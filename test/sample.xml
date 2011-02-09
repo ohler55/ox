@@ -1,0 +1,655 @@
+<?xml version="1.0"?>
+<o c="Test::Ox::Doc">
+<s a="@title">Sample</s>
+<s a="@user">ohler</s>
+<t a="@create_time">1297256865.188610</t>
+<h a="@layers">
+<s>Layer-1</s>
+<o c="Test::Ox::Layer">
+<a a="@members">
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Rect">
+<a a="@bounds">
+<a>
+<f>50</f>
+<f>10</f>
+</a>
+<a>
+<f>60.123456</f>
+<f>20</f>
+</a>
+</a>
+<m a="@color">red</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>part_of</m>
+<s>Layer-1</s>
+</h>
+</o>
+<o c="Test::Ox::Text">
+<a a="@bounds">
+<a>
+<f>50</f>
+<f>10</f>
+</a>
+<a>
+<f>60.123456</f>
+<f>20</f>
+</a>
+</a>
+<z a="@color"/>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<s a="@text">1 in 1</s>
+<s a="@font">helvetica</s>
+<i a="@font_size">14</i>
+<s a="@just">left</s>
+<s a="@text_color">black</s>
+</o>
+</a>
+</o>
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Rect">
+<a a="@bounds">
+<a>
+<f>50</f>
+<f>10</f>
+</a>
+<a>
+<f>55.061728</f>
+<f>15</f>
+</a>
+</a>
+<m a="@color">blue</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>part_of</m>
+<s>Layer-1</s>
+</h>
+</o>
+<o c="Test::Ox::Text">
+<a a="@bounds">
+<a>
+<f>50</f>
+<f>10</f>
+</a>
+<a>
+<f>55.061728</f>
+<f>15</f>
+</a>
+</a>
+<z a="@color"/>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<s a="@text">2 in 1</s>
+<s a="@font">helvetica</s>
+<i a="@font_size">14</i>
+<s a="@just">left</s>
+<s a="@text_color">black</s>
+</o>
+</a>
+</o>
+<o c="Test::Ox::Oval">
+<a a="@bounds">
+<a>
+<f>52</f>
+<f>12</f>
+</a>
+<a>
+<f>58</f>
+<f>18</f>
+</a>
+</a>
+<m a="@color">red</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>inside</m>
+<y/>
+</h>
+</o>
+<o c="Test::Ox::Oval">
+<a a="@bounds">
+<a>
+<f>52</f>
+<f>12</f>
+</a>
+<a>
+<f>55</f>
+<f>15</f>
+</a>
+</a>
+<m a="@color">blue</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>inside</m>
+<y/>
+</h>
+</o>
+<o c="Test::Ox::Group">
+<a a="@members"/>
+</o>
+</a>
+</o>
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Rect">
+<a a="@bounds">
+<a>
+<f>90</f>
+<f>10</f>
+</a>
+<a>
+<f>100.123456</f>
+<f>20</f>
+</a>
+</a>
+<m a="@color">blue</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>part_of</m>
+<s>Layer-1</s>
+</h>
+</o>
+<o c="Test::Ox::Text">
+<a a="@bounds">
+<a>
+<f>90</f>
+<f>10</f>
+</a>
+<a>
+<f>100.123456</f>
+<f>20</f>
+</a>
+</a>
+<z a="@color"/>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<s a="@text">1 in 2</s>
+<s a="@font">helvetica</s>
+<i a="@font_size">14</i>
+<s a="@just">left</s>
+<s a="@text_color">black</s>
+</o>
+</a>
+</o>
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Rect">
+<a a="@bounds">
+<a>
+<f>90</f>
+<f>10</f>
+</a>
+<a>
+<f>95.061728</f>
+<f>15</f>
+</a>
+</a>
+<m a="@color">yellow</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>part_of</m>
+<s>Layer-1</s>
+</h>
+</o>
+<o c="Test::Ox::Text">
+<a a="@bounds">
+<a>
+<f>90</f>
+<f>10</f>
+</a>
+<a>
+<f>95.061728</f>
+<f>15</f>
+</a>
+</a>
+<z a="@color"/>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<s a="@text">2 in 2</s>
+<s a="@font">helvetica</s>
+<i a="@font_size">14</i>
+<s a="@just">left</s>
+<s a="@text_color">black</s>
+</o>
+</a>
+</o>
+<o c="Test::Ox::Oval">
+<a a="@bounds">
+<a>
+<f>92</f>
+<f>12</f>
+</a>
+<a>
+<f>98</f>
+<f>18</f>
+</a>
+</a>
+<m a="@color">blue</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>inside</m>
+<y/>
+</h>
+</o>
+<o c="Test::Ox::Oval">
+<a a="@bounds">
+<a>
+<f>92</f>
+<f>12</f>
+</a>
+<a>
+<f>95</f>
+<f>15</f>
+</a>
+</a>
+<m a="@color">yellow</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>inside</m>
+<y/>
+</h>
+</o>
+<o c="Test::Ox::Group">
+<a a="@members"/>
+</o>
+</a>
+</o>
+</a>
+<s a="@name">Layer-1</s>
+</o>
+<s>Layer-2</s>
+<o c="Test::Ox::Layer">
+<a a="@members">
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Rect">
+<a a="@bounds">
+<a>
+<f>50</f>
+<f>20</f>
+</a>
+<a>
+<f>60.123456</f>
+<f>30</f>
+</a>
+</a>
+<m a="@color">blue</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>part_of</m>
+<s>Layer-2</s>
+</h>
+</o>
+<o c="Test::Ox::Text">
+<a a="@bounds">
+<a>
+<f>50</f>
+<f>20</f>
+</a>
+<a>
+<f>60.123456</f>
+<f>30</f>
+</a>
+</a>
+<z a="@color"/>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<s a="@text">1 in 1</s>
+<s a="@font">helvetica</s>
+<i a="@font_size">14</i>
+<s a="@just">left</s>
+<s a="@text_color">black</s>
+</o>
+</a>
+</o>
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Rect">
+<a a="@bounds">
+<a>
+<f>50</f>
+<f>20</f>
+</a>
+<a>
+<f>55.061728</f>
+<f>25</f>
+</a>
+</a>
+<m a="@color">yellow</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>part_of</m>
+<s>Layer-2</s>
+</h>
+</o>
+<o c="Test::Ox::Text">
+<a a="@bounds">
+<a>
+<f>50</f>
+<f>20</f>
+</a>
+<a>
+<f>55.061728</f>
+<f>25</f>
+</a>
+</a>
+<z a="@color"/>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<s a="@text">2 in 1</s>
+<s a="@font">helvetica</s>
+<i a="@font_size">14</i>
+<s a="@just">left</s>
+<s a="@text_color">black</s>
+</o>
+</a>
+</o>
+<o c="Test::Ox::Oval">
+<a a="@bounds">
+<a>
+<f>52</f>
+<f>22</f>
+</a>
+<a>
+<f>58</f>
+<f>28</f>
+</a>
+</a>
+<m a="@color">blue</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>inside</m>
+<y/>
+</h>
+</o>
+<o c="Test::Ox::Oval">
+<a a="@bounds">
+<a>
+<f>52</f>
+<f>22</f>
+</a>
+<a>
+<f>55</f>
+<f>25</f>
+</a>
+</a>
+<m a="@color">yellow</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>inside</m>
+<y/>
+</h>
+</o>
+<o c="Test::Ox::Group">
+<a a="@members"/>
+</o>
+</a>
+</o>
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Rect">
+<a a="@bounds">
+<a>
+<f>90</f>
+<f>20</f>
+</a>
+<a>
+<f>100.123456</f>
+<f>30</f>
+</a>
+</a>
+<m a="@color">yellow</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>part_of</m>
+<s>Layer-2</s>
+</h>
+</o>
+<o c="Test::Ox::Text">
+<a a="@bounds">
+<a>
+<f>90</f>
+<f>20</f>
+</a>
+<a>
+<f>100.123456</f>
+<f>30</f>
+</a>
+</a>
+<z a="@color"/>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<s a="@text">1 in 2</s>
+<s a="@font">helvetica</s>
+<i a="@font_size">14</i>
+<s a="@just">left</s>
+<s a="@text_color">black</s>
+</o>
+</a>
+</o>
+<o c="Test::Ox::Group">
+<a a="@members">
+<o c="Test::Ox::Rect">
+<a a="@bounds">
+<a>
+<f>90</f>
+<f>20</f>
+</a>
+<a>
+<f>95.061728</f>
+<f>25</f>
+</a>
+</a>
+<m a="@color">green</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>part_of</m>
+<s>Layer-2</s>
+</h>
+</o>
+<o c="Test::Ox::Text">
+<a a="@bounds">
+<a>
+<f>90</f>
+<f>20</f>
+</a>
+<a>
+<f>95.061728</f>
+<f>25</f>
+</a>
+</a>
+<z a="@color"/>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<s a="@text">2 in 2</s>
+<s a="@font">helvetica</s>
+<i a="@font_size">14</i>
+<s a="@just">left</s>
+<s a="@text_color">black</s>
+</o>
+</a>
+</o>
+<o c="Test::Ox::Oval">
+<a a="@bounds">
+<a>
+<f>92</f>
+<f>22</f>
+</a>
+<a>
+<f>98</f>
+<f>28</f>
+</a>
+</a>
+<m a="@color">yellow</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>inside</m>
+<y/>
+</h>
+</o>
+<o c="Test::Ox::Oval">
+<a a="@bounds">
+<a>
+<f>92</f>
+<f>22</f>
+</a>
+<a>
+<f>95</f>
+<f>25</f>
+</a>
+</a>
+<m a="@color">green</m>
+<i a="@border">1</i>
+<m a="@border_color">black</m>
+<h a="@props">
+<m>inside</m>
+<y/>
+</h>
+</o>
+<o c="Test::Ox::Group">
+<a a="@members"/>
+</o>
+</a>
+</o>
+</a>
+<s a="@name">Layer-2</s>
+</o>
+</h>
+<a a="@change_history">
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188617</t>
+<s a="@comment">Changed at t+0.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188620</t>
+<s a="@comment">Changed at t+1.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188623</t>
+<s a="@comment">Changed at t+2.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188625</t>
+<s a="@comment">Changed at t+3.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188628</t>
+<s a="@comment">Changed at t+4.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188630</t>
+<s a="@comment">Changed at t+5.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188632</t>
+<s a="@comment">Changed at t+6.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188635</t>
+<s a="@comment">Changed at t+7.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188637</t>
+<s a="@comment">Changed at t+8.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188639</t>
+<s a="@comment">Changed at t+9.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188641</t>
+<s a="@comment">Changed at t+10.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188643</t>
+<s a="@comment">Changed at t+11.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188646</t>
+<s a="@comment">Changed at t+12.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188648</t>
+<s a="@comment">Changed at t+13.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188650</t>
+<s a="@comment">Changed at t+14.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188652</t>
+<s a="@comment">Changed at t+15.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188654</t>
+<s a="@comment">Changed at t+16.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188656</t>
+<s a="@comment">Changed at t+17.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188658</t>
+<s a="@comment">Changed at t+18.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188661</t>
+<s a="@comment">Changed at t+19.</s>
+</o>
+<o c="Test::Ox::Change">
+<s a="@user">ohler</s>
+<t a="@time">1297256865.188664</t>
+<s a="@comment">Changed at t+20.</s>
+</o>
+</a>
+<h a="@props">
+<m>purpose</m>
+<s>an example</s>
+</h>
+</o>

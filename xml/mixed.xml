@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<!-- A comment. -->
+<top name="Bob">
+  <!-- Comment for top. -->
+  <second>Second</second>
+</top>

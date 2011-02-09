@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<Park.Zoo>
+  <lion>2</lion>
+  <tiger type="Fixnum">3</tiger>
+  <bear type="Float">5.7</bear>
+  <oh_my type="TrueClass"/>
+  <oh_pi type="FalseClass"/>
+  <snake type="Symbol">boa</snake>
+  <big_guy type="Park.Animal">
+    <type>Godzilla</type>
+    <base type="Base64">PGJhc2U2ND4=</base>
+  </big_guy>
+  <nothing/>
+  <tea_time type="Time">1288724706.500122</tea_time>
+  <minutes type="Array">
+    <i>0</i>
+    <i>1</i>
+    <i>5555</i>
+    <i>75932</i>
+  </minutes>
+  <empty type="Array"/>
+  <mixed type="Array">
+    <nil/>
+    <i>55</i>
+    <f>5.6</f>
+    <y/>
+    <n/>
+    <t>1288724706.500122</t>
+    <s>silly</s>
+    <m>symbol</m>
+  </mixed>
+  <clueless type="Hash"/>
+  <clues type="Hash">
+    <y/>
+    <nil/>
+    <i>1</i>
+    <s>cat</s>
+    <m>two</m>
+    <t>1288724706.500123</t>
+  </clues>
+  <nest type="Array">
+    <i>37</i>
+    <a/>
+    <a>
+      <i>77</i>
+    </a>
+    <h/>
+    <h>
+      <m>cnt</m>
+      <i>123</i>
+      <i>37</i>
+      <a>
+        <i>77</i>
+      </a>
+      <i>88</i>
+      <s>ate</s>
+      <s>in</s>
+      <h>
+        <s>prime</s>
+        <i>3</i>
+      </h>
+    </h>
+  </nest>
+</Park.Zoo>

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<Park.Zoo>
+  <lion>2</lion>
+  <tiger type="Fixnum">3</tiger>
+  <bear type="Float">5.7</bear>
+  <oh_my type="TrueClass"/>
+  <raw type="Pod.Xml.XmlStr">
+    <Top attr="value">
+      <Middle>
+        <Inside/>
+        <Str>Hello There</Str>
+        <!-- Some comment -->
+      </Middle>
+    </Top>
+  </raw>
+  <oh_pi type="FalseClass"/>
+  <tea_time type="Time">1288724706.500122</tea_time>
+</Park.Zoo>

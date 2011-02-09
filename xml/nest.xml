@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<Park.Animal>
+  <type>mutant</type>
+  <friends type="Hash">
+    <i>5</i>
+    <Park.Animal>
+      <type>dog</type>
+    </Park.Animal>
+  </friends>
+</Park.Animal>

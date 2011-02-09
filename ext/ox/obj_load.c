@@ -1,0 +1,623 @@
+/* obj_load.c
+ * Copyright (c) 2011, Peter Ohler
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ *  - Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ *  - Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ *  - Neither the name of Peter Ohler nor the names of its contributors may be
+ *    used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <stdlib.h>
+#include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
+#include <time.h>
+
+#include "ruby.h"
+#include "ruby/oniguruma.h"
+#include "base64.h"
+#include "ox.h"
+
+static void     add_text(PInfo pi, char *text, int closed);
+static void     add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren);
+static void     end_element(PInfo pi, const char *ename);
+
+static VALUE    parse_time(const char *text, VALUE clas);
+static VALUE    parse_xsd_time(const char *text, VALUE clas);
+static VALUE    parse_double_time(const char *text, VALUE clas);
+static VALUE    parse_regexp(const char *text);
+
+static VALUE    get_var_sym_from_attrs(Attr a);
+static VALUE    get_obj_from_attrs(Attr a);
+static VALUE    get_class_from_attrs(Attr a);
+static void     debug_stack(PInfo pi, const char *comment);
+static void     fill_indent(PInfo pi, char *buf, size_t size);
+
+
+struct _ParseCallbacks   _ox_obj_callbacks = {
+    0, // add_prolog
+    0, // add_doctype,
+    0, // add_comment,
+    0, // add_cdata,
+    add_text,
+    add_element,
+    end_element,
+};
+
+ParseCallbacks   ox_obj_callbacks = &_ox_obj_callbacks;
+
+extern ParseCallbacks   ox_gen_callbacks;
+
+
+inline static ID
+name2var(const char *name) {
+    VALUE       *slot;
+    ID          var_id;
+
+    if ('0' <= *name && *name <= '9') {
+        var_id = INT2NUM(atoi(name));
+    } else if (Qundef == (var_id = ox_cache_get(attr_cache, name, &slot))) {
+        var_id = rb_intern(name);
+        *slot = var_id;
+    }
+    return var_id;
+}
+
+inline static VALUE
+classname2class(const char *name) {
+    VALUE       *slot;
+    VALUE       clas;
+            
+    if (Qundef == (clas = ox_cache_get(class_cache, name, &slot))) {
+        char            class_name[1024];
+        char            *s;
+        const char      *n = name;
+
+        clas = rb_cObject;
+        for (s = class_name; '\0' != *n; n++) {
+            if (':' == *n) {
+                *s = '\0';
+                n++;
+                clas = rb_const_get(clas, rb_intern(class_name));
+                s = class_name;
+            } else {
+                *s++ = *n;
+            }
+        }
+        *s = '\0';
+        clas = rb_const_get(clas, rb_intern(class_name));
+        *slot = clas;
+    }
+    return clas;
+}
+
+inline static VALUE
+classname2obj(const char *name) {
+    return rb_obj_alloc(classname2class(name));
+}
+
+inline static VALUE
+structname2obj(const char *name) {
+    VALUE       ost;
+    const char  *s = name;
+
+    for (; 1; s++) {
+        if ('\0' == *s) {
+            s = name;
+            break;
+        } else if (':' == *s) {
+            s += 2;
+            break;
+        }
+    }
+    ost = rb_const_get(struct_class, rb_intern(s));
+
+    return rb_struct_alloc_noinit(ost);
+}
+
+// 2010-07-09T10:47:45.895826162+09:00
+inline static VALUE
+parse_time(const char *text, VALUE clas) {
+    VALUE       t;
+
+    if (Qnil == (t = parse_double_time(text, clas)) &&
+        Qnil == (t = parse_xsd_time(text, clas))) {
+        VALUE       args[1];
+
+        //printf("**** time parse\n");
+        *args = rb_str_new2(text);
+        t = rb_funcall2(time_class, parse_id, 1, args);
+    }
+    return t;
+}
+
+static VALUE
+get_var_sym_from_attrs(Attr a) {
+    for (; 0 != a->name; a++) {
+        if ('a' == *a->name && '\0' == *(a->name + 1)) {
+            return name2var(a->value);
+        }
+    }
+    return Qundef;
+}
+
+static VALUE
+get_obj_from_attrs(Attr a) {
+    for (; 0 != a->name; a++) {
+        if ('c' == *a->name && '\0' == *(a->name + 1)) {
+            return classname2obj(a->value);
+        }
+    }
+    return Qundef;
+}
+
+static VALUE
+get_struct_from_attrs(Attr a) {
+    for (; 0 != a->name; a++) {
+        if ('c' == *a->name && '\0' == *(a->name + 1)) {
+            return structname2obj(a->value);
+        }
+    }
+    return Qundef;
+}
+
+static VALUE
+get_class_from_attrs(Attr a) {
+    for (; 0 != a->name; a++) {
+        if ('c' == *a->name && '\0' == *(a->name + 1)) {
+            return classname2class(a->value);
+        }
+    }
+    return Qundef;
+}
+
+static VALUE
+parse_regexp(const char *text) {
+    const char  *te;
+    int         options = 0;
+            
+    te = text + strlen(text) - 1;
+    for (; text < te && '/' != *te; te--) {
+        switch (*te) {
+        case 'i':       options |= ONIG_OPTION_IGNORECASE;      break;
+        case 'm':       options |= ONIG_OPTION_MULTILINE;       break;
+        case 'x':       options |= ONIG_OPTION_EXTEND;          break;
+        default:                                                break;
+        }
+    }
+    return rb_reg_new(text + 1, te - text - 1, options);
+}
+
+static void
+add_text(PInfo pi, char *text, int closed) {
+    if (!closed) {
+        raise_error("Text not closed", pi->str, pi->s);
+    }
+    if (DEBUG <= pi->trace) {
+        char    indent[128];
+
+        fill_indent(pi, indent, sizeof(indent));
+        printf("%s '%s' to type %c\n", indent, text, pi->h->type);
+    }
+    switch (pi->h->type) {
+    case NoCode:
+    case StringCode:
+        pi->h->obj = rb_str_new2(text);
+        break;
+    case FixnumCode:
+    {
+        long        n = 0;
+        char        c;
+        int         neg = 0;
+
+        if ('-' == *text) {
+            neg = 1;
+            text++;
+        }
+        for (; '\0' != *text; text++) {
+            c = *text;
+            if ('0' <= c && c <= '9') {
+                n = n * 10 + (c - '0');
+            } else {
+                raise_error("bad number format", pi->str, pi->s);
+            }
+        }
+        if (neg) {
+            n = -n;
+        }
+        pi->h->obj = LONG2FIX(n);
+        break;
+    }
+    case FloatCode:
+        pi->h->obj = rb_float_new(strtod(text, 0));
+        break;
+    case SymbolCode:
+    {
+        VALUE   sym;
+        VALUE   *slot;
+
+        if (Qundef == (sym = ox_cache_get(symbol_cache, text, &slot))) {
+            sym = ID2SYM(rb_intern(text));
+            *slot = sym;
+        }
+        pi->h->obj = sym;
+        break;
+    }
+    case TimeCode:
+        pi->h->obj = parse_time(text, time_class);
+        break;
+    case Base64Code:
+    {
+        char            buf[1024];
+        char            *str = buf;
+        unsigned long   str_size = b64_orig_size(text);
+        
+        if (sizeof(buf) <= str_size) {
+            if (0 == (str = (char*)malloc(str_size + 1))) {
+                rb_raise(rb_eStandardError, "not enough memory\n");
+            }
+        }
+        from_base64(text, (u_char*)str);
+        pi->h->obj = rb_str_new(str, str_size);
+        if (sizeof(buf) <= str_size) {
+            free(str);
+        }
+        break;
+    }
+    case RegexpCode:
+        if ('/' == *text) {
+            pi->h->obj = parse_regexp(text);
+        } else {
+            char                buf[1024];
+            char                *str = buf;
+            unsigned long       str_size = b64_orig_size(text);
+        
+            if (sizeof(buf) <= str_size) {
+                if (0 == (str = (char*)malloc(str_size + 1))) {
+                    rb_raise(rb_eStandardError, "not enough memory\n");
+                }
+            }
+            from_base64(text, (u_char*)str);
+            pi->h->obj = parse_regexp(str);
+            if (sizeof(buf) <= str_size) {
+                free(str);
+            }
+        }
+        break;
+    case BignumCode:
+        pi->h->obj = rb_cstr_to_inum(text, 10, 1);
+        break;
+    default:
+        pi->h->obj = Qnil;
+        break;
+    }
+}
+
+static void
+add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
+    Attr        a;
+    Helper      h;
+
+    if (TRACE <= pi->trace) {
+        char    buf[1024];
+        char    indent[128];
+        char    *s = buf;
+        char    *end = buf + sizeof(buf) - 2;
+
+        s += snprintf(s, end - s, " <%s%s", (hasChildren) ? "" : "/", ename);
+        for (a = attrs; 0 != a->name; a++) {
+            s += snprintf(s, end - s, " %s=%s", a->name, a->value);
+        }
+        *s++ = '>';
+        *s++ = '\0';
+        if (DEBUG <= pi->trace) {
+            debug_stack(pi, buf);
+        } else {
+            fill_indent(pi, indent, sizeof(indent));
+            printf("%s%s\n", indent, buf);
+        }
+    }
+    if (0 == pi->h) { // top level object
+        pi->h = pi->helpers;
+    } else {
+        pi->h++;
+    }
+    if ('\0' != ename[1]) {
+        raise_error("Invalid element name", pi->str, pi->s);
+    }
+    h = pi->h;
+    h->type = *ename;
+    h->var = get_var_sym_from_attrs(attrs);
+    switch (h->type) {
+    case NilClassCode:
+        h->obj = Qnil;
+        break;
+    case TrueClassCode:
+        h->obj = Qtrue;
+        break;
+    case FalseClassCode:
+        h->obj = Qfalse;
+        break;
+    case StringCode:
+        h->obj = empty_string; // will be replaced by add_text
+        break;
+    case FixnumCode:
+    case FloatCode:
+    case SymbolCode:
+    case Base64Code:
+    case RegexpCode:
+    case BignumCode:
+    case ComplexCode:
+    case RationalCode: // sub elements read next
+    case TimeCode:
+        // value will be read in the following add_text
+        h->obj = Qundef;
+        break;
+    case ArrayCode:
+        h->obj = rb_ary_new();
+        break;
+    case HashCode:
+        h->obj = rb_hash_new();
+        break;
+    case RangeCode:
+        h->obj = rb_range_new(zero_fixnum, zero_fixnum, Qfalse);
+        break;
+    case RawCode:
+        if (hasChildren) {
+            h->obj = parse(pi->s, ox_gen_callbacks, &pi->s, pi->trace);
+        } else {
+            h->obj = Qnil;
+        }
+        break;
+    case ObjectCode:
+        h->obj = get_obj_from_attrs(attrs);
+        break;
+    case StructCode:
+        h->obj = get_struct_from_attrs(attrs);
+        break;
+    case ClassCode:
+        h->obj = get_class_from_attrs(attrs);
+        break;
+    default:
+        raise_error("Invalid element name", pi->str, pi->s);
+        break;
+    }
+    if (DEBUG <= pi->trace) {
+        debug_stack(pi, "   -----------");
+    }
+}
+
+static void
+end_element(PInfo pi, const char *ename) {
+    if (TRACE <= pi->trace) {
+        char    indent[128];
+        
+        if (DEBUG <= pi->trace) {
+            char    buf[1024];
+
+            snprintf(buf, sizeof(buf) - 1, "</%s>", ename);
+            debug_stack(pi, buf);
+        } else {
+            fill_indent(pi, indent, sizeof(indent));
+            printf("%s</%s>\n", indent, ename);
+        }
+    }
+    if (0 != pi->h && pi->helpers <= pi->h) {
+        Helper  h = pi->h;
+
+        pi->obj = h->obj;
+        pi->h--;
+        if (pi->helpers <= pi->h) {
+            switch (pi->h->type) {
+            case ArrayCode:
+                rb_ary_push(pi->h->obj, h->obj);
+                break;
+            case ObjectCode:
+                rb_ivar_set(pi->h->obj, h->var, h->obj);
+                break;
+            case StructCode:
+                rb_struct_aset(pi->h->obj, h->var, h->obj);
+                break;
+            case HashCode:
+                h->type = KeyCode;
+                pi->h++;
+                break;
+            case RangeCode:
+                if (beg_id == h->var) {
+                    RSTRUCT(pi->h->obj)->as.ary[0] = h->obj;
+                } else if (end_id == h->var) {
+                    RSTRUCT(pi->h->obj)->as.ary[1] = h->obj;
+                } else if (excl_id == h->var) {
+                    RSTRUCT(pi->h->obj)->as.ary[2] = h->obj;
+                } else {
+                    raise_error("Invalid range attribute", pi->str, pi->s);
+                }
+                break;
+            case KeyCode:
+                rb_hash_aset((pi->h - 1)->obj, pi->h->obj, h->obj);
+                pi->h--;
+                break;
+            case ComplexCode:
+                if (Qundef == pi->h->obj) {
+                    pi->h->obj = h->obj;
+                } else {
+                    pi->h->obj = rb_complex_new(pi->h->obj, h->obj);
+                }
+                break;
+            case RationalCode:
+                if (Qundef == pi->h->obj) {
+                    pi->h->obj = h->obj;
+                } else {
+                    pi->h->obj = rb_rational_new(pi->h->obj, h->obj);
+                }
+                break;
+            default:
+                raise_error("Corrupt parse stack, container is wrong type", pi->str, pi->s);
+                break;
+            }
+        }
+    }
+    if (DEBUG <= pi->trace) {
+        debug_stack(pi, "   ----------");
+    }
+}
+
+static VALUE
+parse_double_time(const char *text, VALUE clas) {
+    VALUE       args[2];
+    long        v = 0;
+    long        v2 = 0;
+    const char  *dot = 0;
+    char        c;
+    
+    for (; '.' != *text; text++) {
+        c = *text;
+        if (c < '0' || '9' < c) {
+            return Qnil;
+        }
+        v = 10 * v + (long)(c - '0');
+    }
+    dot = text++;
+    for (; '\0' != *text && text - dot <= 6; text++) {
+        c = *text;
+        if (c < '0' || '9' < c) {
+            return Qnil;
+        }
+        v2 = 10 * v2 + (long)(c - '0');
+    }
+    for (; text - dot <= 6; text++) {
+        v2 *= 10;
+    }
+    args[0] = INT2FIX(v);
+    args[1] = INT2FIX(v2);
+
+    return rb_funcall2(clas, at_id, 2, args);
+}
+
+typedef struct _Tp {
+    int         cnt;
+    char        end;
+    char        alt;
+} *Tp;
+
+static VALUE
+parse_xsd_time(const char *text, VALUE clas) {
+    VALUE       args[2];
+    long        cargs[10];
+    long        *cp = cargs;
+    long        v;
+    int         i;
+    char        c;
+    struct _Tp  tpa[10] = { { 4, '-', '-' },
+                           { 2, '-', '-' },
+                           { 2, 'T', 'T' },
+                           { 2, ':', ':' },
+                           { 2, ':', ':' },
+                           { 2, '.', '.' },
+                           { 9, '+', '-' },
+                           { 2, ':', ':' },
+                           { 2, '\0', '\0' },
+                           { 0, '\0', '\0' } };
+    Tp          tp = tpa;
+    struct tm   tm;
+
+    for (; 0 != tp->cnt; tp++) {
+        for (i = tp->cnt, v = 0; 0 < i ; text++, i--) {
+            c = *text;
+            if (c < '0' || '9' < c) {
+                if (tp->end == c || tp->alt == c) {
+                    break;
+                }
+                return Qnil;
+            }
+            v = 10 * v + (long)(c - '0');
+        }
+        c = *text++;
+        if (tp->end != c && tp->alt != c) {
+            return Qnil;
+        }
+        *cp++ = v;
+    }
+    tm.tm_year = (int)cargs[0] - 1900;
+    tm.tm_mon = (int)cargs[1] - 1;
+    tm.tm_mday = (int)cargs[2];
+    tm.tm_hour = (int)cargs[3];
+    tm.tm_min = (int)cargs[4];
+    tm.tm_sec = (int)cargs[5];
+
+    args[0] = INT2FIX(mktime(&tm));
+    args[1] = INT2FIX(cargs[6]);
+
+    return rb_funcall2(clas, at_id, 2, args);
+}
+
+// debug functions
+static void
+fill_indent(PInfo pi, char *buf, size_t size) {
+    if (0 != pi->h) {
+        size_t  cnt = pi->h - pi->helpers + 1;
+
+        if (size < cnt + 1) {
+            cnt = size - 1;
+        }
+        memset(buf, ' ', cnt);
+        buf += cnt;
+    }
+    *buf = '\0';
+}
+
+static void
+debug_stack(PInfo pi, const char *comment) {
+    char        indent[128];
+    Helper      h;
+
+    fill_indent(pi, indent, sizeof(indent));
+    printf("%s%s\n", indent, comment);
+    if (0 != pi->h) {
+        for (h = pi->helpers; h <= pi->h; h++) {
+            const char  *clas = "---";
+            const char  *key = "---";
+
+            if (Qundef != h->obj) {
+                VALUE   c =  rb_obj_class(h->obj);
+
+                clas = rb_class2name(c);
+            }
+            if (Qundef != h->var) {
+                if (HashCode == h->type) {
+                    VALUE       v;
+                    
+                    v = rb_funcall2(h->var, rb_intern("to_s"), 0, 0);
+                    key = StringValuePtr(v);
+                } else if (ObjectCode == (h - 1)->type || RangeCode == (h - 1)->type || StructCode == (h - 1)->type) {
+                    key = rb_id2name(h->var);
+                } else {
+                    printf("%s*** corrupt stack ***\n", indent);
+                }
+            }
+            printf("%s   [%c] %s : %s\n", indent, h->type, clas, key);
+        }
+    }
+}

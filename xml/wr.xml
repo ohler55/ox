@@ -1,0 +1,453 @@
+<?xml version="1.0"?>
+<Pod.Cfg.WorkRequest>
+  <id>w23461</id>
+  <cname>23461</cname>
+  <create_time type="Time">2010-08-09T18:25:11.389608495+09:00</create_time>
+  <mod_time type="Time">2010-08-10T15:52:54.806533000+09:00</mod_time>
+  <mod_uid>ohler</mod_uid>
+  <status>Completed</status>
+  <inventory>iTDC_SOFTWARE</inventory>
+  <returns type="Array"/>
+  <vlans type="Array">
+    <Pod.Cfg.WorkRequest.VlanReq>
+      <addr>117.55.210.168</addr>
+      <netbits type="Fixnum">29</netbits>
+      <scope>Public</scope>
+      <limit type="Fixnum">10</limit>
+      <cap/>
+      <switches type="Hash">
+        <s>sJPTMCV107A1-2</s>
+        <s>117.55.210.170</s>
+        <s>sJPTMCV105B1</s>
+        <nil/>
+        <s>sJPTMCV106B1</s>
+        <nil/>
+        <s>sJPTMCV108A1-2</s>
+        <s>117.55.210.171</s>
+        <nil/>
+        <s>117.55.210.169</s>
+      </switches>
+      <name>TDC_Public</name>
+      <vid>v121</vid>
+      <num type="Fixnum">121</num>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.VlanReq>
+    <Pod.Cfg.WorkRequest.VlanReq>
+      <addr>10.128.2.176</addr>
+      <netbits type="Fixnum">29</netbits>
+      <scope>Shared</scope>
+      <limit type="Fixnum">0</limit>
+      <cap/>
+      <switches type="Hash">
+        <s>sJPTMCV107A1-2</s>
+        <nil/>
+        <s>sJPTMCV105B1</s>
+        <nil/>
+        <s>sJPTMCV106B1</s>
+        <nil/>
+        <s>sJPTMCV108A1-2</s>
+        <nil/>
+      </switches>
+      <name>mira</name>
+      <vid>v4070</vid>
+      <num type="Fixnum">4070</num>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.VlanReq>
+    <Pod.Cfg.WorkRequest.VlanReq>
+      <addr>10.128.2.184</addr>
+      <netbits type="Fixnum">29</netbits>
+      <scope>Shared</scope>
+      <limit type="Fixnum">0</limit>
+      <cap/>
+      <switches type="Hash">
+        <s>sJPTMCV107A1-2</s>
+        <nil/>
+        <s>sJPTMCV105B1</s>
+        <nil/>
+        <s>sJPTMCV106B1</s>
+        <nil/>
+        <s>sJPTMCV108A1-2</s>
+        <nil/>
+      </switches>
+      <name>kaname</name>
+      <vid>v4069</vid>
+      <num type="Fixnum">4069</num>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.VlanReq>
+    <Pod.Cfg.WorkRequest.VlanReq>
+      <addr>10.128.2.192</addr>
+      <netbits type="Fixnum">29</netbits>
+      <scope>Shared</scope>
+      <limit type="Fixnum">0</limit>
+      <cap/>
+      <switches type="Hash">
+        <s>sJPTMCV107A1-2</s>
+        <nil/>
+        <s>sJPTMCV105B1</s>
+        <nil/>
+        <s>sJPTMCV106B1</s>
+        <nil/>
+        <s>sJPTMCV108A1-2</s>
+        <nil/>
+      </switches>
+      <name>teresa</name>
+      <vid>v4066</vid>
+      <num type="Fixnum">4066</num>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.VlanReq>
+  </vlans>
+  <envs type="Array">
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>yoshika</name>
+      <domain/>
+      <os>CentOS_5.5_x64_jp</os>
+      <password>zigeyi22</password>
+      <gateway>10.128.2.190</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>teresa</s>
+        <s>10.128.2.193</s>
+        <s>kaname</s>
+        <s>10.128.2.185</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4066</i>
+        <i>4069</i>
+      </vlan_nums>
+      <machine>mCN701802GY</machine>
+      <vol_mounts type="Array"/>
+      <ilo>10.251.15.155</ilo>
+      <grade>E01</grade>
+      <eid>eCN701802GY</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>mio</name>
+      <domain/>
+      <os>CentOS_5.5_x64_jp</os>
+      <password>zigeyi22</password>
+      <gateway>10.128.2.190</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>teresa</s>
+        <s>10.128.2.194</s>
+        <s>kaname</s>
+        <s>10.128.2.186</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4066</i>
+        <i>4069</i>
+      </vlan_nums>
+      <machine>mCN701802H9</machine>
+      <vol_mounts type="Array"/>
+      <ilo>10.251.1.195</ilo>
+      <grade>E01</grade>
+      <eid>eCN701802H9</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>charlotte</name>
+      <domain/>
+      <os>CentOS_5.5_x64_jp</os>
+      <password>zigeyi22</password>
+      <gateway>10.128.2.193</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>teresa</s>
+        <s>10.128.2.195</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4066</i>
+      </vlan_nums>
+      <machine>mCN701802FJ</machine>
+      <vol_mounts type="Array"/>
+      <ilo>10.251.11.205</ilo>
+      <grade>S01</grade>
+      <eid>eCN701802FJ</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>erica</name>
+      <domain/>
+      <os>CentOS_5.5_x64_jp</os>
+      <password>zigeyi22</password>
+      <gateway>10.128.2.193</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>teresa</s>
+        <s>10.128.2.196</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4066</i>
+      </vlan_nums>
+      <machine>mCN701802FK</machine>
+      <vol_mounts type="Array"/>
+      <ilo>10.251.2.19</ilo>
+      <grade>S01</grade>
+      <eid>eCN701802FK</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>lucchini</name>
+      <domain/>
+      <os>CentOS_5.5_x64_jp</os>
+      <password>zigeyi22</password>
+      <gateway>10.128.2.193</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>teresa</s>
+        <s>10.128.2.197</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4066</i>
+      </vlan_nums>
+      <machine>mJPT0203AF6</machine>
+      <vol_mounts type="Array"/>
+      <ilo>10.251.5.149</ilo>
+      <grade>P01</grade>
+      <eid>eJPT0203AF6</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>sanya</name>
+      <domain/>
+      <os>CentOS_5.5_x64_jp</os>
+      <password>zigeyi22</password>
+      <gateway>10.128.2.193</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>teresa</s>
+        <s>10.128.2.198</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4066</i>
+      </vlan_nums>
+      <machine>mJPT0203AF7</machine>
+      <vol_mounts type="Array"/>
+      <ilo>10.251.11.230</ilo>
+      <grade>P01</grade>
+      <eid>eJPT0203AF7</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+  </envs>
+  <volumes type="Array"/>
+  <firewalls type="Array">
+    <Pod.Cfg.WorkRequest.FwServiceReq>
+      <name>TDC_Sftw_Eng_FW</name>
+      <trust_vlan>mira</trust_vlan>
+      <untrust_vlan>TDC_Public</untrust_vlan>
+      <public_netbits type="Fixnum">29</public_netbits>
+      <trust_vlan_id type="Fixnum">4070</trust_vlan_id>
+      <untrust_vlan_id type="Fixnum">121</untrust_vlan_id>
+      <trust_address_range type="Hash">
+        <m>addr</m>
+        <s>10.128.2.182</s>
+        <m>netbits</m>
+        <i>29</i>
+      </trust_address_range>
+      <untrust_address_range type="Hash">
+        <m>addr</m>
+        <s>117.55.210.172</s>
+        <m>netbits</m>
+        <i>29</i>
+      </untrust_address_range>
+      <permitted_application_sets type="Array">
+        <m>pod_web</m>
+        <m>pod_mail_client</m>
+        <m>pod_mail_server</m>
+        <m>pod_dns_ntp</m>
+        <m>pod_ssh</m>
+        <m>pod_management</m>
+        <m>pod_rdp</m>
+        <m>pod_ftp</m>
+      </permitted_application_sets>
+      <public_address_range type="Hash">
+        <m>addr</m>
+        <s>110.50.79.136</s>
+        <m>netbits</m>
+        <i>29</i>
+      </public_address_range>
+      <nat_members type="Array">
+        <s>TDC_Sftw_Eng_LB</s>
+      </nat_members>
+      <static_nat_map type="Hash">
+        <s>110.50.79.138</s>
+        <s>10.128.2.180</s>
+      </static_nat_map>
+      <lb_ext_float>10.128.2.177</lb_ext_float>
+      <lb_address_range type="Hash">
+        <m>addr</m>
+        <s>10.128.2.184</s>
+        <m>netbits</m>
+        <i>29</i>
+      </lb_address_range>
+      <fws_id>h4070</fws_id>
+      <op>New</op>
+      <src_nat_ip>110.50.79.137</src_nat_ip>
+    </Pod.Cfg.WorkRequest.FwServiceReq>
+  </firewalls>
+  <load_balancers type="Array">
+    <Pod.Cfg.WorkRequest.LBServiceReq>
+      <name>TDC_Sftw_Eng_LB</name>
+      <vip>10.128.2.180</vip>
+      <vip_port type="Fixnum">80</vip_port>
+      <internal_vlan type="Fixnum">4069</internal_vlan>
+      <external_vlan type="Fixnum">4070</external_vlan>
+      <internal_vlan_name>kaname</internal_vlan_name>
+      <external_vlan_name>mira</external_vlan_name>
+      <internal_floating_ip>10.128.2.190</internal_floating_ip>
+      <external_floating_ip>10.128.2.177</external_floating_ip>
+      <internal_netmask>255.255.255.248</internal_netmask>
+      <external_netmask>255.255.255.248</external_netmask>
+      <default_gw>10.128.2.182</default_gw>
+      <virtual_server_type>RESOURCE_TYPE_FAST_L4</virtual_server_type>
+      <members type="Array">
+        <a>
+          <s>10.128.2.186</s>
+          <s>80</s>
+        </a>
+        <a>
+          <s>10.128.2.185</s>
+          <s>80</s>
+        </a>
+      </members>
+      <pool_members type="Hash">
+        <s>mio</s>
+        <s>80</s>
+        <s>yoshika</s>
+        <s>80</s>
+      </pool_members>
+      <profile_name>fastL4</profile_name>
+      <lb_method>LB_METHOD_ROUND_ROBIN</lb_method>
+      <persistence/>
+      <lbs_id>b10.128.2.180.80</lbs_id>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.LBServiceReq>
+  </load_balancers>
+  <auths type="Array">
+    <Pod.Cfg.WorkRequest.AuthReq>
+      <name>admin</name>
+      <password>zigeyi22</password>
+      <op>New</op>
+      <aid>aadmin.TDC_SOFTWARE</aid>
+    </Pod.Cfg.WorkRequest.AuthReq>
+  </auths>
+  <domains type="Array"/>
+  <history type="Array">
+    <Pod.Cfg.WorkRequest.Event>
+      <who>w23461</who>
+      <what>Modify</what>
+      <when type="Time">2010-08-09T17:50:26.648823000+09:00</when>
+      <how>New</how>
+    </Pod.Cfg.WorkRequest.Event>
+    <Pod.Cfg.WorkRequest.Event>
+      <who>w23461</who>
+      <what>Modify</what>
+      <when type="Time">2010-08-09T17:50:28.649910000+09:00</when>
+      <how>Partial</how>
+    </Pod.Cfg.WorkRequest.Event>
+    <Pod.Cfg.WorkRequest.Event>
+      <who>w23461</who>
+      <what>Modify</what>
+      <when type="Time">2010-08-09T18:22:04.092542000+09:00</when>
+      <how>Completed</how>
+    </Pod.Cfg.WorkRequest.Event>
+  </history>
+  <force/>
+  <pro_timeout type="Fixnum">1500</pro_timeout>
+  <errors type="Array"/>
+  <report type="Pod.Xml.Raw">
+    <WorkRequestReport ticket="23461" inventory="TDC_SOFTWARE" status="Completed" start="2010-08-09T17:50:26.648823000+09:00" finish="2010-08-09T18:22:04.092542000+09:00">
+      <IloVpn>
+        <Auth cname="admin" user="admin" password="zigeyi22" id="aadmin.TDC_SOFTWARE"/>
+      </IloVpn>
+      <Network>
+        <Vlans>
+          <Vlan cname="TDC_Public" addr="117.55.210.168" netbits="29" scope="Public" limit="10" id="v121"/>
+          <Vlan cname="mira" addr="10.128.2.176" netbits="29" scope="Shared" limit="0" id="v4070"/>
+          <Vlan cname="kaname" addr="10.128.2.184" netbits="29" scope="Shared" limit="0" id="v4069"/>
+          <Vlan cname="teresa" addr="10.128.2.192" netbits="29" scope="Shared" limit="0" id="v4066"/>
+        </Vlans>
+        <Firewalls>
+          <Firewall cname="TDC_Sftw_Eng_FW" trust_vlan="mira" trust_vlan_id="v4070" untrust_vlan="TDC_Public" untrust_vlan_id="v121" public_block_address="110.50.79.136" public_block_netbits="29" id="h4070">
+            <AppSets>
+              <AppSet name="pod_web"/>
+              <AppSet name="pod_mail_client"/>
+              <AppSet name="pod_mail_server"/>
+              <AppSet name="pod_dns_ntp"/>
+              <AppSet name="pod_ssh"/>
+              <AppSet name="pod_management"/>
+              <AppSet name="pod_rdp"/>
+              <AppSet name="pod_ftp"/>
+            </AppSets>
+            <NatMap>
+              <Entry public="110.50.79.138" trust="10.128.2.180"/>
+            </NatMap>
+          </Firewall>
+        </Firewalls>
+        <LoadBalancers>
+          <LoadBalancer cname="TDC_Sftw_Eng_LB" vip="10.128.2.180" external_vlan="mira" external_vlan_id="v4070" internal_vlan="kaname" internal_vlan_id="v4069" default_gw="10.128.2.182" id="b10.128.2.180.80">
+            <Pool port="80">
+              <Member name="mio" port="80"/>
+              <Member name="yoshika" port="80"/>
+            </Pool>
+          </LoadBalancer>
+        </LoadBalancers>
+      </Network>
+      <Servers>
+        <Server cname="yoshika" gateway="10.128.2.190" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="E01" machine="mCN701802GY" id="eCN701802GY">
+          <Login user="root" password="zigeyi22"/>
+          <IloLogin addr="10.251.15.155" user="ILOUser" password="zigeyi22"/>
+          <Interfaces>
+            <Interface name="eth0.4066" mac="78:e7:d1:65:15:bc" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.193" netbits="29"/>
+            <Interface name="eth0.4069" mac="78:e7:d1:65:15:bc" vlan="4069" vid="v4069" vlan_name="kaname" addr="10.128.2.185" netbits="29"/>
+          </Interfaces>
+        </Server>
+        <Server cname="mio" gateway="10.128.2.190" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="E01" machine="mCN701802H9" id="eCN701802H9">
+          <Login user="root" password="zigeyi22"/>
+          <IloLogin addr="10.251.1.195" user="ILOUser" password="zigeyi22"/>
+          <Interfaces>
+            <Interface name="eth0.4066" mac="78:e7:d1:65:14:04" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.194" netbits="29"/>
+            <Interface name="eth0.4069" mac="78:e7:d1:65:14:04" vlan="4069" vid="v4069" vlan_name="kaname" addr="10.128.2.186" netbits="29"/>
+          </Interfaces>
+        </Server>
+        <Server cname="charlotte" gateway="10.128.2.193" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="S01" machine="mCN701802FJ" id="eCN701802FJ">
+          <Login user="root" password="zigeyi22"/>
+          <IloLogin addr="10.251.11.205" user="ILOUser" password="zigeyi22"/>
+          <Interfaces>
+            <Interface name="eth0" mac="d8:d3:85:e2:28:28" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.195" netbits="29"/>
+          </Interfaces>
+        </Server>
+        <Server cname="erica" gateway="10.128.2.193" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="S01" machine="mCN701802FK" id="eCN701802FK">
+          <Login user="root" password="zigeyi22"/>
+          <IloLogin addr="10.251.2.19" user="ILOUser" password="zigeyi22"/>
+          <Interfaces>
+            <Interface name="eth0" mac="d8:d3:85:e2:b7:a8" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.196" netbits="29"/>
+          </Interfaces>
+        </Server>
+        <Server cname="lucchini" gateway="10.128.2.193" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="P01" machine="mJPT0203AF6" id="eJPT0203AF6">
+          <Login user="root" password="zigeyi22"/>
+          <IloLogin addr="10.251.5.149" user="ILOUser" password="zigeyi22"/>
+          <Interfaces>
+            <Interface name="eth0" mac="d8:d3:85:ba:36:50" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.197" netbits="29"/>
+          </Interfaces>
+        </Server>
+        <Server cname="sanya" gateway="10.128.2.193" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="P01" machine="mJPT0203AF7" id="eJPT0203AF7">
+          <Login user="root" password="zigeyi22"/>
+          <IloLogin addr="10.251.11.230" user="ILOUser" password="zigeyi22"/>
+          <Interfaces>
+            <Interface name="eth0" mac="d8:d3:85:b9:d5:0c" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.198" netbits="29"/>
+          </Interfaces>
+        </Server>
+      </Servers>
+      <Storage/>
+      <Returns/>
+    </WorkRequestReport>
+  </report>
+</Pod.Cfg.WorkRequest>

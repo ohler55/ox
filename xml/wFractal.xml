@@ -1,0 +1,1012 @@
+<?xml version="1.0"?>
+<Pod.Cfg.WorkRequest>
+  <id>wFractal</id>
+  <cname>Fractal</cname>
+  <create_time type="Time">2010-10-08T12:22:12.985217558+09:00</create_time>
+  <mod_time type="Time">2010-10-08T12:22:12.985217558+09:00</mod_time>
+  <mod_uid>kvh</mod_uid>
+  <status>New</status>
+  <inventory>iFractal_Systems</inventory>
+  <returns type="Array"/>
+  <vlans type="Array">
+    <Pod.Cfg.WorkRequest.VlanReq>
+      <addr type="String"/>
+      <netbits/>
+      <scope>Isolated</scope>
+      <limit type="Fixnum">10</limit>
+      <cap/>
+      <switches type="Hash">
+        <s>sJPTMCV107A1-2</s>
+        <nil/>
+        <s>sJPTMCV105B1</s>
+        <nil/>
+        <s>sJPTMCV106B1</s>
+        <nil/>
+        <s>sJPTMCV108A1-2</s>
+        <nil/>
+      </switches>
+      <name>APSEG</name>
+      <vid>v4076</vid>
+      <num type="Fixnum">4076</num>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.VlanReq>
+    <Pod.Cfg.WorkRequest.VlanReq>
+      <addr type="String"/>
+      <netbits/>
+      <scope>Isolated</scope>
+      <limit type="Fixnum">10</limit>
+      <cap/>
+      <switches type="Hash">
+        <s>sJPTMCV107A1-2</s>
+        <nil/>
+        <s>sJPTMCV105B1</s>
+        <nil/>
+        <s>sJPTMCV106B1</s>
+        <nil/>
+        <s>sJPTMCV108A1-2</s>
+        <nil/>
+      </switches>
+      <name>Ext</name>
+      <vid>v4060</vid>
+      <num type="Fixnum">4060</num>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.VlanReq>
+    <Pod.Cfg.WorkRequest.VlanReq>
+      <addr>110.50.78.24</addr>
+      <netbits type="Fixnum">29</netbits>
+      <scope>Public</scope>
+      <limit type="Fixnum">100</limit>
+      <cap/>
+      <switches type="Hash">
+        <s>sJPTMCV107A1-2</s>
+        <s>110.50.78.26</s>
+        <s>sJPTMCV105B1</s>
+        <nil/>
+        <s>sJPTMCV106B1</s>
+        <nil/>
+        <s>sJPTMCV108A1-2</s>
+        <s>110.50.78.27</s>
+        <nil/>
+        <s>110.50.78.25</s>
+      </switches>
+      <name>Fractal-public</name>
+      <vid>v125</vid>
+      <num type="Fixnum">125</num>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.VlanReq>
+    <Pod.Cfg.WorkRequest.VlanReq>
+      <addr>10.128.0.128</addr>
+      <netbits type="Fixnum">25</netbits>
+      <scope>Shared</scope>
+      <limit type="Fixnum">10</limit>
+      <cap/>
+      <switches type="Hash">
+        <s>sJPTMCV107A1-2</s>
+        <nil/>
+        <s>sJPTMCV105B1</s>
+        <nil/>
+        <s>sJPTMCV106B1</s>
+        <nil/>
+        <s>sJPTMCV108A1-2</s>
+        <nil/>
+      </switches>
+      <name>FW</name>
+      <vid>v4059</vid>
+      <num type="Fixnum">4059</num>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.VlanReq>
+    <Pod.Cfg.WorkRequest.VlanReq>
+      <addr>10.128.3.0</addr>
+      <netbits type="Fixnum">25</netbits>
+      <scope>Shared</scope>
+      <limit type="Fixnum">10</limit>
+      <cap/>
+      <switches type="Hash">
+        <s>sJPTMCV107A1-2</s>
+        <nil/>
+        <s>sJPTMCV105B1</s>
+        <nil/>
+        <s>sJPTMCV106B1</s>
+        <nil/>
+        <s>sJPTMCV108A1-2</s>
+        <nil/>
+      </switches>
+      <name>LB</name>
+      <vid>v4058</vid>
+      <num type="Fixnum">4058</num>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.VlanReq>
+  </vlans>
+  <envs type="Array">
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>FJT-IASDB01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>fatuzi69</password>
+      <gateway>10.128.16.1</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>APSEG</s>
+        <nil/>
+        <s>storage</s>
+        <s>10.128.16.26</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4076</i>
+        <i>5</i>
+      </vlan_nums>
+      <machine>mCN701504TM</machine>
+      <vol_mounts type="Array">
+        <s>FJTDBNSF01</s>
+      </vol_mounts>
+      <iscsi_password/>
+      <ilo>10.251.2.179</ilo>
+      <grade>S01</grade>
+      <eid>eCN701504TM</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>FJT-OASDB01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>fatuzi69</password>
+      <gateway>10.128.16.1</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>APSEG</s>
+        <nil/>
+        <s>storage</s>
+        <s>10.128.16.27</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4076</i>
+        <i>5</i>
+      </vlan_nums>
+      <machine>mCN701504TN</machine>
+      <vol_mounts type="Array">
+        <s>FJTDBNSF01</s>
+      </vol_mounts>
+      <iscsi_password/>
+      <ilo>10.251.12.46</ilo>
+      <grade>S01</grade>
+      <eid>eCN701504TN</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>FJT-CASCR01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>fatuzi69</password>
+      <gateway/>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>APSEG</s>
+        <nil/>
+        <s>Ext</s>
+        <nil/>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4076</i>
+        <i>4060</i>
+      </vlan_nums>
+      <machine>mCN700908C2</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.1.232</ilo>
+      <grade>S01</grade>
+      <eid>eCN700908C2</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>ACE-IASDB01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>fatuzi69</password>
+      <gateway>10.128.16.1</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>APSEG</s>
+        <nil/>
+        <s>storage</s>
+        <s>10.128.16.28</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4076</i>
+        <i>5</i>
+      </vlan_nums>
+      <machine>mCN701802BK</machine>
+      <vol_mounts type="Array">
+        <s>ACEDBNSF01</s>
+      </vol_mounts>
+      <iscsi_password/>
+      <ilo>10.251.7.95</ilo>
+      <grade>E01</grade>
+      <eid>eCN701802BK</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>ACE-OASDB01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>fatuzi69</password>
+      <gateway>10.128.16.1</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>APSEG</s>
+        <nil/>
+        <s>storage</s>
+        <s>10.128.16.29</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4076</i>
+        <i>5</i>
+      </vlan_nums>
+      <machine>mCN701802BM</machine>
+      <vol_mounts type="Array">
+        <s>ACEDBNSF01</s>
+      </vol_mounts>
+      <iscsi_password/>
+      <ilo>10.251.5.121</ilo>
+      <grade>E01</grade>
+      <eid>eCN701802BM</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>ACE-CASCR01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>fatuzi69</password>
+      <gateway/>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>APSEG</s>
+        <nil/>
+        <s>Ext</s>
+        <nil/>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4076</i>
+        <i>4060</i>
+      </vlan_nums>
+      <machine>mCN701802BN</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.9.120</ilo>
+      <grade>E01</grade>
+      <eid>eCN701802BN</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>FJT-IASRM01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>defota29</password>
+      <gateway>10.128.3.126</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>v4058</s>
+        <s>10.128.3.1</s>
+        <s>v4076</s>
+        <nil/>
+        <s>LB</s>
+        <s>10.128.3.3</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4058</i>
+        <i>4076</i>
+        <i>4058</i>
+      </vlan_nums>
+      <machine>mCN70090BPP</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.13.220</ilo>
+      <grade>S01</grade>
+      <eid>eCN70090BPP</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>FJT-IASRM02</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>defota29</password>
+      <gateway>10.128.3.126</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>v4058</s>
+        <s>10.128.3.2</s>
+        <s>v4076</s>
+        <nil/>
+        <s>LB</s>
+        <s>10.128.3.4</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4058</i>
+        <i>4076</i>
+        <i>4058</i>
+      </vlan_nums>
+      <machine>mCN701102PM</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.14.172</ilo>
+      <grade>S01</grade>
+      <eid>eCN701102PM</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>FJT-OASRM01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>ratoka99</password>
+      <gateway>10.128.3.122</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>v4058</s>
+        <s>10.128.3.1</s>
+        <s>v4076</s>
+        <nil/>
+        <s>LB</s>
+        <s>10.128.3.5</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4058</i>
+        <i>4076</i>
+        <i>4058</i>
+      </vlan_nums>
+      <machine>mCN701500E9</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.13.207</ilo>
+      <grade>S01</grade>
+      <eid>eCN701500E9</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>FJT-OASRM02</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>ratoka99</password>
+      <gateway>10.128.3.122</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>v4058</s>
+        <s>10.128.3.2</s>
+        <s>v4076</s>
+        <nil/>
+        <s>LB</s>
+        <s>10.128.3.6</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4058</i>
+        <i>4076</i>
+        <i>4058</i>
+      </vlan_nums>
+      <machine>mCN701500EB</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.14.143</ilo>
+      <grade>S01</grade>
+      <eid>eCN701500EB</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>FJT-CASVP01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>ratoka99</password>
+      <gateway>10.128.0.129</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>v4059</s>
+        <s>10.128.0.139</s>
+        <s>v4076</s>
+        <nil/>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4059</i>
+        <i>4076</i>
+      </vlan_nums>
+      <machine>mCN701500EC</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.13.184</ilo>
+      <grade>S01</grade>
+      <eid>eCN701500EC</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>ACE-IASRM01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>zoteru30</password>
+      <gateway>10.128.3.118</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>v4058</s>
+        <s>10.128.3.1</s>
+        <s>v4076</s>
+        <nil/>
+        <s>LB</s>
+        <s>10.128.3.9</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4058</i>
+        <i>4076</i>
+        <i>4058</i>
+      </vlan_nums>
+      <machine>mCN701902B8</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.9.114</ilo>
+      <grade>E01</grade>
+      <eid>eCN701902B8</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>ACE-IASRM02</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>zoteru30</password>
+      <gateway>10.128.3.118</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>v4058</s>
+        <s>10.128.3.2</s>
+        <s>v4076</s>
+        <nil/>
+        <s>LB</s>
+        <s>10.128.3.10</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4058</i>
+        <i>4076</i>
+        <i>4058</i>
+      </vlan_nums>
+      <machine>mCN701802BX</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.7.18</ilo>
+      <grade>E01</grade>
+      <eid>eCN701802BX</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>ACE-OASRM01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>zoteru30</password>
+      <gateway>10.128.3.118</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>v4058</s>
+        <s>10.128.3.7</s>
+        <s>v4076</s>
+        <nil/>
+        <s>LB</s>
+        <s>10.128.3.11</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4058</i>
+        <i>4076</i>
+        <i>4058</i>
+      </vlan_nums>
+      <machine>mCN701802C9</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.11.45</ilo>
+      <grade>E01</grade>
+      <eid>eCN701802C9</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>ACE-OASRM02</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>zoteru30</password>
+      <gateway>10.128.3.118</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>v4058</s>
+        <s>10.128.3.8</s>
+        <s>v4076</s>
+        <nil/>
+        <s>LB</s>
+        <s>10.128.3.12</s>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4058</i>
+        <i>4076</i>
+        <i>4058</i>
+      </vlan_nums>
+      <machine>mCN701802CC</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.6.174</ilo>
+      <grade>E01</grade>
+      <eid>eCN701802CC</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+    <Pod.Cfg.WorkRequest.EnvReq>
+      <name>ACE-CASVP01</name>
+      <domain/>
+      <os>Windows_2008_Standard_x32_jp</os>
+      <password>zoteru30</password>
+      <gateway>10.128.0.129</gateway>
+      <nameserver/>
+      <timezone type="Fixnum">-9</timezone>
+      <vlans type="Hash">
+        <s>v4059</s>
+        <s>10.128.0.147</s>
+        <s>v4076</s>
+        <nil/>
+      </vlans>
+      <vlan_nums type="Array">
+        <i>4059</i>
+        <i>4076</i>
+      </vlan_nums>
+      <machine>mCN701902BC</machine>
+      <vol_mounts type="Array"/>
+      <iscsi_password/>
+      <ilo>10.251.11.119</ilo>
+      <grade>E01</grade>
+      <eid>eCN701902BC</eid>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.EnvReq>
+  </envs>
+  <cust_devices type="Array"/>
+  <volumes type="Array">
+    <Pod.Cfg.WorkRequest.VolReq>
+      <name>FJTDBNSF01</name>
+      <size type="Fixnum">100</size>
+      <mount type="Pod.Cfg.Volume.Nfs">
+        <ro type="Array"/>
+        <rw type="Array">
+          <s>10.128.16.26</s>
+          <s>10.128.16.27</s>
+        </rw>
+      </mount>
+      <vid>d800000020694.cvol28</vid>
+      <addr>10.128.16.2</addr>
+      <vif/>
+      <vlan type="Hash"/>
+      <op/>
+    </Pod.Cfg.WorkRequest.VolReq>
+    <Pod.Cfg.WorkRequest.VolReq>
+      <name>ACEDBNSF01</name>
+      <size type="Fixnum">100</size>
+      <mount type="Pod.Cfg.Volume.Nfs">
+        <ro type="Array"/>
+        <rw type="Array">
+          <s>10.128.16.28</s>
+          <s>10.128.16.29</s>
+        </rw>
+      </mount>
+      <vid>d800000020694.cvol29</vid>
+      <addr>10.128.16.2</addr>
+      <vif/>
+      <vlan type="Hash"/>
+      <op/>
+    </Pod.Cfg.WorkRequest.VolReq>
+  </volumes>
+  <switches type="Array"/>
+  <firewalls type="Array">
+    <Pod.Cfg.WorkRequest.FwServiceReq>
+      <name>Fractal_FW</name>
+      <trust_vlan>v4059</trust_vlan>
+      <untrust_vlan>v125</untrust_vlan>
+      <public_netbits type="Fixnum">27</public_netbits>
+      <trust_vlan_id type="Fixnum">4059</trust_vlan_id>
+      <untrust_vlan_id type="Fixnum">125</untrust_vlan_id>
+      <trust_address_range type="Hash">
+        <m>addr</m>
+        <s>10.128.0.254</s>
+        <m>netbits</m>
+        <i>25</i>
+      </trust_address_range>
+      <untrust_address_range type="Hash">
+        <m>addr</m>
+        <s>110.50.78.28</s>
+        <m>netbits</m>
+        <i>29</i>
+      </untrust_address_range>
+      <permitted_application_sets type="Array">
+        <m>pod_web</m>
+        <m>factal_custom</m>
+      </permitted_application_sets>
+      <public_address_range type="Hash">
+        <m>addr</m>
+        <s>110.50.79.96</s>
+        <m>netbits</m>
+        <i>27</i>
+      </public_address_range>
+      <nat_members type="Array">
+        <s>Fractal_VIP1_LB</s>
+      </nat_members>
+      <static_nat_map type="Hash">
+        <s>110.50.79.98</s>
+        <s>10.128.0.132</s>
+        <s>110.50.79.99</s>
+        <s>10.128.0.134</s>
+        <s>110.50.79.100</s>
+        <s>10.128.0.138</s>
+        <s>110.50.79.101</s>
+        <s>10.128.0.136</s>
+        <s>110.50.79.102</s>
+        <s>10.128.0.142</s>
+        <s>110.50.79.103</s>
+        <s>10.128.0.146</s>
+        <s>110.50.79.104</s>
+        <s>10.128.0.139</s>
+        <s>110.50.79.105</s>
+        <s>10.128.0.147</s>
+      </static_nat_map>
+      <lb_ext_float>10.128.0.129</lb_ext_float>
+      <lb_address_range type="Hash">
+        <m>addr</m>
+        <s>10.128.3.0</s>
+        <m>netbits</m>
+        <i>25</i>
+      </lb_address_range>
+      <fws_id>h4059</fws_id>
+      <op>New</op>
+      <src_nat_ip>110.50.79.97</src_nat_ip>
+    </Pod.Cfg.WorkRequest.FwServiceReq>
+  </firewalls>
+  <load_balancers type="Array">
+    <Pod.Cfg.WorkRequest.LBServiceReq>
+      <name>Fractal_VIP1_LB</name>
+      <vip>10.128.0.132</vip>
+      <vip_port type="Hash">
+        <i>7100</i>
+        <h>
+          <s>10.128.3.3</s>
+          <i>7100</i>
+          <s>10.128.3.4</s>
+          <i>7100</i>
+        </h>
+        <i>7101</i>
+        <h>
+          <s>10.128.3.3</s>
+          <i>7101</i>
+          <s>10.128.3.4</s>
+          <i>7101</i>
+        </h>
+      </vip_port>
+      <vip_env_map type="Hash">
+        <i>7100</i>
+        <h>
+          <s>FJT-IASRM01</s>
+          <i>7100</i>
+          <s>FJT-IASRM02</s>
+          <i>7100</i>
+        </h>
+        <i>7101</i>
+        <h>
+          <s>FJT-IASRM01</s>
+          <i>7101</i>
+          <s>FJT-IASRM02</s>
+          <i>7101</i>
+        </h>
+      </vip_env_map>
+      <internal_vlan type="Fixnum">4058</internal_vlan>
+      <external_vlan type="Fixnum">4059</external_vlan>
+      <internal_vlan_name>v4058</internal_vlan_name>
+      <external_vlan_name>v4059</external_vlan_name>
+      <internal_floating_ip>10.128.3.126</internal_floating_ip>
+      <external_floating_ip>10.128.0.129</external_floating_ip>
+      <internal_netmask>255.255.255.128</internal_netmask>
+      <external_netmask>255.255.255.128</external_netmask>
+      <default_gw>10.128.0.254</default_gw>
+      <virtual_server_type>RESOURCE_TYPE_FAST_L4</virtual_server_type>
+      <profile_name>fastL4</profile_name>
+      <lb_method>LB_METHOD_ROUND_ROBIN</lb_method>
+      <persistence>source_addr</persistence>
+      <lbs_id>b10.128.0.132</lbs_id>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.LBServiceReq>
+    <Pod.Cfg.WorkRequest.LBServiceReq>
+      <name>Fractal_VIP2_LB</name>
+      <vip>10.128.0.134</vip>
+      <vip_port type="Hash">
+        <i>7100</i>
+        <h>
+          <s>10.128.3.5</s>
+          <i>7100</i>
+          <s>10.128.3.6</s>
+          <i>7100</i>
+        </h>
+        <i>7101</i>
+        <h>
+          <s>10.128.3.5</s>
+          <i>7101</i>
+          <s>10.128.3.6</s>
+          <i>7101</i>
+        </h>
+      </vip_port>
+      <vip_env_map type="Hash">
+        <i>7100</i>
+        <h>
+          <s>FJT-OASRM01</s>
+          <i>7100</i>
+          <s>FJT-OASRM02</s>
+          <i>7100</i>
+        </h>
+        <i>7101</i>
+        <h>
+          <s>FJT-OASRM01</s>
+          <i>7101</i>
+          <s>FJT-OASRM02</s>
+          <i>7101</i>
+        </h>
+      </vip_env_map>
+      <internal_vlan type="Fixnum">4058</internal_vlan>
+      <external_vlan type="Fixnum">4059</external_vlan>
+      <internal_vlan_name>v4058</internal_vlan_name>
+      <external_vlan_name>v4059</external_vlan_name>
+      <internal_floating_ip>10.128.3.125</internal_floating_ip>
+      <external_floating_ip>10.128.0.130</external_floating_ip>
+      <internal_netmask>255.255.255.128</internal_netmask>
+      <external_netmask>255.255.255.128</external_netmask>
+      <default_gw>10.128.0.254</default_gw>
+      <virtual_server_type>RESOURCE_TYPE_FAST_L4</virtual_server_type>
+      <profile_name>fastL4</profile_name>
+      <lb_method>LB_METHOD_ROUND_ROBIN</lb_method>
+      <persistence>source_addr</persistence>
+      <lbs_id>b10.128.0.134</lbs_id>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.LBServiceReq>
+    <Pod.Cfg.WorkRequest.LBServiceReq>
+      <name>Fractal_VIP3_LB</name>
+      <vip>10.128.0.138</vip>
+      <vip_port type="Hash">
+        <i>443</i>
+        <h>
+          <s>10.128.3.5</s>
+          <i>443</i>
+          <s>10.128.3.6</s>
+          <i>443</i>
+        </h>
+      </vip_port>
+      <vip_env_map type="Hash">
+        <i>443</i>
+        <h>
+          <s>FJT-OASRM01</s>
+          <i>443</i>
+          <s>FJT-OASRM02</s>
+          <i>443</i>
+        </h>
+      </vip_env_map>
+      <internal_vlan type="Fixnum">4058</internal_vlan>
+      <external_vlan type="Fixnum">4059</external_vlan>
+      <internal_vlan_name>v4058</internal_vlan_name>
+      <external_vlan_name>v4059</external_vlan_name>
+      <internal_floating_ip>10.128.3.122</internal_floating_ip>
+      <external_floating_ip>10.128.0.135</external_floating_ip>
+      <internal_netmask>255.255.255.128</internal_netmask>
+      <external_netmask>255.255.255.128</external_netmask>
+      <default_gw>10.128.0.254</default_gw>
+      <virtual_server_type>RESOURCE_TYPE_FAST_L4</virtual_server_type>
+      <profile_name>fastL4</profile_name>
+      <lb_method>LB_METHOD_ROUND_ROBIN</lb_method>
+      <persistence>source_addr</persistence>
+      <lbs_id>b10.128.0.138</lbs_id>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.LBServiceReq>
+    <Pod.Cfg.WorkRequest.LBServiceReq>
+      <name>Fractal_VIP4_LB</name>
+      <vip>10.128.0.136</vip>
+      <vip_port type="Hash">
+        <i>7100</i>
+        <h>
+          <s>10.128.3.9</s>
+          <i>7100</i>
+          <s>10.128.3.10</s>
+          <i>7100</i>
+        </h>
+        <i>7101</i>
+        <h>
+          <s>10.128.3.9</s>
+          <i>7101</i>
+          <s>10.128.3.10</s>
+          <i>7101</i>
+        </h>
+      </vip_port>
+      <vip_env_map type="Hash">
+        <i>7100</i>
+        <h>
+          <s>ACE-IASRM01</s>
+          <i>7100</i>
+          <s>ACE-IASRM02</s>
+          <i>7100</i>
+        </h>
+        <i>7101</i>
+        <h>
+          <s>ACE-IASRM01</s>
+          <i>7101</i>
+          <s>ACE-IASRM02</s>
+          <i>7101</i>
+        </h>
+      </vip_env_map>
+      <internal_vlan type="Fixnum">4058</internal_vlan>
+      <external_vlan type="Fixnum">4059</external_vlan>
+      <internal_vlan_name>v4058</internal_vlan_name>
+      <external_vlan_name>v4059</external_vlan_name>
+      <internal_floating_ip>10.128.3.126</internal_floating_ip>
+      <external_floating_ip>10.128.0.129</external_floating_ip>
+      <internal_netmask>255.255.255.128</internal_netmask>
+      <external_netmask>255.255.255.128</external_netmask>
+      <default_gw>10.128.0.254</default_gw>
+      <virtual_server_type>RESOURCE_TYPE_FAST_L4</virtual_server_type>
+      <profile_name>fastL4</profile_name>
+      <lb_method>LB_METHOD_ROUND_ROBIN</lb_method>
+      <persistence>source_addr</persistence>
+      <lbs_id>b10.128.0.136</lbs_id>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.LBServiceReq>
+    <Pod.Cfg.WorkRequest.LBServiceReq>
+      <name>Fractal_VIP5_LB</name>
+      <vip>10.128.0.142</vip>
+      <vip_port type="Hash">
+        <i>7100</i>
+        <h>
+          <s>10.128.3.11</s>
+          <i>7100</i>
+          <s>10.128.3.12</s>
+          <i>7100</i>
+        </h>
+        <i>7101</i>
+        <h>
+          <s>10.128.3.11</s>
+          <i>7101</i>
+          <s>10.128.3.12</s>
+          <i>7101</i>
+        </h>
+      </vip_port>
+      <vip_env_map type="Hash">
+        <i>7100</i>
+        <h>
+          <s>ACE-OASRM01</s>
+          <i>7100</i>
+          <s>ACE-OASRM02</s>
+          <i>7100</i>
+        </h>
+        <i>7101</i>
+        <h>
+          <s>ACE-OASRM01</s>
+          <i>7101</i>
+          <s>ACE-OASRM02</s>
+          <i>7101</i>
+        </h>
+      </vip_env_map>
+      <internal_vlan type="Fixnum">4058</internal_vlan>
+      <external_vlan type="Fixnum">4059</external_vlan>
+      <internal_vlan_name>v4058</internal_vlan_name>
+      <external_vlan_name>v4059</external_vlan_name>
+      <internal_floating_ip>10.128.3.121</internal_floating_ip>
+      <external_floating_ip>10.128.0.137</external_floating_ip>
+      <internal_netmask>255.255.255.128</internal_netmask>
+      <external_netmask>255.255.255.128</external_netmask>
+      <default_gw>10.128.0.254</default_gw>
+      <virtual_server_type>RESOURCE_TYPE_FAST_L4</virtual_server_type>
+      <profile_name>fastL4</profile_name>
+      <lb_method>LB_METHOD_ROUND_ROBIN</lb_method>
+      <persistence>source_addr</persistence>
+      <lbs_id>b10.128.0.142</lbs_id>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.LBServiceReq>
+    <Pod.Cfg.WorkRequest.LBServiceReq>
+      <name>Fractal_VIP6_LB</name>
+      <vip>10.128.0.146</vip>
+      <vip_port type="Hash">
+        <i>80</i>
+        <h>
+          <s>10.128.3.11</s>
+          <i>80</i>
+          <s>10.128.3.12</s>
+          <i>80</i>
+        </h>
+      </vip_port>
+      <vip_env_map type="Hash">
+        <i>80</i>
+        <h>
+          <s>ACE-OASRM01</s>
+          <i>80</i>
+          <s>ACE-OASRM02</s>
+          <i>80</i>
+        </h>
+      </vip_env_map>
+      <internal_vlan type="Fixnum">4058</internal_vlan>
+      <external_vlan type="Fixnum">4059</external_vlan>
+      <internal_vlan_name>v4058</internal_vlan_name>
+      <external_vlan_name>v4059</external_vlan_name>
+      <internal_floating_ip>10.128.3.118</internal_floating_ip>
+      <external_floating_ip>10.128.0.143</external_floating_ip>
+      <internal_netmask>255.255.255.128</internal_netmask>
+      <external_netmask>255.255.255.128</external_netmask>
+      <default_gw>10.128.0.254</default_gw>
+      <virtual_server_type>RESOURCE_TYPE_FAST_L4</virtual_server_type>
+      <profile_name>fastL4</profile_name>
+      <lb_method>LB_METHOD_ROUND_ROBIN</lb_method>
+      <persistence>source_addr</persistence>
+      <lbs_id>b10.128.0.146</lbs_id>
+      <op>New</op>
+    </Pod.Cfg.WorkRequest.LBServiceReq>
+  </load_balancers>
+  <auths type="Array">
+    <Pod.Cfg.WorkRequest.AuthReq>
+      <name>admin</name>
+      <password>fatuzi69</password>
+      <op>New</op>
+      <aid>aadmin.Fractal_Systems</aid>
+    </Pod.Cfg.WorkRequest.AuthReq>
+  </auths>
+  <domains type="Array"/>
+  <history type="Array">
+    <Pod.Cfg.WorkRequest.Event>
+      <who>w27757</who>
+      <what>Modify</what>
+      <when type="Time">2010-10-07T10:46:24.204777000+09:00</when>
+      <how>New</how>
+    </Pod.Cfg.WorkRequest.Event>
+    <Pod.Cfg.WorkRequest.Event>
+      <who>w27757</who>
+      <what>Modify</what>
+      <when type="Time">2010-10-07T11:24:06.277349000+09:00</when>
+      <how>Completed</how>
+    </Pod.Cfg.WorkRequest.Event>
+    <Pod.Cfg.WorkRequest.Event>
+      <who>w27779</who>
+      <what>Modify</what>
+      <when type="Time">2010-10-07T13:50:55.031271000+09:00</when>
+      <how>New</how>
+    </Pod.Cfg.WorkRequest.Event>
+    <Pod.Cfg.WorkRequest.Event>
+      <who>w27779</who>
+      <what>Modify</what>
+      <when type="Time">2010-10-07T14:12:36.521032000+09:00</when>
+      <how>Completed</how>
+    </Pod.Cfg.WorkRequest.Event>
+    <Pod.Cfg.WorkRequest.Event>
+      <who>w27805</who>
+      <what>Modify</what>
+      <when type="Time">2010-10-07T17:07:00.591538000+09:00</when>
+      <how>New</how>
+    </Pod.Cfg.WorkRequest.Event>
+    <Pod.Cfg.WorkRequest.Event>
+      <who>w27805</who>
+      <what>Modify</what>
+      <when type="Time">2010-10-07T17:28:55.812314000+09:00</when>
+      <how>Completed</how>
+    </Pod.Cfg.WorkRequest.Event>
+    <Pod.Cfg.WorkRequest.Event>
+      <who>w27831</who>
+      <what>Modify</what>
+      <when type="Time">2010-10-08T09:53:38.694846000+09:00</when>
+      <how>New</how>
+    </Pod.Cfg.WorkRequest.Event>
+    <Pod.Cfg.WorkRequest.Event>
+      <who>w27831</who>
+      <what>Modify</what>
+      <when type="Time">2010-10-08T10:21:36.246424000+09:00</when>
+      <how>Completed</how>
+    </Pod.Cfg.WorkRequest.Event>
+  </history>
+  <force/>
+  <pro_timeout/>
+  <errors type="Array"/>
+  <report/>
+</Pod.Cfg.WorkRequest>
