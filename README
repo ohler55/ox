@@ -1,0 +1,85 @@
+= Ox: A fast XML parser and Object marshaller.
+
+*GitHub* *repo*: http://github.com/tbd
+
+=== Description:
+
+Optimized XML (Ox), as the name implies was written to provide speed optimized
+XML handling. It was designed to be an alternative to Nokogiri in generic XML
+parsing and as an alternative to Marshal for Object serialization. 
+
+Nokogiri relies on libXml while Ox is self contained. Ox uses nothing other
+than standard C libraries so version issues with libXml are not an issue.
+
+Marshal uses a binary format for serializing Objects. That binary format
+changes with releases making Marshal dumped Object incompatible between some
+versions. The use of a binary format make debugging message streams or file
+contents next to impossible unless the same version of Ruby and only Ruby is
+used for inspecting the serialize Object. Ox on the other hand uses human
+readable XML.
+
+It is possible to write an XML serialization gem with Nokogiri but writing
+such a package in Ruby results in a module significantly slower than
+Marshal. This is what triggered the start of Ox development.
+
+Ox handles XML documents in two ways. It is a generic XML parser and writer as
+well as a fast Object / XML marshaller. Ox was written for speed as a
+replacement for Nokogiri and for Marshal.
+
+As an XML parser it is 2 or more times faster than Nokogiri and as a generic
+XML writer it is as much as 20 times faster than Nokogiri. Of course different
+files may result in slightly different times.
+
+As an Object serializer Ox is up to 6 times faster than the standard Ruby
+Marshal.dump() and up to 3 times faster than Marshal.load().
+
+
+=== Object Dump Sample:
+
+  require 'ox'
+
+  class Sample
+    attr_accessor :a, :b, :c
+
+    def initialize(a, b, c)
+      @a = a
+      @b = b
+      @c = c
+    end
+  end
+
+  # Create Object
+  obj = Sample.new(1, "bee", ['x', :y, 7.0])
+  # Now dump the Object to an XML String.
+  xml = Ox.dump(obj)
+  # Convert the object back into a Sample Object.
+  obj2 = Ox.parse_obj(xml)
+
+=== Generic XML Writing and Parsing:
+
+  require 'ox'
+
+  doc = Ox::Document.new(:version => '1.0')
+
+  top = Ox::Element.new('top')
+  top[:name] = 'sample'
+  doc << top
+
+  mid = Ox::Element.new('middle')
+  mid[:name] = 'second'
+  top << mid
+
+  bot = Ox::Element.new('bottom')
+  bot[:name] = 'third'
+  mid << bot
+
+  xml = Ox.dump(doc)
+  puts xml
+  doc2 = Ox.parse(xml)
+  puts "Same? #{doc == doc2}"
+
+
+=== To Do (future release)
+
+ * Support looped object references.
+ * Support UTF-8
