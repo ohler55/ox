@@ -74,7 +74,6 @@ VALUE   trace_sym;
 VALUE   empty_string;
 VALUE   zero_fixnum;
 
-VALUE   exception_clas;
 VALUE   ox_cdata_clas;
 VALUE   ox_comment_clas;
 VALUE   ox_doctype_clas;
@@ -375,7 +374,6 @@ void Init_ox() {
 
     time_class = rb_const_get(rb_cObject, rb_intern("Time"));
     struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
-    exception_clas = rb_const_get(rb_cObject, rb_intern("Exception"));
 
     version_sym = ID2SYM(rb_intern("version"));
     standalone_sym = ID2SYM(rb_intern("standalone"));

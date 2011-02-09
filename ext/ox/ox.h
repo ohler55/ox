@@ -69,7 +69,6 @@ typedef enum {
     ArrayCode      = 'a',
     Base64Code     = 'b',
     ClassCode      = 'c',
-    ExceptionCode  = 'e',
     FloatCode      = 'f',
     RegexpCode     = 'g',
     HashCode       = 'h',
@@ -157,7 +156,6 @@ extern VALUE    struct_class;
 extern VALUE    time_class;
 extern VALUE    version_sym;
 extern VALUE    zero_fixnum;
-extern VALUE    exception_clas;
 
 extern VALUE    ox_document_clas;
 extern VALUE    ox_element_clas;

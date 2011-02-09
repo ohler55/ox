@@ -3,18 +3,13 @@
 ^c^d hide subtree
 ^c^s show subtree
 
-- verify range of dates works
-
-- exceptions
- - obj_load
-  - handle Exceptions differently
-   - how to handle type?
-
-
 
 
 - deal with loops (circular references)
- - keep hash table and put an object reference on each
+ - optional parameter for dump
+ - add id to attrs
+ - maybe load but should be able grab id from the first object
+ - keep cache table and put an object reference on each
  - add ref attribute to each object make a number or use the object_id
 
 - UTF-8 support

@@ -80,6 +80,9 @@ class Func < ::Test::Unit::TestCase
     dump_and_load((0..3), false)
     dump_and_load((-2..3.7), false)
     dump_and_load(('a'...'f'), false)
+    t = Time.now
+    t2 = t + 20
+    dump_and_load((t..t2), false)
   end
 
   def test_regex
@@ -115,7 +118,7 @@ class Func < ::Test::Unit::TestCase
     e = Exception.new("Some Error")
     e.set_backtrace(["./func.rb:119: in test_exception",
                      "./fake.rb:57: in fake_func"])
-    dump_and_load(e, true)
+    dump_and_load(e, false)
   end
 
   def test_struct

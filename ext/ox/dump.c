@@ -522,7 +522,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             dump_gen_element(obj, depth + 1, out);
             out->w_end(out, &e);
         } else { // Object
-            e.type = (Qtrue == rb_obj_is_kind_of(obj, exception_clas)) ? ExceptionCode : ObjectCode;
+            e.type = ObjectCode;
             cnt = (int)rb_ivar_count(obj);
             e.closed = (0 >= cnt);
             out->w_start(out, &e);
