@@ -36,6 +36,7 @@
 #include "ruby.h"
 #include "ruby/oniguruma.h"
 #include "base64.h"
+#include "cache8.h"
 #include "ox.h"
 
 typedef struct _Str {
@@ -44,25 +45,28 @@ typedef struct _Str {
 } *Str;
 
 typedef struct _Element {
-    struct _Str clas;
-    struct _Str attr;
-    int         indent; // < 0 indicates no \n
-    int         closed;
-    char        type;
+    struct _Str         clas;
+    struct _Str         attr;
+    unsigned long       id;
+    int                 indent; // < 0 indicates no \n
+    int                 closed;
+    char                type;
 } *Element;
 
 typedef struct _Out {
-    void        (*w_start)(struct _Out *out, Element e);
-    void        (*w_end)(struct _Out *out, Element e);
-    void        (*w_time)(struct _Out *out, VALUE obj);
-    char        *buf;
-    char        *end;
-    char        *cur;
-    int         indent;
-    int         depth; // used by dumpHash
+    void                (*w_start)(struct _Out *out, Element e);
+    void                (*w_end)(struct _Out *out, Element e);
+    void                (*w_time)(struct _Out *out, VALUE obj);
+    char                *buf;
+    char                *end;
+    char                *cur;
+    Cache8              circ_cache;
+    unsigned long       circ_cnt;
+    int                 indent;
+    int                 depth; // used by dumpHash
 } *Out;
 
-static void     dump_obj_to_xml(VALUE obj, int indent, int xsd_date, Out out);
+static void     dump_obj_to_xml(VALUE obj, int indent, int xsd_date, int circular, Out out);
 
 static void     dump_obj(ID aid, VALUE obj, unsigned int depth, Out out);
 static void     dump_gen_doc(VALUE obj, unsigned int depth, Out out);
@@ -147,6 +151,41 @@ fill_attr(Out out, char name, const char *value, size_t len) {
     *out->cur++ = '"';
 }
 
+inline static const char*
+ulong2str(unsigned long num, char *end) {
+    char        *b;
+
+    *end-- = '\0';
+    for (b = end; 0 < num || b == end; num /= 10, b--) {
+        *b = (num % 10) + '0';
+    }
+    b++;
+
+    return b;
+}
+
+static int
+check_circular(Out out, VALUE obj, Element e) {
+    unsigned long       *slot;
+    unsigned long       id;
+    int                 result;
+    
+    if (0 == (id = ox_cache8_get(out->circ_cache, obj, &slot))) {
+        out->circ_cnt++;
+        id = out->circ_cnt;
+        *slot = id;
+        e->id = id;
+        result = 0;
+    } else {
+        e->type = RefCode;  e->clas.len = 0;  e->clas.str = 0;
+        e->closed = 1;
+        e->id = id;
+        out->w_start(out, e);
+        result = 1;
+    }
+    return result;
+}
+
 static void
 grow(Out out, size_t len) {
     size_t  size = out->end - out->buf;
@@ -175,6 +214,9 @@ dump_start(Out out, Element e) {
     if (0 < e->clas.len) { // c="class"
         size += e->clas.len + 5;
     }
+    if (0 < e->id) { // i="id"
+        size += 24; // over estimate, 19 digits
+    }
     if (out->end - out->cur < (long)size) {
         grow(out, size);
     }
@@ -186,6 +228,13 @@ dump_start(Out out, Element e) {
     }
     if ((ObjectCode == e->type || StructCode == e->type || ClassCode == e->type) && 0 < e->clas.len) {
         fill_attr(out, 'c', e->clas.str, e->clas.len);
+    }
+    if (0 < e->id) {
+        char            buf[32];
+        char            *end = buf + sizeof(buf);
+        const char      *s = ulong2str(e->id, end);
+        
+        fill_attr(out, 'i', s, end - s);
     }
     if (e->closed) {
         *out->cur++ = '/';
@@ -223,19 +272,6 @@ dump_value(Out out, const char *value, size_t size) {
         }
     }
     *out->cur = '\0';
-}
-
-inline static const char*
-uint2str(unsigned int num, char *end) {
-    char        *b;
-
-    *end-- = '\0';
-    for (b = end; 0 < num || b == end; num /= 10, b--) {
-        *b = (num % 10) + '0';
-    }
-    b++;
-
-    return b;
 }
 
 inline static void
@@ -352,6 +388,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     } else {
         e.indent = depth * out->indent;
     }
+    e.id = 0;
     switch (rb_type(obj)) {
     case RUBY_T_NIL:
         e.type = NilClassCode;  e.clas.len = 0;  e.clas.str = 0;
@@ -359,11 +396,14 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         out->w_start(out, &e);
         break;
     case RUBY_T_ARRAY:
+        if (0 != out->circ_cache && check_circular(out, obj, &e)) {
+            break;
+        }
         cnt = (int)RARRAY_LEN(obj);
         e.type = ArrayCode;  e.clas.len = 5;  e.clas.str = "Array";
         e.closed = (0 >= cnt);
         out->w_start(out, &e);
-        if (0 < cnt) {
+        if (!e.closed) {
             VALUE       *np = RARRAY_PTR(obj);
             int         i;
             int         d2 = depth + 1;
@@ -375,15 +415,20 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         }
         break;
     case RUBY_T_HASH:
+        if (0 != out->circ_cache && check_circular(out, obj, &e)) {
+            break;
+        }
         cnt = (int)RHASH_SIZE(obj);
         e.type = HashCode;  e.clas.len = 4;  e.clas.str = "Hash";
         e.closed = (0 >= cnt);
         out->w_start(out, &e);
         if (0 < cnt) {
+            unsigned int        od = out->depth;
+            
             out->depth = depth + 1;
             rb_hash_foreach(obj, dump_hash, (VALUE)out);
+            out->depth = od;
             out->w_end(out, &e);
-            out->depth = depth;
         }
         break;
     case RUBY_T_TRUE:
@@ -413,8 +458,12 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         break;
     case RUBY_T_STRING:
     {
-        const char      *str = StringValuePtr(obj);
+        const char      *str;
 
+        if (0 != out->circ_cache && check_circular(out, obj, &e)) {
+            break;
+        }
+        str = StringValuePtr(obj);
         cnt = (int)RSTRING_LEN(obj);
         if (is_xml_friendly((u_char*)str, cnt)) {
             e.type = StringCode;  e.clas.len = 6;  e.clas.str = "String";
@@ -458,8 +507,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     }
     case RUBY_T_DATA:
     {
-        VALUE   clas = rb_obj_class(obj);
+        VALUE   clas;
 
+        clas = rb_obj_class(obj);
         if (rb_cTime == clas) {
             e.type = TimeCode;  e.clas.len = 4;  e.clas.str = "Time";
             out->w_start(out, &e);
@@ -473,8 +523,12 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     }
     case RUBY_T_STRUCT:
     {
-        VALUE   clas = rb_obj_class(obj);
-        
+        VALUE   clas;
+
+        if (0 != out->circ_cache && check_circular(out, obj, &e)) {
+            break;
+        }
+        clas = rb_obj_class(obj);
         if (rb_cRange == clas) {
             VALUE       beg = RSTRUCT(obj)->as.ary[0];
             VALUE       end = RSTRUCT(obj)->as.ary[1];
@@ -499,7 +553,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             out->w_start(out, &e);
             cnt = (int)RSTRUCT_LEN(obj);
             for (i = 0, vp = RSTRUCT_PTR(obj); i < cnt; i++, vp++) {
-                dump_obj(rb_intern(uint2str(i, num_buf + sizeof(num_buf) - 1)), *vp, d2, out);
+                dump_obj(rb_intern(ulong2str(i, num_buf + sizeof(num_buf) - 1)), *vp, d2, out);
             }
             out->w_end(out, &e);
         }
@@ -507,8 +561,12 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     }
     case RUBY_T_OBJECT:
     {
-        VALUE   clas = rb_obj_class(obj);
+        VALUE   clas;
 
+        if (0 != out->circ_cache && check_circular(out, obj, &e)) {
+            break;
+        }
+        clas = rb_obj_class(obj);
         e.clas.str = rb_class2name(clas);
         e.clas.len = strlen(e.clas.str);
         if (ox_document_clas == clas) {
@@ -527,10 +585,12 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             e.closed = (0 >= cnt);
             out->w_start(out, &e);
             if (0 < cnt) {
+                unsigned int        od = out->depth;
+            
                 out->depth = depth + 1;
                 rb_ivar_foreach(obj, dump_var, (VALUE)out);
+                out->depth = od;
                 out->w_end(out, &e);
-                out->depth = depth;
             }
         }
         break;
@@ -787,13 +847,18 @@ dump_gen_val_node(VALUE obj, unsigned int depth,
 }
 
 static void
-dump_obj_to_xml(VALUE obj, int indent, int xsd_date, Out out) {
+dump_obj_to_xml(VALUE obj, int indent, int xsd_date, int circular, Out out) {
     VALUE       clas = rb_obj_class(obj);
 
     out->w_time = (xsd_date) ? dump_time_xsd : dump_time_thin;
     out->buf = (char*)malloc(65336);
     out->end = out->buf + 65336;
     out->cur = out->buf;
+    out->circ_cache = 0;
+    out->circ_cnt = 0;
+    if (circular) {
+        ox_cache8_new(&out->circ_cache);
+    }
     out->indent = indent;
     if (ox_document_clas == clas) {
         dump_gen_doc(obj, -1, out);
@@ -808,21 +873,21 @@ dump_obj_to_xml(VALUE obj, int indent, int xsd_date, Out out) {
 }
 
 char*
-write_obj_to_str(VALUE obj, int indent, int xsd_date) {
+write_obj_to_str(VALUE obj, int indent, int xsd_date, int circular) {
     struct _Out out;
     
-    dump_obj_to_xml(obj, indent, xsd_date, &out);
+    dump_obj_to_xml(obj, indent, xsd_date, circular, &out);
 
     return out.buf;
 }
 
 void
-write_obj_to_file(VALUE obj, const char *path, int indent, int xsd_date) {
+write_obj_to_file(VALUE obj, const char *path, int indent, int xsd_date, int circular) {
     struct _Out out;
     size_t      size;
     FILE        *f;    
 
-    dump_obj_to_xml(obj, indent, xsd_date, &out);
+    dump_obj_to_xml(obj, indent, xsd_date, circular, &out);
     size = out.cur - out.buf;
     if (0 == (f = fopen(path, "w"))) {
         rb_raise(rb_eStandardError, "%s\n", strerror(errno));

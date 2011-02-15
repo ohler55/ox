@@ -4,15 +4,7 @@
 ^c^s show subtree
 
 
-
-- deal with loops (circular references)
- - optional parameter for dump
- - add id to attrs
- - maybe load but should be able grab id from the first object
- - keep cache table and put an object reference on each
- - add ref attribute to each object make a number or use the object_id
-
 - UTF-8 support
 
-rsync -vr --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc ~/ox/ ~/git_ox
+rsync -vru --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/ox/ ~/git_ox
 

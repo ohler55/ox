@@ -64,6 +64,7 @@ VALUE   encoding_sym;
 VALUE   indent_sym;
 VALUE   xsd_date_sym;
 VALUE   opt_format_sym;
+VALUE   circular_sym;
 VALUE   mode_sym;
 VALUE   auto_sym;
 VALUE   optimized_sym;
@@ -91,7 +92,7 @@ extern ParseCallbacks   ox_obj_callbacks;
 extern ParseCallbacks   ox_gen_callbacks;
 extern ParseCallbacks   ox_limited_callbacks;
 
-static void     parse_dump_options(VALUE options, int *indent, int *xsd_date);
+static void     parse_dump_options(VALUE options, int *indent, int *xsd_date, int *circular);
 
 /* call-seq: parse_obj(xml)
  *
@@ -257,7 +258,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
 }
 
 static void
-parse_dump_options(VALUE options, int *indent, int *xsd_date) {
+parse_dump_options(VALUE options, int *indent, int *xsd_date, int *circular) {
     if (rb_cHash == rb_obj_class(options)) {
         VALUE   v;
         
@@ -278,6 +279,17 @@ parse_dump_options(VALUE options, int *indent, int *xsd_date) {
                 rb_raise(rb_eStandardError, ":xsd_date must be true or false.\n");
             }
         }
+        if (Qnil != (v = rb_hash_lookup(options, circular_sym))) {
+            VALUE       c = rb_obj_class(v);
+            
+            if (rb_cTrueClass == c) {
+                *circular = 1;
+            } else if (rb_cFalseClass == c) {
+                *circular = 0;
+            } else {
+                rb_raise(rb_eStandardError, ":circular must be true or false.\n");
+            }
+        }
     }
  }
 
@@ -295,12 +307,13 @@ dump(int argc, VALUE *argv, VALUE self) {
     char        *xml;
     int         indent = 2;
     int         xsd_date = 0;
+    int         circular = 0;
     VALUE       rstr;
     
     if (2 == argc) {
-        parse_dump_options(argv[1], &indent, &xsd_date);
+        parse_dump_options(argv[1], &indent, &xsd_date, &circular);
     }
-    if (0 == (xml = write_obj_to_str(*argv, indent, xsd_date))) {
+    if (0 == (xml = write_obj_to_str(*argv, indent, xsd_date, circular))) {
         rb_raise(rb_eStandardError, "Not enough memory.\n");
     }
     rstr = rb_str_new2(xml);
@@ -323,12 +336,13 @@ static VALUE
 to_file(int argc, VALUE *argv, VALUE self) {
     int         indent = 2;
     int         xsd_date = 0;
+    int         circular = 0;
     
     if (3 == argc) {
-        parse_dump_options(argv[2], &indent, &xsd_date);
+        parse_dump_options(argv[2], &indent, &xsd_date, &circular);
     }
     Check_Type(*argv, T_STRING);
-    write_obj_to_file(argv[1], StringValuePtr(*argv), indent, xsd_date);
+    write_obj_to_file(argv[1], StringValuePtr(*argv), indent, xsd_date, circular);
 
     return Qnil;
 }
@@ -338,6 +352,14 @@ extern void     ox_cache_test(void);
 static VALUE
 cache_test(VALUE self) {
     ox_cache_test();
+    return Qnil;
+}
+
+extern void     ox_cache8_test(void);
+
+static VALUE
+cache8_test(VALUE self) {
+    ox_cache8_test();
     return Qnil;
 }
 
@@ -385,6 +407,7 @@ void Init_ox() {
     auto_sym = ID2SYM(rb_intern("auto"));
     optimized_sym = ID2SYM(rb_intern("optimized"));
     object_sym = ID2SYM(rb_intern("object"));
+    circular_sym = ID2SYM(rb_intern("circular"));
     generic_sym = ID2SYM(rb_intern("generic"));
     limited_sym = ID2SYM(rb_intern("limited"));
     trace_sym = ID2SYM(rb_intern("trace"));
@@ -403,6 +426,7 @@ void Init_ox() {
     ox_cache_new(&attr_cache);
 
     rb_define_module_function(Ox, "cache_test", cache_test, 0);
+    rb_define_module_function(Ox, "cache8_test", cache8_test, 0);
 }
 
 void

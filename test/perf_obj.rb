@@ -20,6 +20,7 @@ require 'files'
 
 $verbose = 0
 $ox_only = false
+$circular = false
 
 do_sample = false
 do_files = false
@@ -34,6 +35,7 @@ opts = OptionParser.new
 opts.on("-v", "increase verbosity")                         { $verbose += 1 }
 
 opts.on("-x", "ox only")                                    { $ox_only = true }
+opts.on("-c", "circular options")                           { $circular = true }
 
 opts.on("-s", "load and dump as sample Ruby object")        { do_sample = true }
 opts.on("-f", "load and dump as files Ruby object")         { do_files = true }
@@ -53,7 +55,7 @@ if files.empty?
   data = []
   obj = do_sample ? sample_doc(2) : files('..')
   mars = Marshal.dump(obj)
-  xml = Ox.dump(obj, :indent => 0)
+  xml = Ox.dump(obj, :indent => 0, circular: $circular)
   File.open('sample.xml', 'w') { |f| f.write(xml) }
   File.open('sample.marshal', 'w') { |f| f.write(mars) }
   data << { :file => 'sample.xml', :obj => obj, :xml => xml, :marshal => mars }
@@ -105,7 +107,7 @@ def perf_dump(d)
 
   start = Time.now
   (1..$iter).each do
-    xml = Ox.dump(obj, :indent => 2)
+    xml = Ox.dump(obj, :indent => 2, :circular => $circular)
     #puts "*** ox:\n#{xml}"
   end
   $ox_dump_time = Time.now - start
@@ -171,7 +173,7 @@ def perf_write(d)
   if !$ox_only
     start = Time.now
     (1..$iter).each do
-      m = Marshal.dump(obj)
+      m = Marshal.dump(obj, circular: $circular)
       File.open(marshal_filename, "w") { |f| f.write(m) }
     end
     mars_write_time = Time.now - start

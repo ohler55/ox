@@ -79,6 +79,7 @@ typedef enum {
     SymbolCode     = 'm',
     FalseClassCode = 'n',
     ObjectCode     = 'o',
+    RefCode        = 'p',
     RangeCode      = 'r',
     StringCode     = 's',
     TimeCode       = 't',
@@ -112,6 +113,13 @@ typedef struct _ParseCallbacks {
     void        (*end_element)(PInfo pi, const char *ename);
 } *ParseCallbacks;
 
+typedef struct _CircArray {
+    VALUE               obj_array[1024];
+    VALUE               *objs;
+    unsigned long       size; // allocated size or initial array size
+    unsigned long       cnt;
+} *CircArray;
+
 /* parse information structure */
 struct _PInfo {
     struct _Helper      helpers[MAX_DEPTH];
@@ -120,14 +128,16 @@ struct _PInfo {
     char	        *s;		/* current position in buffer */
     VALUE               obj;
     ParseCallbacks      pcb;
+    CircArray           circ_array;
+    unsigned long       id;             /* set for text types when cirs_array is set */
     int                 trace;
 };
 
 extern VALUE    parse(char *xml, ParseCallbacks pcb, char **endp, int trace);
 extern void     _raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
 
-extern char*    write_obj_to_str(VALUE obj, int indent, int xsd_date);
-extern void     write_obj_to_file(VALUE obj, const char *path, int indent, int xsd_date);
+extern char*    write_obj_to_str(VALUE obj, int indent, int xsd_date, int circular);
+extern void     write_obj_to_file(VALUE obj, const char *path, int indent, int xsd_date, int circular);
 
 extern VALUE    Ox;
 

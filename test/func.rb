@@ -142,6 +142,36 @@ class Func < ::Test::Unit::TestCase
     dump_and_load(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, {b: 3, a: [5]}, c: Bag.new(:@x => 7)]), false)
   end
 
+  # Create an Object and an Array with the same Objects in them. Dump and load
+  # and then change the ones in the loaded Object to verify that the ones in
+  # the array change in the same way. They are the same objects so they should
+  # change. Perform the operation on both the object before and the loaded so
+  # the equal() method can be used.
+  def test_circular
+    a = [1]
+    s = "a,b,c"
+    h = { 1 => 2 }
+    e = Ox::Element.new('Zoo')
+    e[:cage] = 'bear'
+    b = Bag.new(:@a => a, :@s => s, :@h => h, :@e => e)
+    a << s
+    a << h
+    a << e
+    a << b
+    loaded = dump_and_load(b, false, true)
+    # modify the string
+    loaded.instance_variable_get(:@s).gsub!(',', '_')
+    b.instance_variable_get(:@s).gsub!(',', '_')
+    # modify hash
+    loaded.instance_variable_get(:@h)[1] = 3
+    b.instance_variable_get(:@h)[1] = 3
+    # modify Element
+    loaded.instance_variable_get(:@e)['pen'] = 'zebra'
+    b.instance_variable_get(:@e)['pen'] = 'zebra'
+    # pp loaded
+    assert_equal(b, loaded)
+  end
+
   def test_raw
     raw = Ox::Element.new('raw')
     su = Ox::Element.new('sushi')
@@ -153,11 +183,12 @@ class Func < ::Test::Unit::TestCase
     dump_and_load(Bag.new(:@raw => raw), false)
   end
 
-  def dump_and_load(obj, trace=false)
-    xml = Ox.dump(obj, :indent => $indent)
+  def dump_and_load(obj, trace=false, circular=false)
+    xml = Ox.dump(obj, :indent => $indent, :circular => circular)
     puts xml if trace
     loaded = Ox.load(xml, :mode => :object, :trace => (trace ? 2 : 0))
     assert_equal(obj, loaded)
+    loaded
   end
 
 end

@@ -95,6 +95,7 @@ parse(char *xml, ParseCallbacks pcb, char **endp, int trace) {
     pi.h = 0;
     pi.pcb = pcb;
     pi.obj = Qnil;
+    pi.circ_array = 0;
     pi.trace = trace;
     while (1) {
 	next_non_white(&pi);	// skip white space

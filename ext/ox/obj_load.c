@@ -49,11 +49,17 @@ static VALUE    parse_xsd_time(const char *text, VALUE clas);
 static VALUE    parse_double_time(const char *text, VALUE clas);
 static VALUE    parse_regexp(const char *text);
 
-static VALUE    get_var_sym_from_attrs(Attr a);
-static VALUE    get_obj_from_attrs(Attr a);
-static VALUE    get_class_from_attrs(Attr a);
-static void     debug_stack(PInfo pi, const char *comment);
-static void     fill_indent(PInfo pi, char *buf, size_t size);
+static VALUE            get_var_sym_from_attrs(Attr a);
+static VALUE            get_obj_from_attrs(Attr a);
+static VALUE            get_class_from_attrs(Attr a);
+static unsigned long    get_id_from_attrs(PInfo pi, Attr a);
+static CircArray        circ_array_new(void);
+static void             circ_array_free(CircArray ca);
+static void             circ_array_set(CircArray ca, VALUE obj, unsigned long id);
+static VALUE            circ_array_get(CircArray ca, unsigned long id);
+
+static void             debug_stack(PInfo pi, const char *comment);
+static void             fill_indent(PInfo pi, char *buf, size_t size);
 
 
 struct _ParseCallbacks   _ox_obj_callbacks = {
@@ -193,6 +199,79 @@ get_class_from_attrs(Attr a) {
     return Qundef;
 }
 
+static unsigned long
+get_id_from_attrs(PInfo pi, Attr a) {
+    for (; 0 != a->name; a++) {
+        if ('i' == *a->name && '\0' == *(a->name + 1)) {
+            unsigned long       id = 0;
+            const char          *text = a->value;
+            char                c;
+            
+            for (; '\0' != *text; text++) {
+                c = *text;
+                if ('0' <= c && c <= '9') {
+                    id = id * 10 + (c - '0');
+                } else {
+                    raise_error("bad number format", pi->str, pi->s);
+                }
+            }
+            return id;
+        }
+    }
+    return 0;
+}
+
+static CircArray
+circ_array_new() {
+    CircArray   ca;
+    
+    if (0 == (ca = (CircArray)malloc(sizeof(struct _CircArray)))) {
+        rb_raise(rb_eStandardError, "not enough memory\n");
+    }
+    ca->objs = ca->obj_array;
+    ca->size = sizeof(ca->obj_array) / sizeof(VALUE);
+    ca->cnt = 0;
+    
+    return ca;
+}
+
+static void
+circ_array_free(CircArray ca) {
+    if (ca->objs != ca->obj_array) {
+        free(ca->objs);
+    }
+    free(ca);
+}
+
+static void
+circ_array_set(CircArray ca, VALUE obj, unsigned long id) {
+    if (0 < id) {
+        unsigned long   i;
+
+        if (ca->size < id) {
+            // allocate more space
+        }
+        id--;
+        for (i = ca->cnt; i < id; i++) {
+            ca->objs[i] = Qundef;
+        }
+        ca->objs[id] = obj;
+        if (ca->cnt <= id) {
+            ca->cnt = id + 1;
+        }
+    }
+}
+
+static VALUE
+circ_array_get(CircArray ca, unsigned long id) {
+    VALUE       obj = Qundef;
+
+    if (id <= ca->cnt) {
+        obj = ca->objs[id - 1];
+    }
+    return obj;
+}
+
 static VALUE
 parse_regexp(const char *text) {
     const char  *te;
@@ -225,6 +304,9 @@ add_text(PInfo pi, char *text, int closed) {
     case NoCode:
     case StringCode:
         pi->h->obj = rb_str_new2(text);
+        if (0 != pi->circ_array) {
+            circ_array_set(pi->circ_array, pi->h->obj, (unsigned long)pi->id);
+        }
         break;
     case FixnumCode:
     {
@@ -273,6 +355,7 @@ add_text(PInfo pi, char *text, int closed) {
         char            buf[1024];
         char            *str = buf;
         unsigned long   str_size = b64_orig_size(text);
+        VALUE           v;
         
         if (sizeof(buf) <= str_size) {
             if (0 == (str = (char*)malloc(str_size + 1))) {
@@ -280,7 +363,11 @@ add_text(PInfo pi, char *text, int closed) {
             }
         }
         from_base64(text, (u_char*)str);
-        pi->h->obj = rb_str_new(str, str_size);
+        v = rb_str_new(str, str_size);
+        if (0 != pi->circ_array) {
+            circ_array_set(pi->circ_array, v, (unsigned long)pi->h->obj);
+        }
+        pi->h->obj = v;
         if (sizeof(buf) <= str_size) {
             free(str);
         }
@@ -317,8 +404,9 @@ add_text(PInfo pi, char *text, int closed) {
 
 static void
 add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
-    Attr        a;
-    Helper      h;
+    Attr                a;
+    Helper              h;
+    unsigned long       id;
 
     if (TRACE <= pi->trace) {
         char    buf[1024];
@@ -341,6 +429,9 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     }
     if (0 == pi->h) { // top level object
         pi->h = pi->helpers;
+        if (0 != (id = get_id_from_attrs(pi, attrs))) {
+            pi->circ_array = circ_array_new();
+        }
     } else {
         pi->h++;
     }
@@ -361,25 +452,41 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         h->obj = Qfalse;
         break;
     case StringCode:
-        h->obj = empty_string; // will be replaced by add_text
+        // h->obj will be replaced by add_text if it is called
+        h->obj = empty_string;
+        if (0 != pi->circ_array) {
+            pi->id = get_id_from_attrs(pi, attrs);
+            circ_array_set(pi->circ_array, h->obj, pi->id);
+        }
         break;
     case FixnumCode:
     case FloatCode:
     case SymbolCode:
-    case Base64Code:
     case RegexpCode:
     case BignumCode:
     case ComplexCode:
-    case RationalCode: // sub elements read next
     case TimeCode:
+    case RationalCode: // sub elements read next
         // value will be read in the following add_text
         h->obj = Qundef;
         break;
+    case Base64Code:
+        h->obj = Qundef;
+        if (0 != pi->circ_array) {
+            pi->id = get_id_from_attrs(pi, attrs);
+        }
+        break;
     case ArrayCode:
         h->obj = rb_ary_new();
+        if (0 != pi->circ_array) {
+            circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+        }
         break;
     case HashCode:
         h->obj = rb_hash_new();
+        if (0 != pi->circ_array) {
+            circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+        }
         break;
     case RangeCode:
         h->obj = rb_range_new(zero_fixnum, zero_fixnum, Qfalse);
@@ -387,18 +494,36 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     case RawCode:
         if (hasChildren) {
             h->obj = parse(pi->s, ox_gen_callbacks, &pi->s, pi->trace);
+            if (0 != pi->circ_array) {
+                circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+            }
         } else {
             h->obj = Qnil;
         }
         break;
     case ObjectCode:
         h->obj = get_obj_from_attrs(attrs);
+        if (0 != pi->circ_array) {
+            circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+        }
         break;
     case StructCode:
         h->obj = get_struct_from_attrs(attrs);
+        if (0 != pi->circ_array) {
+            circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+        }
         break;
     case ClassCode:
         h->obj = get_class_from_attrs(attrs);
+        break;
+    case RefCode:
+        h->obj = Qundef;
+        if (0 != pi->circ_array) {
+            h->obj = circ_array_get(pi->circ_array, get_id_from_attrs(pi, attrs));
+        }
+        if (Qundef == h->obj) {
+            raise_error("Invalid circular reference", pi->str, pi->s);
+        }
         break;
     default:
         raise_error("Invalid element name", pi->str, pi->s);
@@ -427,6 +552,10 @@ end_element(PInfo pi, const char *ename) {
     if (0 != pi->h && pi->helpers <= pi->h) {
         Helper  h = pi->h;
 
+        if (empty_string == h->obj) {
+            // special catch for empty strings
+            h->obj = rb_str_new2("");
+        }
         pi->obj = h->obj;
         pi->h--;
         if (pi->helpers <= pi->h) {
@@ -478,6 +607,10 @@ end_element(PInfo pi, const char *ename) {
                 break;
             }
         }
+    }
+    if (0 != pi->circ_array && pi->helpers > pi->h) {
+        circ_array_free(pi->circ_array);
+        pi->circ_array = 0;
     }
     if (DEBUG <= pi->trace) {
         debug_stack(pi, "   ----------");
