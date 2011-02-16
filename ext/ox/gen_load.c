@@ -140,11 +140,6 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
             VALUE   *slot;
 
             if (Qundef == (sym = ox_cache_get(symbol_cache, attrs->name, &slot))) {
-                if (0 == strchr(attrs->name, ':')) {
-                    sym = ID2SYM(rb_intern(attrs->name));
-                } else {
-                    sym = rb_str_new2(attrs->name);
-                }
                 sym = ID2SYM(rb_intern(attrs->name));
                 *slot = sym;
             }

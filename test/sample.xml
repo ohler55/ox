@@ -1,1652 +1,1684 @@
 <?xml version="1.0"?>
-<o c="Test::Ox::Dir" i="1">
-<s a="@name" i="2">..</s>
-<t a="@ctime">1297599355.000000</t>
-<t a="@mtime">1297599355.000000</t>
-<i a="@size">544</i>
-<s a="@owner" i="3">ohler</s>
-<s a="@group" i="4">staff</s>
-<h a="@permissions" i="5">
-<m>user</m>
-<s i="6">rwx</s>
-<m>group</m>
-<s i="7">r-x</s>
-<m>other</m>
-<s i="8">r-x</s>
-</h>
-<a a="@files" i="9">
-<o c="Test::Ox::Dir" i="10">
-<s a="@name" i="11">doc</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">102</i>
-<s a="@owner" i="12">ohler</s>
-<s a="@group" i="13">staff</s>
-<h a="@permissions" i="14">
-<m>user</m>
-<s i="15">rwx</s>
-<m>group</m>
-<s i="16">r-x</s>
-<m>other</m>
-<s i="17">r-x</s>
-</h>
-<a a="@files" i="18"/>
-</o>
-<o c="Test::Ox::Dir" i="19">
-<s a="@name" i="20">ext</s>
-<t a="@ctime">1291368169.000000</t>
-<t a="@mtime">1291368169.000000</t>
-<i a="@size">136</i>
-<s a="@owner" i="21">ohler</s>
-<s a="@group" i="22">staff</s>
-<h a="@permissions" i="23">
-<m>user</m>
-<s i="24">rwx</s>
-<m>group</m>
-<s i="25">r-x</s>
-<m>other</m>
-<s i="26">r-x</s>
-</h>
-<a a="@files" i="27">
-<o c="Test::Ox::Dir" i="28">
-<s a="@name" i="29">ox</s>
-<t a="@ctime">1297601388.000000</t>
-<t a="@mtime">1297601388.000000</t>
-<i a="@size">1020</i>
-<s a="@owner" i="30">ohler</s>
-<s a="@group" i="31">staff</s>
-<h a="@permissions" i="32">
-<m>user</m>
-<s i="33">rwx</s>
-<m>group</m>
-<s i="34">r-x</s>
-<m>other</m>
-<s i="35">r-x</s>
-</h>
-<a a="@files" i="36">
-<o c="Test::Ox::File" i="37">
-<s a="@name" i="38">base64.c</s>
-<t a="@ctime">1296269212.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">4536</i>
-<s a="@owner" i="39">ohler</s>
-<s a="@group" i="40">staff</s>
-<h a="@permissions" i="41">
-<m>user</m>
-<s i="42">rw-</s>
-<m>group</m>
-<s i="43">r--</s>
-<m>other</m>
-<s i="44">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="45">
-<s a="@name" i="46">base64.h</s>
-<t a="@ctime">1297005388.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">1919</i>
-<s a="@owner" i="47">ohler</s>
-<s a="@group" i="48">staff</s>
-<h a="@permissions" i="49">
-<m>user</m>
-<s i="50">rw-</s>
-<m>group</m>
-<s i="51">r--</s>
-<m>other</m>
-<s i="52">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="53">
-<s a="@name" i="54">base64.o</s>
-<t a="@ctime">1297601387.000000</t>
-<t a="@mtime">1297601387.000000</t>
-<i a="@size">6100</i>
-<s a="@owner" i="55">ohler</s>
-<s a="@group" i="56">staff</s>
-<h a="@permissions" i="57">
-<m>user</m>
-<s i="58">rw-</s>
-<m>group</m>
-<s i="59">r--</s>
-<m>other</m>
-<s i="60">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="61">
-<s a="@name" i="62">cache.c</s>
-<t a="@ctime">1296269212.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">5214</i>
-<s a="@owner" i="63">ohler</s>
-<s a="@group" i="64">staff</s>
-<h a="@permissions" i="65">
-<m>user</m>
-<s i="66">rw-</s>
-<m>group</m>
-<s i="67">r--</s>
-<m>other</m>
-<s i="68">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="69">
-<s a="@name" i="70">cache.h</s>
-<t a="@ctime">1296789099.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">1877</i>
-<s a="@owner" i="71">ohler</s>
-<s a="@group" i="72">staff</s>
-<h a="@permissions" i="73">
-<m>user</m>
-<s i="74">rw-</s>
-<m>group</m>
-<s i="75">r--</s>
-<m>other</m>
-<s i="76">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="77">
-<s a="@name" i="78">cache.o</s>
-<t a="@ctime">1297601387.000000</t>
-<t a="@mtime">1297601387.000000</t>
-<i a="@size">8768</i>
-<s a="@owner" i="79">ohler</s>
-<s a="@group" i="80">staff</s>
-<h a="@permissions" i="81">
-<m>user</m>
-<s i="82">rw-</s>
-<m>group</m>
-<s i="83">r--</s>
-<m>other</m>
-<s i="84">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="85">
-<s a="@name" i="86">cache8.c</s>
-<t a="@ctime">1297599355.000000</t>
-<t a="@mtime">1297599355.000000</t>
-<i a="@size">1847</i>
-<s a="@owner" i="87">ohler</s>
-<s a="@group" i="88">staff</s>
-<h a="@permissions" i="89">
-<m>user</m>
-<s i="90">rw-</s>
-<m>group</m>
-<s i="91">r--</s>
-<m>other</m>
-<s i="92">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="93">
-<s a="@name" i="94">cache8.h</s>
-<t a="@ctime">1297599355.000000</t>
-<t a="@mtime">1297599355.000000</t>
-<i a="@size">1915</i>
-<s a="@owner" i="95">ohler</s>
-<s a="@group" i="96">staff</s>
-<h a="@permissions" i="97">
-<m>user</m>
-<s i="98">rw-</s>
-<m>group</m>
-<s i="99">r--</s>
-<m>other</m>
-<s i="100">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="101">
-<s a="@name" i="102">cache8.o</s>
-<t a="@ctime">1297601387.000000</t>
-<t a="@mtime">1297601387.000000</t>
-<i a="@size">11276</i>
-<s a="@owner" i="103">ohler</s>
-<s a="@group" i="104">staff</s>
-<h a="@permissions" i="105">
-<m>user</m>
-<s i="106">rw-</s>
-<m>group</m>
-<s i="107">r--</s>
-<m>other</m>
-<s i="108">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="109">
-<s a="@name" i="110">cache8_test.c</s>
-<t a="@ctime">1297599355.000000</t>
-<t a="@mtime">1297599355.000000</t>
-<i a="@size">2542</i>
-<s a="@owner" i="111">ohler</s>
-<s a="@group" i="112">staff</s>
-<h a="@permissions" i="113">
-<m>user</m>
-<s i="114">rw-</s>
-<m>group</m>
-<s i="115">r--</s>
-<m>other</m>
-<s i="116">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="117">
-<s a="@name" i="118">cache8_test.o</s>
-<t a="@ctime">1297601387.000000</t>
-<t a="@mtime">1297601387.000000</t>
-<i a="@size">3952</i>
-<s a="@owner" i="119">ohler</s>
-<s a="@group" i="120">staff</s>
-<h a="@permissions" i="121">
-<m>user</m>
-<s i="122">rw-</s>
-<m>group</m>
-<s i="123">r--</s>
-<m>other</m>
-<s i="124">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="125">
-<s a="@name" i="126">cache_test.c</s>
-<t a="@ctime">1296269212.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">2493</i>
-<s a="@owner" i="127">ohler</s>
-<s a="@group" i="128">staff</s>
-<h a="@permissions" i="129">
-<m>user</m>
-<s i="130">rw-</s>
-<m>group</m>
-<s i="131">r--</s>
-<m>other</m>
-<s i="132">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="133">
-<s a="@name" i="134">cache_test.o</s>
-<t a="@ctime">1297601387.000000</t>
-<t a="@mtime">1297601387.000000</t>
-<i a="@size">4856</i>
-<s a="@owner" i="135">ohler</s>
-<s a="@group" i="136">staff</s>
-<h a="@permissions" i="137">
-<m>user</m>
-<s i="138">rw-</s>
-<m>group</m>
-<s i="139">r--</s>
-<m>other</m>
-<s i="140">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="141">
-<s a="@name" i="142">dump.c</s>
-<t a="@ctime">1297599355.000000</t>
-<t a="@mtime">1297599355.000000</t>
-<i a="@size">26509</i>
-<s a="@owner" i="143">ohler</s>
-<s a="@group" i="144">staff</s>
-<h a="@permissions" i="145">
-<m>user</m>
-<s i="146">rw-</s>
-<m>group</m>
-<s i="147">r--</s>
-<m>other</m>
-<s i="148">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="149">
-<s a="@name" i="150">dump.o</s>
-<t a="@ctime">1297601388.000000</t>
-<t a="@mtime">1297601388.000000</t>
-<i a="@size">63084</i>
-<s a="@owner" i="151">ohler</s>
-<s a="@group" i="152">staff</s>
-<h a="@permissions" i="153">
-<m>user</m>
-<s i="154">rw-</s>
-<m>group</m>
-<s i="155">r--</s>
-<m>other</m>
-<s i="156">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="157">
-<s a="@name" i="158">extconf.rb</s>
-<t a="@ctime">1293088302.000000</t>
-<t a="@mtime">1293088302.000000</t>
-<i a="@size">155</i>
-<s a="@owner" i="159">ohler</s>
-<s a="@group" i="160">staff</s>
-<h a="@permissions" i="161">
-<m>user</m>
-<s i="162">rw-</s>
-<m>group</m>
-<s i="163">r--</s>
-<m>other</m>
-<s i="164">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="165">
-<s a="@name" i="166">gen_load.c</s>
-<t a="@ctime">1296874345.000000</t>
-<t a="@mtime">1296874345.000000</t>
-<i a="@size">5516</i>
-<s a="@owner" i="167">ohler</s>
-<s a="@group" i="168">staff</s>
-<h a="@permissions" i="169">
-<m>user</m>
-<s i="170">rw-</s>
-<m>group</m>
-<s i="171">r--</s>
-<m>other</m>
-<s i="172">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="173">
-<s a="@name" i="174">gen_load.o</s>
-<t a="@ctime">1297601388.000000</t>
-<t a="@mtime">1297601388.000000</t>
-<i a="@size">12600</i>
-<s a="@owner" i="175">ohler</s>
-<s a="@group" i="176">staff</s>
-<h a="@permissions" i="177">
-<m>user</m>
-<s i="178">rw-</s>
-<m>group</m>
-<s i="179">r--</s>
-<m>other</m>
-<s i="180">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="181">
-<s a="@name" i="182">Makefile</s>
-<t a="@ctime">1297601382.000000</t>
-<t a="@mtime">1297601382.000000</t>
-<i a="@size">5423</i>
-<s a="@owner" i="183">ohler</s>
-<s a="@group" i="184">staff</s>
-<h a="@permissions" i="185">
-<m>user</m>
-<s i="186">rw-</s>
-<m>group</m>
-<s i="187">r--</s>
-<m>other</m>
-<s i="188">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="189">
-<s a="@name" i="190">obj_load.c</s>
-<t a="@ctime">1297599355.000000</t>
-<t a="@mtime">1297599355.000000</t>
-<i a="@size">21522</i>
-<s a="@owner" i="191">ohler</s>
-<s a="@group" i="192">staff</s>
-<h a="@permissions" i="193">
-<m>user</m>
-<s i="194">rw-</s>
-<m>group</m>
-<s i="195">r--</s>
-<m>other</m>
-<s i="196">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="197">
-<s a="@name" i="198">obj_load.o</s>
-<t a="@ctime">1297601388.000000</t>
-<t a="@mtime">1297601388.000000</t>
-<i a="@size">40656</i>
-<s a="@owner" i="199">ohler</s>
-<s a="@group" i="200">staff</s>
-<h a="@permissions" i="201">
-<m>user</m>
-<s i="202">rw-</s>
-<m>group</m>
-<s i="203">r--</s>
-<m>other</m>
-<s i="204">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="205">
-<s a="@name" i="206">ox.bundle</s>
-<t a="@ctime">1297601388.000000</t>
-<t a="@mtime">1297601388.000000</t>
-<i a="@size">73776</i>
-<s a="@owner" i="207">ohler</s>
-<s a="@group" i="208">staff</s>
-<h a="@permissions" i="209">
-<m>user</m>
-<s i="210">rwx</s>
-<m>group</m>
-<s i="211">r-x</s>
-<m>other</m>
-<s i="212">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="213">
-<s a="@name" i="214">ox.c</s>
-<t a="@ctime">1297599355.000000</t>
-<t a="@mtime">1297599355.000000</t>
-<i a="@size">14039</i>
-<s a="@owner" i="215">ohler</s>
-<s a="@group" i="216">staff</s>
-<h a="@permissions" i="217">
-<m>user</m>
-<s i="218">rw-</s>
-<m>group</m>
-<s i="219">r--</s>
-<m>other</m>
-<s i="220">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="221">
-<s a="@name" i="222">ox.h</s>
-<t a="@ctime">1297599355.000000</t>
-<t a="@mtime">1297599355.000000</t>
-<i a="@size">5948</i>
-<s a="@owner" i="223">ohler</s>
-<s a="@group" i="224">staff</s>
-<h a="@permissions" i="225">
-<m>user</m>
-<s i="226">rw-</s>
-<m>group</m>
-<s i="227">r--</s>
-<m>other</m>
-<s i="228">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="229">
-<s a="@name" i="230">ox.o</s>
-<t a="@ctime">1297601388.000000</t>
-<t a="@mtime">1297601388.000000</t>
-<i a="@size">34660</i>
-<s a="@owner" i="231">ohler</s>
-<s a="@group" i="232">staff</s>
-<h a="@permissions" i="233">
-<m>user</m>
-<s i="234">rw-</s>
-<m>group</m>
-<s i="235">r--</s>
-<m>other</m>
-<s i="236">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="237">
-<s a="@name" i="238">parse.c</s>
-<t a="@ctime">1297599355.000000</t>
-<t a="@mtime">1297599355.000000</t>
-<i a="@size">15605</i>
-<s a="@owner" i="239">ohler</s>
-<s a="@group" i="240">staff</s>
-<h a="@permissions" i="241">
-<m>user</m>
-<s i="242">rw-</s>
-<m>group</m>
-<s i="243">r--</s>
-<m>other</m>
-<s i="244">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="245">
-<s a="@name" i="246">parse.o</s>
-<t a="@ctime">1297601388.000000</t>
-<t a="@mtime">1297601388.000000</t>
-<i a="@size">25232</i>
-<s a="@owner" i="247">ohler</s>
-<s a="@group" i="248">staff</s>
-<h a="@permissions" i="249">
-<m>user</m>
-<s i="250">rw-</s>
-<m>group</m>
-<s i="251">r--</s>
-<m>other</m>
-<s i="252">r--</s>
-</h>
-</o>
-</a>
-</o>
-</a>
-</o>
-<o c="Test::Ox::Dir" i="253">
-<s a="@name" i="254">lib</s>
-<t a="@ctime">1296269212.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">170</i>
-<s a="@owner" i="255">ohler</s>
-<s a="@group" i="256">staff</s>
-<h a="@permissions" i="257">
-<m>user</m>
-<s i="258">rwx</s>
-<m>group</m>
-<s i="259">r-x</s>
-<m>other</m>
-<s i="260">r-x</s>
-</h>
-<a a="@files" i="261">
-<o c="Test::Ox::Dir" i="262">
-<s a="@name" i="263">ox</s>
-<t a="@ctime">1296874622.000000</t>
-<t a="@mtime">1296874622.000000</t>
-<i a="@size">306</i>
-<s a="@owner" i="264">ohler</s>
-<s a="@group" i="265">staff</s>
-<h a="@permissions" i="266">
-<m>user</m>
-<s i="267">rwx</s>
-<m>group</m>
-<s i="268">r-x</s>
-<m>other</m>
-<s i="269">r-x</s>
-</h>
-<a a="@files" i="270">
-<o c="Test::Ox::File" i="271">
-<s a="@name" i="272">cdata.rb</s>
-<t a="@ctime">1296269212.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">233</i>
-<s a="@owner" i="273">ohler</s>
-<s a="@group" i="274">staff</s>
-<h a="@permissions" i="275">
-<m>user</m>
-<s i="276">rw-</s>
-<m>group</m>
-<s i="277">r--</s>
-<m>other</m>
-<s i="278">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="279">
-<s a="@name" i="280">comment.rb</s>
-<t a="@ctime">1296269212.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">297</i>
-<s a="@owner" i="281">ohler</s>
-<s a="@group" i="282">staff</s>
-<h a="@permissions" i="283">
-<m>user</m>
-<s i="284">rw-</s>
-<m>group</m>
-<s i="285">r--</s>
-<m>other</m>
-<s i="286">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="287">
-<s a="@name" i="288">doctype.rb</s>
-<t a="@ctime">1297005388.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">291</i>
-<s a="@owner" i="289">ohler</s>
-<s a="@group" i="290">staff</s>
-<h a="@permissions" i="291">
-<m>user</m>
-<s i="292">rw-</s>
-<m>group</m>
-<s i="293">r--</s>
-<m>other</m>
-<s i="294">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="295">
-<s a="@name" i="296">document.rb</s>
-<t a="@ctime">1297005388.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">792</i>
-<s a="@owner" i="297">ohler</s>
-<s a="@group" i="298">staff</s>
-<h a="@permissions" i="299">
-<m>user</m>
-<s i="300">rw-</s>
-<m>group</m>
-<s i="301">r--</s>
-<m>other</m>
-<s i="302">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="303">
-<s a="@name" i="304">element.rb</s>
-<t a="@ctime">1296874622.000000</t>
-<t a="@mtime">1296874622.000000</t>
-<i a="@size">2058</i>
-<s a="@owner" i="305">ohler</s>
-<s a="@group" i="306">staff</s>
-<h a="@permissions" i="307">
-<m>user</m>
-<s i="308">rw-</s>
-<m>group</m>
-<s i="309">r--</s>
-<m>other</m>
-<s i="310">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="311">
-<s a="@name" i="312">node.rb</s>
-<t a="@ctime">1296269212.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">645</i>
-<s a="@owner" i="313">ohler</s>
-<s a="@group" i="314">staff</s>
-<h a="@permissions" i="315">
-<m>user</m>
-<s i="316">rw-</s>
-<m>group</m>
-<s i="317">r--</s>
-<m>other</m>
-<s i="318">r--</s>
-</h>
-</o>
-</a>
-</o>
-<o c="Test::Ox::File" i="319">
-<s a="@name" i="320">ox.rb</s>
-<t a="@ctime">1297005388.000000</t>
-<t a="@mtime">1296269212.000000</t>
-<i a="@size">3168</i>
-<s a="@owner" i="321">ohler</s>
-<s a="@group" i="322">staff</s>
-<h a="@permissions" i="323">
-<m>user</m>
-<s i="324">rw-</s>
-<m>group</m>
-<s i="325">r--</s>
-<m>other</m>
-<s i="326">r--</s>
-</h>
-</o>
-</a>
-</o>
-<o c="Test::Ox::File" i="327">
-<s a="@name" i="328">LICENSE</s>
-<t a="@ctime">1296131588.000000</t>
-<t a="@mtime">1296131588.000000</t>
-<i a="@size">1488</i>
-<s a="@owner" i="329">ohler</s>
-<s a="@group" i="330">staff</s>
-<h a="@permissions" i="331">
-<m>user</m>
-<s i="332">rw-</s>
-<m>group</m>
-<s i="333">r--</s>
-<m>other</m>
-<s i="334">r--</s>
-</h>
-</o>
-<o c="Test::Ox::Dir" i="335">
-<s a="@name" i="336">misc</s>
-<t a="@ctime">1291368218.000000</t>
-<t a="@mtime">1291368218.000000</t>
-<i a="@size">238</i>
-<s a="@owner" i="337">ohler</s>
-<s a="@group" i="338">staff</s>
-<h a="@permissions" i="339">
-<m>user</m>
-<s i="340">rwx</s>
-<m>group</m>
-<s i="341">r-x</s>
-<m>other</m>
-<s i="342">r-x</s>
-</h>
-<a a="@files" i="343">
-<o c="Test::Ox::File" i="344">
-<s a="@name" i="345">load_cfg.rb</s>
-<t a="@ctime">1291368218.000000</t>
-<t a="@mtime">1291368218.000000</t>
-<i a="@size">1273</i>
-<s a="@owner" i="346">ohler</s>
-<s a="@group" i="347">staff</s>
-<h a="@permissions" i="348">
-<m>user</m>
-<s i="349">rwx</s>
-<m>group</m>
-<s i="350">r-x</s>
-<m>other</m>
-<s i="351">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="352">
-<s a="@name" i="353">Ruby_C.pdf</s>
-<t a="@ctime">1291368218.000000</t>
-<t a="@mtime">1291368218.000000</t>
-<i a="@size">694019</i>
-<s a="@owner" i="354">ohler</s>
-<s a="@group" i="355">staff</s>
-<h a="@permissions" i="356">
-<m>user</m>
-<s i="357">rw-</s>
-<m>group</m>
-<s i="358">r--</s>
-<m>other</m>
-<s i="359">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="360">
-<s a="@name" i="361">Ruby_C2.2.pdf</s>
-<t a="@ctime">1291368218.000000</t>
-<t a="@mtime">1291368218.000000</t>
-<i a="@size">673287</i>
-<s a="@owner" i="362">ohler</s>
-<s a="@group" i="363">staff</s>
-<h a="@permissions" i="364">
-<m>user</m>
-<s i="365">rw-</s>
-<m>group</m>
-<s i="366">r--</s>
-<m>other</m>
-<s i="367">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="368">
-<s a="@name" i="369">Ruby_C2.pdf</s>
-<t a="@ctime">1291368218.000000</t>
-<t a="@mtime">1291368218.000000</t>
-<i a="@size">1147160</i>
-<s a="@owner" i="370">ohler</s>
-<s a="@group" i="371">staff</s>
-<h a="@permissions" i="372">
-<m>user</m>
-<s i="373">rw-</s>
-<m>group</m>
-<s i="374">r--</s>
-<m>other</m>
-<s i="375">r--</s>
-</h>
-</o>
-</a>
-</o>
-<o c="Test::Ox::File" i="376">
-<s a="@name" i="377">notes</s>
-<t a="@ctime">1297599355.000000</t>
-<t a="@mtime">1297599355.000000</t>
-<i a="@size">256</i>
-<s a="@owner" i="378">ohler</s>
-<s a="@group" i="379">staff</s>
-<h a="@permissions" i="380">
-<m>user</m>
-<s i="381">rw-</s>
-<m>group</m>
-<s i="382">r--</s>
-<m>other</m>
-<s i="383">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="384">
-<s a="@name" i="385">ox-1.0.0.gem</s>
-<t a="@ctime">1295700974.000000</t>
-<t a="@mtime">1295700974.000000</t>
-<i a="@size">33280</i>
-<s a="@owner" i="386">ohler</s>
-<s a="@group" i="387">staff</s>
-<h a="@permissions" i="388">
-<m>user</m>
-<s i="389">rw-</s>
-<m>group</m>
-<s i="390">r--</s>
-<m>other</m>
-<s i="391">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="392">
-<s a="@name" i="393">ox.gemspec</s>
-<t a="@ctime">1295599902.000000</t>
-<t a="@mtime">1295599902.000000</t>
-<i a="@size">732</i>
-<s a="@owner" i="394">ohler</s>
-<s a="@group" i="395">staff</s>
-<h a="@permissions" i="396">
-<m>user</m>
-<s i="397">rw-</s>
-<m>group</m>
-<s i="398">r--</s>
-<m>other</m>
-<s i="399">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="400">
-<s a="@name" i="401">ox.gemspec~</s>
-<t a="@ctime">1295264281.000000</t>
-<t a="@mtime">1295264281.000000</t>
-<i a="@size">1400</i>
-<s a="@owner" i="402">ohler</s>
-<s a="@group" i="403">staff</s>
-<h a="@permissions" i="404">
-<m>user</m>
-<s i="405">rw-</s>
-<m>group</m>
-<s i="406">r--</s>
-<m>other</m>
-<s i="407">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="408">
-<s a="@name" i="409">README</s>
-<t a="@ctime">1296876957.000000</t>
-<t a="@mtime">1296876957.000000</t>
-<i a="@size">2465</i>
-<s a="@owner" i="410">ohler</s>
-<s a="@group" i="411">staff</s>
-<h a="@permissions" i="412">
-<m>user</m>
-<s i="413">rw-</s>
-<m>group</m>
-<s i="414">r--</s>
-<m>other</m>
-<s i="415">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="416">
-<s a="@name" i="417">svn-prop.tmp~</s>
-<t a="@ctime">1295883032.000000</t>
-<t a="@mtime">1295269514.000000</t>
-<i a="@size">10</i>
-<s a="@owner" i="418">ohler</s>
-<s a="@group" i="419">staff</s>
-<h a="@permissions" i="420">
-<m>user</m>
-<s i="421">rw-</s>
-<m>group</m>
-<s i="422">r--</s>
-<m>other</m>
-<s i="423">r--</s>
-</h>
-</o>
-<o c="Test::Ox::Dir" i="424">
-<s a="@name" i="425">test</s>
-<t a="@ctime">1297599354.000000</t>
-<t a="@mtime">1297599354.000000</t>
-<i a="@size">884</i>
-<s a="@owner" i="426">ohler</s>
-<s a="@group" i="427">staff</s>
-<h a="@permissions" i="428">
-<m>user</m>
-<s i="429">rwx</s>
-<m>group</m>
-<s i="430">r-x</s>
-<m>other</m>
-<s i="431">r-x</s>
-</h>
-<a a="@files" i="432">
-<o c="Test::Ox::File" i="433">
-<s a="@name" i="434">#foo#</s>
-<t a="@ctime">1294745565.000000</t>
-<t a="@mtime">1294745565.000000</t>
-<i a="@size">56575</i>
-<s a="@owner" i="435">ohler</s>
-<s a="@group" i="436">staff</s>
-<h a="@permissions" i="437">
-<m>user</m>
-<s i="438">rw-</s>
-<m>group</m>
-<s i="439">r--</s>
-<m>other</m>
-<s i="440">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="441">
-<s a="@name" i="442">#foo.xml#</s>
-<t a="@ctime">1294747095.000000</t>
-<t a="@mtime">1294747095.000000</t>
-<i a="@size">47173</i>
-<s a="@owner" i="443">ohler</s>
-<s a="@group" i="444">staff</s>
-<h a="@permissions" i="445">
-<m>user</m>
-<s i="446">rw-</s>
-<m>group</m>
-<s i="447">r--</s>
-<m>other</m>
-<s i="448">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="449">
-<s a="@name" i="450">attr.xml~</s>
-<t a="@ctime">1295953304.000000</t>
-<t a="@mtime">1295953304.000000</t>
-<i a="@size">11770</i>
-<s a="@owner" i="451">ohler</s>
-<s a="@group" i="452">staff</s>
-<h a="@permissions" i="453">
-<m>user</m>
-<s i="454">rw-</s>
-<m>group</m>
-<s i="455">r--</s>
-<m>other</m>
-<s i="456">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="457">
-<s a="@name" i="458">cache16_test.rb</s>
-<t a="@ctime">1293442019.000000</t>
-<t a="@mtime">1293442019.000000</t>
-<i a="@size">201</i>
-<s a="@owner" i="459">ohler</s>
-<s a="@group" i="460">staff</s>
-<h a="@permissions" i="461">
-<m>user</m>
-<s i="462">rwx</s>
-<m>group</m>
-<s i="463">r-x</s>
-<m>other</m>
-<s i="464">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="465">
-<s a="@name" i="466">cache8_test.rb</s>
-<t a="@ctime">1297599354.000000</t>
-<t a="@mtime">1297599354.000000</t>
-<i a="@size">200</i>
-<s a="@owner" i="467">ohler</s>
-<s a="@group" i="468">staff</s>
-<h a="@permissions" i="469">
-<m>user</m>
-<s i="470">rwx</s>
-<m>group</m>
-<s i="471">r-x</s>
-<m>other</m>
-<s i="472">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="473">
-<s a="@name" i="474">cache_test.rb</s>
-<t a="@ctime">1293442019.000000</t>
-<t a="@mtime">1293442019.000000</t>
-<i a="@size">199</i>
-<s a="@owner" i="475">ohler</s>
-<s a="@group" i="476">staff</s>
-<h a="@permissions" i="477">
-<m>user</m>
-<s i="478">rwx</s>
-<m>group</m>
-<s i="479">r-x</s>
-<m>other</m>
-<s i="480">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="481">
-<s a="@name" i="482">files.rb</s>
-<t a="@ctime">1294547303.000000</t>
-<t a="@mtime">1292576032.000000</t>
-<i a="@size">712</i>
-<s a="@owner" i="483">ohler</s>
-<s a="@group" i="484">staff</s>
-<h a="@permissions" i="485">
-<m>user</m>
-<s i="486">rwx</s>
-<m>group</m>
-<s i="487">r-x</s>
-<m>other</m>
-<s i="488">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="489">
-<s a="@name" i="490">func.rb</s>
-<t a="@ctime">1297599354.000000</t>
-<t a="@mtime">1297599354.000000</t>
-<i a="@size">5110</i>
-<s a="@owner" i="491">ohler</s>
-<s a="@group" i="492">staff</s>
-<h a="@permissions" i="493">
-<m>user</m>
-<s i="494">rwx</s>
-<m>group</m>
-<s i="495">r-x</s>
-<m>other</m>
-<s i="496">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="497">
-<s a="@name" i="498">gen_sample.rb</s>
-<t a="@ctime">1296118505.000000</t>
-<t a="@mtime">1295438571.000000</t>
-<i a="@size">330</i>
-<s a="@owner" i="499">ohler</s>
-<s a="@group" i="500">staff</s>
-<h a="@permissions" i="501">
-<m>user</m>
-<s i="502">rw-</s>
-<m>group</m>
-<s i="503">r--</s>
-<m>other</m>
-<s i="504">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="505">
-<s a="@name" i="506">gen_sample.rb~</s>
-<t a="@ctime">1295437514.000000</t>
-<t a="@mtime">1295437514.000000</t>
-<i a="@size">326</i>
-<s a="@owner" i="507">ohler</s>
-<s a="@group" i="508">staff</s>
-<h a="@permissions" i="509">
-<m>user</m>
-<s i="510">rw-</s>
-<m>group</m>
-<s i="511">r--</s>
-<m>other</m>
-<s i="512">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="513">
-<s a="@name" i="514">obj_sample.rb</s>
-<t a="@ctime">1296118505.000000</t>
-<t a="@mtime">1295437430.000000</t>
-<i a="@size">326</i>
-<s a="@owner" i="515">ohler</s>
-<s a="@group" i="516">staff</s>
-<h a="@permissions" i="517">
-<m>user</m>
-<s i="518">rw-</s>
-<m>group</m>
-<s i="519">r--</s>
-<m>other</m>
-<s i="520">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="521">
-<s a="@name" i="522">obj_sample.rb~</s>
-<t a="@ctime">1295436895.000000</t>
-<t a="@mtime">1295436895.000000</t>
-<i a="@size">833</i>
-<s a="@owner" i="523">ohler</s>
-<s a="@group" i="524">staff</s>
-<h a="@permissions" i="525">
-<m>user</m>
-<s i="526">rw-</s>
-<m>group</m>
-<s i="527">r--</s>
-<m>other</m>
-<s i="528">r--</s>
-</h>
-</o>
-<o c="Test::Ox::Dir" i="529">
-<s a="@name" i="530">ox</s>
-<t a="@ctime">1293705138.000000</t>
-<t a="@mtime">1293705138.000000</t>
-<i a="@size">510</i>
-<s a="@owner" i="531">ohler</s>
-<s a="@group" i="532">staff</s>
-<h a="@permissions" i="533">
-<m>user</m>
-<s i="534">rwx</s>
-<m>group</m>
-<s i="535">r-x</s>
-<m>other</m>
-<s i="536">r-x</s>
-</h>
-<a a="@files" i="537">
-<o c="Test::Ox::File" i="538">
-<s a="@name" i="539">change.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291110167.000000</t>
-<i a="@size">330</i>
-<s a="@owner" i="540">ohler</s>
-<s a="@group" i="541">staff</s>
-<h a="@permissions" i="542">
-<m>user</m>
-<s i="543">rw-</s>
-<m>group</m>
-<s i="544">r--</s>
-<m>other</m>
-<s i="545">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="546">
-<s a="@name" i="547">dir.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291730307.000000</t>
-<i a="@size">255</i>
-<s a="@owner" i="548">ohler</s>
-<s a="@group" i="549">staff</s>
-<h a="@permissions" i="550">
-<m>user</m>
-<s i="551">rw-</s>
-<m>group</m>
-<s i="552">r--</s>
-<m>other</m>
-<s i="553">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="554">
-<s a="@name" i="555">doc.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291110167.000000</t>
-<i a="@size">831</i>
-<s a="@owner" i="556">ohler</s>
-<s a="@group" i="557">staff</s>
-<h a="@permissions" i="558">
-<m>user</m>
-<s i="559">rw-</s>
-<m>group</m>
-<s i="560">r--</s>
-<m>other</m>
-<s i="561">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="562">
-<s a="@name" i="563">file.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291819425.000000</t>
-<i a="@size">1085</i>
-<s a="@owner" i="564">ohler</s>
-<s a="@group" i="565">staff</s>
-<h a="@permissions" i="566">
-<m>user</m>
-<s i="567">rw-</s>
-<m>group</m>
-<s i="568">r--</s>
-<m>other</m>
-<s i="569">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="570">
-<s a="@name" i="571">group.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291110167.000000</t>
-<i a="@size">239</i>
-<s a="@owner" i="572">ohler</s>
-<s a="@group" i="573">staff</s>
-<h a="@permissions" i="574">
-<m>user</m>
-<s i="575">rw-</s>
-<m>group</m>
-<s i="576">r--</s>
-<m>other</m>
-<s i="577">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="578">
-<s a="@name" i="579">hasprops.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291110167.000000</t>
-<i a="@size">344</i>
-<s a="@owner" i="580">ohler</s>
-<s a="@group" i="581">staff</s>
-<h a="@permissions" i="582">
-<m>user</m>
-<s i="583">rw-</s>
-<m>group</m>
-<s i="584">r--</s>
-<m>other</m>
-<s i="585">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="586">
-<s a="@name" i="587">layer.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291110167.000000</t>
-<i a="@size">189</i>
-<s a="@owner" i="588">ohler</s>
-<s a="@group" i="589">staff</s>
-<h a="@permissions" i="590">
-<m>user</m>
-<s i="591">rw-</s>
-<m>group</m>
-<s i="592">r--</s>
-<m>other</m>
-<s i="593">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="594">
-<s a="@name" i="595">line.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291110167.000000</t>
-<i a="@size">369</i>
-<s a="@owner" i="596">ohler</s>
-<s a="@group" i="597">staff</s>
-<h a="@permissions" i="598">
-<m>user</m>
-<s i="599">rw-</s>
-<m>group</m>
-<s i="600">r--</s>
-<m>other</m>
-<s i="601">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="602">
-<s a="@name" i="603">oval.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291110167.000000</t>
-<i a="@size">166</i>
-<s a="@owner" i="604">ohler</s>
-<s a="@group" i="605">staff</s>
-<h a="@permissions" i="606">
-<m>user</m>
-<s i="607">rw-</s>
-<m>group</m>
-<s i="608">r--</s>
-<m>other</m>
-<s i="609">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="610">
-<s a="@name" i="611">rect.rb</s>
-<t a="@ctime">1294763419.000000</t>
-<t a="@mtime">1291110167.000000</t>
-<i a="@size">166</i>
-<s a="@owner" i="612">ohler</s>
-<s a="@group" i="613">staff</s>
-<h a="@permissions" i="614">
-<m>user</m>
-<s i="615">rw-</s>
-<m>group</m>
-<s i="616">r--</s>
-<m>other</m>
-<s i="617">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="618">
-<s a="@name" i="619">shape.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291110167.000000</t>
-<i a="@size">658</i>
-<s a="@owner" i="620">ohler</s>
-<s a="@group" i="621">staff</s>
-<h a="@permissions" i="622">
-<m>user</m>
-<s i="623">rw-</s>
-<m>group</m>
-<s i="624">r--</s>
-<m>other</m>
-<s i="625">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="626">
-<s a="@name" i="627">text.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291370834.000000</t>
-<i a="@size">470</i>
-<s a="@owner" i="628">ohler</s>
-<s a="@group" i="629">staff</s>
-<h a="@permissions" i="630">
-<m>user</m>
-<s i="631">rw-</s>
-<m>group</m>
-<s i="632">r--</s>
-<m>other</m>
-<s i="633">r--</s>
-</h>
-</o>
-</a>
-</o>
-<o c="Test::Ox::File" i="634">
-<s a="@name" i="635">perf_gen.rb</s>
-<t a="@ctime">1296572964.000000</t>
-<t a="@mtime">1295953409.000000</t>
-<i a="@size">5216</i>
-<s a="@owner" i="636">ohler</s>
-<s a="@group" i="637">staff</s>
-<h a="@permissions" i="638">
-<m>user</m>
-<s i="639">rwx</s>
-<m>group</m>
-<s i="640">r-x</s>
-<m>other</m>
-<s i="641">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="642">
-<s a="@name" i="643">perf_mars.rb</s>
-<t a="@ctime">1297254633.000000</t>
-<t a="@mtime">1297254633.000000</t>
-<i a="@size">2423</i>
-<s a="@owner" i="644">ohler</s>
-<s a="@group" i="645">staff</s>
-<h a="@permissions" i="646">
-<m>user</m>
-<s i="647">rwx</s>
-<m>group</m>
-<s i="648">r-x</s>
-<m>other</m>
-<s i="649">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="650">
-<s a="@name" i="651">perf_obj.rb</s>
-<t a="@ctime">1297599354.000000</t>
-<t a="@mtime">1297599354.000000</t>
-<i a="@size">5398</i>
-<s a="@owner" i="652">ohler</s>
-<s a="@group" i="653">staff</s>
-<h a="@permissions" i="654">
-<m>user</m>
-<s i="655">rwx</s>
-<m>group</m>
-<s i="656">r-x</s>
-<m>other</m>
-<s i="657">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="658">
-<s a="@name" i="659">perf_pod.rb</s>
-<t a="@ctime">1294838721.000000</t>
-<t a="@mtime">1294838721.000000</t>
-<i a="@size">2373</i>
-<s a="@owner" i="660">ohler</s>
-<s a="@group" i="661">staff</s>
-<h a="@permissions" i="662">
-<m>user</m>
-<s i="663">rwx</s>
-<m>group</m>
-<s i="664">r-x</s>
-<m>other</m>
-<s i="665">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="666">
-<s a="@name" i="667">perf_write.rb</s>
-<t a="@ctime">1291368169.000000</t>
-<t a="@mtime">1291368169.000000</t>
-<i a="@size">1675</i>
-<s a="@owner" i="668">ohler</s>
-<s a="@group" i="669">staff</s>
-<h a="@permissions" i="670">
-<m>user</m>
-<s i="671">rwx</s>
-<m>group</m>
-<s i="672">r-x</s>
-<m>other</m>
-<s i="673">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="674">
-<s a="@name" i="675">Sample.graffle</s>
-<t a="@ctime">1293703999.000000</t>
-<t a="@mtime">1293703999.000000</t>
-<i a="@size">46577</i>
-<s a="@owner" i="676">ohler</s>
-<s a="@group" i="677">staff</s>
-<h a="@permissions" i="678">
-<m>user</m>
-<s i="679">rw-</s>
-<m>group</m>
-<s i="680">r--</s>
-<m>other</m>
-<s i="681">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="682">
-<s a="@name" i="683">sample.marshal</s>
-<t a="@ctime">1297601363.000000</t>
-<t a="@mtime">1297601363.000000</t>
-<i a="@size">13081</i>
-<s a="@owner" i="684">ohler</s>
-<s a="@group" i="685">staff</s>
-<h a="@permissions" i="686">
-<m>user</m>
-<s i="687">rw-</s>
-<m>group</m>
-<s i="688">r--</s>
-<m>other</m>
-<s i="689">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="690">
-<s a="@name" i="691">sample.rb</s>
-<t a="@ctime">1294547272.000000</t>
-<t a="@mtime">1291370861.000000</t>
-<i a="@size">1488</i>
-<s a="@owner" i="692">ohler</s>
-<s a="@group" i="693">staff</s>
-<h a="@permissions" i="694">
-<m>user</m>
-<s i="695">rwx</s>
-<m>group</m>
-<s i="696">r-x</s>
-<m>other</m>
-<s i="697">r-x</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="698">
-<s a="@name" i="699">sample.xml</s>
-<t a="@ctime">1297601363.000000</t>
-<t a="@mtime">1297601363.000000</t>
-<i a="@size">29544</i>
-<s a="@owner" i="700">ohler</s>
-<s a="@group" i="701">staff</s>
-<h a="@permissions" i="702">
-<m>user</m>
-<s i="703">rw-</s>
-<m>group</m>
-<s i="704">r--</s>
-<m>other</m>
-<s i="705">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="706">
-<s a="@name" i="707">test.rb</s>
-<t a="@ctime">1291368169.000000</t>
-<t a="@mtime">1291368169.000000</t>
-<i a="@size">1225</i>
-<s a="@owner" i="708">ohler</s>
-<s a="@group" i="709">staff</s>
-<h a="@permissions" i="710">
-<m>user</m>
-<s i="711">rwx</s>
-<m>group</m>
-<s i="712">r-x</s>
-<m>other</m>
-<s i="713">r-x</s>
-</h>
-</o>
-</a>
-</o>
-<o c="Test::Ox::Dir" i="714">
-<s a="@name" i="715">xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">544</i>
-<s a="@owner" i="716">ohler</s>
-<s a="@group" i="717">staff</s>
-<h a="@permissions" i="718">
-<m>user</m>
-<s i="719">rwx</s>
-<m>group</m>
-<s i="720">r-x</s>
-<m>other</m>
-<s i="721">r-x</s>
-</h>
-<a a="@files" i="722">
-<o c="Test::Ox::File" i="723">
-<s a="@name" i="724">attr.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">40</i>
-<s a="@owner" i="725">ohler</s>
-<s a="@group" i="726">staff</s>
-<h a="@permissions" i="727">
-<m>user</m>
-<s i="728">rw-</s>
-<m>group</m>
-<s i="729">r--</s>
-<m>other</m>
-<s i="730">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="731">
-<s a="@name" i="732">comment.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">44</i>
-<s a="@owner" i="733">ohler</s>
-<s a="@group" i="734">staff</s>
-<h a="@permissions" i="735">
-<m>user</m>
-<s i="736">rw-</s>
-<m>group</m>
-<s i="737">r--</s>
-<m>other</m>
-<s i="738">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="739">
-<s a="@name" i="740">empty.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">23</i>
-<s a="@owner" i="741">ohler</s>
-<s a="@group" i="742">staff</s>
-<h a="@permissions" i="743">
-<m>user</m>
-<s i="744">rw-</s>
-<m>group</m>
-<s i="745">r--</s>
-<m>other</m>
-<s i="746">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="747">
-<s a="@name" i="748">env.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">1097</i>
-<s a="@owner" i="749">ohler</s>
-<s a="@group" i="750">staff</s>
-<h a="@permissions" i="751">
-<m>user</m>
-<s i="752">rw-</s>
-<m>group</m>
-<s i="753">r--</s>
-<m>other</m>
-<s i="754">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="755">
-<s a="@name" i="756">loner.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">30</i>
-<s a="@owner" i="757">ohler</s>
-<s a="@group" i="758">staff</s>
-<h a="@permissions" i="759">
-<m>user</m>
-<s i="760">rw-</s>
-<m>group</m>
-<s i="761">r--</s>
-<m>other</m>
-<s i="762">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="763">
-<s a="@name" i="764">mixed.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">120</i>
-<s a="@owner" i="765">ohler</s>
-<s a="@group" i="766">staff</s>
-<h a="@permissions" i="767">
-<m>user</m>
-<s i="768">rw-</s>
-<m>group</m>
-<s i="769">r--</s>
-<m>other</m>
-<s i="770">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="771">
-<s a="@name" i="772">nest.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">183</i>
-<s a="@owner" i="773">ohler</s>
-<s a="@group" i="774">staff</s>
-<h a="@permissions" i="775">
-<m>user</m>
-<s i="776">rw-</s>
-<m>group</m>
-<s i="777">r--</s>
-<m>other</m>
-<s i="778">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="779">
-<s a="@name" i="780">sample.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">68</i>
-<s a="@owner" i="781">ohler</s>
-<s a="@group" i="782">staff</s>
-<h a="@permissions" i="783">
-<m>user</m>
-<s i="784">rw-</s>
-<m>group</m>
-<s i="785">r--</s>
-<m>other</m>
-<s i="786">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="787">
-<s a="@name" i="788">wFractal.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">29077</i>
-<s a="@owner" i="789">ohler</s>
-<s a="@group" i="790">staff</s>
-<h a="@permissions" i="791">
-<m>user</m>
-<s i="792">rw-</s>
-<m>group</m>
-<s i="793">r--</s>
-<m>other</m>
-<s i="794">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="795">
-<s a="@name" i="796">wFractal_report.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">44231</i>
-<s a="@owner" i="797">ohler</s>
-<s a="@group" i="798">staff</s>
-<h a="@permissions" i="799">
-<m>user</m>
-<s i="800">rw-</s>
-<m>group</m>
-<s i="801">r--</s>
-<m>other</m>
-<s i="802">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="803">
-<s a="@name" i="804">wr.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">15822</i>
-<s a="@owner" i="805">ohler</s>
-<s a="@group" i="806">staff</s>
-<h a="@permissions" i="807">
-<m>user</m>
-<s i="808">rw-</s>
-<m>group</m>
-<s i="809">r--</s>
-<m>other</m>
-<s i="810">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="811">
-<s a="@name" i="812">zoo.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">420</i>
-<s a="@owner" i="813">ohler</s>
-<s a="@group" i="814">staff</s>
-<h a="@permissions" i="815">
-<m>user</m>
-<s i="816">rw-</s>
-<m>group</m>
-<s i="817">r--</s>
-<m>other</m>
-<s i="818">r--</s>
-</h>
-</o>
-<o c="Test::Ox::File" i="819">
-<s a="@name" i="820">zoo2.xml</s>
-<t a="@ctime">1291368177.000000</t>
-<t a="@mtime">1291368177.000000</t>
-<i a="@size">1138</i>
-<s a="@owner" i="821">ohler</s>
-<s a="@group" i="822">staff</s>
-<h a="@permissions" i="823">
-<m>user</m>
-<s i="824">rw-</s>
-<m>group</m>
-<s i="825">r--</s>
-<m>other</m>
-<s i="826">r--</s>
-</h>
-</o>
-</a>
-</o>
-</a>
+<o c="Test::Ox::Dir">
+  <s a="@name">..</s>
+  <t a="@ctime">1297780969.000000</t>
+  <t a="@mtime">1297780969.000000</t>
+  <i a="@size">544</i>
+  <s a="@owner">ohler</s>
+  <s a="@group">staff</s>
+  <h a="@permissions">
+    <m>user</m>
+    <s>rwx</s>
+    <m>group</m>
+    <s>r-x</s>
+    <m>other</m>
+    <s>r-x</s>
+  </h>
+  <a a="@files">
+    <o c="Test::Ox::Dir">
+      <s a="@name">doc</s>
+      <t a="@ctime">1291368177.000000</t>
+      <t a="@mtime">1291368177.000000</t>
+      <i a="@size">102</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rwx</s>
+        <m>group</m>
+        <s>r-x</s>
+        <m>other</m>
+        <s>r-x</s>
+      </h>
+      <a a="@files"/>
+    </o>
+    <o c="Test::Ox::Dir">
+      <s a="@name">ext</s>
+      <t a="@ctime">1291368169.000000</t>
+      <t a="@mtime">1291368169.000000</t>
+      <i a="@size">136</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rwx</s>
+        <m>group</m>
+        <s>r-x</s>
+        <m>other</m>
+        <s>r-x</s>
+      </h>
+      <a a="@files">
+        <o c="Test::Ox::Dir">
+          <s a="@name">ox</s>
+          <t a="@ctime">1297855593.000000</t>
+          <t a="@mtime">1297855593.000000</t>
+          <i a="@size">1020</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+          <a a="@files">
+            <o c="Test::Ox::File">
+              <s a="@name">base64.c</s>
+              <t a="@ctime">1296269212.000000</t>
+              <t a="@mtime">1296269212.000000</t>
+              <i a="@size">4536</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">base64.h</s>
+              <t a="@ctime">1297005388.000000</t>
+              <t a="@mtime">1296269212.000000</t>
+              <i a="@size">1919</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">base64.o</s>
+              <t a="@ctime">1297773622.000000</t>
+              <t a="@mtime">1297773622.000000</t>
+              <i a="@size">6100</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">cache.c</s>
+              <t a="@ctime">1296269212.000000</t>
+              <t a="@mtime">1296269212.000000</t>
+              <i a="@size">5214</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">cache.h</s>
+              <t a="@ctime">1296789099.000000</t>
+              <t a="@mtime">1296269212.000000</t>
+              <i a="@size">1877</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">cache.o</s>
+              <t a="@ctime">1297773622.000000</t>
+              <t a="@mtime">1297773622.000000</t>
+              <i a="@size">8768</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">cache8.c</s>
+              <t a="@ctime">1297599355.000000</t>
+              <t a="@mtime">1297599355.000000</t>
+              <i a="@size">1847</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">cache8.h</s>
+              <t a="@ctime">1297599355.000000</t>
+              <t a="@mtime">1297599355.000000</t>
+              <i a="@size">1915</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">cache8.o</s>
+              <t a="@ctime">1297773622.000000</t>
+              <t a="@mtime">1297773622.000000</t>
+              <i a="@size">11276</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">cache8_test.c</s>
+              <t a="@ctime">1297599355.000000</t>
+              <t a="@mtime">1297599355.000000</t>
+              <i a="@size">2542</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">cache8_test.o</s>
+              <t a="@ctime">1297773622.000000</t>
+              <t a="@mtime">1297773622.000000</t>
+              <i a="@size">3952</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">cache_test.c</s>
+              <t a="@ctime">1296269212.000000</t>
+              <t a="@mtime">1296269212.000000</t>
+              <i a="@size">2493</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">cache_test.o</s>
+              <t a="@ctime">1297773622.000000</t>
+              <t a="@mtime">1297773622.000000</t>
+              <i a="@size">4856</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">dump.c</s>
+              <t a="@ctime">1297775833.000000</t>
+              <t a="@mtime">1297775833.000000</t>
+              <i a="@size">26631</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">dump.o</s>
+              <t a="@ctime">1297775835.000000</t>
+              <t a="@mtime">1297775835.000000</t>
+              <i a="@size">63188</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">extconf.rb</s>
+              <t a="@ctime">1293088302.000000</t>
+              <t a="@mtime">1293088302.000000</t>
+              <i a="@size">155</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">gen_load.c</s>
+              <t a="@ctime">1297855587.000000</t>
+              <t a="@mtime">1297855587.000000</t>
+              <i a="@size">5310</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">gen_load.o</s>
+              <t a="@ctime">1297855593.000000</t>
+              <t a="@mtime">1297855593.000000</t>
+              <i a="@size">12440</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">Makefile</s>
+              <t a="@ctime">1297601382.000000</t>
+              <t a="@mtime">1297601382.000000</t>
+              <i a="@size">5423</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">obj_load.c</s>
+              <t a="@ctime">1297599355.000000</t>
+              <t a="@mtime">1297599355.000000</t>
+              <i a="@size">21522</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">obj_load.o</s>
+              <t a="@ctime">1297773622.000000</t>
+              <t a="@mtime">1297773622.000000</t>
+              <i a="@size">40656</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">ox.bundle</s>
+              <t a="@ctime">1297855593.000000</t>
+              <t a="@mtime">1297855593.000000</t>
+              <i a="@size">73728</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rwx</s>
+                <m>group</m>
+                <s>r-x</s>
+                <m>other</m>
+                <s>r-x</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">ox.c</s>
+              <t a="@ctime">1297599355.000000</t>
+              <t a="@mtime">1297599355.000000</t>
+              <i a="@size">14039</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">ox.h</s>
+              <t a="@ctime">1297599355.000000</t>
+              <t a="@mtime">1297599355.000000</t>
+              <i a="@size">5948</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">ox.o</s>
+              <t a="@ctime">1297773623.000000</t>
+              <t a="@mtime">1297773623.000000</t>
+              <i a="@size">34660</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">parse.c</s>
+              <t a="@ctime">1297599355.000000</t>
+              <t a="@mtime">1297599355.000000</t>
+              <i a="@size">15605</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">parse.o</s>
+              <t a="@ctime">1297773623.000000</t>
+              <t a="@mtime">1297773623.000000</t>
+              <i a="@size">25232</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+          </a>
+        </o>
+      </a>
+    </o>
+    <o c="Test::Ox::Dir">
+      <s a="@name">lib</s>
+      <t a="@ctime">1296269212.000000</t>
+      <t a="@mtime">1296269212.000000</t>
+      <i a="@size">170</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rwx</s>
+        <m>group</m>
+        <s>r-x</s>
+        <m>other</m>
+        <s>r-x</s>
+      </h>
+      <a a="@files">
+        <o c="Test::Ox::Dir">
+          <s a="@name">ox</s>
+          <t a="@ctime">1296874622.000000</t>
+          <t a="@mtime">1296874622.000000</t>
+          <i a="@size">306</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+          <a a="@files">
+            <o c="Test::Ox::File">
+              <s a="@name">cdata.rb</s>
+              <t a="@ctime">1296269212.000000</t>
+              <t a="@mtime">1296269212.000000</t>
+              <i a="@size">233</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">comment.rb</s>
+              <t a="@ctime">1296269212.000000</t>
+              <t a="@mtime">1296269212.000000</t>
+              <i a="@size">297</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">doctype.rb</s>
+              <t a="@ctime">1297005388.000000</t>
+              <t a="@mtime">1296269212.000000</t>
+              <i a="@size">291</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">document.rb</s>
+              <t a="@ctime">1297005388.000000</t>
+              <t a="@mtime">1296269212.000000</t>
+              <i a="@size">792</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">element.rb</s>
+              <t a="@ctime">1296874622.000000</t>
+              <t a="@mtime">1296874622.000000</t>
+              <i a="@size">2058</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">node.rb</s>
+              <t a="@ctime">1296269212.000000</t>
+              <t a="@mtime">1296269212.000000</t>
+              <i a="@size">645</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+          </a>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">ox.rb</s>
+          <t a="@ctime">1297005388.000000</t>
+          <t a="@mtime">1296269212.000000</t>
+          <i a="@size">3168</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+      </a>
+    </o>
+    <o c="Test::Ox::File">
+      <s a="@name">LICENSE</s>
+      <t a="@ctime">1296131588.000000</t>
+      <t a="@mtime">1296131588.000000</t>
+      <i a="@size">1488</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rw-</s>
+        <m>group</m>
+        <s>r--</s>
+        <m>other</m>
+        <s>r--</s>
+      </h>
+    </o>
+    <o c="Test::Ox::Dir">
+      <s a="@name">misc</s>
+      <t a="@ctime">1291368218.000000</t>
+      <t a="@mtime">1291368218.000000</t>
+      <i a="@size">238</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rwx</s>
+        <m>group</m>
+        <s>r-x</s>
+        <m>other</m>
+        <s>r-x</s>
+      </h>
+      <a a="@files">
+        <o c="Test::Ox::File">
+          <s a="@name">load_cfg.rb</s>
+          <t a="@ctime">1291368218.000000</t>
+          <t a="@mtime">1291368218.000000</t>
+          <i a="@size">1273</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">Ruby_C.pdf</s>
+          <t a="@ctime">1291368218.000000</t>
+          <t a="@mtime">1291368218.000000</t>
+          <i a="@size">694019</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">Ruby_C2.2.pdf</s>
+          <t a="@ctime">1291368218.000000</t>
+          <t a="@mtime">1291368218.000000</t>
+          <i a="@size">673287</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">Ruby_C2.pdf</s>
+          <t a="@ctime">1291368218.000000</t>
+          <t a="@mtime">1291368218.000000</t>
+          <i a="@size">1147160</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+      </a>
+    </o>
+    <o c="Test::Ox::File">
+      <s a="@name">notes</s>
+      <t a="@ctime">1297780969.000000</t>
+      <t a="@mtime">1297780969.000000</t>
+      <i a="@size">425</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rw-</s>
+        <m>group</m>
+        <s>r--</s>
+        <m>other</m>
+        <s>r--</s>
+      </h>
+    </o>
+    <o c="Test::Ox::File">
+      <s a="@name">ox-1.0.0.gem</s>
+      <t a="@ctime">1295700974.000000</t>
+      <t a="@mtime">1295700974.000000</t>
+      <i a="@size">33280</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rw-</s>
+        <m>group</m>
+        <s>r--</s>
+        <m>other</m>
+        <s>r--</s>
+      </h>
+    </o>
+    <o c="Test::Ox::File">
+      <s a="@name">ox.gemspec</s>
+      <t a="@ctime">1295599902.000000</t>
+      <t a="@mtime">1295599902.000000</t>
+      <i a="@size">732</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rw-</s>
+        <m>group</m>
+        <s>r--</s>
+        <m>other</m>
+        <s>r--</s>
+      </h>
+    </o>
+    <o c="Test::Ox::File">
+      <s a="@name">ox.gemspec~</s>
+      <t a="@ctime">1295264281.000000</t>
+      <t a="@mtime">1295264281.000000</t>
+      <i a="@size">1400</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rw-</s>
+        <m>group</m>
+        <s>r--</s>
+        <m>other</m>
+        <s>r--</s>
+      </h>
+    </o>
+    <o c="Test::Ox::File">
+      <s a="@name">README</s>
+      <t a="@ctime">1296876957.000000</t>
+      <t a="@mtime">1296876957.000000</t>
+      <i a="@size">2465</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rw-</s>
+        <m>group</m>
+        <s>r--</s>
+        <m>other</m>
+        <s>r--</s>
+      </h>
+    </o>
+    <o c="Test::Ox::File">
+      <s a="@name">svn-prop.tmp~</s>
+      <t a="@ctime">1295883032.000000</t>
+      <t a="@mtime">1295269514.000000</t>
+      <i a="@size">10</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rw-</s>
+        <m>group</m>
+        <s>r--</s>
+        <m>other</m>
+        <s>r--</s>
+      </h>
+    </o>
+    <o c="Test::Ox::Dir">
+      <s a="@name">test</s>
+      <t a="@ctime">1297775884.000000</t>
+      <t a="@mtime">1297775884.000000</t>
+      <i a="@size">952</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rwx</s>
+        <m>group</m>
+        <s>r-x</s>
+        <m>other</m>
+        <s>r-x</s>
+      </h>
+      <a a="@files">
+        <o c="Test::Ox::File">
+          <s a="@name">#foo#</s>
+          <t a="@ctime">1294745565.000000</t>
+          <t a="@mtime">1294745565.000000</t>
+          <i a="@size">56575</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">#foo.xml#</s>
+          <t a="@ctime">1294747095.000000</t>
+          <t a="@mtime">1294747095.000000</t>
+          <i a="@size">47173</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">attr.xml~</s>
+          <t a="@ctime">1295953304.000000</t>
+          <t a="@mtime">1295953304.000000</t>
+          <i a="@size">11770</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">cache16_test.rb</s>
+          <t a="@ctime">1293442019.000000</t>
+          <t a="@mtime">1293442019.000000</t>
+          <i a="@size">201</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">cache8_test.rb</s>
+          <t a="@ctime">1297599354.000000</t>
+          <t a="@mtime">1297599354.000000</t>
+          <i a="@size">200</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">cache_test.rb</s>
+          <t a="@ctime">1293442019.000000</t>
+          <t a="@mtime">1293442019.000000</t>
+          <i a="@size">199</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">files.rb</s>
+          <t a="@ctime">1294547303.000000</t>
+          <t a="@mtime">1292576032.000000</t>
+          <i a="@size">712</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">func.rb</s>
+          <t a="@ctime">1297775884.000000</t>
+          <t a="@mtime">1297775884.000000</t>
+          <i a="@size">5111</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">gen_sample.rb</s>
+          <t a="@ctime">1296118505.000000</t>
+          <t a="@mtime">1295438571.000000</t>
+          <i a="@size">330</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">gen_sample.rb~</s>
+          <t a="@ctime">1295437514.000000</t>
+          <t a="@mtime">1295437514.000000</t>
+          <i a="@size">326</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">indent.rb</s>
+          <t a="@ctime">1297773982.000000</t>
+          <t a="@mtime">1297773982.000000</t>
+          <i a="@size">688</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">indent.rb~</s>
+          <t a="@ctime">1297773560.000000</t>
+          <t a="@mtime">1297773553.000000</t>
+          <i a="@size">724</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">obj_sample.rb</s>
+          <t a="@ctime">1296118505.000000</t>
+          <t a="@mtime">1295437430.000000</t>
+          <i a="@size">326</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">obj_sample.rb~</s>
+          <t a="@ctime">1295436895.000000</t>
+          <t a="@mtime">1295436895.000000</t>
+          <i a="@size">833</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::Dir">
+          <s a="@name">ox</s>
+          <t a="@ctime">1293705138.000000</t>
+          <t a="@mtime">1293705138.000000</t>
+          <i a="@size">510</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+          <a a="@files">
+            <o c="Test::Ox::File">
+              <s a="@name">change.rb</s>
+              <t a="@ctime">1294547272.000000</t>
+              <t a="@mtime">1291110167.000000</t>
+              <i a="@size">330</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">dir.rb</s>
+              <t a="@ctime">1294547272.000000</t>
+              <t a="@mtime">1291730307.000000</t>
+              <i a="@size">255</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">doc.rb</s>
+              <t a="@ctime">1294547272.000000</t>
+              <t a="@mtime">1291110167.000000</t>
+              <i a="@size">831</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">file.rb</s>
+              <t a="@ctime">1294547272.000000</t>
+              <t a="@mtime">1291819425.000000</t>
+              <i a="@size">1085</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">group.rb</s>
+              <t a="@ctime">1294547272.000000</t>
+              <t a="@mtime">1291110167.000000</t>
+              <i a="@size">239</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">hasprops.rb</s>
+              <t a="@ctime">1294547272.000000</t>
+              <t a="@mtime">1291110167.000000</t>
+              <i a="@size">344</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">layer.rb</s>
+              <t a="@ctime">1294547272.000000</t>
+              <t a="@mtime">1291110167.000000</t>
+              <i a="@size">189</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">line.rb</s>
+              <t a="@ctime">1294547272.000000</t>
+              <t a="@mtime">1291110167.000000</t>
+              <i a="@size">369</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">oval.rb</s>
+              <t a="@ctime">1294547272.000000</t>
+              <t a="@mtime">1291110167.000000</t>
+              <i a="@size">166</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">rect.rb</s>
+              <t a="@ctime">1294763419.000000</t>
+              <t a="@mtime">1291110167.000000</t>
+              <i a="@size">166</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">shape.rb</s>
+              <t a="@ctime">1294547272.000000</t>
+              <t a="@mtime">1291110167.000000</t>
+              <i a="@size">658</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+            <o c="Test::Ox::File">
+              <s a="@name">text.rb</s>
+              <t a="@ctime">1294547272.000000</t>
+              <t a="@mtime">1291370834.000000</t>
+              <i a="@size">470</i>
+              <s a="@owner">ohler</s>
+              <s a="@group">staff</s>
+              <h a="@permissions">
+                <m>user</m>
+                <s>rw-</s>
+                <m>group</m>
+                <s>r--</s>
+                <m>other</m>
+                <s>r--</s>
+              </h>
+            </o>
+          </a>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">perf_gen.rb</s>
+          <t a="@ctime">1296572964.000000</t>
+          <t a="@mtime">1295953409.000000</t>
+          <i a="@size">5216</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">perf_mars.rb</s>
+          <t a="@ctime">1297254633.000000</t>
+          <t a="@mtime">1297254633.000000</t>
+          <i a="@size">2423</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">perf_obj.rb</s>
+          <t a="@ctime">1297599354.000000</t>
+          <t a="@mtime">1297599354.000000</t>
+          <i a="@size">5398</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">perf_pod.rb</s>
+          <t a="@ctime">1294838721.000000</t>
+          <t a="@mtime">1294838721.000000</t>
+          <i a="@size">2373</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">perf_write.rb</s>
+          <t a="@ctime">1291368169.000000</t>
+          <t a="@mtime">1291368169.000000</t>
+          <i a="@size">1675</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">Sample.graffle</s>
+          <t a="@ctime">1293703999.000000</t>
+          <t a="@mtime">1293703999.000000</t>
+          <i a="@size">46577</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">sample.marshal</s>
+          <t a="@ctime">1297601391.000000</t>
+          <t a="@mtime">1297601391.000000</t>
+          <i a="@size">13344</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">sample.rb</s>
+          <t a="@ctime">1294547272.000000</t>
+          <t a="@mtime">1291370861.000000</t>
+          <i a="@size">1488</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">sample.xml</s>
+          <t a="@ctime">1297855579.000000</t>
+          <t a="@mtime">1297855579.000000</t>
+          <i a="@size">50246</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">test.rb</s>
+          <t a="@ctime">1291368169.000000</t>
+          <t a="@mtime">1291368169.000000</t>
+          <i a="@size">1225</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rwx</s>
+            <m>group</m>
+            <s>r-x</s>
+            <m>other</m>
+            <s>r-x</s>
+          </h>
+        </o>
+      </a>
+    </o>
+    <o c="Test::Ox::Dir">
+      <s a="@name">xml</s>
+      <t a="@ctime">1291368177.000000</t>
+      <t a="@mtime">1291368177.000000</t>
+      <i a="@size">544</i>
+      <s a="@owner">ohler</s>
+      <s a="@group">staff</s>
+      <h a="@permissions">
+        <m>user</m>
+        <s>rwx</s>
+        <m>group</m>
+        <s>r-x</s>
+        <m>other</m>
+        <s>r-x</s>
+      </h>
+      <a a="@files">
+        <o c="Test::Ox::File">
+          <s a="@name">attr.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">40</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">comment.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">44</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">empty.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">23</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">env.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">1097</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">loner.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">30</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">mixed.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">120</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">nest.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">183</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">sample.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">68</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">wFractal.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">29077</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">wFractal_report.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">44231</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">wr.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">15822</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">zoo.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">420</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+        <o c="Test::Ox::File">
+          <s a="@name">zoo2.xml</s>
+          <t a="@ctime">1291368177.000000</t>
+          <t a="@mtime">1291368177.000000</t>
+          <i a="@size">1138</i>
+          <s a="@owner">ohler</s>
+          <s a="@group">staff</s>
+          <h a="@permissions">
+            <m>user</m>
+            <s>rw-</s>
+            <m>group</m>
+            <s>r--</s>
+            <m>other</m>
+            <s>r--</s>
+          </h>
+        </o>
+      </a>
+    </o>
+  </a>
 </o>
