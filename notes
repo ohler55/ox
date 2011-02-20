@@ -4,11 +4,8 @@
 ^c^s show subtree
 
 
-- UTF-8 support
- - rb_encoding *rb_utf8_encoding(void);  
- - VALUE rb_enc_str_new(const char *str, long len, rb_encoding *encoding);
- - ID rb_intern3(const char*, long, rb_encoding*);
- - from VALUE to cstr
+- TBDs
+ - dump - free flag
 
 
 rsync -vru --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/ox/ ~/git_ox

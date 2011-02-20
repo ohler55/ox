@@ -96,6 +96,7 @@ parse(char *xml, ParseCallbacks pcb, char **endp, int trace) {
     pi.pcb = pcb;
     pi.obj = Qnil;
     pi.circ_array = 0;
+    pi.encoding = 0;
     pi.trace = trace;
     while (1) {
 	next_non_white(&pi);	// skip white space
@@ -185,9 +186,11 @@ read_prolog(PInfo pi) {
 		}
 	    } else if (0 == strcasecmp("encoding", name)) {
 		encoding = read_quoted_value(pi);
+                /*
 		if (validateProlog && 0 != strcasecmp("UTF-8", encoding)) {
 		    raise_error("invalid format, only UTF-8 supported", pi->str, pi->s);
 		}
+                */
 	    } else if (0 == strcasecmp("standalone", name)) {
 		standalone = read_quoted_value(pi);
 		if (validateProlog && 0 != strcmp("yes", standalone)) {
@@ -443,6 +446,7 @@ static void
 read_text(PInfo pi) {
     char        buf[MAX_TEXT_LEN];
     char	*b = buf;
+    char        *alloc_buf = 0;
     char	*end = b + sizeof(buf) - 2;
     char	c;
     int		spc = 0;
@@ -469,7 +473,25 @@ read_text(PInfo pi) {
 		c = read_coded_char(pi);
 	    }
 	    if (end <= b + spc) {
-                raise_error("text too long", pi->str, pi->s); // TBD change to allocate later
+                unsigned long   size;
+                
+                if (0 != alloc_buf) {
+                    size = sizeof(buf) * 2;
+                    if (0 == (alloc_buf = (char*)malloc(size))) {
+                        raise_error("text too long", pi->str, pi->s);
+                    }
+                    memcpy(alloc_buf, buf, b - buf);
+                    b = alloc_buf + (b - buf);
+                } else {
+                    unsigned long       pos = b - alloc_buf;
+                    
+                    size = (end - alloc_buf) * 2;
+                    if (0 == (alloc_buf = (char*)realloc(alloc_buf, size))) {
+                        raise_error("text too long", pi->str, pi->s);
+                    }
+                    b = alloc_buf + pos;
+                }
+                end = alloc_buf + size;
 	    }
 	    if (spc) {
 		*b++ = ' ';
@@ -481,6 +503,9 @@ read_text(PInfo pi) {
     }
     *b = '\0';
     pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
+    if (0 != alloc_buf) {
+        free(alloc_buf);
+    }
 }
 
 static char*

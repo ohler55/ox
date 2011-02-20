@@ -40,6 +40,7 @@
 #include "base64.h"
 #include "ox.h"
 
+static void     add_prolog(PInfo pi, const char *version, const char *encoding, const char *standalone);
 static void     add_text(PInfo pi, char *text, int closed);
 static void     add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren);
 static void     end_element(PInfo pi, const char *ename);
@@ -63,7 +64,7 @@ static void             fill_indent(PInfo pi, char *buf, size_t size);
 
 
 struct _ParseCallbacks   _ox_obj_callbacks = {
-    0, // add_prolog
+    add_prolog,
     0, // add_doctype,
     0, // add_comment,
     0, // add_cdata,
@@ -249,7 +250,19 @@ circ_array_set(CircArray ca, VALUE obj, unsigned long id) {
         unsigned long   i;
 
         if (ca->size < id) {
-            // allocate more space
+            unsigned long       cnt = id + 512;
+
+            if (ca->objs == ca->obj_array) {
+                if (0 == (ca->objs = (VALUE*)malloc(sizeof(VALUE) * cnt))) {
+                    rb_raise(rb_eStandardError, "not enough memory\n");
+                }
+                memcpy(ca->objs, ca->obj_array, sizeof(VALUE) * ca->cnt);
+            } else { 
+                if (0 == (ca->objs = (VALUE*)realloc(ca->objs, sizeof(VALUE) * cnt))) {
+                    rb_raise(rb_eStandardError, "not enough memory\n");
+                }
+            }
+            ca->size = cnt;
         }
         id--;
         for (i = ca->cnt; i < id; i++) {
@@ -290,6 +303,13 @@ parse_regexp(const char *text) {
 }
 
 static void
+add_prolog(PInfo pi, const char *version, const char *encoding, const char *standalone) {
+    if (0 != encoding) {
+        pi->encoding = rb_enc_find(encoding);
+    }
+}
+
+static void
 add_text(PInfo pi, char *text, int closed) {
     if (!closed) {
         raise_error("Text not closed", pi->str, pi->s);
@@ -304,6 +324,9 @@ add_text(PInfo pi, char *text, int closed) {
     case NoCode:
     case StringCode:
         pi->h->obj = rb_str_new2(text);
+        if (0 != pi->encoding) {
+            rb_enc_associate(pi->h->obj, pi->encoding);
+        }
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, pi->h->obj, (unsigned long)pi->id);
         }
@@ -364,6 +387,9 @@ add_text(PInfo pi, char *text, int closed) {
         }
         from_base64(text, (u_char*)str);
         v = rb_str_new(str, str_size);
+        if (0 != pi->encoding) {
+            rb_enc_associate(v, pi->encoding);
+        }
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, v, (unsigned long)pi->h->obj);
         }

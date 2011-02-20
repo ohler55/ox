@@ -86,6 +86,7 @@ add_prolog(PInfo pi, const char *version, const char *encoding, const char *stan
     }
     if (0 != encoding) {
         rb_hash_aset(ah, encoding_sym, rb_str_new2(encoding));
+        pi->encoding = rb_enc_find(encoding);
     }
     if (0 != standalone) {
         rb_hash_aset(ah, standalone_sym, rb_str_new2(standalone));
@@ -100,38 +101,59 @@ add_prolog(PInfo pi, const char *version, const char *encoding, const char *stan
 static void
 add_doctype(PInfo pi, const char *docType) {
     VALUE       n = rb_obj_alloc(ox_doctype_clas);
+    VALUE       s = rb_str_new2(docType);
 
-    rb_ivar_set(n, value_id, rb_str_new2(docType));
+    if (0 != pi->encoding) {
+        rb_enc_associate(s, pi->encoding);
+    }
+    rb_ivar_set(n, value_id, s);
     rb_ary_push(pi->h->obj, n);
 }
 
 static void
 add_comment(PInfo pi, const char *comment) {
     VALUE       n = rb_obj_alloc(ox_comment_clas);
+    VALUE       s = rb_str_new2(comment);
 
-    rb_ivar_set(n, value_id, rb_str_new2(comment));
+    if (0 != pi->encoding) {
+        rb_enc_associate(s, pi->encoding);
+    }
+    rb_ivar_set(n, value_id, s);
     rb_ary_push(pi->h->obj, n);
 }
 
 static void
 add_cdata(PInfo pi, const char *cdata, size_t len) {
     VALUE       n = rb_obj_alloc(ox_cdata_clas);
+    VALUE       s = rb_str_new2(cdata);
 
-    rb_ivar_set(n, value_id, rb_str_new2(cdata));
+    if (0 != pi->encoding) {
+        rb_enc_associate(s, pi->encoding);
+    }
+    rb_ivar_set(n, value_id, s);
     rb_ary_push(pi->h->obj, n);
 }
 
 static void
 add_text(PInfo pi, char *text, int closed) {
-    rb_ary_push(pi->h->obj, rb_str_new2(text));
+    VALUE       s = rb_str_new2(text);
+
+    if (0 != pi->encoding) {
+        rb_enc_associate(s, pi->encoding);
+    }
+    rb_ary_push(pi->h->obj, s);
 }
 
 static void
 add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     VALUE       e;
+    VALUE       s = rb_str_new2(ename);
 
+    if (0 != pi->encoding) {
+        rb_enc_associate(s, pi->encoding);
+    }
     e = rb_obj_alloc(ox_element_clas);
-    rb_ivar_set(e, value_id, rb_str_new2(ename)); // TBD change to utf-8 or encoding
+    rb_ivar_set(e, value_id, s);
     if (0 != attrs->name) {
         VALUE   ah = rb_hash_new();
         
@@ -143,7 +165,11 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
                 sym = ID2SYM(rb_intern(attrs->name));
                 *slot = sym;
             }
-            rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
+            s = rb_str_new2(attrs->value);
+            if (0 != pi->encoding) {
+                rb_enc_associate(s, pi->encoding);
+            }
+            rb_hash_aset(ah, sym, s);
         }
         rb_ivar_set(e, attributes_id, ah);
     }
