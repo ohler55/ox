@@ -3,10 +3,15 @@
 ^c^d hide subtree
 ^c^s show subtree
 
+- check readme after install for format of xml
+
+- load options
+ - get rid of optimized
+ - add docs for limited
 
 - TBDs
  - dump - free flag
 
 
-rsync -vru --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/ox/ ~/git_ox
+rsync -vru --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/code/ox/ ~/git/ox
 

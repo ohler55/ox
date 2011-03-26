@@ -1,6 +1,6 @@
 = Ox: A fast XML parser and Object marshaller.
 
-*GitHub* *repo*: http://github.com/tbd
+*GitHub* *repo*: https://github.com/ohler55/ox
 
 === Description:
 
@@ -79,7 +79,75 @@ Marshal.dump() and up to 3 times faster than Marshal.load().
   puts "Same? #{doc == doc2}"
 
 
-=== To Do (future release)
+=== Object XML format
 
- * Support looped object references.
- * Support UTF-8
+The XML format used for Object encoding follows the structure of the
+Object. Each XML element is encoded so that the XML element name is a type
+indicator. Attributes of the element provide additional information such as
+the Class if relevant, the Object attribute name, and Object ID if
+necessary.
+
+The type indicator map is:
+
+  a => Array
+  b => Base64
+  c => Class
+  f => Float
+  g => Regexp
+  h => Hash
+  i => Fixnum
+  j => Bignum
+  l => Rational
+  m => Symbol
+  n => FalseClass
+  o => Object
+  p => Ref
+  r => Range
+  s => String
+  t => Time
+  u => Struct
+  v => Complex
+  x => Raw
+  y => TrueClass
+  z => NilClass
+
+If the type is an Object, type 'o' then an attribute named 'c' should be set
+with the full Class name including the Module names. If the XML element
+represents an Object then a sub-elements is included for each attribute of
+the Object. An XML element attribute 'a' is set with a value that is the
+name of the Ruby Object attribute. In all cases, except for the Exception
+attribute hack the attribute names begin with an @ character. (Exception are
+stange in that the attributes of the Exception Class are not named with a @
+suffix. A hack since it has to be done in C and can not be done through the
+interpreter.)
+
+Values are encoded as the text portion of an element or in the sub-elements
+of the principle. For example, a Fixnum is encoded as:
+
+  <i>123</i>
+
+An Array has sub-elements and is encoded similar to this example.
+
+  <a>
+    <i>1</i>
+    <s>abc</s>
+  </a>
+
+A Hash is encoded with an even number of elements where the first element is
+the key and the second is the value. This is repeated for each entry in the
+Hash. An example is of { 1 => 'one', 2 => 'two' } encoding is:
+
+  <h>
+    <i>1</i>
+    <s>one</s>
+    <i>2</i>
+    <s>two</s>
+  </h>
+
+Strings with characters not allowed in XML are base64 encoded amd will be
+converted back into a String when loaded.
+
+Ox supports circular references where attributes of one Object can refer to
+an Object that refers back to the first Object. When this option is used an
+Object ID is added to each XML Object element as the value of the 'a'
+attribute.

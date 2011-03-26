@@ -58,5 +58,5 @@ def sample_doc(size=3)
 end
 
 if $0 == __FILE__
-  File.open('foo.xml', "w") { |f| f.write(Ox.dump(sample_doc(3), :indent => 0)) }
+  File.open('foo.xml', "w") { |f| f.write(Ox.dump(sample_doc(3), :indent => 2)) }
 end
