@@ -71,6 +71,7 @@ VALUE   optimized_sym;
 VALUE   object_sym;
 VALUE   generic_sym;
 VALUE   limited_sym;
+VALUE   best_effort_sym;
 VALUE   trace_sym;
 VALUE   empty_string;
 VALUE   zero_fixnum;
@@ -94,7 +95,7 @@ extern ParseCallbacks   ox_limited_callbacks;
 
 static void     parse_dump_options(VALUE options, int *indent, int *xsd_date, int *circular);
 
-/* call-seq: parse_obj(xml)
+/* call-seq: parse_obj(xml) => Object
  *
  * Parses an XML document String that is in the object format and returns an
  * Object of the type represented by the XML. This function expects an
@@ -111,12 +112,12 @@ to_obj(VALUE self, VALUE ruby_xml) {
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
     xml = strdup(StringValuePtr(ruby_xml));
-    obj = parse(xml, ox_obj_callbacks, 0, 0);
+    obj = parse(xml, ox_obj_callbacks, 0, 0, 0);
     free(xml);
     return obj;
 }
 
-/* call-seq: parse(xml)
+/* call-seq: parse(xml) => Ox::Document or Ox::Element
  *
  * Parses and XML document String into an Ox::Document or Ox::Element.
  * Raises an exception if the XML is malformed.
@@ -130,7 +131,7 @@ to_gen(VALUE self, VALUE ruby_xml) {
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
     xml = strdup(StringValuePtr(ruby_xml));
-    obj = parse(xml, ox_gen_callbacks, 0, 0);
+    obj = parse(xml, ox_gen_callbacks, 0, 0, 0);
     free(xml);
     return obj;
 }
@@ -147,6 +148,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
     VALUE       obj;
     int         mode = AutoMode;
     int         trace = 0;
+    int         best_effort = 0;
     
     if (1 == argc && rb_cHash == rb_obj_class(*argv)) {
         VALUE   h = *argv;
@@ -171,20 +173,23 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
             Check_Type(v, T_FIXNUM);
             trace = FIX2INT(v);
         }
+        if (Qnil != (v = rb_hash_lookup(h, best_effort_sym))) {
+            best_effort = (Qfalse != v);
+        }
     }
     switch (mode) {
     case ObjMode:
-        obj = parse(xml, ox_obj_callbacks, 0, trace);
+        obj = parse(xml, ox_obj_callbacks, 0, trace, best_effort);
         break;
     case GenMode:
-        obj = parse(xml, ox_gen_callbacks, 0, trace);
+        obj = parse(xml, ox_gen_callbacks, 0, trace, 0);
         break;
     case LimMode:
-        obj = parse(xml, ox_limited_callbacks, 0, trace);
+        obj = parse(xml, ox_limited_callbacks, 0, trace, best_effort);
         break;
     case AutoMode:
     default:
-        obj = parse(xml, ox_gen_callbacks, 0, trace);
+        obj = parse(xml, ox_gen_callbacks, 0, trace, 0);
         break;
     }
     free(xml);
@@ -192,17 +197,19 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
     return obj;
 }
 
-/* call-seq: load(xml, options)
+/* call-seq: load(xml, options) => Ox::Document or Ox::Element or Object
  *
  * Parses and XML document String into an Ox::Document, or Ox::Element, or
  * Object depending on the options.  Raises an exception if the XML is
  * malformed or the classes specified are not valid.
  * [xml]     XML String
  * [options] load options
- *           [:mode]  format expected
- *                    [:object]  object format
- *                    [:generic] read as a generic XML file
- *           [:trace] trace level as a Fixnum, default: 0 (silent)
+ *           [:mode]        format expected
+ *                          [:object]  object format
+ *                          [:generic] read as a generic XML file
+ *                          [:limited] read as a generic XML file but with callbacks on text and elements events only
+ *           [:trace]       trace level as a Fixnum, default: 0 (silent)
+ *           [:best_effort] use best effort to create Objects using nil if undefined Class, default: 0
  */
 static VALUE
 load_str(int argc, VALUE *argv, VALUE self) {
@@ -215,18 +222,20 @@ load_str(int argc, VALUE *argv, VALUE self) {
     return load(xml, argc - 1, argv + 1, self);
 }
 
-/* call-seq: load_file(file_path, xml, options)
+/* call-seq: load_file(file_path, xml, options) => Ox::Document or Ox::Element or Object
  *
  * Parses and XML document from a file into an Ox::Document, or Ox::Element,
  * or Object depending on the options.  Raises an exception if the XML is
  * malformed or the classes specified are not valid.
  * [file_path] file path to read the XML document from
  * [xml]       XML String
- * [options]   load options
- *             [:mode]  format expected
- *                      [:object]  object format
- *                      [:generic] read as a generic XML file
- *             [:trace] trace level as a Fixnum, default: 0 (silent)
+ * [options] load options
+ *           [:mode]        format expected
+ *                          [:object]  object format
+ *                          [:generic] read as a generic XML file
+ *                          [:limited] read as a generic XML file but with callbacks on text and elements events only
+ *           [:trace]       trace level as a Fixnum, default: 0 (silent)
+ *           [:best_effort] use best effort to create Objects using nil if undefined Class, default: 0
  */
 static VALUE
 load_file(int argc, VALUE *argv, VALUE self) {
@@ -293,14 +302,14 @@ parse_dump_options(VALUE options, int *indent, int *xsd_date, int *circular) {
     }
  }
 
-/* call-seq: dump(obj, options)
+/* call-seq: dump(obj, options) => xml-string
  *
  * Dumps an Object (obj) to a string.
  * [obj]     Object to serialize as an XML document String
  * [options] formating options
- *           [:indent]     number of spaces to use as the standard indention, default: 2
- *           [:xsd_date]   use XSD date format if true, default: false
- *           [:opt_format] use optimized XML format instead of original format, default: true
+ *           [:indent]   number of spaces to use as the standard indention, default: 2
+ *           [:xsd_date] use XSD date format if true, default: false
+ *           [:circular] allow circular references, default: false
  */
 static VALUE
 dump(int argc, VALUE *argv, VALUE self) {
@@ -328,9 +337,9 @@ dump(int argc, VALUE *argv, VALUE self) {
  * [file_path] file path to write the XML document to
  * [obj]       Object to serialize as an XML document String
  * [options]   formating options
- *             [:indent]     number of spaces to use as the standard indention, default: 2
- *             [:xsd_date]   use XSD date format if true, default: false
- *             [:opt_format] use optimized XML format instead of original format, default: true
+ *             [:indent]   number of spaces to use as the standard indention, default: 2
+ *             [:xsd_date] use XSD date format if true, default: false
+ *             [:circular] allow circular references, default: false
  */
 static VALUE
 to_file(int argc, VALUE *argv, VALUE self) {
@@ -411,6 +420,7 @@ void Init_ox() {
     generic_sym = ID2SYM(rb_intern("generic"));
     limited_sym = ID2SYM(rb_intern("limited"));
     trace_sym = ID2SYM(rb_intern("trace"));
+    best_effort_sym = ID2SYM(rb_intern("best_effort"));
     empty_string = rb_str_new2("");
     zero_fixnum = INT2NUM(0);
     

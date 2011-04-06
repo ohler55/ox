@@ -110,6 +110,19 @@ class Func < ::Test::Unit::TestCase
     dump_and_load(Bag.new(:@x => 3), false)
   end
   
+  def test_bad_object
+    xml = %{<?xml version="1.0"?>
+<o c="Bad">
+  <i a="@x">3</i>
+</o>
+}
+    assert_raise(NameError) {
+      Ox.load(xml, :mode => :object, :trace => 0)
+    }
+    loaded = Ox.load(xml, :mode => :object, :trace => 0, :best_effort => true)
+    assert_equal(loaded, nil)
+  end
+  
   def test_class
     dump_and_load(Bag, false)
   end

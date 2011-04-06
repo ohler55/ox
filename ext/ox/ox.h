@@ -133,9 +133,10 @@ struct _PInfo {
     rb_encoding         *encoding;
     unsigned long       id;             /* set for text types when cirs_array is set */
     int                 trace;
+    int                 best_effort;
 };
 
-extern VALUE    parse(char *xml, ParseCallbacks pcb, char **endp, int trace);
+extern VALUE    parse(char *xml, ParseCallbacks pcb, char **endp, int trace, int best_effort);
 extern void     _raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
 
 extern char*    write_obj_to_str(VALUE obj, int indent, int xsd_date, int circular);
