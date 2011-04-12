@@ -245,7 +245,7 @@ circ_array_new() {
     CircArray   ca;
     
     if (0 == (ca = (CircArray)malloc(sizeof(struct _CircArray)))) {
-        rb_raise(rb_eStandardError, "not enough memory\n");
+        rb_raise(rb_eNoMemError, "not enough memory\n");
     }
     ca->objs = ca->obj_array;
     ca->size = sizeof(ca->obj_array) / sizeof(VALUE);
@@ -272,12 +272,12 @@ circ_array_set(CircArray ca, VALUE obj, unsigned long id) {
 
             if (ca->objs == ca->obj_array) {
                 if (0 == (ca->objs = (VALUE*)malloc(sizeof(VALUE) * cnt))) {
-                    rb_raise(rb_eStandardError, "not enough memory\n");
+                    rb_raise(rb_eNoMemError, "not enough memory\n");
                 }
                 memcpy(ca->objs, ca->obj_array, sizeof(VALUE) * ca->cnt);
             } else { 
                 if (0 == (ca->objs = (VALUE*)realloc(ca->objs, sizeof(VALUE) * cnt))) {
-                    rb_raise(rb_eStandardError, "not enough memory\n");
+                    rb_raise(rb_eNoMemError, "not enough memory\n");
                 }
             }
             ca->size = cnt;
@@ -400,7 +400,7 @@ add_text(PInfo pi, char *text, int closed) {
         
         if (sizeof(buf) <= str_size) {
             if (0 == (str = (char*)malloc(str_size + 1))) {
-                rb_raise(rb_eStandardError, "not enough memory\n");
+                rb_raise(rb_eNoMemError, "not enough memory\n");
             }
         }
         from_base64(text, (u_char*)str);
@@ -427,7 +427,7 @@ add_text(PInfo pi, char *text, int closed) {
         
             if (sizeof(buf) <= str_size) {
                 if (0 == (str = (char*)malloc(str_size + 1))) {
-                    rb_raise(rb_eStandardError, "not enough memory\n");
+                    rb_raise(rb_eNoMemError, "not enough memory\n");
                 }
             }
             from_base64(text, (u_char*)str);

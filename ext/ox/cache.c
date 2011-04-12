@@ -47,7 +47,7 @@ static void     slot_print(Cache cache, unsigned int depth);
 void
 ox_cache_new(Cache *cache) {
     if (0 == (*cache = (Cache)malloc(sizeof(struct _Cache)))) {
-        rb_raise(rb_eStandardError, "not enough memory\n");
+        rb_raise(rb_eNoMemError, "not enough memory\n");
     }
     (*cache)->key = 0;
     (*cache)->value = Qundef;

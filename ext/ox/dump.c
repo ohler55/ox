@@ -197,7 +197,7 @@ grow(Out out, size_t len) {
         size += len;
     }
     if (0 == (buf = (char*)realloc(out->buf, size))) {
-        rb_raise(rb_eStandardError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
+        rb_raise(rb_eNoMemError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
     }
     out->buf = buf;
     out->end = buf + size;
@@ -479,7 +479,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             e.type = Base64Code;  e.clas.len = 6;  e.clas.str = "Base64";
             if (sizeof(buf64) < size) {
                 if (0 == (b64 = (char*)malloc(size + 1))) {
-                    rb_raise(rb_eStandardError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
+                    rb_raise(rb_eNoMemError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
                 }
             }
             to_base64((u_char*)str, cnt, b64);
@@ -620,7 +620,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
 
             if (sizeof(buf64) < size) {
                 if (0 == (b64 = (char*)malloc(size + 1))) {
-                    rb_raise(rb_eStandardError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
+                    rb_raise(rb_eNoMemError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
                 }
             }
             to_base64((u_char*)s, cnt, b64);
@@ -680,7 +680,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         break;
     }
     default:
-        rb_raise(rb_eStandardError, "Failed to dump %s Object (%02x)\n", rb_class2name(rb_obj_class(obj)), rb_type(obj));
+        rb_raise(rb_eNotImpError, "Failed to dump %s Object (%02x)\n", rb_class2name(rb_obj_class(obj)), rb_type(obj));
         break;
     }
 }
@@ -787,7 +787,7 @@ dump_gen_nodes(VALUE obj, unsigned int depth, Out out) {
             } else if (ox_doctype_clas == clas) {
                 dump_gen_val_node(*np, d2, "<!DOCTYPE ", 10, " >", 2, out);
             } else {
-                rb_raise(rb_eStandardError, "Unexpected class, %s, while dumping generic XML\n", rb_class2name(clas));
+                rb_raise(rb_eTypeError, "Unexpected class, %s, while dumping generic XML\n", rb_class2name(clas));
             }
         }
     }
@@ -890,11 +890,11 @@ write_obj_to_file(VALUE obj, const char *path, int indent, int xsd_date, int cir
     dump_obj_to_xml(obj, indent, xsd_date, circular, &out);
     size = out.cur - out.buf;
     if (0 == (f = fopen(path, "w"))) {
-        rb_raise(rb_eStandardError, "%s\n", strerror(errno));
+        rb_raise(rb_eIOError, "%s\n", strerror(errno));
     }
     if (size != fwrite(out.buf, 1, size, f)) {
         int err = ferror(f);
-        rb_raise(rb_eStandardError, "Write failed. [%d:%s]\n", err, strerror(err));
+        rb_raise(rb_eIOError, "Write failed. [%d:%s]\n", err, strerror(err));
     }
     free(out.buf);
     fclose(f);

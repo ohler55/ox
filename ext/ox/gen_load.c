@@ -76,7 +76,7 @@ add_prolog(PInfo pi, const char *version, const char *encoding, const char *stan
     VALUE       nodes;
     
     if (0 != pi->h) { // top level object
-        rb_raise(rb_eStandardError, "Prolog must be the first element in an XML document.\n");
+        rb_raise(rb_eEncodingError, "Prolog must be the first element in an XML document.\n");
     }
     pi->h = pi->helpers;
     doc = rb_obj_alloc(ox_document_clas);

@@ -166,7 +166,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
             } else if (limited_sym == v) {
                 mode = LimMode;
             } else {
-                rb_raise(rb_eStandardError, ":mode must be :auto, :generic, :optimized, :object, or :limited.\n");
+                rb_raise(rb_eArgError, ":mode must be :generic, :object, or :limited.\n");
             }
         }
         if (Qnil != (v = rb_hash_lookup(h, trace_sym))) {
@@ -247,18 +247,18 @@ load_file(int argc, VALUE *argv, VALUE self) {
     Check_Type(*argv, T_STRING);
     path = StringValuePtr(*argv);
     if (0 == (f = fopen(path, "r"))) {
-        rb_raise(rb_eStandardError, "%s\n", strerror(errno));
+        rb_raise(rb_eIOError, "%s\n", strerror(errno));
     }
     fseek(f, 0, SEEK_END);
     len = ftell(f);
     if (0 == (xml = malloc(len + 1))) {
         fclose(f);
-        rb_raise(rb_eStandardError, "Could not allocate memory for %ld byte file.\n", len);
+        rb_raise(rb_eNoMemError, "Could not allocate memory for %ld byte file.\n", len);
     }
     fseek(f, 0, SEEK_SET);
     if (len != fread(xml, 1, len, f)) {
         fclose(f);
-        rb_raise(rb_eStandardError, "Failed to read %ld bytes from %s.\n", len, path);
+        rb_raise(rb_eLoadError, "Failed to read %ld bytes from %s.\n", len, path);
     }
     fclose(f);
     xml[len] = '\0';
@@ -273,7 +273,7 @@ parse_dump_options(VALUE options, int *indent, int *xsd_date, int *circular) {
         
         if (Qnil != (v = rb_hash_lookup(options, indent_sym))) {
             if (rb_cFixnum != rb_obj_class(v)) {
-                rb_raise(rb_eStandardError, ":indent must be a Fixnum.\n");
+                rb_raise(rb_eArgError, ":indent must be a Fixnum.\n");
             }
             *indent = NUM2INT(v);
         }
@@ -285,7 +285,7 @@ parse_dump_options(VALUE options, int *indent, int *xsd_date, int *circular) {
             } else if (rb_cFalseClass == c) {
                 *xsd_date = 0;
             } else {
-                rb_raise(rb_eStandardError, ":xsd_date must be true or false.\n");
+                rb_raise(rb_eArgError, ":xsd_date must be true or false.\n");
             }
         }
         if (Qnil != (v = rb_hash_lookup(options, circular_sym))) {
@@ -296,7 +296,7 @@ parse_dump_options(VALUE options, int *indent, int *xsd_date, int *circular) {
             } else if (rb_cFalseClass == c) {
                 *circular = 0;
             } else {
-                rb_raise(rb_eStandardError, ":circular must be true or false.\n");
+                rb_raise(rb_eArgError, ":circular must be true or false.\n");
             }
         }
     }
@@ -323,7 +323,7 @@ dump(int argc, VALUE *argv, VALUE self) {
         parse_dump_options(argv[1], &indent, &xsd_date, &circular);
     }
     if (0 == (xml = write_obj_to_str(*argv, indent, xsd_date, circular))) {
-        rb_raise(rb_eStandardError, "Not enough memory.\n");
+        rb_raise(rb_eNoMemError, "Not enough memory.\n");
     }
     rstr = rb_str_new2(xml);
     free(xml);
@@ -452,5 +452,5 @@ _raise_error(const char *msg, const char *xml, const char *current, const char* 
             xline++;
         }
     }
-    rb_raise(rb_eStandardError, "%s at line %d, column %d [%s:%d]\n", msg, xline, col, file, line);
+    rb_raise(rb_eEncodingError, "%s at line %d, column %d [%s:%d]\n", msg, xline, col, file, line);
 }
