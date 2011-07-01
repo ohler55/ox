@@ -476,7 +476,7 @@ read_text(PInfo pi) {
 	    if (end <= b + spc) {
                 unsigned long   size;
                 
-                if (0 != alloc_buf) {
+                if (0 == alloc_buf) {
                     size = sizeof(buf) * 2;
                     if (0 == (alloc_buf = (char*)malloc(size))) {
                         raise_error("text too long", pi->str, pi->s);
@@ -485,7 +485,7 @@ read_text(PInfo pi) {
                     b = alloc_buf + (b - buf);
                 } else {
                     unsigned long       pos = b - alloc_buf;
-                    
+
                     size = (end - alloc_buf) * 2;
                     if (0 == (alloc_buf = (char*)realloc(alloc_buf, size))) {
                         raise_error("text too long", pi->str, pi->s);
