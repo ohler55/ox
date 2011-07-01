@@ -3,7 +3,7 @@ require 'date'
 
 Gem::Specification.new do |s|
   s.name = "ox"
-  s.version = '1.0.1'
+  s.version = '1.0.2'
   # s.version = ::Ox::VERSION
   s.authors = "Peter Ohler"
   s.date = Date.today.to_s
