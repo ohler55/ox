@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.summary = "A fast XML parser and object serializer."
   s.description = "A fast XML parser and object serializer that uses only standard C lib."
 
-  s.files = Dir["{lib,ext,test}/**/*.{rb,h,c,graffle}"] + ['LICENSE', 'README']
+  s.files = Dir["{lib,ext,test}/**/*.{rb,h,c,graffle}"] + ['LICENSE', 'README.rdoc']
 
   s.extensions = ["ext/ox/extconf.rb"]
   # s.executables = []
@@ -20,8 +20,8 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib", "ext"]
 
   s.has_rdoc = true
-  s.extra_rdoc_files = ['README']
-  s.rdoc_options = ['--main', 'README']
+  s.extra_rdoc_files = ['README.rdoc']
+  s.rdoc_options = ['--main', 'README.rdoc']
   
   s.rubyforge_project = 'ox' # dummy to keep the build quiet
 end
