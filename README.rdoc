@@ -1,6 +1,7 @@
 = Ox: A fast XML parser and Object marshaller.
 
 *GitHub* *repo*: https://github.com/ohler55/ox
+
 *RubyGems* *repo*: https://rubygems.org/gems/ox
 
 === Description:
