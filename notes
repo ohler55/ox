@@ -6,6 +6,7 @@
 
 - TBDs
  - dump - free flag on error
+ - fix alloc bug where large text block fail to allocate
 
 
 #rsync -vru --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/code/ox/ ~/git/ox

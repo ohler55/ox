@@ -702,8 +702,8 @@ dump_hash(VALUE key, VALUE value, Out out) {
 
 static void
 dump_gen_doc(VALUE obj, unsigned int depth, Out out) {
-    VALUE       attrs = rb_ivar_get(obj, attributes_id);
-    VALUE       nodes = rb_ivar_get(obj, nodes_id);
+    VALUE       attrs = rb_attr_get(obj, attributes_id);
+    VALUE       nodes = rb_attr_get(obj, nodes_id);
 
     dump_value(out, "<?xml", 5);
     if (Qnil != attrs) {
@@ -717,9 +717,9 @@ dump_gen_doc(VALUE obj, unsigned int depth, Out out) {
 
 static void
 dump_gen_element(VALUE obj, unsigned int depth, Out out) {
-    VALUE       rname = rb_ivar_get(obj, value_id);
-    VALUE       attrs = rb_ivar_get(obj, attributes_id);
-    VALUE       nodes = rb_ivar_get(obj, nodes_id);
+    VALUE       rname = rb_attr_get(obj, value_id);
+    VALUE       attrs = rb_attr_get(obj, attributes_id);
+    VALUE       nodes = rb_attr_get(obj, nodes_id);
     const char  *name = StringValuePtr(rname);
     long        nlen = RSTRING_LEN(rname);
     size_t      size;
@@ -817,7 +817,7 @@ static void
 dump_gen_val_node(VALUE obj, unsigned int depth,
                   const char *pre, size_t plen,
                   const char *suf, size_t slen, Out out) {
-    VALUE       v = rb_ivar_get(obj, value_id);
+    VALUE       v = rb_attr_get(obj, value_id);
     const char  *val;
     size_t      vlen;
     size_t      size;

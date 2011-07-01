@@ -228,7 +228,6 @@ load_str(int argc, VALUE *argv, VALUE self) {
  * or Object depending on the options.  Raises an exception if the XML is
  * malformed or the classes specified are not valid.
  * [file_path] file path to read the XML document from
- * [xml]       XML String
  * [options] load options
  *           [:mode]        format expected
  *                          [:object]  object format

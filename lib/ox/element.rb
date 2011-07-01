@@ -1,6 +1,6 @@
 
 module Ox
-  # An Element represents a element of an EML document. It has a name,
+  # An Element represents a element of an XML document. It has a name,
   # attributes, and sub-nodes.
   class Element < Node
     
@@ -17,28 +17,28 @@ module Ox
     # Returns the Element's nodes array. These are the sub-elements of this
     # Element.
     def nodes
-      @nodes = [] if @nodes.nil?
+      @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       @nodes
     end
 
     # Appends a Node to the Element's nodes array.
     # [node] Node to append to the nodes array
     def <<(node)
-      @nodes = [] if @nodes.nil?
+      @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
       @nodes << node
     end
 
     # Returns all the attributes of the Element as a Hash.
     def attributes
-      @attributes = { } if @attributes.nil?
+      @attributes = { } if !instance_variable_defined?(:@attributes) or @attributes.nil?
       @attributes
     end
     
     # Returns the value of an attribute.
     # [attr]  attribute name or key to return the value for
     def [](attr)
-      return nil unless @attributes.is_a?(Hash)
+      return nil unless instance_variable_defined?(:@attributes) and @attributes.is_a?(Hash)
       @attributes[attr] or (attr.is_a?(String) ? @attributes[attr.to_sym] : @attributes[attr.to_s])
     end
 
@@ -47,7 +47,7 @@ module Ox
     # [value] value for the attribute
     def []=(attr, value)
       raise "argument to [] must be a Symbol or a String." unless attr.is_a?(Symbol) or attr.is_a?(String)
-      @attributes = { } if @attributes.nil?
+      @attributes = { } if !instance_variable_defined?(:@attributes) or @attributes.nil?
       @attributes[attr] = value.to_s
     end
 
