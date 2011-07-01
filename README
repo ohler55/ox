@@ -117,7 +117,7 @@ represents an Object then a sub-elements is included for each attribute of
 the Object. An XML element attribute 'a' is set with a value that is the
 name of the Ruby Object attribute. In all cases, except for the Exception
 attribute hack the attribute names begin with an @ character. (Exception are
-stange in that the attributes of the Exception Class are not named with a @
+strange in that the attributes of the Exception Class are not named with a @
 suffix. A hack since it has to be done in C and can not be done through the
 interpreter.)
 
