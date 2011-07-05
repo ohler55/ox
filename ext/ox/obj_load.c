@@ -51,8 +51,8 @@ static VALUE    parse_double_time(const char *text, VALUE clas);
 static VALUE    parse_regexp(const char *text);
 
 static VALUE            get_var_sym_from_attrs(Attr a);
-static VALUE            get_obj_from_attrs(Attr a, int best_effort);
-static VALUE            get_class_from_attrs(Attr a, int best_effort);
+static VALUE            get_obj_from_attrs(Attr a, PInfo pi);
+static VALUE            get_class_from_attrs(Attr a, PInfo pi);
 static unsigned long    get_id_from_attrs(PInfo pi, Attr a);
 static CircArray        circ_array_new(void);
 static void             circ_array_free(CircArray ca);
@@ -93,7 +93,7 @@ name2var(const char *name) {
 }
 
 inline static VALUE
-classname2class(const char *name, int best_effort) {
+classname2class(const char *name, PInfo pi) {
     VALUE       *slot;
     VALUE       clas;
             
@@ -109,7 +109,7 @@ classname2class(const char *name, int best_effort) {
                 *s = '\0';
                 n++;
                 ci = rb_intern(class_name);
-                if (!best_effort || rb_const_defined(clas, ci)) {
+                if (!pi->best_effort || rb_const_defined(clas, ci)) {
                     clas = rb_const_get(clas, ci);
                 } else {
                     return Qundef;
@@ -121,7 +121,7 @@ classname2class(const char *name, int best_effort) {
         }
         *s = '\0';
         ci = rb_intern(class_name);
-        if (!best_effort || rb_const_defined(clas, ci)) {
+        if (!pi->best_effort || rb_const_defined(clas, ci)) {
             clas = rb_const_get(clas, ci);
         } else {
             return Qundef;
@@ -133,8 +133,8 @@ classname2class(const char *name, int best_effort) {
 }
 
 inline static VALUE
-classname2obj(const char *name, int best_effort) {
-    VALUE   clas = classname2class(name, best_effort);
+classname2obj(const char *name, PInfo pi) {
+    VALUE   clas = classname2class(name, pi);
     
     if (Qundef == clas) {
         return Qnil;
@@ -189,10 +189,10 @@ get_var_sym_from_attrs(Attr a) {
 }
 
 static VALUE
-get_obj_from_attrs(Attr a, int best_effort) {
+get_obj_from_attrs(Attr a, PInfo pi) {
     for (; 0 != a->name; a++) {
         if ('c' == *a->name && '\0' == *(a->name + 1)) {
-            return classname2obj(a->value, best_effort);
+            return classname2obj(a->value, pi);
         }
     }
     return Qundef;
@@ -209,10 +209,10 @@ get_struct_from_attrs(Attr a) {
 }
 
 static VALUE
-get_class_from_attrs(Attr a, int best_effort) {
+get_class_from_attrs(Attr a, PInfo pi) {
     for (; 0 != a->name; a++) {
         if ('c' == *a->name && '\0' == *(a->name + 1)) {
-            return classname2class(a->value, best_effort);
+            return classname2class(a->value, pi);
         }
     }
     return Qundef;
@@ -537,7 +537,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         break;
     case RawCode:
         if (hasChildren) {
-            h->obj = parse(pi->s, ox_gen_callbacks, &pi->s, pi->trace, pi->best_effort);
+            h->obj = parse(pi->s, ox_gen_callbacks, &pi->s, pi->trace, pi->best_effort, pi->auto_define);
             if (0 != pi->circ_array) {
                 circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
             }
@@ -546,7 +546,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         }
         break;
     case ObjectCode:
-        h->obj = get_obj_from_attrs(attrs, pi->best_effort);
+        h->obj = get_obj_from_attrs(attrs, pi);
         if (0 != pi->circ_array && Qnil != h->obj) {
             circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
         }
@@ -558,7 +558,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         }
         break;
     case ClassCode:
-        h->obj = get_class_from_attrs(attrs, pi->best_effort);
+        h->obj = get_class_from_attrs(attrs, pi);
         break;
     case RefCode:
         h->obj = Qundef;

@@ -72,6 +72,7 @@ VALUE   object_sym;
 VALUE   generic_sym;
 VALUE   limited_sym;
 VALUE   best_effort_sym;
+VALUE   auto_define_sym;
 VALUE   trace_sym;
 VALUE   empty_string;
 VALUE   zero_fixnum;
@@ -112,7 +113,7 @@ to_obj(VALUE self, VALUE ruby_xml) {
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
     xml = strdup(StringValuePtr(ruby_xml));
-    obj = parse(xml, ox_obj_callbacks, 0, 0, 0);
+    obj = parse(xml, ox_obj_callbacks, 0, 0, 0, 0);
     free(xml);
     return obj;
 }
@@ -131,7 +132,7 @@ to_gen(VALUE self, VALUE ruby_xml) {
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
     xml = strdup(StringValuePtr(ruby_xml));
-    obj = parse(xml, ox_gen_callbacks, 0, 0, 0);
+    obj = parse(xml, ox_gen_callbacks, 0, 0, 0, 0);
     free(xml);
     return obj;
 }
@@ -149,6 +150,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
     int         mode = AutoMode;
     int         trace = 0;
     int         best_effort = 0;
+    int         auto_define = 0;
     
     if (1 == argc && rb_cHash == rb_obj_class(*argv)) {
         VALUE   h = *argv;
@@ -176,20 +178,23 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
         if (Qnil != (v = rb_hash_lookup(h, best_effort_sym))) {
             best_effort = (Qfalse != v);
         }
+        if (Qnil != (v = rb_hash_lookup(h, auto_define_sym))) {
+            auto_define = (Qfalse != v);
+        }
     }
     switch (mode) {
     case ObjMode:
-        obj = parse(xml, ox_obj_callbacks, 0, trace, best_effort);
+        obj = parse(xml, ox_obj_callbacks, 0, trace, best_effort, auto_define);
         break;
     case GenMode:
-        obj = parse(xml, ox_gen_callbacks, 0, trace, 0);
+        obj = parse(xml, ox_gen_callbacks, 0, trace, 0, 0);
         break;
     case LimMode:
-        obj = parse(xml, ox_limited_callbacks, 0, trace, best_effort);
+        obj = parse(xml, ox_limited_callbacks, 0, trace, best_effort, auto_define);
         break;
     case AutoMode:
     default:
-        obj = parse(xml, ox_gen_callbacks, 0, trace, 0);
+        obj = parse(xml, ox_gen_callbacks, 0, trace, 0, 0);
         break;
     }
     free(xml);
@@ -209,7 +214,8 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
  *                          [:generic] read as a generic XML file
  *                          [:limited] read as a generic XML file but with callbacks on text and elements events only
  *           [:trace]       trace level as a Fixnum, default: 0 (silent)
- *           [:best_effort] use best effort to create Objects using nil if undefined Class, default: 0
+ *           [:best_effort] use best effort to create Objects using nil if undefined Class, default: false
+ *           [:auto_define] auto define missing classes and modules, default: false
  */
 static VALUE
 load_str(int argc, VALUE *argv, VALUE self) {
@@ -234,7 +240,8 @@ load_str(int argc, VALUE *argv, VALUE self) {
  *                          [:generic] read as a generic XML file
  *                          [:limited] read as a generic XML file but with callbacks on text and elements events only
  *           [:trace]       trace level as a Fixnum, default: 0 (silent)
- *           [:best_effort] use best effort to create Objects using nil if undefined Class, default: 0
+ *           [:best_effort] use best effort to create Objects using nil if undefined Class, default: false
+ *           [:auto_define] auto define missing classes and modules, default: false
  */
 static VALUE
 load_file(int argc, VALUE *argv, VALUE self) {
@@ -420,6 +427,7 @@ void Init_ox() {
     limited_sym = ID2SYM(rb_intern("limited"));
     trace_sym = ID2SYM(rb_intern("trace"));
     best_effort_sym = ID2SYM(rb_intern("best_effort"));
+    auto_define_sym = ID2SYM(rb_intern("auto_define"));
     empty_string = rb_str_new2("");
     zero_fixnum = INT2NUM(0);
     

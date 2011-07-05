@@ -5,6 +5,13 @@
 
 
 - TBDs
+ - add Bag class and auto create classes
+  - classname2class(const char *name, int best_effort)
+   - detect errors in C and create there
+  - test
+   - create xml by hand with undefined module and see if module and class are defined
+ 
+
  - dump - free flag on error
 
 
