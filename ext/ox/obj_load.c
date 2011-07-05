@@ -53,6 +53,7 @@ static VALUE    parse_regexp(const char *text);
 static VALUE            get_var_sym_from_attrs(Attr a);
 static VALUE            get_obj_from_attrs(Attr a, PInfo pi);
 static VALUE            get_class_from_attrs(Attr a, PInfo pi);
+static VALUE            classname2class(const char *name, PInfo pi);
 static unsigned long    get_id_from_attrs(PInfo pi, Attr a);
 static CircArray        circ_array_new(void);
 static void             circ_array_free(CircArray ca);
@@ -93,41 +94,31 @@ name2var(const char *name) {
 }
 
 inline static VALUE
-classname2class(const char *name, PInfo pi) {
-    VALUE       *slot;
+resolve_classname(VALUE mod, const char *class_name, Effort effort) {
     VALUE       clas;
-            
-    if (Qundef == (clas = ox_cache_get(class_cache, name, &slot))) {
-        char            class_name[1024];
-        char            *s;
-        const char      *n = name;
-        ID              ci;
+    ID          ci = rb_intern(class_name);
 
-        clas = rb_cObject;
-        for (s = class_name; '\0' != *n; n++) {
-            if (':' == *n) {
-                *s = '\0';
-                n++;
-                ci = rb_intern(class_name);
-                if (!pi->best_effort || rb_const_defined(clas, ci)) {
-                    clas = rb_const_get(clas, ci);
-                } else {
-                    return Qundef;
-                }
-                s = class_name;
-            } else {
-                *s++ = *n;
-            }
-        }
-        *s = '\0';
-        ci = rb_intern(class_name);
-        if (!pi->best_effort || rb_const_defined(clas, ci)) {
-            clas = rb_const_get(clas, ci);
+    switch (effort) {
+    case TolerantEffort:
+        if (rb_const_defined(mod, ci)) {
+            clas = rb_const_get(mod, ci);
         } else {
-            return Qundef;
+            clas = Qundef;
         }
-        //clas = rb_const_get(clas, rb_intern(class_name));
-        *slot = clas;
+        break;
+    case AutoEffort:
+        if (rb_const_defined(mod, ci)) {
+            clas = rb_const_get(mod, ci);
+        } else {
+            clas = Qundef; // tmp
+            // TBD define class or module
+        }
+        break;
+    case StrictEffort:
+    default:
+        // raise an error if name is not defined
+        clas = rb_const_get(mod, ci);
+        break;
     }
     return clas;
 }
@@ -176,6 +167,37 @@ parse_time(const char *text, VALUE clas) {
         t = rb_funcall2(time_class, parse_id, 1, args);
     }
     return t;
+}
+
+static VALUE
+classname2class(const char *name, PInfo pi) {
+    VALUE       *slot;
+    VALUE       clas;
+            
+    if (Qundef == (clas = ox_cache_get(class_cache, name, &slot))) {
+        char            class_name[1024];
+        char            *s;
+        const char      *n = name;
+
+        clas = rb_cObject;
+        for (s = class_name; '\0' != *n; n++) {
+            if (':' == *n) {
+                *s = '\0';
+                n++;
+                if (Qundef == (clas = resolve_classname(clas, class_name, pi->effort))) {
+                    return Qundef;
+                }
+                s = class_name;
+            } else {
+                *s++ = *n;
+            }
+        }
+        *s = '\0';
+        if (Qundef != (clas = resolve_classname(clas, class_name, pi->effort))) {
+            *slot = clas;
+        }
+    }
+    return clas;
 }
 
 static VALUE
@@ -537,7 +559,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         break;
     case RawCode:
         if (hasChildren) {
-            h->obj = parse(pi->s, ox_gen_callbacks, &pi->s, pi->trace, pi->best_effort, pi->auto_define);
+            h->obj = parse(pi->s, ox_gen_callbacks, &pi->s, pi->trace, pi->effort);
             if (0 != pi->circ_array) {
                 circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
             }

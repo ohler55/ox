@@ -119,7 +119,7 @@ class Func < ::Test::Unit::TestCase
     assert_raise(NameError) {
       Ox.load(xml, :mode => :object, :trace => 0)
     }
-    loaded = Ox.load(xml, :mode => :object, :trace => 0, :best_effort => true)
+    loaded = Ox.load(xml, :mode => :object, :trace => 0, :effort => :tolerant)
     assert_equal(loaded, nil)
   end
   

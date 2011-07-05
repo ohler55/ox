@@ -79,7 +79,7 @@ next_non_white(PInfo pi) {
 }
 
 VALUE
-parse(char *xml, ParseCallbacks pcb, char **endp, int trace, int best_effort, int auto_define) {
+parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
     struct _PInfo       pi;
     int                 body_read = 0;
 
@@ -98,8 +98,7 @@ parse(char *xml, ParseCallbacks pcb, char **endp, int trace, int best_effort, in
     pi.circ_array = 0;
     pi.encoding = 0;
     pi.trace = trace;
-    pi.best_effort = best_effort;
-    pi.auto_define = auto_define;
+    pi.effort = effort;
     while (1) {
 	next_non_white(&pi);	// skip white space
 	if ('\0' == *pi.s) {
