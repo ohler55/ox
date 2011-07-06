@@ -84,7 +84,7 @@ VALUE   ox_comment_clas;
 VALUE   ox_doctype_clas;
 VALUE   ox_document_clas;
 VALUE   ox_element_clas;
-VALUE   ox_text_clas;
+VALUE   ox_bag_clas;
 VALUE   struct_class;
 VALUE   time_class;
 
@@ -449,6 +449,7 @@ void Init_ox() {
     ox_comment_clas = rb_const_get(Ox, rb_intern("Comment"));
     ox_doctype_clas = rb_const_get(Ox, rb_intern("DocType"));
     ox_cdata_clas = rb_const_get(Ox, rb_intern("CData"));
+    ox_bag_clas = rb_const_get(Ox, rb_intern("Bag"));
 
     ox_cache_new(&symbol_cache);
     ox_cache_new(&class_cache);

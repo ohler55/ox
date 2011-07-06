@@ -110,8 +110,7 @@ resolve_classname(VALUE mod, const char *class_name, Effort effort) {
         if (rb_const_defined(mod, ci)) {
             clas = rb_const_get(mod, ci);
         } else {
-            clas = Qundef; // tmp
-            // TBD define class or module
+            clas = rb_define_class_under(mod, class_name, ox_bag_clas);
         }
         break;
     case StrictEffort:

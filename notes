@@ -5,14 +5,6 @@
 
 
 - TBDs
- - add Bag class and auto create classes
-  - classname2class(const char *name, int best_effort)
-  - remove define_class from Bag
-  - test
-   - create xml by hand with undefined module and see if module and class are defined (extend Bad test)
-   - verify modules are actually classes
-    - need to allow for inner classes 
-
  - dump - free flag on error
 
 

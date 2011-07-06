@@ -18,7 +18,8 @@ changes with releases making Marshal dumped Object incompatible between some
 versions. The use of a binary format make debugging message streams or file
 contents next to impossible unless the same version of Ruby and only Ruby is
 used for inspecting the serialize Object. Ox on the other hand uses human
-readable XML.
+readable XML. Ox also includes options that allow strict, tolerant, or a mode
+that automatically defines missing classes.
 
 It is possible to write an XML serialization gem with Nokogiri but writing
 such a package in Ruby results in a module significantly slower than

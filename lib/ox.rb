@@ -93,5 +93,6 @@ require 'ox/cdata'
 require 'ox/doctype'
 require 'ox/element'
 require 'ox/document'
+require 'ox/bag'
 
 require 'ox/ox' # C extension

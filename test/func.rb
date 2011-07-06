@@ -112,8 +112,13 @@ class Func < ::Test::Unit::TestCase
   
   def test_bad_object
     xml = %{<?xml version="1.0"?>
-<o c="Bad">
+<o c="Bad::Boy">
   <i a="@x">3</i>
+</o>
+}
+    xml2 = %{<?xml version="1.0"?>
+<o c="Bad">
+  <i a="@x">7</i>
 </o>
 }
     assert_raise(NameError) {
@@ -121,6 +126,12 @@ class Func < ::Test::Unit::TestCase
     }
     loaded = Ox.load(xml, :mode => :object, :trace => 0, :effort => :tolerant)
     assert_equal(loaded, nil)
+    loaded = Ox.load(xml, :mode => :object, :trace => 0, :effort => :auto_define)
+    assert_equal(loaded.class.to_s, 'Bad::Boy')
+    assert_equal(loaded.class.superclass.to_s, 'Ox::Bag')
+    loaded = Ox.load(xml2, :mode => :object, :trace => 0, :effort => :auto_define)
+    assert_equal(loaded.class.to_s, 'Bad')
+    assert_equal(loaded.class.superclass.to_s, 'Ox::Bag')
   end
   
   def test_class
