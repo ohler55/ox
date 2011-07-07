@@ -7,6 +7,37 @@
 - TBDs
  - dump - free flag on error
 
+- XSD
+- DTD
+ - option to add DOCTYPE and DTD reference
+  - <!DOCTYPE o SYSTEM "ox.dtd">
+  - <!DOCTYPE x SYSTEM "ox.dtd"> - specify top element tag
+ - put ox.dtd on a web pages somewhere
+  - either github if possible or ohler.com
+
+- metadata for encoding options
+ - processing instructions
+  - <?target data?>
+   - goes before first element, either size of <?xml?>
+   - <?ox mode='object' effort='strict' ?> optional
+ - parse.c
+  - change read_prolog read_instructions
+   - grab chars until space
+   - if xml then read_prolog
+   - else pi->pcb->instruct
+    - add instruct to ParseCallbacks
+  - _ox_obj_callbacks
+   - change callbacks if pi->mode is not set
+    - pi->mode set from args
+    - pi->effort override as well from file if not set explicitly
+
+- options
+ - add option to dump to include dtd
+ - add option to dump to include instructions, default true
+ - option to include <?xml?>
+ 
+
+xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
 
 #rsync -vru --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/code/ox/ ~/git/ox
 rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/code/ox/ ~/git/ox

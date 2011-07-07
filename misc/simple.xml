@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<?ox mode="object" effort="strict" circular="false" xsd_date="false" ?>
+<!DOCTYPE o SYSTEM "ox.dtd">
+<o c="Test::Ox::Dir">
+  <i a="@size">510</i>
+  <s a="@str">xyz</s>
+</o>

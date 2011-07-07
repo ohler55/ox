@@ -1,0 +1,74 @@
+<!--
+   a attribute is an attribute name usually beginning with the @ character
+   i attribute is the id of the object if circular references are used
+-->
+<!ENTITY % common_attrs
+         "a CDATA #IMPLIED
+          i IDREF #IMPLIED" >
+
+<!ENTITY % any "(a*, b*, c*, f*, g*, h*, i*, j*, l*, m*, n*, o*, p*, r*, s*, t*, u*, v*, x*, y*, z*)*">
+
+<!ELEMENT o %any;>
+<!ATTLIST o
+          %common_attrs;
+          c CDATA #REQUIRED> <!-- c attribute identifies the class of the serialized object -->
+
+<!ELEMENT a %any;> <!-- Array -->
+<!ATTLIST a %common_attrs;>
+
+<!ELEMENT b (#PCDATA)> <!-- Base64 encoded String -->
+<!ATTLIST b %common_attrs;>
+
+<!ELEMENT c (#PCDATA)> <!-- Class -->
+<!ATTLIST c %common_attrs;>
+
+<!ELEMENT f (#PCDATA)> <!-- Float -->
+<!ATTLIST f %common_attrs;>
+
+<!ELEMENT g (#PCDATA)> <!-- Regexp -->
+<!ATTLIST g %common_attrs;>
+
+<!ELEMENT h %any;> <!-- Hash -->
+<!ATTLIST h %common_attrs;>
+
+<!ELEMENT i (#PCDATA)> <!-- Fixnum in base 10, e.g., -1234 -->
+<!ATTLIST i %common_attrs;>
+
+<!ELEMENT j (#PCDATA)> <!-- Bignum -->
+<!ATTLIST j %common_attrs;>
+
+<!ELEMENT l (#PCDATA)> <!-- Rational -->
+<!ATTLIST l %common_attrs;>
+
+<!ELEMENT m (#PCDATA)> <!-- Symbol -->
+<!ATTLIST m %common_attrs;>
+
+<!ELEMENT n EMPTY> <!-- False -->
+<!ATTLIST n %common_attrs;>
+
+<!ELEMENT p (#PCDATA)> <!-- Ref -->
+<!ATTLIST p %common_attrs;>
+
+<!ELEMENT r (#PCDATA)> <!-- Range -->
+<!ATTLIST r %common_attrs;>
+
+<!ELEMENT s (#PCDATA)> <!-- String -->
+<!ATTLIST s %common_attrs;>
+
+<!ELEMENT t (#PCDATA)> <!-- Time -->
+<!ATTLIST t %common_attrs;>
+
+<!ELEMENT u %any;> <!-- Struct -->
+<!ATTLIST u %common_attrs;>
+
+<!ELEMENT v (#PCDATA)> <!-- Complex -->
+<!ATTLIST v %common_attrs;>
+
+<!ELEMENT x (#PCDATA)> <!-- Raw XML embedded document -->
+<!ATTLIST x %common_attrs;>
+
+<!ELEMENT y EMPTY> <!-- True -->
+<!ATTLIST y %common_attrs;>
+
+<!ELEMENT z EMPTY> <!-- Nil -->
+<!ATTLIST z %common_attrs;>
