@@ -51,6 +51,12 @@ extern "C" {
 #define TRACE           1
 #define DEBUG           2
 
+#define XSD_DATE        0x01
+#define WITH_XML        0x02
+#define WITH_INST       0x04
+#define WITH_DTD        0x08
+#define CIRCULAR        0x10
+
 typedef enum {
     UseObj      = 1,
     UseAttr     = 2,
@@ -145,8 +151,8 @@ struct _PInfo {
 extern VALUE    parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort);
 extern void     _raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
 
-extern char*    write_obj_to_str(VALUE obj, int indent, int xsd_date, int circular);
-extern void     write_obj_to_file(VALUE obj, const char *path, int indent, int xsd_date, int circular);
+extern char*    write_obj_to_str(VALUE obj, int indent, int flags);
+extern void     write_obj_to_file(VALUE obj, const char *path, int indent, int flags);
 
 extern VALUE    Ox;
 

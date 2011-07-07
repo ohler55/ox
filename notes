@@ -9,9 +9,6 @@
 
 - XSD
 - DTD
- - option to add DOCTYPE and DTD reference
-  - <!DOCTYPE o SYSTEM "ox.dtd">
-  - <!DOCTYPE x SYSTEM "ox.dtd"> - specify top element tag
  - put ox.dtd on a web pages somewhere
   - either github if possible or ohler.com
 
@@ -31,10 +28,6 @@
     - pi->mode set from args
     - pi->effort override as well from file if not set explicitly
 
-- options
- - add option to dump to include dtd
- - add option to dump to include instructions, default true
- - option to include <?xml?>
  
 
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml

@@ -67,10 +67,11 @@ typedef struct _Out {
     int                 depth; // used by dumpHash
 } *Out;
 
-static void     dump_obj_to_xml(VALUE obj, int indent, int xsd_date, int circular, Out out);
+static void     dump_obj_to_xml(VALUE obj, int indent, int flags, Out out);
 
+static void     dump_first_obj(VALUE obj, int flags, Out out);
 static void     dump_obj(ID aid, VALUE obj, unsigned int depth, Out out);
-static void     dump_gen_doc(VALUE obj, unsigned int depth, Out out);
+static void     dump_gen_doc(VALUE obj, unsigned int depth, int flags, Out out);
 static void     dump_gen_element(VALUE obj, unsigned int depth, Out out);
 static int      dump_gen_attr(VALUE key, VALUE value, Out out);
 static int      dump_gen_nodes(VALUE obj, unsigned int depth, Out out);
@@ -221,7 +222,9 @@ dump_start(Out out, Element e) {
     if (out->end - out->cur < (long)size) {
         grow(out, size);
     }
-    fill_indent(out, e->indent);
+    if (out->buf < out->cur) {
+        fill_indent(out, e->indent);
+    }
     *out->cur++ = '<';
     *out->cur++ = e->type;
     if (0 < e->attr.len) {
@@ -362,6 +365,30 @@ dump_time_xsd(Out out, VALUE obj) {
 }
 
 static void
+dump_first_obj(VALUE obj, int flags, Out out) {
+    if (flags & WITH_XML) {
+        dump_value(out, "<?xml version=\"1.0\"?>", 21);
+    }
+    if (flags & WITH_INST) {
+        char    buf[128];
+
+        sprintf(buf, "%s<?ox mode=\"object\"%s%s?>",
+                (out->buf < out->cur) ? "\n" : "",
+                (flags & CIRCULAR) ? " circular=\"true\"" : "",
+                (flags & XSD_DATE) ? " xsd_date=\"true\"" : "");
+        dump_value(out, buf, strlen(buf));
+    }
+    if (flags & WITH_DTD) {
+        if (out->buf < out->cur) {
+            dump_value(out, "\n<!DOCTYPE o SYSTEM \"ox.dtd\">", 29);
+        } else {
+            dump_value(out, "<!DOCTYPE o SYSTEM \"ox.dtd\">", 28);
+        }
+    }
+    dump_obj(0, obj, 0, out);
+}
+
+static void
 dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     struct _Element     e;
     char                value_buf[64];
@@ -376,12 +403,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     }
     e.closed = 0;
     if (0 == depth) {
-        if (0 <= out->indent) {
-            e.indent = 0;
-        } else {
-            e.indent = -1;
-        }
-        dump_value(out, "<?xml version=\"1.0\"?>", 21);
+        e.indent = (0 <= out->indent) ? 0 : -1;
     } else if (0 > out->indent) {
         e.indent = -1;
     } else if (0 == out->indent) {
@@ -573,7 +595,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         if (ox_document_clas == clas) {
             e.type = RawCode;
             out->w_start(out, &e);
-            dump_gen_doc(obj, depth + 1, out);
+            dump_gen_doc(obj, depth + 1, 0, out);
             out->w_end(out, &e);
         } else if (ox_element_clas == clas) {
             e.type = RawCode;
@@ -702,15 +724,26 @@ dump_hash(VALUE key, VALUE value, Out out) {
 }
 
 static void
-dump_gen_doc(VALUE obj, unsigned int depth, Out out) {
+dump_gen_doc(VALUE obj, unsigned int depth, int flags, Out out) {
     VALUE       attrs = rb_attr_get(obj, attributes_id);
     VALUE       nodes = rb_attr_get(obj, nodes_id);
 
-    dump_value(out, "<?xml", 5);
-    if (Qnil != attrs) {
-        rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
+    // TBD use flags to determine is ?xml or ?ox will be included
+    
+    if (flags & WITH_XML) {
+        dump_value(out, "<?xml", 5);
+        if (Qnil != attrs) {
+            rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
+        }
+        dump_value(out, "?>", 2);
     }
-    dump_value(out, "?>", 2);
+    if (flags & WITH_INST) {
+        if (out->buf < out->cur) {
+            dump_value(out, "\n<?ox mode=\"generic\"?>", 22);
+        } else {
+            dump_value(out, "<?ox mode=\"generic\"?>", 21);
+        }
+    }
     if (Qnil != nodes) {
         dump_gen_nodes(nodes, depth, out);
     }
@@ -848,47 +881,47 @@ dump_gen_val_node(VALUE obj, unsigned int depth,
 }
 
 static void
-dump_obj_to_xml(VALUE obj, int indent, int xsd_date, int circular, Out out) {
+dump_obj_to_xml(VALUE obj, int indent, int flags, Out out) {
     VALUE       clas = rb_obj_class(obj);
 
-    out->w_time = (xsd_date) ? dump_time_xsd : dump_time_thin;
+    out->w_time = (flags & XSD_DATE) ? dump_time_xsd : dump_time_thin;
     out->buf = (char*)malloc(65336);
     out->end = out->buf + 65336;
     out->cur = out->buf;
     out->circ_cache = 0;
     out->circ_cnt = 0;
-    if (circular) {
+    if (flags & CIRCULAR) {
         ox_cache8_new(&out->circ_cache);
     }
     out->indent = indent;
     if (ox_document_clas == clas) {
-        dump_gen_doc(obj, -1, out);
+        dump_gen_doc(obj, -1, flags, out);
     } else if (ox_element_clas == clas) {
         dump_gen_element(obj, 0, out);
     } else {
         out->w_start = dump_start;
         out->w_end = dump_end;
-        dump_obj(0, obj, 0, out);
+        dump_first_obj(obj, flags, out);
     }
     dump_value(out, "\n", 1);
 }
 
 char*
-write_obj_to_str(VALUE obj, int indent, int xsd_date, int circular) {
+write_obj_to_str(VALUE obj, int indent, int flags) {
     struct _Out out;
     
-    dump_obj_to_xml(obj, indent, xsd_date, circular, &out);
+    dump_obj_to_xml(obj, indent, flags, &out);
 
     return out.buf;
 }
 
 void
-write_obj_to_file(VALUE obj, const char *path, int indent, int xsd_date, int circular) {
+write_obj_to_file(VALUE obj, const char *path, int indent, int flags) {
     struct _Out out;
     size_t      size;
     FILE        *f;    
 
-    dump_obj_to_xml(obj, indent, xsd_date, circular, &out);
+    dump_obj_to_xml(obj, indent, flags, &out);
     size = out.cur - out.buf;
     if (0 == (f = fopen(path, "w"))) {
         rb_raise(rb_eIOError, "%s\n", strerror(errno));
