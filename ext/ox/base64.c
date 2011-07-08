@@ -59,21 +59,16 @@ to_base64(const u_char *src, int len, char *b64) {
     const u_char	*end3;
     int			len3 = len % 3;
     u_char		b1, b2, b3;
-    u_char              i;
     
     end3 = src + (len - len3);
     while (src < end3) {
 	b1 = *src++;
 	b2 = *src++;
 	b3 = *src++;
-        i = b1 >> 2;
-	*b64++ = digits[i];
-        i = ((b1 & 0x03) << 4) | (b2 >> 4);
-	*b64++ = digits[i];
-        i = ((b2 & 0x0F) << 2) | (b3 >> 6);
-	*b64++ = digits[i];
-        i = b3 & 0x3F;
-	*b64++ = digits[i];
+	*b64++ = digits[(u_char)(b1 >> 2)];
+	*b64++ = digits[(u_char)(((b1 & 0x03) << 4) | (b2 >> 4))];
+	*b64++ = digits[(u_char)(((b2 & 0x0F) << 2) | (b3 >> 6))];
+	*b64++ = digits[(u_char)(b3 & 0x3F)];
     }
     if (1 == len3) {
 	b1 = *src++;
@@ -97,10 +92,8 @@ b64_orig_size(const char *text) {
     const char          *start = text;
     unsigned long        size = 0;
 
-    //printf("**** b64 text %s\n", text);
     if ('\0' != *text) {
         for (; 0 != *text; text++) { }
-        //printf("*** b64 size: %lu\n", text - start);
         size = (text - start) * 3 / 4;
         text--;
         if ('=' == *text) {

@@ -368,6 +368,7 @@ static void
 dump_first_obj(VALUE obj, int flags, Out out) {
     if (flags & WITH_XML) {
         dump_value(out, "<?xml version=\"1.0\"?>", 21);
+        //dump_value(out, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", 38);
     }
     if (flags & WITH_INST) {
         char    buf[128];
@@ -379,6 +380,7 @@ dump_first_obj(VALUE obj, int flags, Out out) {
         dump_value(out, buf, strlen(buf));
     }
     if (flags & WITH_DTD) {
+        // TBD get correct type character
         if (out->buf < out->cur) {
             dump_value(out, "\n<!DOCTYPE o SYSTEM \"ox.dtd\">", 29);
         } else {

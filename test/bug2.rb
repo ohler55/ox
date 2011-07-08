@@ -22,6 +22,17 @@ def bug2()
   s2 = Ox.load(xml, mode: :object)
   puts "size after: #{s2.size}"
   #puts s2
+  b1 = s.bytes
+  b2 = s2.bytes
+  (0..s2.bytesize).each do |i|
+    puts "#{s.getbyte(i)}  #{s2.getbyte(i)}"
+    if s.getbyte(i) != s2.getbyte(i)
+      puts "stopped at #{i}"
+      break
+    end
+  end
+  puts "byte sizes #{s.bytesize}  #{s2.bytesize}"
+  puts "char sizes #{s.size}  #{s2.size}"
 end
 
 bug2()

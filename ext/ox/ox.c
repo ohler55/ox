@@ -326,7 +326,8 @@ parse_dump_options(VALUE options, int *indent, int *flags) {
                     char        buf[128];
 
                     sprintf(buf, "%s must be true or false.\n", StringValuePtr(b->sym));
-                    rb_raise(rb_eArgError, buf);
+                    //rb_raise(rb_eArgError, buf);
+                    rb_raise(rb_eArgError, "%s must be true or false.\n", StringValuePtr(b->sym));
                 }
             }
         }
@@ -402,7 +403,11 @@ cache8_test(VALUE self) {
 }
 
 void Init_ox() {
+    VALUE       reuse = Qnil;
+
     Ox = rb_define_module("Ox");
+    reuse = rb_cv_get(Ox, "@@reuse"); // needed to stop GC of reuseable VALUEs
+
     rb_define_module_function(Ox, "parse_obj", to_obj, 1);
     rb_define_module_function(Ox, "parse", to_gen, 1);
     rb_define_module_function(Ox, "load", load_str, -1);
@@ -435,30 +440,32 @@ void Init_ox() {
     time_class = rb_const_get(rb_cObject, rb_intern("Time"));
     struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
 
-    version_sym = ID2SYM(rb_intern("version"));
-    standalone_sym = ID2SYM(rb_intern("standalone"));
-    encoding_sym = ID2SYM(rb_intern("encoding"));
-    indent_sym = ID2SYM(rb_intern("indent"));
-    xsd_date_sym = ID2SYM(rb_intern("xsd_date"));
-    opt_format_sym = ID2SYM(rb_intern("opt_format"));
-    mode_sym = ID2SYM(rb_intern("mode"));
-    auto_sym = ID2SYM(rb_intern("auto"));
-    optimized_sym = ID2SYM(rb_intern("optimized"));
-    object_sym = ID2SYM(rb_intern("object"));
-    circular_sym = ID2SYM(rb_intern("circular"));
-    generic_sym = ID2SYM(rb_intern("generic"));
-    limited_sym = ID2SYM(rb_intern("limited"));
-    trace_sym = ID2SYM(rb_intern("trace"));
-    effort_sym = ID2SYM(rb_intern("effort"));
-    strict_sym = ID2SYM(rb_intern("strict"));
-    tolerant_sym = ID2SYM(rb_intern("tolerant"));
-    auto_define_sym = ID2SYM(rb_intern("auto_define"));
-    with_dtd_sym = ID2SYM(rb_intern("with_dtd"));
-    with_instruct_sym = ID2SYM(rb_intern("with_instructions"));
-    with_xml_sym = ID2SYM(rb_intern("with_xml"));
+    version_sym = ID2SYM(rb_intern("version")); rb_ary_push(reuse, version_sym);
+    standalone_sym = ID2SYM(rb_intern("standalone")); rb_ary_push(reuse, standalone_sym);
+    encoding_sym = ID2SYM(rb_intern("encoding")); rb_ary_push(reuse, encoding_sym);
+    indent_sym = ID2SYM(rb_intern("indent")); rb_ary_push(reuse, indent_sym);
+    xsd_date_sym = ID2SYM(rb_intern("xsd_date")); rb_ary_push(reuse, xsd_date_sym);
+    opt_format_sym = ID2SYM(rb_intern("opt_format")); rb_ary_push(reuse, opt_format_sym);
+    mode_sym = ID2SYM(rb_intern("mode")); rb_ary_push(reuse, mode_sym);
+    auto_sym = ID2SYM(rb_intern("auto")); rb_ary_push(reuse, auto_sym);
+    optimized_sym = ID2SYM(rb_intern("optimized")); rb_ary_push(reuse, optimized_sym);
+    object_sym = ID2SYM(rb_intern("object")); rb_ary_push(reuse, object_sym);
+    circular_sym = ID2SYM(rb_intern("circular")); rb_ary_push(reuse, circular_sym);
+    generic_sym = ID2SYM(rb_intern("generic")); rb_ary_push(reuse, generic_sym);
+    limited_sym = ID2SYM(rb_intern("limited")); rb_ary_push(reuse, limited_sym);
+    trace_sym = ID2SYM(rb_intern("trace")); rb_ary_push(reuse, trace_sym);
+    effort_sym = ID2SYM(rb_intern("effort")); rb_ary_push(reuse, effort_sym);
+    strict_sym = ID2SYM(rb_intern("strict")); rb_ary_push(reuse, strict_sym);
+    tolerant_sym = ID2SYM(rb_intern("tolerant")); rb_ary_push(reuse, tolerant_sym);
+    auto_define_sym = ID2SYM(rb_intern("auto_define")); rb_ary_push(reuse, auto_define_sym);
+    with_dtd_sym = ID2SYM(rb_intern("with_dtd")); rb_ary_push(reuse, with_dtd_sym);
+    with_instruct_sym = ID2SYM(rb_intern("with_instructions")); rb_ary_push(reuse, with_instruct_sym);
+    with_xml_sym = ID2SYM(rb_intern("with_xml")); rb_ary_push(reuse, with_xml_sym);
 
-    empty_string = rb_str_new2("");
-    zero_fixnum = INT2NUM(0);
+    empty_string = rb_str_new2(""); rb_ary_push(reuse, empty_string);
+    
+    zero_fixnum = INT2NUM(0); rb_ary_push(reuse, zero_fixnum);
+
     
     //rb_require("node"); // generic xml node classes
     ox_document_clas = rb_const_get(Ox, rb_intern("Document"));

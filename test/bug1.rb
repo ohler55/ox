@@ -13,7 +13,7 @@ end
 require 'ox'
 
 def oxpoo(cnt = 100000)
-  xml = "\n<?xml version=\"1.0\"?>\n<a>\n  <m>inc</m>\n  <i>1</i>\n</a>\n" 
+  xml = "<?xml version=\"1.0\"?>\n<a>\n  <m>inc</m>\n  <i>1</i>\n</a>\n" 
   cnt.times do |i|
     obj = Ox.load(xml, :mode => :object)
     puts "#{obj} (#{obj.class})"

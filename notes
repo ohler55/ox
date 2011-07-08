@@ -7,13 +7,10 @@
 - TBDs
  - dump - free flag on error
 
-- bug
- - bug1.rb
- - check large binary string support
-
 - XSD
 - DTD
- - put ox.dtd on a web pages somewhere
+ - add comments for each type
+
 
 - metadata for encoding options
  - processing instructions
@@ -38,6 +35,8 @@
    - on instructions swap callbacks
    - on first non-instruction or prolog switch to generic
    
+- add option for encoding
+ - option to set the default for various options
  
 
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
@@ -46,3 +45,15 @@ xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
 rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/code/ox/ ~/git/ox
 rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/git/ox/ ~/code/ox
 
+
+- changes
+ - fixed large string corruption issue
+ - added reuse array to stop GC from reusing optimization global VALUEs
+ - added option for xml encoding to dump
+ - added default options
+  - encoding
+  - indent
+  - dtd
+  - circular
+  - xml
+  - instruct
