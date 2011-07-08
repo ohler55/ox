@@ -1,10 +1,11 @@
 
+$: << File.join(File.dirname(__FILE__), 'lib')
 require 'date'
+require 'ox'
 
 Gem::Specification.new do |s|
   s.name = "ox"
-  s.version = '1.1.1'
-  # s.version = ::Ox::VERSION
+  s.version = ::Ox::VERSION
   s.authors = "Peter Ohler"
   s.date = Date.today.to_s
   s.email = "peter@ohler.com"

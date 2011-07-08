@@ -66,6 +66,7 @@ static void             fill_indent(PInfo pi, char *buf, size_t size);
 
 struct _ParseCallbacks   _ox_obj_callbacks = {
     add_prolog,
+    0, // instruct,
     0, // add_doctype,
     0, // add_comment,
     0, // add_cdata,

@@ -84,7 +84,7 @@
 #   puts "Same? #{doc == doc2}"
 module Ox
   # Current version of the module. 
-  VERSION = '1.0.0'
+  VERSION = '1.2.0'
 end
 
 require 'ox/node'

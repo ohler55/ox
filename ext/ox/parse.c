@@ -36,6 +36,7 @@
 #include "ruby.h"
 #include "ox.h"
 
+static void     read_instruction(PInfo pi);
 static void     read_prolog(PInfo pi);
 static void     read_doctype(PInfo pi);
 static void     read_comment(PInfo pi);
@@ -115,7 +116,7 @@ parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
 	switch (*pi.s) {
 	case '?':	// prolog
 	    pi.s++;
-	    read_prolog(&pi);
+	    read_instruction(&pi);
 	    break;
 	case '!':	/* comment or doctype */
 	    pi.s++;
@@ -150,6 +151,27 @@ parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
 /* Entered after the "<?" sequence. Ready to read the rest.
  */
 static void
+read_instruction(PInfo pi) {
+    if (0 == strncasecmp("xml", pi->s, 3)) {
+        read_prolog(pi);
+    } else {
+        while ('?' != *pi->s) {
+            if ('\0' == *pi->s) {
+                raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
+            }
+	    pi->s++;
+        }
+        if ('?' == *pi->s) {
+            pi->s++;
+        }
+        if ('>' != *pi->s++) {
+            raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
+        }
+        // TBD
+    }
+}
+
+static void
 read_prolog(PInfo pi) {
     char        *version = 0;
     char        *encoding = 0;
@@ -158,10 +180,6 @@ read_prolog(PInfo pi) {
     char        *end;
     char        c;
     
-    // skip xml string
-    if (0 != strncasecmp("xml", pi->s, 3)) {
-	raise_error("invalid format, expected 'xml'", pi->str, pi->s);
-    }
     pi->s += 3;	// past xml
     /* looking for ?> to terminate the prolog */
     while ('?' != *pi->s) {
@@ -492,7 +510,7 @@ read_text(PInfo pi) {
                     }
                     b = alloc_buf + pos;
                 }
-                end = alloc_buf + size;
+                end = alloc_buf + size - 2;
 	    }
 	    if (spc) {
 		*b++ = ' ';
@@ -503,9 +521,11 @@ read_text(PInfo pi) {
 	}
     }
     *b = '\0';
-    pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
     if (0 != alloc_buf) {
+        pi->pcb->add_text(pi, alloc_buf, ('/' == *(pi->s + 1)));
         free(alloc_buf);
+    } else {
+        pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
     }
 }
 

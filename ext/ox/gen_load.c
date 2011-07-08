@@ -47,6 +47,7 @@ static void     end_element(PInfo pi, const char *ename);
 
 struct _ParseCallbacks   _ox_gen_callbacks = {
     add_prolog,
+    0, // instruct,
     add_doctype,
     add_comment,
     add_cdata,
@@ -58,6 +59,7 @@ struct _ParseCallbacks   _ox_gen_callbacks = {
 ParseCallbacks   ox_gen_callbacks = &_ox_gen_callbacks;
 
 struct _ParseCallbacks   _ox_limited_callbacks = {
+    0,
     0,
     0,
     0,

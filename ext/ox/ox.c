@@ -286,8 +286,24 @@ load_file(int argc, VALUE *argv, VALUE self) {
     return load(xml, argc - 1, argv + 1, self);
 }
 
+typedef struct _BooOpt {
+    VALUE       sym;
+    int         set;
+    int         flag;
+} *BooOpt;
+
 static void
 parse_dump_options(VALUE options, int *indent, int *flags) {
+    struct _BooOpt      boos[] = {
+        { with_xml_sym, WITH_XML_SET, WITH_XML },
+        { with_dtd_sym, WITH_DTD_SET, WITH_DTD },
+        { with_instruct_sym, WITH_INST_SET, WITH_INST },
+        { xsd_date_sym, XSD_DATE_SET, XSD_DATE },
+        { circular_sym, CIRCULAR_SET, CIRCULAR },
+        { Qnil, 0, 0 }
+    };
+    BooOpt      b;
+    
     if (rb_cHash == rb_obj_class(options)) {
         VALUE   v;
         
@@ -297,59 +313,21 @@ parse_dump_options(VALUE options, int *indent, int *flags) {
             }
             *indent = NUM2INT(v);
         }
-        if (Qnil != (v = rb_hash_lookup(options, xsd_date_sym))) {
-            VALUE       c = rb_obj_class(v);
+        for (b = boos; 0 != b->flag; b++) {
+            if (Qnil != (v = rb_hash_lookup(options, b->sym))) {
+                VALUE       c = rb_obj_class(v);
             
-            if (rb_cTrueClass == c) {
-                *flags |= XSD_DATE;
-            } else if (rb_cFalseClass == c) {
-                *flags &= ~XSD_DATE;
-            } else {
-                rb_raise(rb_eArgError, ":xsd_date must be true or false.\n");
-            }
-        }
-        if (Qnil != (v = rb_hash_lookup(options, with_xml_sym))) {
-            VALUE       c = rb_obj_class(v);
-            
-            if (rb_cTrueClass == c) {
-                *flags |= WITH_XML;
-            } else if (rb_cFalseClass == c) {
-                *flags &= ~WITH_XML;
-            } else {
-                rb_raise(rb_eArgError, ":with_xml must be true or false.\n");
-            }
-        }
-        if (Qnil != (v = rb_hash_lookup(options, with_instruct_sym))) {
-            VALUE       c = rb_obj_class(v);
-            
-            if (rb_cTrueClass == c) {
-                *flags |= WITH_INST;
-            } else if (rb_cFalseClass == c) {
-                *flags &= ~WITH_INST;
-            } else {
-                rb_raise(rb_eArgError, ":xsd_date must be true or false.\n");
-            }
-        }
-        if (Qnil != (v = rb_hash_lookup(options, with_dtd_sym))) {
-            VALUE       c = rb_obj_class(v);
-            
-            if (rb_cTrueClass == c) {
-                *flags |= WITH_DTD;
-            } else if (rb_cFalseClass == c) {
-                *flags &= ~WITH_DTD;
-            } else {
-                rb_raise(rb_eArgError, ":xsd_date must be true or false.\n");
-            }
-        }
-        if (Qnil != (v = rb_hash_lookup(options, circular_sym))) {
-            VALUE       c = rb_obj_class(v);
-            
-            if (rb_cTrueClass == c) {
-                *flags |= CIRCULAR;
-            } else if (rb_cFalseClass == c) {
-                *flags &= ~CIRCULAR;
-            } else {
-                rb_raise(rb_eArgError, ":circular must be true or false.\n");
+                *flags |= b->set;
+                if (rb_cTrueClass == c) {
+                    *flags |= b->flag;
+                } else if (rb_cFalseClass == c) {
+                    *flags &= ~b->flag;
+                } else {
+                    char        buf[128];
+
+                    sprintf(buf, "%s must be true or false.\n", StringValuePtr(b->sym));
+                    rb_raise(rb_eArgError, buf);
+                }
             }
         }
     }

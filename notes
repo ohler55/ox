@@ -7,10 +7,13 @@
 - TBDs
  - dump - free flag on error
 
+- bug
+ - bug1.rb
+ - check large binary string support
+
 - XSD
 - DTD
  - put ox.dtd on a web pages somewhere
-  - either github if possible or ohler.com
 
 - metadata for encoding options
  - processing instructions
@@ -27,7 +30,14 @@
    - change callbacks if pi->mode is not set
     - pi->mode set from args
     - pi->effort override as well from file if not set explicitly
-
+  - start with ox_auto_callbacks
+   - switch to correct one (object) after reading instructions or element func is called
+   - prolog should create doc object
+    - if gen then use that object
+    - if object then replace doc object
+   - on instructions swap callbacks
+   - on first non-instruction or prolog switch to generic
+   
  
 
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml

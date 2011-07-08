@@ -51,11 +51,17 @@ extern "C" {
 #define TRACE           1
 #define DEBUG           2
 
-#define XSD_DATE        0x01
-#define WITH_XML        0x02
-#define WITH_INST       0x04
-#define WITH_DTD        0x08
-#define CIRCULAR        0x10
+#define XSD_DATE        0x0001
+#define WITH_XML        0x0002
+#define WITH_INST       0x0004
+#define WITH_DTD        0x0008
+#define CIRCULAR        0x0010
+
+#define XSD_DATE_SET    0x0100
+#define WITH_XML_SET    0x0200
+#define WITH_INST_SET   0x0400
+#define WITH_DTD_SET    0x0800
+#define CIRCULAR_SET    0x1000
 
 typedef enum {
     UseObj      = 1,
@@ -118,6 +124,7 @@ typedef struct _PInfo   *PInfo;
 
 typedef struct _ParseCallbacks {
     void        (*add_prolog)(PInfo pi, const char *version, const char *encoding, const char *standalone);
+    void        (*instruct)(PInfo pi, const char *target, const char *instruction);
     void        (*add_doctype)(PInfo pi, const char *docType);
     void        (*add_comment)(PInfo pi, const char *comment);
     void        (*add_cdata)(PInfo pi, const char *cdata, size_t len);
