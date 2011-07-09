@@ -11,6 +11,24 @@
 - DTD
  - add comments for each type
 
+- plan
+ - add options to dump
+  - encoding
+  - check on standalone/dtd
+ - add default values
+  - encoding
+  - indent
+  - with_dtd
+  - circular
+  - with_xml
+  - with_instruct
+  - mode
+  - xsd_date
+  - effort
+ - instructions
+  - move parsing of prolog options into callbacks
+  - keep instruct and remove prolog callback
+
 
 - metadata for encoding options
  - processing instructions

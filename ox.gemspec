@@ -1,7 +1,6 @@
 
-$: << File.join(File.dirname(__FILE__), 'lib')
 require 'date'
-require 'ox'
+require File.join(File.dirname(__FILE__), 'lib/ox/version')
 
 Gem::Specification.new do |s|
   s.name = "ox"
