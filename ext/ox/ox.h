@@ -78,10 +78,24 @@ typedef enum {
 } Use;
 
 typedef enum {
-    StrictEffort    = 0,
-    TolerantEffort  = 1,
-    AutoEffort      = 2,
+    StrictEffort    = 's',
+    TolerantEffort  = 't',
+    AutoEffort      = 'a',
+    NoEffort        = 0,
 } Effort;
+
+typedef enum {
+    Yes    = 'y',
+    No     = 'n',
+    NotSet = 0
+} YesNo;
+
+typedef enum {
+    ObjMode  = 'o',
+    GenMode  = 'g',
+    LimMode  = 'l',
+    NoMode   = 0
+} LoadMode;
 
 typedef enum {
     NoCode         = 0,
@@ -154,6 +168,19 @@ struct _PInfo {
     int                 trace;
     Effort              effort;
 };
+
+typedef struct _Options {
+    char        encoding[64];   // encoding, stored in the option to avoid GC invalidation in default values
+    int         indent;         // indention for dump, default 2
+    int         trace;          // trace level
+    char        with_dtd;       // YesNo
+    char        with_xml;       // YesNo
+    char        with_instruct;  // YesNo
+    char        circular;       // YesNo
+    char        xsd_date;       // YesNo
+    char        mode;           // LoadMode
+    char        effort;         // Effort
+} *Options;
 
 extern VALUE    parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort);
 extern void     _raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);

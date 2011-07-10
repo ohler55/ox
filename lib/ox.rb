@@ -84,7 +84,7 @@
 #   puts "Same? #{doc == doc2}"
 module Ox
   private
-  @@reuse = []
+  @@keep = []
 end
 
 require 'ox/version'

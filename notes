@@ -14,17 +14,10 @@
 - plan
  - add options to dump
   - encoding
-  - check on standalone/dtd
+  - standalone i snot needed since it defaults to 'no', could include if dtd is specified but value should be nil
  - add default values
-  - encoding
-  - indent
-  - with_dtd
-  - circular
-  - with_xml
-  - with_instruct
-  - mode
-  - xsd_date
-  - effort
+  - Options
+  - for instruction use 'yes' and 'no'
  - instructions
   - move parsing of prolog options into callbacks
   - keep instruct and remove prolog callback

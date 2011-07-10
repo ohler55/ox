@@ -96,6 +96,19 @@ Cache   symbol_cache = 0;
 Cache   class_cache = 0;
 Cache   attr_cache = 0;
 
+static struct _Options  default_options = {
+    { '\0' },           // encoding
+    2,                  // indent
+    0,                  // trace
+    No,                 // with_dtd
+    Yes,                // with_xml  // TBD maybe make No
+    No,                 // with_instruct
+    No,                 // circular
+    No,                 // xsd_date
+    NoMode,             // load_mode
+    StrictEffort,       // effort
+};
+
 extern ParseCallbacks   ox_obj_callbacks;
 extern ParseCallbacks   ox_gen_callbacks;
 extern ParseCallbacks   ox_limited_callbacks;
@@ -143,68 +156,58 @@ to_gen(VALUE self, VALUE ruby_xml) {
     return obj;
 }
 
-typedef enum {
-    AutoMode = 0, // not supported
-    ObjMode  = 1,
-    GenMode  = 2,
-    LimMode  = 3,
-} LoadMode;
-
 static VALUE
 load(char *xml, int argc, VALUE *argv, VALUE self) {
-    VALUE       obj;
-    int         mode = AutoMode;
-    int         effort = StrictEffort;
-    int         trace = 0;
+    VALUE               obj;
+    struct _Options     options = default_options;
     
     if (1 == argc && rb_cHash == rb_obj_class(*argv)) {
         VALUE   h = *argv;
         VALUE   v;
         
         if (Qnil != (v = rb_hash_lookup(h, mode_sym))) {
-            if (auto_sym == v) {
-                mode = AutoMode;
-            } else if (object_sym == v) {
-                mode = ObjMode;
+            if (object_sym == v) {
+                options.mode = ObjMode;
             } else if (optimized_sym == v) {
-                mode = ObjMode;
+                options.mode = ObjMode;
             } else if (generic_sym == v) {
-                mode = GenMode;
+                options.mode = GenMode;
             } else if (limited_sym == v) {
-                mode = LimMode;
+                options.mode = LimMode;
             } else {
                 rb_raise(rb_eArgError, ":mode must be :generic, :object, or :limited.\n");
             }
         }
         if (Qnil != (v = rb_hash_lookup(h, effort_sym))) {
             if (auto_define_sym == v) {
-                effort = AutoEffort;
+                options.effort = AutoEffort;
             } else if (tolerant_sym == v) {
-                effort = TolerantEffort;
+                options.effort = TolerantEffort;
             } else if (strict_sym == v) {
-                effort = StrictEffort;
+                options.effort = StrictEffort;
             } else {
                 rb_raise(rb_eArgError, ":effort must be :strict, :tolerant, or :auto_define.\n");
             }
         }
         if (Qnil != (v = rb_hash_lookup(h, trace_sym))) {
             Check_Type(v, T_FIXNUM);
-            trace = FIX2INT(v);
+            options.trace = FIX2INT(v);
         }
     }
-    switch (mode) {
+    switch (options.mode) {
     case ObjMode:
-        obj = parse(xml, ox_obj_callbacks, 0, trace, effort);
+        obj = parse(xml, ox_obj_callbacks, 0, options.trace, options.effort);
         break;
     case GenMode:
-        obj = parse(xml, ox_gen_callbacks, 0, trace, StrictEffort);
+        obj = parse(xml, ox_gen_callbacks, 0, options.trace, StrictEffort);
         break;
     case LimMode:
-        obj = parse(xml, ox_limited_callbacks, 0, trace, effort);
+        obj = parse(xml, ox_limited_callbacks, 0, options.trace, StrictEffort);
         break;
-    case AutoMode:
+    case NoMode:
+        // TBD get mode from xml or use generic
     default:
-        obj = parse(xml, ox_gen_callbacks, 0, trace, StrictEffort);
+        obj = parse(xml, ox_gen_callbacks, 0, options.trace, StrictEffort);
         break;
     }
     free(xml);
@@ -292,8 +295,25 @@ typedef struct _BooOpt {
     int         flag;
 } *BooOpt;
 
+typedef struct _YesNoOpt {
+    VALUE       sym;
+    char        *attr;
+} *YesNoOpt;
+
+// TBD convert to use Options
 static void
+//parse_dump_options(VALUE ropts, Options copts) {
 parse_dump_options(VALUE options, int *indent, int *flags) {
+/*
+    struct _YesNoOpt    ynos[] = {
+        { with_xml_sym, &copts.with_xml },
+        { with_dtd_sym, &copts.with_dtd },
+        { with_instruct_sym, &copts.with_instruct },
+        { xsd_date_sym, &copts.xsd_date },
+        { circular_sym, &copts.circular },
+        { Qnil, 0 }
+    };
+*/
     struct _BooOpt      boos[] = {
         { with_xml_sym, WITH_XML_SET, WITH_XML },
         { with_dtd_sym, WITH_DTD_SET, WITH_DTD },
@@ -313,6 +333,8 @@ parse_dump_options(VALUE options, int *indent, int *flags) {
             }
             *indent = NUM2INT(v);
         }
+        // TBD get trace
+        // TBD get encoding
         for (b = boos; 0 != b->flag; b++) {
             if (Qnil != (v = rb_hash_lookup(options, b->sym))) {
                 VALUE       c = rb_obj_class(v);
@@ -403,10 +425,10 @@ cache8_test(VALUE self) {
 }
 
 void Init_ox() {
-    VALUE       reuse = Qnil;
+    VALUE       keep = Qnil;
 
     Ox = rb_define_module("Ox");
-    reuse = rb_cv_get(Ox, "@@reuse"); // needed to stop GC of reuseable VALUEs
+    keep = rb_cv_get(Ox, "@@keep"); // needed to stop GC from deleting and reusing VALUEs
 
     rb_define_module_function(Ox, "parse_obj", to_obj, 1);
     rb_define_module_function(Ox, "parse", to_gen, 1);
@@ -440,31 +462,30 @@ void Init_ox() {
     time_class = rb_const_get(rb_cObject, rb_intern("Time"));
     struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
 
-    version_sym = ID2SYM(rb_intern("version")); rb_ary_push(reuse, version_sym);
-    standalone_sym = ID2SYM(rb_intern("standalone")); rb_ary_push(reuse, standalone_sym);
-    encoding_sym = ID2SYM(rb_intern("encoding")); rb_ary_push(reuse, encoding_sym);
-    indent_sym = ID2SYM(rb_intern("indent")); rb_ary_push(reuse, indent_sym);
-    xsd_date_sym = ID2SYM(rb_intern("xsd_date")); rb_ary_push(reuse, xsd_date_sym);
-    opt_format_sym = ID2SYM(rb_intern("opt_format")); rb_ary_push(reuse, opt_format_sym);
-    mode_sym = ID2SYM(rb_intern("mode")); rb_ary_push(reuse, mode_sym);
-    auto_sym = ID2SYM(rb_intern("auto")); rb_ary_push(reuse, auto_sym);
-    optimized_sym = ID2SYM(rb_intern("optimized")); rb_ary_push(reuse, optimized_sym);
-    object_sym = ID2SYM(rb_intern("object")); rb_ary_push(reuse, object_sym);
-    circular_sym = ID2SYM(rb_intern("circular")); rb_ary_push(reuse, circular_sym);
-    generic_sym = ID2SYM(rb_intern("generic")); rb_ary_push(reuse, generic_sym);
-    limited_sym = ID2SYM(rb_intern("limited")); rb_ary_push(reuse, limited_sym);
-    trace_sym = ID2SYM(rb_intern("trace")); rb_ary_push(reuse, trace_sym);
-    effort_sym = ID2SYM(rb_intern("effort")); rb_ary_push(reuse, effort_sym);
-    strict_sym = ID2SYM(rb_intern("strict")); rb_ary_push(reuse, strict_sym);
-    tolerant_sym = ID2SYM(rb_intern("tolerant")); rb_ary_push(reuse, tolerant_sym);
-    auto_define_sym = ID2SYM(rb_intern("auto_define")); rb_ary_push(reuse, auto_define_sym);
-    with_dtd_sym = ID2SYM(rb_intern("with_dtd")); rb_ary_push(reuse, with_dtd_sym);
-    with_instruct_sym = ID2SYM(rb_intern("with_instructions")); rb_ary_push(reuse, with_instruct_sym);
-    with_xml_sym = ID2SYM(rb_intern("with_xml")); rb_ary_push(reuse, with_xml_sym);
+    version_sym = ID2SYM(rb_intern("version"));                 rb_ary_push(keep, version_sym);
+    standalone_sym = ID2SYM(rb_intern("standalone"));           rb_ary_push(keep, standalone_sym);
+    encoding_sym = ID2SYM(rb_intern("encoding"));               rb_ary_push(keep, encoding_sym);
+    indent_sym = ID2SYM(rb_intern("indent"));                   rb_ary_push(keep, indent_sym);
+    xsd_date_sym = ID2SYM(rb_intern("xsd_date"));               rb_ary_push(keep, xsd_date_sym);
+    opt_format_sym = ID2SYM(rb_intern("opt_format"));           rb_ary_push(keep, opt_format_sym);
+    mode_sym = ID2SYM(rb_intern("mode"));                       rb_ary_push(keep, mode_sym);
+    auto_sym = ID2SYM(rb_intern("auto"));                       rb_ary_push(keep, auto_sym);
+    optimized_sym = ID2SYM(rb_intern("optimized"));             rb_ary_push(keep, optimized_sym);
+    object_sym = ID2SYM(rb_intern("object"));                   rb_ary_push(keep, object_sym);
+    circular_sym = ID2SYM(rb_intern("circular"));               rb_ary_push(keep, circular_sym);
+    generic_sym = ID2SYM(rb_intern("generic"));                 rb_ary_push(keep, generic_sym);
+    limited_sym = ID2SYM(rb_intern("limited"));                 rb_ary_push(keep, limited_sym);
+    trace_sym = ID2SYM(rb_intern("trace"));                     rb_ary_push(keep, trace_sym);
+    effort_sym = ID2SYM(rb_intern("effort"));                   rb_ary_push(keep, effort_sym);
+    strict_sym = ID2SYM(rb_intern("strict"));                   rb_ary_push(keep, strict_sym);
+    tolerant_sym = ID2SYM(rb_intern("tolerant"));               rb_ary_push(keep, tolerant_sym);
+    auto_define_sym = ID2SYM(rb_intern("auto_define"));         rb_ary_push(keep, auto_define_sym);
+    with_dtd_sym = ID2SYM(rb_intern("with_dtd"));               rb_ary_push(keep, with_dtd_sym);
+    with_instruct_sym = ID2SYM(rb_intern("with_instructions")); rb_ary_push(keep, with_instruct_sym);
+    with_xml_sym = ID2SYM(rb_intern("with_xml"));               rb_ary_push(keep, with_xml_sym);
 
-    empty_string = rb_str_new2(""); rb_ary_push(reuse, empty_string);
-    
-    zero_fixnum = INT2NUM(0); rb_ary_push(reuse, zero_fixnum);
+    empty_string = rb_str_new2("");                             rb_ary_push(keep, empty_string);
+    zero_fixnum = INT2NUM(0);                                   rb_ary_push(keep, zero_fixnum);
 
     
     //rb_require("node"); // generic xml node classes
