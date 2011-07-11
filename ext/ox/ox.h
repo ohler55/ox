@@ -185,8 +185,8 @@ typedef struct _Options {
 extern VALUE    parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort);
 extern void     _raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
 
-extern char*    write_obj_to_str(VALUE obj, int indent, int flags);
-extern void     write_obj_to_file(VALUE obj, const char *path, int indent, int flags);
+extern char*    write_obj_to_str(VALUE obj, Options copts);
+extern void     write_obj_to_file(VALUE obj, const char *path, Options copts);
 
 extern VALUE    Ox;
 

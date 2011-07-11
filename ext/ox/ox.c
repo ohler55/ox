@@ -36,6 +36,11 @@
 #include "ruby.h"
 #include "ox.h"
 
+typedef struct _YesNoOpt {
+    VALUE       sym;
+    char        *attr;
+} *YesNoOpt;
+
 void Init_ox();
 
 VALUE    Ox = Qnil;
@@ -101,11 +106,11 @@ static struct _Options  default_options = {
     2,                  // indent
     0,                  // trace
     No,                 // with_dtd
-    Yes,                // with_xml  // TBD maybe make No
+    No,                 // with_xml
     No,                 // with_instruct
     No,                 // circular
     No,                 // xsd_date
-    NoMode,             // load_mode
+    NoMode,             // mode
     StrictEffort,       // effort
 };
 
@@ -113,7 +118,115 @@ extern ParseCallbacks   ox_obj_callbacks;
 extern ParseCallbacks   ox_gen_callbacks;
 extern ParseCallbacks   ox_limited_callbacks;
 
-static void     parse_dump_options(VALUE options, int *indent, int *flags);
+static void     parse_dump_options(VALUE ropts, Options copts);
+
+/* call-seq: default_options() => Hash
+ *
+ * Returns the default load and dump options as a Hash.
+ */
+static VALUE
+get_def_opts(VALUE self) {
+    VALUE       opts = rb_hash_new();
+    int         elen = (int)strlen(default_options.encoding);
+    
+    rb_hash_aset(opts, encoding_sym, (0 == elen) ? Qnil : rb_str_new(default_options.encoding, elen));
+    rb_hash_aset(opts, indent_sym, INT2FIX(default_options.indent));
+    rb_hash_aset(opts, trace_sym, INT2FIX(default_options.trace));
+    rb_hash_aset(opts, with_dtd_sym, (Yes == default_options.with_dtd) ? Qtrue : ((No == default_options.with_dtd) ? Qfalse : Qnil));
+    rb_hash_aset(opts, with_xml_sym, (Yes == default_options.with_xml) ? Qtrue : ((No == default_options.with_xml) ? Qfalse : Qnil));
+    rb_hash_aset(opts, with_instruct_sym, (Yes == default_options.with_instruct) ? Qtrue : ((No == default_options.with_instruct) ? Qfalse : Qnil));
+    rb_hash_aset(opts, circular_sym, (Yes == default_options.circular) ? Qtrue : ((No == default_options.circular) ? Qfalse : Qnil));
+    rb_hash_aset(opts, xsd_date_sym, (Yes == default_options.xsd_date) ? Qtrue : ((No == default_options.xsd_date) ? Qfalse : Qnil));
+    switch (default_options.mode) {
+    case ObjMode:       rb_hash_aset(opts, mode_sym, object_sym);       break;
+    case GenMode:       rb_hash_aset(opts, mode_sym, generic_sym);      break;
+    case LimMode:       rb_hash_aset(opts, mode_sym, limited_sym);      break;
+    case NoMode:
+    default:            rb_hash_aset(opts, mode_sym, Qnil);             break;
+    }
+    switch (default_options.effort) {
+    case StrictEffort:          rb_hash_aset(opts, effort_sym, strict_sym);             break;
+    case TolerantEffort:        rb_hash_aset(opts, effort_sym, tolerant_sym);           break;
+    case AutoEffort:            rb_hash_aset(opts, effort_sym, auto_define_sym);        break;
+    case NoEffort:
+    default:                    rb_hash_aset(opts, effort_sym, Qnil);                   break;
+    }
+    return opts;
+}
+
+/* call-seq: default_options=(Hash)
+ *
+ * Sets the default options for load and dump.
+ */
+static VALUE
+set_def_opts(VALUE self, VALUE opts) {
+    struct _YesNoOpt    ynos[] = {
+        { with_xml_sym, &default_options.with_xml },
+        { with_dtd_sym, &default_options.with_dtd },
+        { with_instruct_sym, &default_options.with_instruct },
+        { xsd_date_sym, &default_options.xsd_date },
+        { circular_sym, &default_options.circular },
+        { Qnil, 0 }
+    };
+    YesNoOpt    o;
+    VALUE       v;
+    
+    Check_Type(opts, T_HASH);
+
+    v = rb_hash_aref(opts, encoding_sym);
+    if (Qnil == v) {
+        *default_options.encoding = '\0';
+    } else {
+        Check_Type(v, T_STRING);
+        strncpy(default_options.encoding, StringValuePtr(v), sizeof(default_options.encoding) - 1);
+    }
+    v = rb_hash_aref(opts, indent_sym);
+    Check_Type(v, T_FIXNUM);
+    default_options.indent = FIX2INT(v);
+
+    v = rb_hash_aref(opts, trace_sym);
+    Check_Type(v, T_FIXNUM);
+    default_options.trace = FIX2INT(v);
+    
+    v = rb_hash_aref(opts, mode_sym);
+    if (Qnil == v) {
+        default_options.mode = NoMode;
+    } else if (object_sym == v) {
+        default_options.mode = ObjMode;
+    } else if (generic_sym == v) {
+        default_options.mode = GenMode;
+    } else if (limited_sym == v) {
+        default_options.mode = LimMode;
+    } else {
+        rb_raise(rb_eArgError, ":mode must be :object, :generic, :limited, or nil.\n");
+    }
+
+    v = rb_hash_aref(opts, effort_sym);
+    if (Qnil == v) {
+        default_options.effort = NoEffort;
+    } else if (strict_sym == v) {
+        default_options.effort = StrictEffort;
+    } else if (tolerant_sym == v) {
+        default_options.effort = TolerantEffort;
+    } else if (auto_define_sym == v) {
+        default_options.effort = AutoEffort;
+    } else {
+        rb_raise(rb_eArgError, ":effort must be :strict, :tolerant, :auto_define, or nil.\n");
+    }
+    for (o = ynos; 0 != o->attr; o++) {
+        v = rb_hash_lookup(opts, o->sym);
+        if (Qnil == v) {
+            *o->attr = NotSet;
+        } else if (Qtrue == v) {
+            *o->attr = Yes;
+        } else if (Qfalse == v) {
+            *o->attr = No;
+        } else {
+            rb_raise(rb_eArgError, "%s must be true, false, or nil.\n", StringValuePtr(o->sym));
+        }
+    }
+    return Qnil;
+}
 
 /* call-seq: parse_obj(xml) => Object
  *
@@ -289,67 +402,49 @@ load_file(int argc, VALUE *argv, VALUE self) {
     return load(xml, argc - 1, argv + 1, self);
 }
 
-typedef struct _BooOpt {
-    VALUE       sym;
-    int         set;
-    int         flag;
-} *BooOpt;
-
-typedef struct _YesNoOpt {
-    VALUE       sym;
-    char        *attr;
-} *YesNoOpt;
-
-// TBD convert to use Options
 static void
-//parse_dump_options(VALUE ropts, Options copts) {
-parse_dump_options(VALUE options, int *indent, int *flags) {
-/*
+parse_dump_options(VALUE ropts, Options copts) {
     struct _YesNoOpt    ynos[] = {
-        { with_xml_sym, &copts.with_xml },
-        { with_dtd_sym, &copts.with_dtd },
-        { with_instruct_sym, &copts.with_instruct },
-        { xsd_date_sym, &copts.xsd_date },
-        { circular_sym, &copts.circular },
+        { with_xml_sym, &copts->with_xml },
+        { with_dtd_sym, &copts->with_dtd },
+        { with_instruct_sym, &copts->with_instruct },
+        { xsd_date_sym, &copts->xsd_date },
+        { circular_sym, &copts->circular },
         { Qnil, 0 }
     };
-*/
-    struct _BooOpt      boos[] = {
-        { with_xml_sym, WITH_XML_SET, WITH_XML },
-        { with_dtd_sym, WITH_DTD_SET, WITH_DTD },
-        { with_instruct_sym, WITH_INST_SET, WITH_INST },
-        { xsd_date_sym, XSD_DATE_SET, XSD_DATE },
-        { circular_sym, CIRCULAR_SET, CIRCULAR },
-        { Qnil, 0, 0 }
-    };
-    BooOpt      b;
+    YesNoOpt    o;
     
-    if (rb_cHash == rb_obj_class(options)) {
+    if (rb_cHash == rb_obj_class(ropts)) {
         VALUE   v;
         
-        if (Qnil != (v = rb_hash_lookup(options, indent_sym))) {
+        if (Qnil != (v = rb_hash_lookup(ropts, indent_sym))) {
             if (rb_cFixnum != rb_obj_class(v)) {
                 rb_raise(rb_eArgError, ":indent must be a Fixnum.\n");
             }
-            *indent = NUM2INT(v);
+            copts->indent = NUM2INT(v);
         }
-        // TBD get trace
-        // TBD get encoding
-        for (b = boos; 0 != b->flag; b++) {
-            if (Qnil != (v = rb_hash_lookup(options, b->sym))) {
+        if (Qnil != (v = rb_hash_lookup(ropts, trace_sym))) {
+            if (rb_cFixnum != rb_obj_class(v)) {
+                rb_raise(rb_eArgError, ":trace must be a Fixnum.\n");
+            }
+            copts->trace = NUM2INT(v);
+        }
+        if (Qnil != (v = rb_hash_lookup(ropts, encoding_sym))) {
+            if (rb_cString != rb_obj_class(v)) {
+                rb_raise(rb_eArgError, ":encoding must be a String.\n");
+            }
+            strncpy(copts->encoding, StringValuePtr(v), sizeof(copts->encoding) - 1);
+        }
+        for (o = ynos; 0 != o->attr; o++) {
+            if (Qnil != (v = rb_hash_lookup(ropts, o->sym))) {
                 VALUE       c = rb_obj_class(v);
-            
-                *flags |= b->set;
-                if (rb_cTrueClass == c) {
-                    *flags |= b->flag;
-                } else if (rb_cFalseClass == c) {
-                    *flags &= ~b->flag;
-                } else {
-                    char        buf[128];
 
-                    sprintf(buf, "%s must be true or false.\n", StringValuePtr(b->sym));
-                    //rb_raise(rb_eArgError, buf);
-                    rb_raise(rb_eArgError, "%s must be true or false.\n", StringValuePtr(b->sym));
+                if (rb_cTrueClass == c) {
+                    *o->attr = Yes;
+                } else if (rb_cFalseClass == c) {
+                    *o->attr = No;
+                } else {
+                    rb_raise(rb_eArgError, "%s must be true or false.\n", StringValuePtr(o->sym));
                 }
             }
         }
@@ -367,15 +462,14 @@ parse_dump_options(VALUE options, int *indent, int *flags) {
  */
 static VALUE
 dump(int argc, VALUE *argv, VALUE self) {
-    char        *xml;
-    int         indent = 2;
-    int         flags = WITH_XML | WITH_INST;
-    VALUE       rstr;
+    char                *xml;
+    struct _Options     copts;
+    VALUE               rstr;
     
     if (2 == argc) {
-        parse_dump_options(argv[1], &indent, &flags);
+        parse_dump_options(argv[1], &copts);
     }
-    if (0 == (xml = write_obj_to_str(*argv, indent, flags))) {
+    if (0 == (xml = write_obj_to_str(*argv, &copts))) {
         rb_raise(rb_eNoMemError, "Not enough memory.\n");
     }
     rstr = rb_str_new2(xml);
@@ -396,14 +490,13 @@ dump(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE
 to_file(int argc, VALUE *argv, VALUE self) {
-    int         indent = 2;
-    int         flags = WITH_XML | WITH_INST;
+    struct _Options     copts;
     
     if (3 == argc) {
-        parse_dump_options(argv[2], &indent, &flags);
+        parse_dump_options(argv[2], &copts);
     }
     Check_Type(*argv, T_STRING);
-    write_obj_to_file(argv[1], StringValuePtr(*argv), indent, flags);
+    write_obj_to_file(argv[1], StringValuePtr(*argv), &copts);
 
     return Qnil;
 }
@@ -429,6 +522,9 @@ void Init_ox() {
 
     Ox = rb_define_module("Ox");
     keep = rb_cv_get(Ox, "@@keep"); // needed to stop GC from deleting and reusing VALUEs
+
+    rb_define_module_function(Ox, "default_options", get_def_opts, 0);
+    rb_define_module_function(Ox, "default_options=", set_def_opts, 1);
 
     rb_define_module_function(Ox, "parse_obj", to_obj, 1);
     rb_define_module_function(Ox, "parse", to_gen, 1);

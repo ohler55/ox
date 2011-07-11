@@ -67,11 +67,11 @@ typedef struct _Out {
     int                 depth; // used by dumpHash
 } *Out;
 
-static void     dump_obj_to_xml(VALUE obj, int indent, int flags, Out out);
+static void     dump_obj_to_xml(VALUE obj, Options copts, Out out);
 
-static void     dump_first_obj(VALUE obj, int flags, Out out);
+static void     dump_first_obj(VALUE obj, Options copts, Out out);
 static void     dump_obj(ID aid, VALUE obj, unsigned int depth, Out out);
-static void     dump_gen_doc(VALUE obj, unsigned int depth, int flags, Out out);
+static void     dump_gen_doc(VALUE obj, unsigned int depth, Options copts, Out out);
 static void     dump_gen_element(VALUE obj, unsigned int depth, Out out);
 static int      dump_gen_attr(VALUE key, VALUE value, Out out);
 static int      dump_gen_nodes(VALUE obj, unsigned int depth, Out out);
@@ -112,6 +112,30 @@ is_xml_friendly(const u_char *str, int len) {
         }
     }
     return 1;
+}
+
+inline static Type
+obj_class_code(VALUE obj) {
+    switch (rb_type(obj)) {
+    case RUBY_T_NIL:            return NilClassCode;
+    case RUBY_T_ARRAY:          return ArrayCode;
+    case RUBY_T_HASH:           return HashCode;
+    case RUBY_T_TRUE:           return TrueClassCode;
+    case RUBY_T_FALSE:          return FalseClassCode;
+    case RUBY_T_FIXNUM:         return FixnumCode;
+    case RUBY_T_FLOAT:          return FloatCode;
+    case RUBY_T_STRING:         return (is_xml_friendly((u_char*)StringValuePtr(obj), (int)RSTRING_LEN(obj))) ? StringCode : Base64Code;
+    case RUBY_T_SYMBOL:         return SymbolCode;
+    case RUBY_T_DATA:           return (rb_cTime == rb_obj_class(obj)) ? TimeCode : 0;
+    case RUBY_T_STRUCT:         return (rb_cRange == rb_obj_class(obj)) ? RangeCode : StructCode;
+    case RUBY_T_OBJECT:         return (ox_document_clas == rb_obj_class(obj) || ox_element_clas == rb_obj_class(obj)) ? RawCode : ObjectCode;
+    case RUBY_T_REGEXP:         return RegexpCode;
+    case RUBY_T_BIGNUM:         return BignumCode;
+    case RUBY_T_COMPLEX:        return ComplexCode;
+    case RUBY_T_RATIONAL:       return RationalCode;
+    case RUBY_T_CLASS:          return ClassCode;
+    default:                    return 0;
+    }
 }
 
 inline static void
@@ -365,27 +389,28 @@ dump_time_xsd(Out out, VALUE obj) {
 }
 
 static void
-dump_first_obj(VALUE obj, int flags, Out out) {
-    if (flags & WITH_XML) {
-        dump_value(out, "<?xml version=\"1.0\"?>", 21);
-        //dump_value(out, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", 38);
-    }
-    if (flags & WITH_INST) {
-        char    buf[128];
+dump_first_obj(VALUE obj, Options copts, Out out) {
+    char        buf[128];
+    int         cnt;
 
-        sprintf(buf, "%s<?ox mode=\"object\"%s%s?>",
-                (out->buf < out->cur) ? "\n" : "",
-                (flags & CIRCULAR) ? " circular=\"true\"" : "",
-                (flags & XSD_DATE) ? " xsd_date=\"true\"" : "");
-        dump_value(out, buf, strlen(buf));
-    }
-    if (flags & WITH_DTD) {
-        // TBD get correct type character
-        if (out->buf < out->cur) {
-            dump_value(out, "\n<!DOCTYPE o SYSTEM \"ox.dtd\">", 29);
+    if (Yes == copts->with_xml) {
+        if ('\0' == *copts->encoding) {
+            dump_value(out, "<?xml version=\"1.0\"?>", 21);
         } else {
-            dump_value(out, "<!DOCTYPE o SYSTEM \"ox.dtd\">", 28);
+            cnt = sprintf(buf, "<?xml version=\"1.0\" encoding=\"%s\"?>", copts->encoding);
+            dump_value(out, buf, cnt);
         }
+    }
+    if (Yes == copts->with_instruct) {
+        cnt = sprintf(buf, "%s<?ox version=\"1.0\" mode=\"object\"%s%s?>",
+                      (out->buf < out->cur) ? "\n" : "",
+                      (Yes == copts->circular) ? " circular=\"yes\"" : ((No == copts->circular) ? " circular=\"no\"" : ""),
+                      (Yes == copts->xsd_date) ? " xsd_date=\"yes\"" : ((No == copts->xsd_date) ? " xsd_date=\"no\"" : ""));
+        dump_value(out, buf, cnt);
+    }
+    if (Yes == copts->with_dtd) {
+        cnt = sprintf(buf, "%s<!DOCTYPE %c SYSTEM \"ox.dtd\">", (out->buf < out->cur) ? "\n" : "", obj_class_code(obj));
+        dump_value(out, buf, cnt);
     }
     dump_obj(0, obj, 0, out);
 }
@@ -726,24 +751,22 @@ dump_hash(VALUE key, VALUE value, Out out) {
 }
 
 static void
-dump_gen_doc(VALUE obj, unsigned int depth, int flags, Out out) {
+dump_gen_doc(VALUE obj, unsigned int depth, Options copts, Out out) {
     VALUE       attrs = rb_attr_get(obj, attributes_id);
     VALUE       nodes = rb_attr_get(obj, nodes_id);
 
-    // TBD use flags to determine is ?xml or ?ox will be included
-    
-    if (flags & WITH_XML) {
+    if (Yes == copts->with_xml) {
         dump_value(out, "<?xml", 5);
         if (Qnil != attrs) {
             rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
         }
         dump_value(out, "?>", 2);
     }
-    if (flags & WITH_INST) {
+    if (Yes == copts->with_instruct) {
         if (out->buf < out->cur) {
-            dump_value(out, "\n<?ox mode=\"generic\"?>", 22);
+            dump_value(out, "\n<?ox version=\"1.0\" mode=\"generic\"?>", 36);
         } else {
-            dump_value(out, "<?ox mode=\"generic\"?>", 21);
+            dump_value(out, "<?ox version=\"1.0\" mode=\"generic\"?>", 35);
         }
     }
     if (Qnil != nodes) {
@@ -883,47 +906,47 @@ dump_gen_val_node(VALUE obj, unsigned int depth,
 }
 
 static void
-dump_obj_to_xml(VALUE obj, int indent, int flags, Out out) {
+dump_obj_to_xml(VALUE obj, Options copts, Out out) {
     VALUE       clas = rb_obj_class(obj);
 
-    out->w_time = (flags & XSD_DATE) ? dump_time_xsd : dump_time_thin;
+    out->w_time = (Yes == copts->xsd_date) ? dump_time_xsd : dump_time_thin;
     out->buf = (char*)malloc(65336);
     out->end = out->buf + 65336;
     out->cur = out->buf;
     out->circ_cache = 0;
     out->circ_cnt = 0;
-    if (flags & CIRCULAR) {
+    if (Yes == copts->circular) {
         ox_cache8_new(&out->circ_cache);
     }
-    out->indent = indent;
+    out->indent = copts->indent;
     if (ox_document_clas == clas) {
-        dump_gen_doc(obj, -1, flags, out);
+        dump_gen_doc(obj, -1, copts, out);
     } else if (ox_element_clas == clas) {
         dump_gen_element(obj, 0, out);
     } else {
         out->w_start = dump_start;
         out->w_end = dump_end;
-        dump_first_obj(obj, flags, out);
+        dump_first_obj(obj, copts, out);
     }
     dump_value(out, "\n", 1);
 }
 
 char*
-write_obj_to_str(VALUE obj, int indent, int flags) {
+write_obj_to_str(VALUE obj, Options copts) {
     struct _Out out;
     
-    dump_obj_to_xml(obj, indent, flags, &out);
+    dump_obj_to_xml(obj, copts, &out);
 
     return out.buf;
 }
 
 void
-write_obj_to_file(VALUE obj, const char *path, int indent, int flags) {
+write_obj_to_file(VALUE obj, const char *path, Options copts) {
     struct _Out out;
     size_t      size;
     FILE        *f;    
 
-    dump_obj_to_xml(obj, indent, flags, &out);
+    dump_obj_to_xml(obj, copts, &out);
     size = out.cur - out.buf;
     if (0 == (f = fopen(path, "w"))) {
         rb_raise(rb_eIOError, "%s\n", strerror(errno));

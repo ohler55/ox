@@ -12,16 +12,9 @@
  - add comments for each type
 
 - plan
- - add options to dump
-  - encoding
-  - standalone i snot needed since it defaults to 'no', could include if dtd is specified but value should be nil
- - add default values
-  - Options
-  - for instruction use 'yes' and 'no'
  - instructions
   - move parsing of prolog options into callbacks
   - keep instruct and remove prolog callback
-
 
 - metadata for encoding options
  - processing instructions
@@ -46,11 +39,10 @@
    - on instructions swap callbacks
    - on first non-instruction or prolog switch to generic
    
-- add option for encoding
- - option to set the default for various options
- 
+
 
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
+
 
 #rsync -vru --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/code/ox/ ~/git/ox
 rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/code/ox/ ~/git/ox
@@ -62,9 +54,3 @@ rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude
  - added reuse array to stop GC from reusing optimization global VALUEs
  - added option for xml encoding to dump
  - added default options
-  - encoding
-  - indent
-  - dtd
-  - circular
-  - xml
-  - instruct

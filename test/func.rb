@@ -22,7 +22,37 @@ opts.on("-h", "--help", "Show this display")                { puts opts; Process
 files = opts.parse(ARGV)
 
 class Func < ::Test::Unit::TestCase
-  
+
+  def test_options
+    opts = Ox.default_options()
+    assert_equal(opts, {
+                   :encoding=>nil,
+                   :indent=>2,
+                   :trace=>0,
+                   :with_dtd=>false,
+                   :with_xml=>true,
+                   :with_instructions=>false,
+                   :circular=>false,
+                   :xsd_date=>false,
+                   :mode=>nil,
+                   :effort=>:strict})
+    o2 = {
+      :encoding=>"UTF-8",
+      :indent=>4,
+      :trace=>1,
+      :with_dtd=>true,
+      :with_xml=>false,
+      :with_instructions=>true,
+      :circular=>true,
+      :xsd_date=>true,
+      :mode=>:object,
+      :effort=>:tolerant }
+    Ox.default_options = o2
+    opts = Ox.default_options()
+    assert_equal(opts, o2);
+    Ox.default_options = opts # return to original
+  end
+
   def test_nil
     dump_and_load(nil, false)
   end
@@ -133,7 +163,32 @@ class Func < ::Test::Unit::TestCase
     assert_equal(loaded.class.to_s, 'Bad')
     assert_equal(loaded.class.superclass.to_s, 'Ox::Bag')
   end
-  
+
+  def test_xml_instruction
+    xml = Ox.dump("test", mode: :object, with_xml: false)
+    assert_equal(xml, "<s>test</s>\n")
+    xml = Ox.dump("test", mode: :object, with_xml: true)
+    assert_equal(xml, "<?xml version=\"1.0\"?>\n<s>test</s>\n")
+    xml = Ox.dump("test", mode: :object, with_xml: true, encoding: 'UTF-8')
+    assert_equal(xml, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<s>test</s>\n")
+  end
+
+  def test_ox_instruction
+    xml = Ox.dump("test", mode: :object, with_xml: true, with_instructions: true)
+    assert_equal(xml, "<?xml version=\"1.0\"?>\n<?ox version=\"1.0\" mode=\"object\"?>\n<s>test</s>\n")
+    xml = Ox.dump("test", mode: :object, with_instructions: true)
+    assert_equal(xml, "<?ox version=\"1.0\" mode=\"object\"?>\n<s>test</s>\n")
+    xml = Ox.dump("test", mode: :object, with_instructions: true, circular: true, xsd_date: true)
+    assert_equal(xml, "<?ox version=\"1.0\" mode=\"object\" circular=\"yes\" xsd_date=\"yes\"?>\n<s i=\"1\">test</s>\n")
+    xml = Ox.dump("test", mode: :object, with_instructions: true, circular: false, xsd_date: false)
+    assert_equal(xml, "<?ox version=\"1.0\" mode=\"object\" circular=\"no\" xsd_date=\"no\"?>\n<s>test</s>\n")
+  end
+
+  def test_dtd
+    xml = Ox.dump("test", mode: :object, with_dtd: true)
+    assert_equal(xml, "<!DOCTYPE s SYSTEM \"ox.dtd\">\n<s>test</s>\n")
+  end
+
   def test_class
     dump_and_load(Bag, false)
   end
