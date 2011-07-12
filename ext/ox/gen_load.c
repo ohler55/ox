@@ -38,6 +38,7 @@
 #include "ox.h"
 
 static void     instruct(PInfo pi, const char *target, Attr attrs);
+static void     create_prolog_doc(PInfo pi, const char *target, Attr attrs);
 static void     nomode_instruct(PInfo pi, const char *target, Attr attrs);
 static void     add_doctype(PInfo pi, const char *docType);
 static void     add_comment(PInfo pi, const char *comment);
@@ -85,29 +86,36 @@ struct _ParseCallbacks   _ox_nomode_callbacks = {
 ParseCallbacks   ox_nomode_callbacks = &_ox_nomode_callbacks;
 
 static void
+create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
+    VALUE       doc;
+    VALUE       ah;
+    VALUE       nodes;
+
+    if (0 != pi->h) { // top level object
+        rb_raise(rb_eEncodingError, "Prolog must be the first element in an XML document.\n");
+    }
+    pi->h = pi->helpers;
+    doc = rb_obj_alloc(ox_document_clas);
+    ah = rb_hash_new();
+    for (; 0 != attrs->name; attrs++) {
+        rb_hash_aset(ah, ID2SYM(rb_intern(attrs->name)), rb_str_new2(attrs->value));
+        if (0 == strcmp("encoding", attrs->name)) {
+            pi->encoding = rb_enc_find(attrs->value);
+        }
+    }
+    nodes = rb_ary_new();
+    rb_ivar_set(doc, attributes_id, ah);
+    rb_ivar_set(doc, nodes_id, nodes);
+    pi->h->obj = nodes;
+    pi->obj = doc;
+}
+
+
+
+static void
 instruct(PInfo pi, const char *target, Attr attrs) {
     if (0 == strcmp("xml", target)) {
-        VALUE       doc;
-        VALUE       ah;
-        VALUE       nodes;
-
-        if (0 != pi->h) { // top level object
-            rb_raise(rb_eEncodingError, "Prolog must be the first element in an XML document.\n");
-        }
-        pi->h = pi->helpers;
-        doc = rb_obj_alloc(ox_document_clas);
-        ah = rb_hash_new();
-        for (; 0 != attrs->name; attrs++) {
-            rb_hash_aset(ah, ID2SYM(rb_intern(attrs->name)), rb_str_new2(attrs->value));
-            if (0 == strcmp("encoding", attrs->name)) {
-                pi->encoding = rb_enc_find(attrs->value);
-            }
-        }
-        nodes = rb_ary_new();
-        rb_ivar_set(doc, attributes_id, ah);
-        rb_ivar_set(doc, nodes_id, nodes);
-        pi->h->obj = nodes;
-        pi->obj = doc;
+        create_prolog_doc(pi, target, attrs);
     } else if (0 == strcmp("ox", target)) {
         for (; 0 != attrs->name; attrs++) {
             if (0 == strcmp("version", attrs->name)) {
@@ -127,27 +135,7 @@ instruct(PInfo pi, const char *target, Attr attrs) {
 static void
 nomode_instruct(PInfo pi, const char *target, Attr attrs) {
     if (0 == strcmp("xml", target)) {
-        VALUE       doc;
-        VALUE       ah;
-        VALUE       nodes;
-
-        if (0 != pi->h) { // top level object
-            rb_raise(rb_eEncodingError, "Prolog must be the first element in an XML document.\n");
-        }
-        pi->h = pi->helpers;
-        doc = rb_obj_alloc(ox_document_clas);
-        ah = rb_hash_new();
-        for (; 0 != attrs->name; attrs++) {
-            rb_hash_aset(ah, ID2SYM(rb_intern(attrs->name)), rb_str_new2(attrs->value));
-            if (0 == strcmp("encoding", attrs->name)) {
-                pi->encoding = rb_enc_find(attrs->value);
-            }
-        }
-        nodes = rb_ary_new();
-        rb_ivar_set(doc, attributes_id, ah);
-        rb_ivar_set(doc, nodes_id, nodes);
-        pi->h->obj = nodes;
-        pi->obj = doc;
+        create_prolog_doc(pi, target, attrs);
     } else if (0 == strcmp("ox", target)) {
         for (; 0 != attrs->name; attrs++) {
             if (0 == strcmp("version", attrs->name)) {

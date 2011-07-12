@@ -47,8 +47,6 @@ static char*    read_quoted_value(PInfo pi);
 static int      read_coded_char(PInfo pi);
 static void     next_non_white(PInfo pi);
 
-static int	validateProlog = 1;
-
 /* This XML parser is a single pass, destructive, callback parser. It is a
  * single pass parse since it only make one pass over the characters in the
  * XML document string. It is destructive because it re-uses the content of
