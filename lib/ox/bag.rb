@@ -54,35 +54,35 @@ module Ox
     end
     alias == eql?
     
-  end # Bag
-
-  # Define a new class based on the Ox::Bag class. This is used internally in
-  # the Ox module and is available to service wrappers that receive XML
-  # requests that include Objects of Classes not defined in the storage
-  # process.
-  # [classname] Class name or symbol that includes Module names
-  def self.define_class(classname)
-    classname = classname.to_s unless classname.is_a?(String)
-    tokens = classname.split('::').map { |n| n.to_sym }
-    raise "Invalid classname '#{classname}" if tokens.empty?
-    m = Object
-    tokens[0..-2].each do |sym|
-      if m.const_defined?(sym)
-        m = m.const_get(sym)
-      else
-        c = Module.new
-        m.const_set(sym, c)
-        m = c
+    # Define a new class based on the Ox::Bag class. This is used internally in
+    # the Ox module and is available to service wrappers that receive XML
+    # requests that include Objects of Classes not defined in the storage
+    # process.
+    # [classname] Class name or symbol that includes Module names
+    def self.define_class(classname)
+      classname = classname.to_s unless classname.is_a?(String)
+      tokens = classname.split('::').map { |n| n.to_sym }
+      raise "Invalid classname '#{classname}" if tokens.empty?
+      m = Object
+      tokens[0..-2].each do |sym|
+        if m.const_defined?(sym)
+          m = m.const_get(sym)
+        else
+          c = Module.new
+          m.const_set(sym, c)
+          m = c
+        end
       end
+      sym = tokens[-1]
+      if m.const_defined?(sym)
+        c = m.const_get(sym)
+      else
+        c = Class.new(Ox::Bag)
+        m.const_set(sym, c)
+      end
+      c
     end
-    sym = tokens[-1]
-    if m.const_defined?(sym)
-      c = m.const_get(sym)
-    else
-      c = Class.new(Ox::Bag)
-      m.const_set(sym, c)
-    end
-    c
-  end
+
+  end # Bag
 
 end # Ox

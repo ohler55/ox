@@ -123,7 +123,17 @@ static void     parse_dump_options(VALUE ropts, Options copts);
 
 /* call-seq: default_options() => Hash
  *
- * Returns the default load and dump options as a Hash.
+ * Returns the default load and dump options as a Hash. The options are
+ * - indent: [Fixnum] number of spaces to indent each element in an XML document
+ * - trace: [Fixnum] trace level where 0 is silent
+ * - encoding: [String] character encoding for the XML file
+ * - with_dtd: [true|false|nil] include DTD in the dump
+ * - with_instruct: [true|false|nil] include instructions in the dump
+ * - with_xml: [true|false|nil] include XML prolog in the dump
+ * - circular: [true|false|nil] support circular references while dumping
+ * - xsd_date: [true|false|nil] use XSD date format instead of decimal format
+ * - mode: [:object|:generic|:limited|nil] load method to use for XML
+ * - effort: [:strict|:tolerant|:auto_define] set the tolerance level for loading
  */
 static VALUE
 get_def_opts(VALUE self) {
@@ -157,7 +167,17 @@ get_def_opts(VALUE self) {
 
 /* call-seq: default_options=(Hash)
  *
- * Sets the default options for load and dump.
+ * Sets the default options for load and dump. Options are:
+ * - indent: [Fixnum] number of spaces to indent each element in an XML document
+ * - trace: [Fixnum] trace level where 0 is silent
+ * - encoding: [String] character encoding for the XML file
+ * - with_dtd: [true|false|nil] include DTD in the dump
+ * - with_instruct: [true|false|nil] include instructions in the dump
+ * - with_xml: [true|false|nil] include XML prolog in the dump
+ * - circular: [true|false|nil] support circular references while dumping
+ * - xsd_date: [true|false|nil] use XSD date format instead of decimal format
+ * - mode: [:object|:generic|:limited|nil] load method to use for XML
+ * - effort: [:strict|:tolerant|:auto_define] set the tolerance level for loading
  */
 static VALUE
 set_def_opts(VALUE self, VALUE opts) {
