@@ -11,34 +11,7 @@
 - DTD
  - add comments for each type
 
-- plan
- - instructions
-  - move parsing of prolog options into callbacks
-  - keep instruct and remove prolog callback
-
-- metadata for encoding options
- - processing instructions
-  - <?target data?>
-   - goes before first element, either size of <?xml?>
-   - <?ox mode='object' effort='strict' ?> optional
- - parse.c
-  - change read_prolog read_instructions
-   - grab chars until space
-   - if xml then read_prolog
-   - else pi->pcb->instruct
-    - add instruct to ParseCallbacks
-  - _ox_obj_callbacks
-   - change callbacks if pi->mode is not set
-    - pi->mode set from args
-    - pi->effort override as well from file if not set explicitly
-  - start with ox_auto_callbacks
-   - switch to correct one (object) after reading instructions or element func is called
-   - prolog should create doc object
-    - if gen then use that object
-    - if object then replace doc object
-   - on instructions swap callbacks
-   - on first non-instruction or prolog switch to generic
-   
+- add or change prolog to instruction for classes
 
 
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml

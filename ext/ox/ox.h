@@ -137,8 +137,7 @@ typedef struct _Helper {
 typedef struct _PInfo   *PInfo;
 
 typedef struct _ParseCallbacks {
-    void        (*add_prolog)(PInfo pi, const char *version, const char *encoding, const char *standalone);
-    void        (*instruct)(PInfo pi, const char *target, const char *instruction);
+    void        (*instruct)(PInfo pi, const char *target, Attr attrs);
     void        (*add_doctype)(PInfo pi, const char *docType);
     void        (*add_comment)(PInfo pi, const char *comment);
     void        (*add_cdata)(PInfo pi, const char *cdata, size_t len);

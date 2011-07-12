@@ -37,7 +37,8 @@
 #include "ruby.h"
 #include "ox.h"
 
-static void     add_prolog(PInfo pi, const char *version, const char *encoding, const char *standalone);
+static void     instruct(PInfo pi, const char *target, Attr attrs);
+static void     nomode_instruct(PInfo pi, const char *target, Attr attrs);
 static void     add_doctype(PInfo pi, const char *docType);
 static void     add_comment(PInfo pi, const char *comment);
 static void     add_cdata(PInfo pi, const char *cdata, size_t len);
@@ -45,9 +46,10 @@ static void     add_text(PInfo pi, char *text, int closed);
 static void     add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren);
 static void     end_element(PInfo pi, const char *ename);
 
+extern ParseCallbacks   ox_obj_callbacks;
+
 struct _ParseCallbacks   _ox_gen_callbacks = {
-    add_prolog,
-    0, // instruct,
+    instruct, // instruct,
     add_doctype,
     add_comment,
     add_cdata,
@@ -63,7 +65,6 @@ struct _ParseCallbacks   _ox_limited_callbacks = {
     0,
     0,
     0,
-    0,
     add_text,
     add_element,
     end_element,
@@ -71,33 +72,109 @@ struct _ParseCallbacks   _ox_limited_callbacks = {
 
 ParseCallbacks   ox_limited_callbacks = &_ox_limited_callbacks;
 
+struct _ParseCallbacks   _ox_nomode_callbacks = {
+    nomode_instruct,
+    add_doctype,
+    add_comment,
+    add_cdata,
+    add_text,
+    add_element,
+    end_element,
+};
+
+ParseCallbacks   ox_nomode_callbacks = &_ox_nomode_callbacks;
+
 static void
-add_prolog(PInfo pi, const char *version, const char *encoding, const char *standalone) {
-    VALUE       doc;
-    VALUE       ah;
-    VALUE       nodes;
-    
-    if (0 != pi->h) { // top level object
-        rb_raise(rb_eEncodingError, "Prolog must be the first element in an XML document.\n");
+instruct(PInfo pi, const char *target, Attr attrs) {
+    if (0 == strcmp("xml", target)) {
+        VALUE       doc;
+        VALUE       ah;
+        VALUE       nodes;
+
+        if (0 != pi->h) { // top level object
+            rb_raise(rb_eEncodingError, "Prolog must be the first element in an XML document.\n");
+        }
+        pi->h = pi->helpers;
+        doc = rb_obj_alloc(ox_document_clas);
+        ah = rb_hash_new();
+        for (; 0 != attrs->name; attrs++) {
+            rb_hash_aset(ah, ID2SYM(rb_intern(attrs->name)), rb_str_new2(attrs->value));
+            if (0 == strcmp("encoding", attrs->name)) {
+                pi->encoding = rb_enc_find(attrs->value);
+            }
+        }
+        nodes = rb_ary_new();
+        rb_ivar_set(doc, attributes_id, ah);
+        rb_ivar_set(doc, nodes_id, nodes);
+        pi->h->obj = nodes;
+        pi->obj = doc;
+    } else if (0 == strcmp("ox", target)) {
+        for (; 0 != attrs->name; attrs++) {
+            if (0 == strcmp("version", attrs->name)) {
+                if (0 != strcmp("1.0", attrs->value)) {
+                    rb_raise(rb_eEncodingError, "Only Ox XML Object version 1.0 supported, not %s.\n", attrs->value);
+                }
+            }
+            // ignore other instructions
+        }
+    } else {
+        if (TRACE <= pi->trace) {
+            printf("Processing instruction %s ignored.\n", target);
+        }
     }
-    pi->h = pi->helpers;
-    doc = rb_obj_alloc(ox_document_clas);
-    ah = rb_hash_new();
-    if (0 != version) {
-        rb_hash_aset(ah, version_sym, rb_str_new2(version));
+}
+
+static void
+nomode_instruct(PInfo pi, const char *target, Attr attrs) {
+    if (0 == strcmp("xml", target)) {
+        VALUE       doc;
+        VALUE       ah;
+        VALUE       nodes;
+
+        if (0 != pi->h) { // top level object
+            rb_raise(rb_eEncodingError, "Prolog must be the first element in an XML document.\n");
+        }
+        pi->h = pi->helpers;
+        doc = rb_obj_alloc(ox_document_clas);
+        ah = rb_hash_new();
+        for (; 0 != attrs->name; attrs++) {
+            rb_hash_aset(ah, ID2SYM(rb_intern(attrs->name)), rb_str_new2(attrs->value));
+            if (0 == strcmp("encoding", attrs->name)) {
+                pi->encoding = rb_enc_find(attrs->value);
+            }
+        }
+        nodes = rb_ary_new();
+        rb_ivar_set(doc, attributes_id, ah);
+        rb_ivar_set(doc, nodes_id, nodes);
+        pi->h->obj = nodes;
+        pi->obj = doc;
+    } else if (0 == strcmp("ox", target)) {
+        for (; 0 != attrs->name; attrs++) {
+            if (0 == strcmp("version", attrs->name)) {
+                if (0 != strcmp("1.0", attrs->value)) {
+                    rb_raise(rb_eEncodingError, "Only Ox XML Object version 1.0 supported, not %s.\n", attrs->value);
+                }
+            } else if (0 == strcmp("mode", attrs->name)) {
+                if (0 == strcmp("object", attrs->value)) {
+                    pi->pcb = ox_obj_callbacks;
+                    pi->obj = Qnil;
+                    pi->h = 0;
+                } else if (0 == strcmp("generic", attrs->value)) {
+                    pi->pcb = ox_gen_callbacks;
+                } else if (0 == strcmp("limited", attrs->value)) {
+                    pi->pcb = ox_limited_callbacks;
+                    pi->obj = Qnil;
+                    pi->h = 0;
+                } else {
+                    rb_raise(rb_eEncodingError, "%s is not a valid processing instruction mode.\n", attrs->value);
+                }
+            }
+        }
+    } else {
+        if (TRACE <= pi->trace) {
+            printf("Processing instruction %s ignored.\n", target);
+        }
     }
-    if (0 != encoding) {
-        rb_hash_aset(ah, encoding_sym, rb_str_new2(encoding));
-        pi->encoding = rb_enc_find(encoding);
-    }
-    if (0 != standalone) {
-        rb_hash_aset(ah, standalone_sym, rb_str_new2(standalone));
-    }
-    nodes = rb_ary_new();
-    rb_ivar_set(doc, attributes_id, ah);
-    rb_ivar_set(doc, nodes_id, nodes);
-    pi->h->obj = nodes;
-    pi->obj = doc;
 }
 
 static void

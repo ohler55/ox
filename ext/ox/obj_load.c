@@ -40,7 +40,7 @@
 #include "base64.h"
 #include "ox.h"
 
-static void     add_prolog(PInfo pi, const char *version, const char *encoding, const char *standalone);
+static void     instruct(PInfo pi, const char *target, Attr attrs);
 static void     add_text(PInfo pi, char *text, int closed);
 static void     add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren);
 static void     end_element(PInfo pi, const char *ename);
@@ -65,8 +65,7 @@ static void             fill_indent(PInfo pi, char *buf, size_t size);
 
 
 struct _ParseCallbacks   _ox_obj_callbacks = {
-    add_prolog,
-    0, // instruct,
+    instruct, // instruct,
     0, // add_doctype,
     0, // add_comment,
     0, // add_cdata,
@@ -343,9 +342,13 @@ parse_regexp(const char *text) {
 }
 
 static void
-add_prolog(PInfo pi, const char *version, const char *encoding, const char *standalone) {
-    if (0 != encoding) {
-        pi->encoding = rb_enc_find(encoding);
+instruct(PInfo pi, const char *target, Attr attrs) {
+    if (0 == strcmp("xml", target)) {
+        for (; 0 != attrs->name; attrs++) {
+            if (0 == strcmp("encoding", attrs->name)) {
+                pi->encoding = rb_enc_find(attrs->value);
+            }
+        }
     }
 }
 

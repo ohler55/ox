@@ -117,6 +117,7 @@ static struct _Options  default_options = {
 extern ParseCallbacks   ox_obj_callbacks;
 extern ParseCallbacks   ox_gen_callbacks;
 extern ParseCallbacks   ox_limited_callbacks;
+extern ParseCallbacks   ox_nomode_callbacks;
 
 static void     parse_dump_options(VALUE ropts, Options copts);
 
@@ -318,7 +319,8 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
         obj = parse(xml, ox_limited_callbacks, 0, options.trace, StrictEffort);
         break;
     case NoMode:
-        // TBD get mode from xml or use generic
+        obj = parse(xml, ox_nomode_callbacks, 0, options.trace, options.effort);
+        break;
     default:
         obj = parse(xml, ox_gen_callbacks, 0, options.trace, StrictEffort);
         break;

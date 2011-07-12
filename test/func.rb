@@ -23,19 +23,33 @@ files = opts.parse(ARGV)
 
 class Func < ::Test::Unit::TestCase
 
-  def test_options
+  def test_get_options
     opts = Ox.default_options()
     assert_equal(opts, {
                    :encoding=>nil,
                    :indent=>2,
                    :trace=>0,
                    :with_dtd=>false,
-                   :with_xml=>true,
+                   :with_xml=>false,
                    :with_instructions=>false,
                    :circular=>false,
                    :xsd_date=>false,
                    :mode=>nil,
                    :effort=>:strict})
+  end
+
+  def test_set_options
+    orig = {
+      :encoding=>nil,
+      :indent=>2,
+      :trace=>0,
+      :with_dtd=>false,
+      :with_xml=>true,
+      :with_instructions=>false,
+      :circular=>false,
+      :xsd_date=>false,
+      :mode=>nil,
+      :effort=>:strict}
     o2 = {
       :encoding=>"UTF-8",
       :indent=>4,
@@ -50,7 +64,7 @@ class Func < ::Test::Unit::TestCase
     Ox.default_options = o2
     opts = Ox.default_options()
     assert_equal(opts, o2);
-    Ox.default_options = opts # return to original
+    Ox.default_options = orig # return to original
   end
 
   def test_nil
@@ -269,6 +283,14 @@ class Func < ::Test::Unit::TestCase
     assert_equal(obj, loaded)
     loaded
   end
+
+  def test_instructions
+    xml = Ox.dump("test", with_instructions: true)
+    puts xml
+    obj = Ox.load(xml) # should convert it to an object
+    assert_equal("test", obj)
+  end
+
 
 end
 

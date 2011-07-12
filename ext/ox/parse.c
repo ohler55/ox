@@ -37,7 +37,6 @@
 #include "ox.h"
 
 static void     read_instruction(PInfo pi);
-static void     read_prolog(PInfo pi);
 static void     read_doctype(PInfo pi);
 static void     read_comment(PInfo pi);
 static void     read_element(PInfo pi);
@@ -152,93 +151,48 @@ parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
  */
 static void
 read_instruction(PInfo pi) {
-    if (0 == strncasecmp("xml", pi->s, 3)) {
-        read_prolog(pi);
-    } else {
+    struct _Attr        attrs[MAX_ATTRS + 1];
+    Attr                a = attrs;
+    char                *target;
+    char                *end;
+    char                c;
+        
+    memset(attrs, 0, sizeof(attrs));
+    target = read_name_token(pi);
+    end = pi->s;
+    next_non_white(pi);
+    c = *pi->s;
+    *end = '\0'; // terminate name
+    if ('?' != c) {
         while ('?' != *pi->s) {
             if ('\0' == *pi->s) {
                 raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
             }
-	    pi->s++;
+            next_non_white(pi);
+            a->name = read_name_token(pi);
+            end = pi->s;
+            next_non_white(pi);
+            if ('=' != *pi->s++) {
+                raise_error("invalid format, no attribute value", pi->str, pi->s);
+            }
+            *end = '\0'; // terminate name
+            // read value
+            next_non_white(pi);
+            a->value = read_quoted_value(pi);
+            a++;
+            if (MAX_ATTRS <= (a - attrs)) {
+                raise_error("too many attributes", pi->str, pi->s);
+            }
         }
         if ('?' == *pi->s) {
             pi->s++;
         }
-        if ('>' != *pi->s++) {
-            raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
-        }
-        // TBD
-    }
-}
-
-static void
-read_prolog(PInfo pi) {
-    char        *version = 0;
-    char        *encoding = 0;
-    char        *standalone = 0;
-    char        *name;
-    char        *end;
-    char        c;
-    
-    pi->s += 3;	// past xml
-    /* looking for ?> to terminate the prolog */
-    while ('?' != *pi->s) {
-	if ('\0' == *pi->s) {
-	    raise_error("invalid format, prolog not terminated", pi->str, pi->s);
-	}
-        name = read_name_token(pi);
-        end = pi->s;
-	next_non_white(pi);
-        c = *pi->s;
-        *end = '\0'; // terminate name
-        if ('=' == c) {
-	    // Figure out what the token is, read a value for it, and check
-	    // against supported values.
-	    pi->s++;
-	    next_non_white(pi);
-	    if (0 == strcasecmp("version", name)) {
-		version = read_quoted_value(pi);
-		if (validateProlog &&
-                    (0 != strcmp("1.0", version) &&
-                     0 != strcmp("1.1", version))) {
-		    raise_error("invalid format, wrong XML version", pi->str, pi->s);
-		}
-	    } else if (0 == strcasecmp("encoding", name)) {
-		encoding = read_quoted_value(pi);
-                /*
-		if (validateProlog && 0 != strcasecmp("UTF-8", encoding)) {
-		    raise_error("invalid format, only UTF-8 supported", pi->str, pi->s);
-		}
-                */
-	    } else if (0 == strcasecmp("standalone", name)) {
-		standalone = read_quoted_value(pi);
-		if (validateProlog && 0 != strcmp("yes", standalone)) {
-		    raise_error("invalid format, only standalone XML supported", pi->str, pi->s);
-		}
-	    } else {
-		raise_error("invalid format, unknown prolog attribute", pi->str, pi->s);
-	    }
-	} else if ('?' == c) {
-	    pi->s++;
-	    if ('>' != *pi->s++) {
-		raise_error("invalid format, prolog not terminated", pi->str, pi->s);
-	    }
-	    return;
-	} else {
-	    raise_error("invalid format, prolog format error", pi->str, pi->s);
-	}
-    }
-    if ('\0' == pi->s) {
-	raise_error("invalid format, prolog not terminated", pi->str, pi->s);
-    }
-    if ('?' == *pi->s) {
-	pi->s++;
     }
     if ('>' != *pi->s++) {
-	raise_error("invalid format, prolog not terminated", pi->str, pi->s);
+        raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
     }
-    if (0 != pi->pcb->add_prolog) {
-        pi->pcb->add_prolog(pi, version, encoding, standalone);
+    if (0 != pi->pcb->instruct) {
+        pi->pcb->instruct(pi, target, attrs);
     }
 }
 
