@@ -11,7 +11,7 @@
 - DTD
  - add comments for each type
 
-- add or change prolog to instruction for classes
+- add @instructions to Document
 
 
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
