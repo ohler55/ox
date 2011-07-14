@@ -485,7 +485,7 @@ parse_dump_options(VALUE ropts, Options copts) {
 static VALUE
 dump(int argc, VALUE *argv, VALUE self) {
     char                *xml;
-    struct _Options     copts;
+    struct _Options     copts = default_options;
     VALUE               rstr;
     
     if (2 == argc) {
