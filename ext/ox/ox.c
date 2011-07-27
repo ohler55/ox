@@ -201,14 +201,19 @@ set_def_opts(VALUE self, VALUE opts) {
         Check_Type(v, T_STRING);
         strncpy(default_options.encoding, StringValuePtr(v), sizeof(default_options.encoding) - 1);
     }
+
     v = rb_hash_aref(opts, indent_sym);
-    Check_Type(v, T_FIXNUM);
-    default_options.indent = FIX2INT(v);
+    if (Qnil != v) {
+        Check_Type(v, T_FIXNUM);
+        default_options.indent = FIX2INT(v);
+    }
 
     v = rb_hash_aref(opts, trace_sym);
-    Check_Type(v, T_FIXNUM);
-    default_options.trace = FIX2INT(v);
-    
+    if (Qnil != v) {
+        Check_Type(v, T_FIXNUM);
+        default_options.trace = FIX2INT(v);
+    }
+
     v = rb_hash_aref(opts, mode_sym);
     if (Qnil == v) {
         default_options.mode = NoMode;

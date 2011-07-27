@@ -62,9 +62,11 @@ class Func < ::Test::Unit::TestCase
       :xsd_date=>true,
       :mode=>:object,
       :effort=>:tolerant }
+    o3 = { :xsd_date=>false }
     Ox.default_options = o2
     opts = Ox.default_options()
     assert_equal(opts, o2);
+    Ox.default_options = o3 # see if it throws an exception
     Ox.default_options = orig # return to original
   end
 
