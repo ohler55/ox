@@ -495,6 +495,9 @@ dump(int argc, VALUE *argv, VALUE self) {
         rb_raise(rb_eNoMemError, "Not enough memory.\n");
     }
     rstr = rb_str_new2(xml);
+    if ('\0' != *copts.encoding) {
+        rb_enc_associate(rstr, rb_enc_find(copts.encoding));
+    }
     free(xml);
 
     return rstr;
