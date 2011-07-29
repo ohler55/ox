@@ -304,6 +304,16 @@ class Func < ::Test::Unit::TestCase
     assert_equal("test", obj)
   end
 
+  def test_IO
+    f = File.open("func.rb", "r")
+    assert_raise(NotImplementedError) {
+      xml = Ox.dump(f, effort: :strict)
+    }
+    xml = Ox.dump(f, effort: :tolerant)
+    obj = Ox.load(xml, mode: :object) # should convert it to an object
+    assert_equal(nil, obj)
+  end
+
 end
 
 class Bag

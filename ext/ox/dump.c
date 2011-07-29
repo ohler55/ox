@@ -65,13 +65,14 @@ typedef struct _Out {
     unsigned long       circ_cnt;
     int                 indent;
     int                 depth; // used by dumpHash
+    Options             opts;
 } *Out;
 
 static void     dump_obj_to_xml(VALUE obj, Options copts, Out out);
 
-static void     dump_first_obj(VALUE obj, Options copts, Out out);
+static void     dump_first_obj(VALUE obj, Out out);
 static void     dump_obj(ID aid, VALUE obj, unsigned int depth, Out out);
-static void     dump_gen_doc(VALUE obj, unsigned int depth, Options copts, Out out);
+static void     dump_gen_doc(VALUE obj, unsigned int depth, Out out);
 static void     dump_gen_element(VALUE obj, unsigned int depth, Out out);
 static int      dump_gen_attr(VALUE key, VALUE value, Out out);
 static int      dump_gen_nodes(VALUE obj, unsigned int depth, Out out);
@@ -389,8 +390,9 @@ dump_time_xsd(Out out, VALUE obj) {
 }
 
 static void
-dump_first_obj(VALUE obj, Options copts, Out out) {
+dump_first_obj(VALUE obj, Out out) {
     char        buf[128];
+    Options     copts = out->opts;
     int         cnt;
 
     if (Yes == copts->with_xml) {
@@ -622,7 +624,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         if (ox_document_clas == clas) {
             e.type = RawCode;
             out->w_start(out, &e);
-            dump_gen_doc(obj, depth + 1, 0, out);
+            dump_gen_doc(obj, depth + 1, out);
             out->w_end(out, &e);
         } else if (ox_element_clas == clas) {
             e.type = RawCode;
@@ -730,7 +732,14 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         break;
     }
     default:
-        rb_raise(rb_eNotImpError, "Failed to dump %s Object (%02x)\n", rb_class2name(rb_obj_class(obj)), rb_type(obj));
+        if (StrictEffort == out->opts->effort) {
+            rb_raise(rb_eNotImpError, "Failed to dump %s Object (%02x)\n",
+                     rb_class2name(rb_obj_class(obj)), rb_type(obj));
+        } else {
+            e.type = NilClassCode;  e.clas.len = 0;  e.clas.str = 0;
+            e.closed = 1;
+            out->w_start(out, &e);
+        }
         break;
     }
 }
@@ -751,18 +760,18 @@ dump_hash(VALUE key, VALUE value, Out out) {
 }
 
 static void
-dump_gen_doc(VALUE obj, unsigned int depth, Options copts, Out out) {
+dump_gen_doc(VALUE obj, unsigned int depth, Out out) {
     VALUE       attrs = rb_attr_get(obj, attributes_id);
     VALUE       nodes = rb_attr_get(obj, nodes_id);
 
-    if (Yes == copts->with_xml) {
+    if (Yes == out->opts->with_xml) {
         dump_value(out, "<?xml", 5);
         if (Qnil != attrs) {
             rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
         }
         dump_value(out, "?>", 2);
     }
-    if (Yes == copts->with_instruct) {
+    if (Yes == out->opts->with_instruct) {
         if (out->buf < out->cur) {
             dump_value(out, "\n<?ox version=\"1.0\" mode=\"generic\"?>", 36);
         } else {
@@ -915,18 +924,19 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
     out->cur = out->buf;
     out->circ_cache = 0;
     out->circ_cnt = 0;
+    out->opts = copts;
     if (Yes == copts->circular) {
         ox_cache8_new(&out->circ_cache);
     }
     out->indent = copts->indent;
     if (ox_document_clas == clas) {
-        dump_gen_doc(obj, -1, copts, out);
+        dump_gen_doc(obj, -1, out);
     } else if (ox_element_clas == clas) {
         dump_gen_element(obj, 0, out);
     } else {
         out->w_start = dump_start;
         out->w_end = dump_end;
-        dump_first_obj(obj, copts, out);
+        dump_first_obj(obj, out);
     }
     dump_value(out, "\n", 1);
 }

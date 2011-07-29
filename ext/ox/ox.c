@@ -462,6 +462,17 @@ parse_dump_options(VALUE ropts, Options copts) {
             }
             strncpy(copts->encoding, StringValuePtr(v), sizeof(copts->encoding) - 1);
         }
+        if (Qnil != (v = rb_hash_lookup(ropts, effort_sym))) {
+            if (auto_define_sym == v) {
+                copts->effort = AutoEffort;
+            } else if (tolerant_sym == v) {
+                copts->effort = TolerantEffort;
+            } else if (strict_sym == v) {
+                copts->effort = StrictEffort;
+            } else {
+                rb_raise(rb_eArgError, ":effort must be :strict, :tolerant, or :auto_define.\n");
+            }
+        }
         for (o = ynos; 0 != o->attr; o++) {
             if (Qnil != (v = rb_hash_lookup(ropts, o->sym))) {
                 VALUE       c = rb_obj_class(v);
@@ -486,6 +497,9 @@ parse_dump_options(VALUE ropts, Options copts) {
  *           [:indent]   number of spaces to use as the standard indention, default: 2
  *           [:xsd_date] use XSD date format if true, default: false
  *           [:circular] allow circular references, default: false
+ *           [:effort] effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
+ *                     [:strict]   raise an NotImplementedError if an undumpable object is encountered
+ *                     [:tolerant] replaces undumplable objects with nil
  */
 static VALUE
 dump(int argc, VALUE *argv, VALUE self) {
@@ -510,13 +524,16 @@ dump(int argc, VALUE *argv, VALUE self) {
 
 /* call-seq: to_file(file_path, obj, options)
  *
- * Dumps and Object to the specified file.
+ * Dumps an Object to the specified file.
  * [file_path] file path to write the XML document to
  * [obj]       Object to serialize as an XML document String
  * [options]   formating options
  *             [:indent]   number of spaces to use as the standard indention, default: 2
  *             [:xsd_date] use XSD date format if true, default: false
  *             [:circular] allow circular references, default: false
+ *             [:effort]   effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
+ *                       [:strict]   raise an NotImplementedError if an undumpable object is encountered
+ *                       [:tolerant] replaces undumplable objects with nil
  */
 static VALUE
 to_file(int argc, VALUE *argv, VALUE self) {
