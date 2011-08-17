@@ -22,8 +22,7 @@ rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude
 rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/git/ox/ ~/code/ox
 
 
-- changes
- - fixed large string corruption issue
- - added reuse array to stop GC from reusing optimization global VALUEs
- - added option for xml encoding to dump
- - added default options
+- changes for 1.2.6
+ - changed comment format to yardoc
+ - fixed exception bug in Bag
+

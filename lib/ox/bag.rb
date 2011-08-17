@@ -11,7 +11,8 @@ module Ox
     # The initializer can take multiple arguments in the form of key values
     # where the key is the variable name and the value is the variable
     # value. This is intended for testing purposes only.
-    # Example: Ox::Bag.new(:@x => 42, :@y => 57)
+    # @example Ox::Bag.new(:@x => 42, :@y => 57)
+    # @param [Hash] args instance variable symbols and their values
     def initialize(args={ })
       args.each do |k,v|
         self.instance_variable_set(k, v)
@@ -22,9 +23,10 @@ module Ox
       end
     end
 
-    # Replaces the Object.respond_to?() method to return true for any method
-    # than matches instance variables.
-    # [m] method symbol
+    # Replaces the Object.respond_to?() method.
+    # @param [Symbol] m method symbol
+    # @return [Boolean] true for any method that matches an instance
+    #                   variable reader, otherwise false.
     def respond_to?(m)
       at_m = ('@' + m.to_s).to_sym
       instance_variables.include?(at_m)
@@ -32,16 +34,20 @@ module Ox
 
     # Handles requests for variable values. Others cause an Exception to be
     # raised.
-    # [m] method symbol
+    # @param [Symbol] m method symbol
+    # @return [Boolean] the value of the specified instance variable.
+    # @raise [ArgumentError] if an argument is given. Zero arguments expected.
+    # @raise [NoMethodError] if the instance variable is not defined.
     def method_missing(m, *args, &block)
-      raise ArgumentError.new("wrong number of arguments(#{args.size} for 0)") unless args.nil? or args.empty?
+      raise ArgumentError.new("wrong number of arguments (#{args.size} for 0) to method #{m}") unless args.nil? or args.empty?
       at_m = ('@' + m.to_s).to_sym
-      raise NoMethodError("undefined method", m) unless instance_variable_defined?(at_m)
+      raise NoMethodError.new("undefined method #{m}", m) unless instance_variable_defined?(at_m)
       instance_variable_get(at_m)
     end
 
-    # Replace eql?() with something more reasonable for this Class.
-    # [other] Object to compare this one to
+    # Replaces eql?() with something more reasonable for this Class.
+    # @param [Object] other Object to compare self to
+    # @return [Boolean] true if each variable and value are the same, otherwise false.
     def eql?(other)
       return false if (other.nil? or self.class != other.class)
       ova = other.instance_variables
@@ -58,11 +64,13 @@ module Ox
     # the Ox module and is available to service wrappers that receive XML
     # requests that include Objects of Classes not defined in the storage
     # process.
-    # [classname] Class name or symbol that includes Module names
+    # @param [String] classname Class name or symbol that includes Module names.
+    # @return [Object] an instance of the specified Class.
+    # @raise [NameError] if the classname is invalid.
     def self.define_class(classname)
       classname = classname.to_s unless classname.is_a?(String)
       tokens = classname.split('::').map { |n| n.to_sym }
-      raise "Invalid classname '#{classname}" if tokens.empty?
+      raise NameError.new("Invalid classname '#{classname}") if tokens.empty?
       m = Object
       tokens[0..-2].each do |sym|
         if m.const_defined?(sym)
@@ -84,5 +92,4 @@ module Ox
     end
 
   end # Bag
-
 end # Ox

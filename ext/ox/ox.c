@@ -134,6 +134,7 @@ static void     parse_dump_options(VALUE ropts, Options copts);
  * - xsd_date: [true|false|nil] use XSD date format instead of decimal format
  * - mode: [:object|:generic|:limited|nil] load method to use for XML
  * - effort: [:strict|:tolerant|:auto_define] set the tolerance level for loading
+ * @return [Hash] all current option settings.
  */
 static VALUE
 get_def_opts(VALUE self) {
@@ -165,19 +166,21 @@ get_def_opts(VALUE self) {
     return opts;
 }
 
-/* call-seq: default_options=(Hash)
+/* call-seq: default_options=(opts)
  *
- * Sets the default options for load and dump. Options are:
- * - indent: [Fixnum] number of spaces to indent each element in an XML document
- * - trace: [Fixnum] trace level where 0 is silent
- * - encoding: [String] character encoding for the XML file
- * - with_dtd: [true|false|nil] include DTD in the dump
- * - with_instruct: [true|false|nil] include instructions in the dump
- * - with_xml: [true|false|nil] include XML prolog in the dump
- * - circular: [true|false|nil] support circular references while dumping
- * - xsd_date: [true|false|nil] use XSD date format instead of decimal format
- * - mode: [:object|:generic|:limited|nil] load method to use for XML
- * - effort: [:strict|:tolerant|:auto_define] set the tolerance level for loading
+ * Sets the default options for load and dump.
+ * @param [Hash] opts options to change
+ * @param [Fixnum] :indent number of spaces to indent each element in an XML document
+ * @param [Fixnum] :trace trace level where 0 is silent
+ * @param [String] :encoding character encoding for the XML file
+ * @param [true|false|nil] :with_dtd include DTD in the dump
+ * @param [true|false|nil] :with_instruct include instructions in the dump
+ * @param [true|false|nil] :with_xml include XML prolog in the dump
+ * @param [true|false|nil] :circular support circular references while dumping
+ * @param [true|false|nil] :xsd_date use XSD date format instead of decimal format
+ * @param [:object|:generic|:limited|nil] :mode load method to use for XML
+ * @param [:strict|:tolerant|:auto_define] :effort set the tolerance level for loading
+ * @return [nil]
  */
 static VALUE
 set_def_opts(VALUE self, VALUE opts) {
@@ -261,7 +264,8 @@ set_def_opts(VALUE self, VALUE opts) {
  * optimized XML formated String. For other formats use the more generic
  * Ox.load() method.  Raises an exception if the XML is malformed or the
  * classes specified in the file are not valid.
- * [xml] XML String in optimized Object format.
+ * @param [String] xml XML String in optimized Object format.
+ * @return [Object] deserialized Object.
  */
 static VALUE
 to_obj(VALUE self, VALUE ruby_xml) {
@@ -279,8 +283,9 @@ to_obj(VALUE self, VALUE ruby_xml) {
 /* call-seq: parse(xml) => Ox::Document or Ox::Element
  *
  * Parses and XML document String into an Ox::Document or Ox::Element.
- * Raises an exception if the XML is malformed.
- * [xml] XML String
+ * @param [String] xml XML String
+ * @return [Ox::Document or Ox::Element] parsed XML document.
+ * @raise [Exception] if the XML is malformed.
  */
 static VALUE
 to_gen(VALUE self, VALUE ruby_xml) {
