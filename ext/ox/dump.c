@@ -539,8 +539,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             dump_value(out, b64, size);
             e.indent = -1;
             out->w_end(out, &e);
-            // TBD pass in flag to free if failure
-            if (sizeof(buf64) <= size) {
+            if (buf64 != b64) {
                 free(b64);
             }
         }
@@ -677,7 +676,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             }
             to_base64((u_char*)s, cnt, b64);
             dump_value(out, b64, size);
-            if (sizeof(buf64) <= size) {
+            if (buf64 != b64) {
                 free(b64);
             }
         }

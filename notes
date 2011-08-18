@@ -25,4 +25,5 @@ rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude
 - changes for 1.2.6
  - changed comment format to yardoc
  - fixed exception bug in Bag
+ - initialized options in Ox.to_file
 

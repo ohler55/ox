@@ -251,6 +251,7 @@ set_def_opts(VALUE self, VALUE opts) {
         } else if (Qfalse == v) {
             *o->attr = No;
         } else {
+            // TBD get length
             rb_raise(rb_eArgError, "%s must be true, false, or nil.\n", StringValuePtr(o->sym));
         }
     }
@@ -274,6 +275,7 @@ to_obj(VALUE self, VALUE ruby_xml) {
 
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
+    // TBD get length
     xml = strdup(StringValuePtr(ruby_xml));
     obj = parse(xml, ox_obj_callbacks, 0, 0, StrictEffort);
     free(xml);
@@ -294,6 +296,7 @@ to_gen(VALUE self, VALUE ruby_xml) {
 
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
+    // TBD get length
     xml = strdup(StringValuePtr(ruby_xml));
     obj = parse(xml, ox_gen_callbacks, 0, 0, StrictEffort);
     free(xml);
@@ -383,6 +386,7 @@ load_str(int argc, VALUE *argv, VALUE self) {
     
     Check_Type(*argv, T_STRING);
     // the xml string gets modified so make a copy of it
+    // TBD get length
     xml = strdup(StringValuePtr(*argv));
 
     return load(xml, argc - 1, argv + 1, self);
@@ -413,6 +417,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
     unsigned long       len;
     
     Check_Type(*argv, T_STRING);
+    // TBD get length
     path = StringValuePtr(*argv);
     if (0 == (f = fopen(path, "r"))) {
         rb_raise(rb_eIOError, "%s\n", strerror(errno));
@@ -487,6 +492,7 @@ parse_dump_options(VALUE ropts, Options copts) {
                 } else if (rb_cFalseClass == c) {
                     *o->attr = No;
                 } else {
+                    // TBD get length or copy into buffer
                     rb_raise(rb_eArgError, "%s must be true or false.\n", StringValuePtr(o->sym));
                 }
             }
@@ -542,12 +548,13 @@ dump(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE
 to_file(int argc, VALUE *argv, VALUE self) {
-    struct _Options     copts;
+    struct _Options     copts = default_options;
     
     if (3 == argc) {
         parse_dump_options(argv[2], &copts);
     }
     Check_Type(*argv, T_STRING);
+    // TBD get length
     write_obj_to_file(argv[1], StringValuePtr(*argv), &copts);
 
     return Qnil;
