@@ -251,7 +251,6 @@ set_def_opts(VALUE self, VALUE opts) {
         } else if (Qfalse == v) {
             *o->attr = No;
         } else {
-            // TBD get length
             rb_raise(rb_eArgError, "%s must be true, false, or nil.\n", StringValuePtr(o->sym));
         }
     }
@@ -275,7 +274,6 @@ to_obj(VALUE self, VALUE ruby_xml) {
 
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
-    // TBD get length
     xml = strdup(StringValuePtr(ruby_xml));
     obj = parse(xml, ox_obj_callbacks, 0, 0, StrictEffort);
     free(xml);
@@ -296,7 +294,6 @@ to_gen(VALUE self, VALUE ruby_xml) {
 
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
-    // TBD get length
     xml = strdup(StringValuePtr(ruby_xml));
     obj = parse(xml, ox_gen_callbacks, 0, 0, StrictEffort);
     free(xml);
@@ -368,17 +365,17 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
  * Parses and XML document String into an Ox::Document, or Ox::Element, or
  * Object depending on the options.  Raises an exception if the XML is
  * malformed or the classes specified are not valid.
- * [xml]     XML String
- * [options] load options
- *           [:mode]   format expected
- *                     [:object]  object format
- *                     [:generic] read as a generic XML file
- *                     [:limited] read as a generic XML file but with callbacks on text and elements events only
- *           [:effort] effort to use when an undefined class is encountered, default: :strict
- *                     [:strict]      raise an NameError for missing classes and modules
- *                     [:tolerant]    return nil for missing classes and modules
- *                     [:auto_define] auto define missing classes and modules
- *           [:trace]  trace level as a Fixnum, default: 0 (silent)
+ * @param [String] xml XML String
+ * @param [Hash] options load options
+ * @param [:object|:generic|:limited] :mode format expected
+ *  - *:object* - object format
+ *  - *:generic* - read as a generic XML file
+ *  - *:limited* - read as a generic XML file but with callbacks on text and elements events only
+ * @param [:strict|:tolerant|:auto_define] :effort effort to use when an undefined class is encountered, default: :strict
+ *  - *:strict* - raise an NameError for missing classes and modules
+ *  - *:tolerant* - return nil for missing classes and modules
+ *  - *:auto_define* - auto define missing classes and modules
+ * @param [Fixnum] :trace trace level as a Fixnum, default: 0 (silent)
  */
 static VALUE
 load_str(int argc, VALUE *argv, VALUE self) {
@@ -386,7 +383,6 @@ load_str(int argc, VALUE *argv, VALUE self) {
     
     Check_Type(*argv, T_STRING);
     // the xml string gets modified so make a copy of it
-    // TBD get length
     xml = strdup(StringValuePtr(*argv));
 
     return load(xml, argc - 1, argv + 1, self);
@@ -397,17 +393,17 @@ load_str(int argc, VALUE *argv, VALUE self) {
  * Parses and XML document from a file into an Ox::Document, or Ox::Element,
  * or Object depending on the options.  Raises an exception if the XML is
  * malformed or the classes specified are not valid.
- * [file_path] file path to read the XML document from
- * [options] load options
- *           [:mode]   format expected
- *                     [:object]  object format
- *                     [:generic] read as a generic XML file
- *                     [:limited] read as a generic XML file but with callbacks on text and elements events only
- *           [:effort] effort to use when an undefined class is encountered, default: :strict
- *                     [:strict]      raise an NameError for missing classes and modules
- *                     [:tolerant]    return nil for missing classes and modules
- *                     [:auto_define] auto define missing classes and modules
- *           [:trace]  trace level as a Fixnum, default: 0 (silent)
+ * @param [String] file_path file path to read the XML document from
+ * @param [Hash] options load options
+ * @param [:object|:generic|:limited] :mode format expected
+ *  - *:object* - object format
+ *  - *:generic* - read as a generic XML file
+ *  - *:limited* - read as a generic XML file but with callbacks on text and elements events only
+ * @param [:strict|:tolerant|:auto_define] :effort effort to use when an undefined class is encountered, default: :strict
+ *  - *:strict* - raise an NameError for missing classes and modules
+ *  - *:tolerant* - return nil for missing classes and modules
+ *  - *:auto_define* - auto define missing classes and modules
+ * @param [Fixnum] :trace trace level as a Fixnum, default: 0 (silent)
  */
 static VALUE
 load_file(int argc, VALUE *argv, VALUE self) {
@@ -417,7 +413,6 @@ load_file(int argc, VALUE *argv, VALUE self) {
     unsigned long       len;
     
     Check_Type(*argv, T_STRING);
-    // TBD get length
     path = StringValuePtr(*argv);
     if (0 == (f = fopen(path, "r"))) {
         rb_raise(rb_eIOError, "%s\n", strerror(errno));
@@ -492,7 +487,6 @@ parse_dump_options(VALUE ropts, Options copts) {
                 } else if (rb_cFalseClass == c) {
                     *o->attr = No;
                 } else {
-                    // TBD get length or copy into buffer
                     rb_raise(rb_eArgError, "%s must be true or false.\n", StringValuePtr(o->sym));
                 }
             }
@@ -503,14 +497,14 @@ parse_dump_options(VALUE ropts, Options copts) {
 /* call-seq: dump(obj, options) => xml-string
  *
  * Dumps an Object (obj) to a string.
- * [obj]     Object to serialize as an XML document String
- * [options] formating options
- *           [:indent]   number of spaces to use as the standard indention, default: 2
- *           [:xsd_date] use XSD date format if true, default: false
- *           [:circular] allow circular references, default: false
- *           [:effort] effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
- *                     [:strict]   raise an NotImplementedError if an undumpable object is encountered
- *                     [:tolerant] replaces undumplable objects with nil
+ * @param [Object] obj Object to serialize as an XML document String
+ * @param [Hash] options formating options
+ * @param [Fixnum] :indent format expected
+ * @param [true|false] :xsd_date use XSD date format if true, default: false
+ * @param [true|false] :circular allow circular references, default: false
+ * @param [:strict|:tolerant] :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
+ *  - *:strict* - raise an NotImplementedError if an undumpable object is encountered
+ *  - *:tolerant* - replaces undumplable objects with nil
  */
 static VALUE
 dump(int argc, VALUE *argv, VALUE self) {
@@ -536,15 +530,15 @@ dump(int argc, VALUE *argv, VALUE self) {
 /* call-seq: to_file(file_path, obj, options)
  *
  * Dumps an Object to the specified file.
- * [file_path] file path to write the XML document to
- * [obj]       Object to serialize as an XML document String
- * [options]   formating options
- *             [:indent]   number of spaces to use as the standard indention, default: 2
- *             [:xsd_date] use XSD date format if true, default: false
- *             [:circular] allow circular references, default: false
- *             [:effort]   effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
- *                       [:strict]   raise an NotImplementedError if an undumpable object is encountered
- *                       [:tolerant] replaces undumplable objects with nil
+ * @param [String] file_path file path to write the XML document to
+ * @param [Object] obj Object to serialize as an XML document String
+ * @param [Hash] options formating options
+ * @param [Fixnum] :indent format expected
+ * @param [true|false] :xsd_date use XSD date format if true, default: false
+ * @param [true|false] :circular allow circular references, default: false
+ * @param [:strict|:tolerant] :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
+ *  - *:strict* - raise an NotImplementedError if an undumpable object is encountered
+ *  - *:tolerant* - replaces undumplable objects with nil
  */
 static VALUE
 to_file(int argc, VALUE *argv, VALUE self) {
@@ -554,7 +548,6 @@ to_file(int argc, VALUE *argv, VALUE self) {
         parse_dump_options(argv[2], &copts);
     }
     Check_Type(*argv, T_STRING);
-    // TBD get length
     write_obj_to_file(argv[1], StringValuePtr(*argv), &copts);
 
     return Qnil;
@@ -644,12 +637,12 @@ void Init_ox() {
 
     
     //rb_require("node"); // generic xml node classes
-    ox_document_clas = rb_const_get(Ox, rb_intern("Document"));
-    ox_element_clas = rb_const_get(Ox, rb_intern("Element"));
-    ox_comment_clas = rb_const_get(Ox, rb_intern("Comment"));
-    ox_doctype_clas = rb_const_get(Ox, rb_intern("DocType"));
-    ox_cdata_clas = rb_const_get(Ox, rb_intern("CData"));
-    ox_bag_clas = rb_const_get(Ox, rb_intern("Bag"));
+    ox_document_clas = rb_const_get_at(Ox, rb_intern("Document"));
+    ox_element_clas = rb_const_get_at(Ox, rb_intern("Element"));
+    ox_comment_clas = rb_const_get_at(Ox, rb_intern("Comment"));
+    ox_doctype_clas = rb_const_get_at(Ox, rb_intern("DocType"));
+    ox_cdata_clas = rb_const_get_at(Ox, rb_intern("CData"));
+    ox_bag_clas = rb_const_get_at(Ox, rb_intern("Bag"));
 
     ox_cache_new(&symbol_cache);
     ox_cache_new(&class_cache);

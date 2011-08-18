@@ -100,15 +100,16 @@ resolve_classname(VALUE mod, const char *class_name, Effort effort) {
 
     switch (effort) {
     case TolerantEffort:
-        if (rb_const_defined(mod, ci)) {
-            clas = rb_const_get(mod, ci);
+        if (rb_const_defined_at(mod, ci)) {
+            clas = rb_const_get_at(mod, ci);
         } else {
             clas = Qundef;
         }
         break;
     case AutoEffort:
-        if (rb_const_defined(mod, ci)) {
-            clas = rb_const_get(mod, ci);
+        //printf("*** auto %s\n", class_name);
+        if (rb_const_defined_at(mod, ci)) {
+            clas = rb_const_get_at(mod, ci);
         } else {
             clas = rb_define_class_under(mod, class_name, ox_bag_clas);
         }
@@ -116,7 +117,7 @@ resolve_classname(VALUE mod, const char *class_name, Effort effort) {
     case StrictEffort:
     default:
         // raise an error if name is not defined
-        clas = rb_const_get(mod, ci);
+        clas = rb_const_get_at(mod, ci);
         break;
     }
     return clas;
