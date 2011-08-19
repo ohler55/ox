@@ -4,8 +4,8 @@
 ^c^s show subtree
 
 
-- changes for 1.2.7
- - memory overrun error fixed
+- changes for 1.2.8
+
 
 - make thread safe
  - make thread safe
