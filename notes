@@ -4,29 +4,22 @@
 ^c^s show subtree
 
 
+- changes for 1.2.7
+
+
+
+- know bugs
+ - does not parse symbols that contain a < or > character
+  - create b64 variant for symbols
+
 - TBDs
  - dump - free flag on error
 
-- XSD
-- DTD
- - add comments for each type
 
-- add @instructions to Document
-
-
+- hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
-
 
 #rsync -vru --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/code/ox/ ~/git/ox
 rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/code/ox/ ~/git/ox
 rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/git/ox/ ~/code/ox
-
-- know bugs
- - does not parse symbols that contain a < or > character
-
-- changes for 1.2.6
- - changed comment format to yardoc
- - fixed exception bug in Bag
- - initialized options in Ox.to_file
- - fixed bug that failed to auto define a class that had a full name of Boo::Zoo::Boo
 
