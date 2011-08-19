@@ -220,10 +220,10 @@ grow(Out out, size_t len) {
     char    *buf;
         
     size *= 2;
-    if (size < len + pos) {
+    if (size <= len * 2 + pos) {
         size += len;
     }
-    if (0 == (buf = (char*)realloc(out->buf, size))) {
+    if (0 == (buf = (char*)realloc(out->buf, size + 10))) { // 1 extra for terminator character plus extra (paranoid)
         rb_raise(rb_eNoMemError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
     }
     out->buf = buf;
@@ -244,7 +244,7 @@ dump_start(Out out, Element e) {
     if (0 < e->id) { // i="id"
         size += 24; // over estimate, 19 digits
     }
-    if (out->end - out->cur < (long)size) {
+    if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }
     if (out->buf < out->cur) {
@@ -276,7 +276,7 @@ static void
 dump_end(Out out, Element e) {
     size_t      size = e->indent + 5;
 
-    if (out->end - out->cur < (long)size) {
+    if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }
     fill_indent(out, e->indent);
@@ -289,7 +289,7 @@ dump_end(Out out, Element e) {
 
 inline static void
 dump_value(Out out, const char *value, size_t size) {
-    if (out->end - out->cur < (long)size) {
+    if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }
     if (6 < size) {
@@ -327,7 +327,7 @@ dump_num(Out out, VALUE obj) {
     } else {
         *b = '0';
     }
-    if (out->end - out->cur < (long)(sizeof(buf) - (b - buf))) {
+    if (out->end - out->cur <= (long)(sizeof(buf) - (b - buf))) {
         grow(out, sizeof(buf) - (b - buf));
     }
     for (; '\0' != *b; b++) {
@@ -355,7 +355,7 @@ dump_time_thin(Out out, VALUE obj) {
     }
     b++;
     size = sizeof(buf) - (b - buf) - 1;
-    if (out->end - out->cur < size) {
+    if (out->end - out->cur <= size) {
         grow(out, size);
     }
     memcpy(out->cur, b, size);
@@ -370,7 +370,7 @@ dump_time_xsd(Out out, VALUE obj) {
     int         tzhour, tzmin;
     char        tzsign = '+';
 
-    if (out->end - out->cur < 33) {
+    if (out->end - out->cur <= 33) {
         grow(out, 33);
     }
     // 2010-07-09T10:47:45.895826+09:00
@@ -800,7 +800,7 @@ dump_gen_element(VALUE obj, unsigned int depth, Out out) {
         indent = depth * out->indent;
     }
     size = indent + 4 + nlen;
-    if (out->end - out->cur < (long)size) {
+    if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }
     fill_indent(out, indent);
@@ -814,7 +814,7 @@ dump_gen_element(VALUE obj, unsigned int depth, Out out) {
         
         *out->cur++ = '>';
         do_indent = dump_gen_nodes(nodes, depth, out);
-        if (out->end - out->cur < (long)size) {
+        if (out->end - out->cur <= (long)size) {
             grow(out, size);
         }
         if (do_indent) {
@@ -867,7 +867,7 @@ dump_gen_attr(VALUE key, VALUE value, Out out) {
     size_t      klen = strlen(ks);
     size_t      size = 4 + klen + RSTRING_LEN(value);
     
-    if (out->end - out->cur < (long)size) {
+    if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }
     *out->cur++ = ' ';
@@ -903,7 +903,7 @@ dump_gen_val_node(VALUE obj, unsigned int depth,
         indent = depth * out->indent;
     }
     size = indent + plen + slen + vlen;
-    if (out->end - out->cur < (long)size) {
+    if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }
     fill_indent(out, indent);
@@ -945,7 +945,6 @@ write_obj_to_str(VALUE obj, Options copts) {
     struct _Out out;
     
     dump_obj_to_xml(obj, copts, &out);
-
     return out.buf;
 }
 

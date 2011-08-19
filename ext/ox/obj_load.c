@@ -107,7 +107,6 @@ resolve_classname(VALUE mod, const char *class_name, Effort effort) {
         }
         break;
     case AutoEffort:
-        //printf("*** auto %s\n", class_name);
         if (rb_const_defined_at(mod, ci)) {
             clas = rb_const_get_at(mod, ci);
         } else {

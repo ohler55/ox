@@ -5,8 +5,12 @@
 
 
 - changes for 1.2.7
+ - memory overrun error fixed
 
-
+- make thread safe
+ - make thread safe
+  - cache8
+  - default_options
 
 - know bugs
  - does not parse symbols that contain a < or > character
