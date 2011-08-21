@@ -8,17 +8,6 @@
  - support symbols that contain a < or > character
 
 
-- make thread safe
- - cache
-  - either check before caching or lock down at the start of obj_load
-   - not expected to have multiple threads so optimize for 1 thread
- - what mutex to use?
-  - VALUE rb_mutex_new(void)
-  - VALUE rb_mutex_lock(VALUE self)
-  - VALUE rb_mutex_unlock(VALUE self)
- - check overhead. if too high make multithread an option
-
-
 
 - TBDs
  - dump - free flag on error
