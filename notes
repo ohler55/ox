@@ -9,14 +9,14 @@
 
 
 - make thread safe
- - cache8
-  - pass in arg if needed to turn on or off
+ - cache
+  - either check before caching or lock down at the start of obj_load
+   - not expected to have multiple threads so optimize for 1 thread
  - what mutex to use?
   - VALUE rb_mutex_new(void)
   - VALUE rb_mutex_lock(VALUE self)
   - VALUE rb_mutex_unlock(VALUE self)
  - check overhead. if too high make multithread an option
- - locking not needed with current ruby thread model?
 
 
 
