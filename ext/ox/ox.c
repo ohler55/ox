@@ -88,6 +88,8 @@ VALUE   with_xml_sym;
 VALUE   empty_string;
 VALUE   zero_fixnum;
 
+VALUE   options_mutex;
+
 VALUE   ox_cdata_clas;
 VALUE   ox_comment_clas;
 VALUE   ox_doctype_clas;
@@ -197,6 +199,8 @@ set_def_opts(VALUE self, VALUE opts) {
     
     Check_Type(opts, T_HASH);
 
+    rb_mutex_lock(options_mutex);
+    
     v = rb_hash_aref(opts, encoding_sym);
     if (Qnil == v) {
         *default_options.encoding = '\0';
@@ -254,6 +258,8 @@ set_def_opts(VALUE self, VALUE opts) {
             rb_raise(rb_eArgError, "%s must be true, false, or nil.\n", StringValuePtr(o->sym));
         }
     }
+    rb_mutex_unlock(options_mutex);
+
     return Qnil;
 }
 
@@ -587,6 +593,8 @@ void Init_ox() {
 
     rb_define_module_function(Ox, "load_file", load_file, -1);
     rb_define_module_function(Ox, "to_file", to_file, -1);
+
+    options_mutex = rb_mutex_new();
 
     rb_require("time");
     parse_id = rb_intern("parse");

@@ -416,7 +416,7 @@ add_text(PInfo pi, char *text, int closed) {
     case TimeCode:
         pi->h->obj = parse_time(text, time_class);
         break;
-    case Base64Code:
+    case String64Code:
     {
         char            buf[1024];
         char            *str = buf;
@@ -437,7 +437,31 @@ add_text(PInfo pi, char *text, int closed) {
             circ_array_set(pi->circ_array, v, (unsigned long)pi->h->obj);
         }
         pi->h->obj = v;
+        if (buf != str) {
+            free(str);
+        }
+        break;
+    }
+    case Symbol64Code:
+    {
+        VALUE           sym;
+        VALUE           *slot;
+        char            buf[1024];
+        char            *str = buf;
+        unsigned long   str_size = b64_orig_size(text);
+        
         if (sizeof(buf) <= str_size) {
+            if (0 == (str = (char*)malloc(str_size + 1))) {
+                rb_raise(rb_eNoMemError, "not enough memory\n");
+            }
+        }
+        from_base64(text, (u_char*)str);
+        if (Qundef == (sym = ox_cache_get(symbol_cache, str, &slot))) {
+            sym = ID2SYM(rb_intern(str));
+            *slot = sym;
+        }
+        pi->h->obj = sym;
+        if (buf != str) {
             free(str);
         }
         break;
@@ -531,6 +555,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     case FixnumCode:
     case FloatCode:
     case SymbolCode:
+    case Symbol64Code:
     case RegexpCode:
     case BignumCode:
     case ComplexCode:
@@ -539,7 +564,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         // value will be read in the following add_text
         h->obj = Qundef;
         break;
-    case Base64Code:
+    case String64Code:
         h->obj = Qundef;
         if (0 != pi->circ_array) {
             pi->id = get_id_from_attrs(pi, attrs);

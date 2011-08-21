@@ -100,8 +100,9 @@ typedef enum {
 typedef enum {
     NoCode         = 0,
     ArrayCode      = 'a',
-    Base64Code     = 'b',
+    String64Code   = 'b', // base64 encoded String
     ClassCode      = 'c',
+    Symbol64Code   = 'd', // base64 encoded Symbol
     FloatCode      = 'f',
     RegexpCode     = 'g',
     HashCode       = 'h',

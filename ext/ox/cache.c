@@ -40,6 +40,7 @@ struct _Cache {
     char                *key; // only set if the node has a value, and it is not an exact match
     VALUE               value;
     struct _Cache       *slots[16];
+    //VALUE               mutex;
 };
 
 static void     slot_print(Cache cache, unsigned int depth);
@@ -52,6 +53,7 @@ ox_cache_new(Cache *cache) {
     (*cache)->key = 0;
     (*cache)->value = Qundef;
     bzero((*cache)->slots, sizeof((*cache)->slots));
+    //(*cache)->mutex = rb_mutex_new();
 }
 
 VALUE

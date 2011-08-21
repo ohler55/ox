@@ -20,6 +20,7 @@ struct _Cache8 {
     };
 };
 
+static void     cache8_delete(Cache8 cache, int depth);
 static void     slot_print(Cache8 cache, VALUE key, unsigned int depth);
 
 void
@@ -33,6 +34,26 @@ ox_cache8_new(Cache8 *cache) {
     for (i = SLOT_CNT, cp = (*cache)->slots; 0 < i; i--, cp++) {
         *cp = 0;
     }
+}
+
+void
+ox_cache8_delete(Cache8 cache) {
+    cache8_delete(cache, 0);
+}
+
+static void
+cache8_delete(Cache8 cache, int depth) {
+    Cache8              *cp;
+    unsigned int        i;
+
+    for (i = 0, cp = cache->slots; i < SLOT_CNT; i++, cp++) {
+        if (0 != *cp) {
+            if (DEPTH - 1 != depth) {
+                cache8_delete(*cp, depth + 1);
+            }
+        }
+    }
+    free(cache);
 }
 
 unsigned long

@@ -125,8 +125,13 @@ obj_class_code(VALUE obj) {
     case RUBY_T_FALSE:          return FalseClassCode;
     case RUBY_T_FIXNUM:         return FixnumCode;
     case RUBY_T_FLOAT:          return FloatCode;
-    case RUBY_T_STRING:         return (is_xml_friendly((u_char*)StringValuePtr(obj), (int)RSTRING_LEN(obj))) ? StringCode : Base64Code;
-    case RUBY_T_SYMBOL:         return SymbolCode;
+    case RUBY_T_STRING:         return (is_xml_friendly((u_char*)StringValuePtr(obj), (int)RSTRING_LEN(obj))) ? StringCode : String64Code;
+    case RUBY_T_SYMBOL:
+    {
+        const char      *sym = rb_id2name(SYM2ID(obj));
+
+        return (is_xml_friendly((u_char*)sym, (int)strlen(sym))) ? SymbolCode : Symbol64Code;
+    }
     case RUBY_T_DATA:           return (rb_cTime == rb_obj_class(obj)) ? TimeCode : 0;
     case RUBY_T_STRUCT:         return (rb_cRange == rb_obj_class(obj)) ? RangeCode : StructCode;
     case RUBY_T_OBJECT:         return (ox_document_clas == rb_obj_class(obj) || ox_element_clas == rb_obj_class(obj)) ? RawCode : ObjectCode;
@@ -441,9 +446,11 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         e.indent = depth * out->indent;
     }
     e.id = 0;
+    e.clas.len = 0;
+    e.clas.str = 0;    
     switch (rb_type(obj)) {
     case RUBY_T_NIL:
-        e.type = NilClassCode;  e.clas.len = 0;  e.clas.str = 0;
+        e.type = NilClassCode;
         e.closed = 1;
         out->w_start(out, &e);
         break;
@@ -452,7 +459,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             break;
         }
         cnt = (int)RARRAY_LEN(obj);
-        e.type = ArrayCode;  e.clas.len = 5;  e.clas.str = "Array";
+        e.type = ArrayCode;
         e.closed = (0 >= cnt);
         out->w_start(out, &e);
         if (!e.closed) {
@@ -471,7 +478,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             break;
         }
         cnt = (int)RHASH_SIZE(obj);
-        e.type = HashCode;  e.clas.len = 4;  e.clas.str = "Hash";
+        e.type = HashCode;
         e.closed = (0 >= cnt);
         out->w_start(out, &e);
         if (0 < cnt) {
@@ -484,24 +491,24 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         }
         break;
     case RUBY_T_TRUE:
-        e.type = TrueClassCode;  e.clas.len = 9;  e.clas.str = "TrueClass";
+        e.type = TrueClassCode;
         e.closed = 1;
         out->w_start(out, &e);
         break;
     case RUBY_T_FALSE:
-        e.type = FalseClassCode;  e.clas.len = 10;  e.clas.str = "FalseClass";
+        e.type = FalseClassCode;
         e.closed = 1;
         out->w_start(out, &e);
         break;
     case RUBY_T_FIXNUM:
-        e.type = FixnumCode;  e.clas.len = 6;  e.clas.str = "Fixnum";
+        e.type = FixnumCode;
         out->w_start(out, &e);
         dump_num(out, obj);
         e.indent = -1;
         out->w_end(out, &e);
         break;
     case RUBY_T_FLOAT:
-        e.type = FloatCode;  e.clas.len = 5;  e.clas.str = "Float";
+        e.type = FloatCode;
         cnt = sprintf(value_buf, "%0.16g", RFLOAT_VALUE(obj)); // used sprintf due to bug in snprintf
         out->w_start(out, &e);
         dump_value(out, value_buf, cnt);
@@ -518,7 +525,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         str = StringValuePtr(obj);
         cnt = (int)RSTRING_LEN(obj);
         if (is_xml_friendly((u_char*)str, cnt)) {
-            e.type = StringCode;  e.clas.len = 6;  e.clas.str = "String";
+            e.type = StringCode;
             out->w_start(out, &e);
             dump_value(out, str, cnt);
             e.indent = -1;
@@ -528,7 +535,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             char                *b64 = buf64;
             unsigned long       size = b64_size(cnt);
 
-            e.type = Base64Code;  e.clas.len = 6;  e.clas.str = "Base64";
+            e.type = String64Code;
             if (sizeof(buf64) < size) {
                 if (0 == (b64 = (char*)malloc(size + 1))) {
                     rb_raise(rb_eNoMemError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
@@ -549,11 +556,33 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     {
         const char      *sym = rb_id2name(SYM2ID(obj));
 
-        e.type = SymbolCode;  e.clas.len = 6;  e.clas.str = "Symbol";
-        out->w_start(out, &e);
-        dump_value(out, sym, strlen(sym));
-        e.indent = -1;
-        out->w_end(out, &e);
+        cnt = (int)strlen(sym);
+        if (is_xml_friendly((u_char*)sym, cnt)) {
+            e.type = SymbolCode;
+            out->w_start(out, &e);
+            dump_value(out, sym, cnt);
+            e.indent = -1;
+            out->w_end(out, &e);
+        } else {
+            char                buf64[4096];
+            char                *b64 = buf64;
+            unsigned long       size = b64_size(cnt);
+
+            e.type = Symbol64Code;
+            if (sizeof(buf64) < size) {
+                if (0 == (b64 = (char*)malloc(size + 1))) {
+                    rb_raise(rb_eNoMemError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
+                }
+            }
+            to_base64((u_char*)sym, cnt, b64);
+            out->w_start(out, &e);
+            dump_value(out, b64, size);
+            e.indent = -1;
+            out->w_end(out, &e);
+            if (buf64 != b64) {
+                free(b64);
+            }
+        }
         break;
     }
     case RUBY_T_DATA:
@@ -562,7 +591,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
 
         clas = rb_obj_class(obj);
         if (rb_cTime == clas) {
-            e.type = TimeCode;  e.clas.len = 4;  e.clas.str = "Time";
+            e.type = TimeCode;
             out->w_start(out, &e);
             out->w_time(out, obj);
             e.indent = -1;
@@ -659,7 +688,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
 
         cnt = (int)RREGEXP_SRC_LEN(obj);
 #endif
-        e.type = RegexpCode;  e.clas.len = 6;  e.clas.str = "Regexp";
+        e.type = RegexpCode;
         out->w_start(out, &e);
         if (is_xml_friendly((u_char*)s, cnt)) {
             //dump_value(out, "/", 1);
@@ -700,7 +729,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     {
         VALUE   rs = rb_big2str(obj, 10);
         
-        e.type = BignumCode;  e.clas.len = 6;  e.clas.str = "Bignum";
+        e.type = BignumCode;
         out->w_start(out, &e);
         dump_value(out, StringValuePtr(rs), RSTRING_LEN(rs));
         e.indent = -1;
@@ -708,14 +737,14 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         break;
     }
     case RUBY_T_COMPLEX:
-        e.type = ComplexCode;  e.clas.len = 7;  e.clas.str = "Complex";
+        e.type = ComplexCode;
         out->w_start(out, &e);
         dump_obj(0, RCOMPLEX(obj)->real, depth + 1, out);
         dump_obj(0, RCOMPLEX(obj)->imag, depth + 1, out);
         out->w_end(out, &e);
         break;
     case RUBY_T_RATIONAL:
-        e.type = RationalCode;  e.clas.len = 8;  e.clas.str = "Rational";
+        e.type = RationalCode;
         out->w_start(out, &e);
         dump_obj(0, RRATIONAL(obj)->num, depth + 1, out);
         dump_obj(0, RRATIONAL(obj)->den, depth + 1, out);
@@ -735,7 +764,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             rb_raise(rb_eNotImpError, "Failed to dump %s Object (%02x)\n",
                      rb_class2name(rb_obj_class(obj)), rb_type(obj));
         } else {
-            e.type = NilClassCode;  e.clas.len = 0;  e.clas.str = 0;
+            e.type = NilClassCode;
             e.closed = 1;
             out->w_start(out, &e);
         }
@@ -938,6 +967,9 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
         dump_first_obj(obj, out);
     }
     dump_value(out, "\n", 1);
+    if (Yes == copts->circular) {
+        ox_cache8_delete(out->circ_cache);
+    }
 }
 
 char*

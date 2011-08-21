@@ -103,6 +103,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_symbol
     dump_and_load(:a_symbol, false)
+    dump_and_load(:<=, false)
   end
 
   def test_base64

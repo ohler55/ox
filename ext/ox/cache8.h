@@ -36,6 +36,8 @@
 typedef struct _Cache8   *Cache8;
 
 extern void             ox_cache8_new(Cache8 *cache);
+extern void             ox_cache8_delete(Cache8 cache);
+
 extern unsigned long    ox_cache8_get(Cache8 cache, VALUE key, unsigned long **slot);
 
 extern void             ox_cache8_print(Cache8 cache);
