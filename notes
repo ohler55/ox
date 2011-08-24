@@ -4,13 +4,20 @@
 ^c^s show subtree
 
 
-- changes for 1.2.8
- - support symbols that contain a < or > character
+- changes for 1.2.9
+
 
 
 
 - TBDs
  - dump - free flag on error
+ - streaming parsing
+  - SAX
+   - create a buffered reader
+    - keep two blocks and leapfrog
+     - if word spans blocks then create new buffer and copy into that or maybe memmove
+   - given a file name, open and start reading in blocks
+   - given an IO, start reading in blocks
 
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
