@@ -4,9 +4,6 @@
 ^c^s show subtree
 
 
-- changes for 1.2.9
- - handles Objects that can not be serialized better (e.g., Mutex)
-
 - changes for 1.2.10
 
 
