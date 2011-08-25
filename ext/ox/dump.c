@@ -597,7 +597,14 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             e.indent = -1;
             out->w_end(out, &e);
         } else {
-            printf("*** dumpAttr: RUBY_T_DATA class: %s\n", rb_class2name(clas));
+            if (StrictEffort == out->opts->effort) {
+                rb_raise(rb_eNotImpError, "Failed to dump RUBY_T_DATA %s Object (%02x)\n",
+                         rb_class2name(clas), rb_type(obj));
+            } else {
+                e.type = NilClassCode;
+                e.closed = 1;
+                out->w_start(out, &e);
+            }
         }
         break;
     }
