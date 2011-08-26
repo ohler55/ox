@@ -7,6 +7,9 @@
 - changes for 1.2.10
 
 
+- try dumping NameError::message
+
+
 - TBDs
  - dump - free flag on error
  - streaming parsing
