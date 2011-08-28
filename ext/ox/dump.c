@@ -447,7 +447,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     }
     e.id = 0;
     e.clas.len = 0;
-    e.clas.str = 0;    
+    e.clas.str = 0;
     switch (rb_type(obj)) {
     case RUBY_T_NIL:
         e.type = NilClassCode;
@@ -598,8 +598,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             out->w_end(out, &e);
         } else {
             if (StrictEffort == out->opts->effort) {
-                rb_raise(rb_eNotImpError, "Failed to dump RUBY_T_DATA %s Object (%02x)\n",
-                         rb_class2name(clas), rb_type(obj));
+                rb_raise(rb_eNotImpError, "Failed to dump RUBY_T_DATA %s\n", rb_class2name(clas));
             } else {
                 e.type = NilClassCode;
                 e.closed = 1;
@@ -673,7 +672,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             out->w_start(out, &e);
             if (0 < cnt) {
                 unsigned int        od = out->depth;
-            
+
                 out->depth = depth + 1;
                 rb_ivar_foreach(obj, dump_var, (VALUE)out);
                 out->depth = od;
@@ -781,8 +780,19 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
 
 static int
 dump_var(ID key, VALUE value, Out out) {
+    if (RUBY_T_DATA == rb_type(value) && rb_cTime != rb_obj_class(value)) {
+        /* There is a secret recipe that keeps Exception mesg attributes as a
+         * T_DATA until it is needed. StringValue() makes the value needed and
+         * it is converted to a regular Ruby Object. It might seem reasonable
+         * to expect that this would be done before calling the foreach
+         * callback but it isn't. A slight hack fixes the inconsistency. If
+         * the var is not something that can be represented as a String then
+         * this will fail.
+         */
+        StringValue(value);
+    }
     dump_obj(key, value, out->depth, out);
-    
+
     return ST_CONTINUE;
 }
 
