@@ -4,10 +4,9 @@
 ^c^s show subtree
 
 
-- changes for 1.2.10
+- changes for 1.2.11
+ - parses special characters in attributes
 
-
-- try dumping NameError::message
 
 
 - TBDs

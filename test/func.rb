@@ -223,6 +223,13 @@ class Func < ::Test::Unit::TestCase
     dump_and_load(s.new(2, 4, 10, 20), false)
   end
 
+  def test_bad_format
+    xml = "<?xml version=\"1.0\"?>\n<tag>test</tagz>\n"
+    assert_raise(EncodingError) {
+      Ox.load(xml, :mode => :generic, :trace => 0)
+    }
+  end
+
   def test_array_multi
     dump_and_load([nil, true, false, 3, 'z', 7.9, 'a&b', :xyz, Time.now, (-1..7)], false)
   end
