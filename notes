@@ -7,6 +7,12 @@
 - changes for 1.2.11
  - parses special characters in attributes
 
+- 1.8.7 compatible
+ - create ruby version define
+  - maybe look for RUBY_T_NIL for 1.9
+ - no encoding
+ - ivar_foreach change to do it the hard slow way
+ 
 
 
 - TBDs

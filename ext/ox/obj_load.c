@@ -36,7 +36,6 @@
 #include <time.h>
 
 #include "ruby.h"
-#include "ruby/oniguruma.h"
 #include "base64.h"
 #include "ox.h"
 
