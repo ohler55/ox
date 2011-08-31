@@ -38,7 +38,11 @@ extern "C" {
 #endif
 #endif
 
+#include "ruby.h"
+#ifdef HAVE_RUBY_ENCODING_H
+// RUBY_T_NIL defined for Ruby 1.9
 #include "ruby/encoding.h"
+#endif
 #include "cache.h"
 
 #define raise_error(msg, xml, current) _raise_error(msg, xml, current, __FILE__, __LINE__)
@@ -163,7 +167,9 @@ struct _PInfo {
     VALUE               obj;
     ParseCallbacks      pcb;
     CircArray           circ_array;
+#ifdef HAVE_RUBY_ENCODING_H
     rb_encoding         *encoding;
+#endif
     unsigned long       id;             /* set for text types when cirs_array is set */
     int                 trace;
     Effort              effort;

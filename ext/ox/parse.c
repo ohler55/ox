@@ -96,7 +96,9 @@ parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
     pi.pcb = pcb;
     pi.obj = Qnil;
     pi.circ_array = 0;
+#ifdef ENCODING_INLINE_MAX
     pi.encoding = 0;
+#endif
     pi.trace = trace;
     pi.effort = effort;
     while (1) {

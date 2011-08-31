@@ -329,6 +329,7 @@ parse_regexp(const char *text) {
     int         options = 0;
             
     te = text + strlen(text) - 1;
+#ifdef HAVE_RUBY_ENCODING_H
     for (; text < te && '/' != *te; te--) {
         switch (*te) {
         case 'i':       options |= ONIG_OPTION_IGNORECASE;      break;
@@ -337,17 +338,20 @@ parse_regexp(const char *text) {
         default:                                                break;
         }
     }
+#endif
     return rb_reg_new(text + 1, te - text - 1, options);
 }
 
 static void
 instruct(PInfo pi, const char *target, Attr attrs) {
     if (0 == strcmp("xml", target)) {
+#ifdef HAVE_RUBY_ENCODING_H
         for (; 0 != attrs->name; attrs++) {
             if (0 == strcmp("encoding", attrs->name)) {
                 pi->encoding = rb_enc_find(attrs->value);
             }
         }
+#endif
     }
 }
 
@@ -366,9 +370,11 @@ add_text(PInfo pi, char *text, int closed) {
     case NoCode:
     case StringCode:
         pi->h->obj = rb_str_new2(text);
+#ifdef HAVE_RUBY_ENCODING_H
         if (0 != pi->encoding) {
             rb_enc_associate(pi->h->obj, pi->encoding);
         }
+#endif
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, pi->h->obj, (unsigned long)pi->id);
         }
@@ -429,9 +435,11 @@ add_text(PInfo pi, char *text, int closed) {
         }
         from_base64(text, (u_char*)str);
         v = rb_str_new(str, str_size);
+#ifdef HAVE_RUBY_ENCODING_H
         if (0 != pi->encoding) {
             rb_enc_associate(v, pi->encoding);
         }
+#endif
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, v, (unsigned long)pi->h->obj);
         }

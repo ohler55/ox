@@ -99,9 +99,11 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     ah = rb_hash_new();
     for (; 0 != attrs->name; attrs++) {
         rb_hash_aset(ah, ID2SYM(rb_intern(attrs->name)), rb_str_new2(attrs->value));
+#ifdef HAVE_RUBY_ENCODING_H
         if (0 == strcmp("encoding", attrs->name)) {
             pi->encoding = rb_enc_find(attrs->value);
         }
+#endif
     }
     nodes = rb_ary_new();
     rb_ivar_set(doc, attributes_id, ah);
@@ -170,9 +172,11 @@ add_doctype(PInfo pi, const char *docType) {
     VALUE       n = rb_obj_alloc(ox_doctype_clas);
     VALUE       s = rb_str_new2(docType);
 
+#ifdef HAVE_RUBY_ENCODING_H
     if (0 != pi->encoding) {
         rb_enc_associate(s, pi->encoding);
     }
+#endif
     rb_ivar_set(n, value_id, s);
     rb_ary_push(pi->h->obj, n);
 }
@@ -182,9 +186,11 @@ add_comment(PInfo pi, const char *comment) {
     VALUE       n = rb_obj_alloc(ox_comment_clas);
     VALUE       s = rb_str_new2(comment);
 
+#ifdef HAVE_RUBY_ENCODING_H
     if (0 != pi->encoding) {
         rb_enc_associate(s, pi->encoding);
     }
+#endif
     rb_ivar_set(n, value_id, s);
     rb_ary_push(pi->h->obj, n);
 }
@@ -194,9 +200,11 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
     VALUE       n = rb_obj_alloc(ox_cdata_clas);
     VALUE       s = rb_str_new2(cdata);
 
+#ifdef HAVE_RUBY_ENCODING_H
     if (0 != pi->encoding) {
         rb_enc_associate(s, pi->encoding);
     }
+#endif
     rb_ivar_set(n, value_id, s);
     rb_ary_push(pi->h->obj, n);
 }
@@ -205,9 +213,11 @@ static void
 add_text(PInfo pi, char *text, int closed) {
     VALUE       s = rb_str_new2(text);
 
+#ifdef HAVE_RUBY_ENCODING_H
     if (0 != pi->encoding) {
         rb_enc_associate(s, pi->encoding);
     }
+#endif
     rb_ary_push(pi->h->obj, s);
 }
 
@@ -216,9 +226,11 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     VALUE       e;
     VALUE       s = rb_str_new2(ename);
 
+#ifdef HAVE_RUBY_ENCODING_H
     if (0 != pi->encoding) {
         rb_enc_associate(s, pi->encoding);
     }
+#endif
     e = rb_obj_alloc(ox_element_clas);
     rb_ivar_set(e, value_id, s);
     if (0 != attrs->name) {
@@ -233,9 +245,11 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
                 *slot = sym;
             }
             s = rb_str_new2(attrs->value);
+#ifdef HAVE_RUBY_ENCODING_H
             if (0 != pi->encoding) {
                 rb_enc_associate(s, pi->encoding);
             }
+#endif
             rb_hash_aset(ah, sym, s);
         }
         rb_ivar_set(e, attributes_id, ah);
