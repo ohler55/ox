@@ -4,8 +4,7 @@
 ^c^s show subtree
 
 
-- changes for 1.2.13
- - made Ruby 1.8.7 compatible (really this time)
+- changes for 1.2.14
 
 
 
