@@ -188,7 +188,7 @@ fill_attr(Out out, char name, const char *value, size_t len) {
 }
 
 inline static const char*
-ulong2str(unsigned long num, char *end) {
+ulong2str(uint64_t num, char *end) {
     char        *b;
 
     *end-- = '\0';
@@ -202,9 +202,9 @@ ulong2str(unsigned long num, char *end) {
 
 static int
 check_circular(Out out, VALUE obj, Element e) {
-    unsigned long       *slot;
-    unsigned long       id;
-    int                 result;
+    uint64_t    *slot;
+    uint64_t    id;
+    int         result;
     
     if (0 == (id = ox_cache8_get(out->circ_cache, obj, &slot))) {
         out->circ_cnt++;
@@ -535,9 +535,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             e.indent = -1;
             out->w_end(out, &e);
         } else {
-            char                buf64[4096];
-            char                *b64 = buf64;
-            unsigned long       size = b64_size(cnt);
+            char        buf64[4096];
+            char        *b64 = buf64;
+            uint64_t    size = b64_size(cnt);
 
             e.type = String64Code;
             if (sizeof(buf64) < size) {
@@ -568,9 +568,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             e.indent = -1;
             out->w_end(out, &e);
         } else {
-            char                buf64[4096];
-            char                *b64 = buf64;
-            unsigned long       size = b64_size(cnt);
+            char        buf64[4096];
+            char        *b64 = buf64;
+            uint64_t    size = b64_size(cnt);
 
             e.type = Symbol64Code;
             if (sizeof(buf64) < size) {
@@ -620,9 +620,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         }
         clas = rb_obj_class(obj);
         if (rb_cRange == clas) {
-            VALUE       beg = RSTRUCT(obj)->as.ary[0];
-            VALUE       end = RSTRUCT(obj)->as.ary[1];
-            VALUE       excl = RSTRUCT(obj)->as.ary[2];
+            VALUE       beg = RSTRUCT_PTR(obj)[0];
+            VALUE       end = RSTRUCT_PTR(obj)[1];
+            VALUE       excl = RSTRUCT_PTR(obj)[2];
             int         d2 = depth + 1;
 
             e.type = RangeCode;  e.clas.len = 5;  e.clas.str = "Range";
@@ -670,6 +670,8 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             dump_gen_element(obj, depth + 1, out);
             out->w_end(out, &e);
         } else { // Object
+// use encoding as the indicator for Ruby 1.8.7 or 1.9.x
+#ifdef HAVE_RUBY_ENCODING_H
             e.type = ObjectCode;
             cnt = (int)rb_ivar_count(obj);
             e.closed = (0 >= cnt);
@@ -682,6 +684,28 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
                 out->depth = od;
                 out->w_end(out, &e);
             }
+#else
+            VALUE       vars = rb_obj_instance_variables(obj);
+            
+            e.type = ObjectCode;
+            cnt = (int)RARRAY_LEN(vars);
+            e.closed = (0 >= cnt);
+            out->w_start(out, &e);
+            if (0 < cnt) {
+                VALUE           *np = RARRAY_PTR(vars);
+                ID              vid;
+                unsigned int    od = out->depth;
+                int             i;
+
+                out->depth = depth + 1;
+                for (i = cnt; 0 < i; i--, np++) {
+                    vid = rb_to_id(*np);
+                    dump_var(vid, rb_ivar_get(obj, vid), out);
+                }
+                out->depth = od;
+                out->w_end(out, &e);
+            }
+#endif
         }
         break;
     }
@@ -704,9 +728,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             //dump_value(out, "/", 1);
             dump_value(out, s, cnt);
         } else {
-            char                buf64[4096];
-            char                *b64 = buf64;
-            unsigned long       size = b64_size(cnt);
+            char        buf64[4096];
+            char        *b64 = buf64;
+            uint64_t    size = b64_size(cnt);
 
             if (sizeof(buf64) < size) {
                 if (0 == (b64 = (char*)malloc(size + 1))) {

@@ -92,7 +92,7 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     VALUE       nodes;
 
     if (0 != pi->h) { // top level object
-        rb_raise(rb_eEncodingError, "Prolog must be the first element in an XML document.\n");
+        rb_raise(rb_eSyntaxError, "Prolog must be the first element in an XML document.\n");
     }
     pi->h = pi->helpers;
     doc = rb_obj_alloc(ox_document_clas);
@@ -122,7 +122,7 @@ instruct(PInfo pi, const char *target, Attr attrs) {
         for (; 0 != attrs->name; attrs++) {
             if (0 == strcmp("version", attrs->name)) {
                 if (0 != strcmp("1.0", attrs->value)) {
-                    rb_raise(rb_eEncodingError, "Only Ox XML Object version 1.0 supported, not %s.\n", attrs->value);
+                    rb_raise(rb_eSyntaxError, "Only Ox XML Object version 1.0 supported, not %s.\n", attrs->value);
                 }
             }
             // ignore other instructions
@@ -142,7 +142,7 @@ nomode_instruct(PInfo pi, const char *target, Attr attrs) {
         for (; 0 != attrs->name; attrs++) {
             if (0 == strcmp("version", attrs->name)) {
                 if (0 != strcmp("1.0", attrs->value)) {
-                    rb_raise(rb_eEncodingError, "Only Ox XML Object version 1.0 supported, not %s.\n", attrs->value);
+                    rb_raise(rb_eSyntaxError, "Only Ox XML Object version 1.0 supported, not %s.\n", attrs->value);
                 }
             } else if (0 == strcmp("mode", attrs->name)) {
                 if (0 == strcmp("object", attrs->value)) {
@@ -156,7 +156,7 @@ nomode_instruct(PInfo pi, const char *target, Attr attrs) {
                     pi->obj = Qnil;
                     pi->h = 0;
                 } else {
-                    rb_raise(rb_eEncodingError, "%s is not a valid processing instruction mode.\n", attrs->value);
+                    rb_raise(rb_eSyntaxError, "%s is not a valid processing instruction mode.\n", attrs->value);
                 }
             }
         }

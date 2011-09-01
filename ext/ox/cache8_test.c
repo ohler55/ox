@@ -31,37 +31,37 @@
 #include <stdio.h>
 #include "cache8.h"
 
-static unsigned long    data[] = {
-    0x000000A0A0A0A0A0,
-    0x0000000000ABCDEF,
-    0x0123456789ABCDEF,
-    0x0000000000000001,
-    0x0000000000000002,
-    0x0000000000000003,
-    0x0000000000000004,
+static uint64_t data[] = {
+    0x000000A0A0A0A0A0ULL,
+    0x0000000000ABCDEFULL,
+    0x0123456789ABCDEFULL,
+    0x0000000000000001ULL,
+    0x0000000000000002ULL,
+    0x0000000000000003ULL,
+    0x0000000000000004ULL,
     0
 };
 
 void
 ox_cache8_test() {
-    Cache8              c;
-    unsigned long       v;
-    unsigned long       *d;
-    unsigned long       cnt = 1;
-    unsigned long       *slot = 0;
+    Cache8      c;
+    uint64_t    v;
+    uint64_t    *d;
+    uint64_t    cnt = 1;
+    uint64_t    *slot = 0;
 
     ox_cache8_new(&c);
     for (d = data; 0 != *d; d++) {
         v = ox_cache8_get(c, *d, &slot);
         if (0 == v) {
             if (0 == slot) {
-                printf("*** failed to get a slot for 0x%016lx\n", *d);
+                printf("*** failed to get a slot for 0x%016llx\n", *d);
             } else {
-                printf("*** adding 0x%016lx to cache with value %lu\n", *d, cnt);
+                printf("*** adding 0x%016llx to cache with value %llu\n", *d, cnt);
                 *slot = cnt++;
             }
         } else {
-            printf("*** get on 0x%016lx returned %lu\n", *d, v);
+            printf("*** get on 0x%016llx returned %llu\n", *d, v);
         }
         //ox_cache8_print(c);
     }

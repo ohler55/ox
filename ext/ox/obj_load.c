@@ -147,8 +147,12 @@ structname2obj(const char *name) {
         }
     }
     ost = rb_const_get(struct_class, rb_intern(s));
-
+// use encoding as the indicator for Ruby 1.8.7 or 1.9.x
+#ifdef HAVE_RUBY_ENCODING_H
     return rb_struct_alloc_noinit(ost);
+#else
+    return rb_struct_new(ost);
+#endif
 }
 
 // 2010-07-09T10:47:45.895826162+09:00
@@ -678,11 +682,11 @@ end_element(PInfo pi, const char *ename) {
                 break;
             case RangeCode:
                 if (beg_id == h->var) {
-                    RSTRUCT(pi->h->obj)->as.ary[0] = h->obj;
+                    RSTRUCT_PTR(pi->h->obj)[0] = h->obj;
                 } else if (end_id == h->var) {
-                    RSTRUCT(pi->h->obj)->as.ary[1] = h->obj;
+                    RSTRUCT_PTR(pi->h->obj)[1] = h->obj;
                 } else if (excl_id == h->var) {
-                    RSTRUCT(pi->h->obj)->as.ary[2] = h->obj;
+                    RSTRUCT_PTR(pi->h->obj)[2] = h->obj;
                 } else {
                     raise_error("Invalid range attribute", pi->str, pi->s);
                 }
@@ -692,18 +696,26 @@ end_element(PInfo pi, const char *ename) {
                 pi->h--;
                 break;
             case ComplexCode:
+#ifdef T_COMPLEX
                 if (Qundef == pi->h->obj) {
                     pi->h->obj = h->obj;
                 } else {
                     pi->h->obj = rb_complex_new(pi->h->obj, h->obj);
                 }
+#else
+                raise_error("Complex Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
+#endif
                 break;
             case RationalCode:
+#ifdef T_RATIONAL
                 if (Qundef == pi->h->obj) {
                     pi->h->obj = h->obj;
                 } else {
                     pi->h->obj = rb_rational_new(pi->h->obj, h->obj);
                 }
+#else
+                raise_error("Rational Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
+#endif
                 break;
             default:
                 raise_error("Corrupt parse stack, container is wrong type", pi->str, pi->s);

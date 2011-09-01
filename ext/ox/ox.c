@@ -667,5 +667,5 @@ _raise_error(const char *msg, const char *xml, const char *current, const char* 
             xline++;
         }
     }
-    rb_raise(rb_eEncodingError, "%s at line %d, column %d [%s:%d]\n", msg, xline, col, file, line);
+    rb_raise(rb_eSyntaxError, "%s at line %d, column %d [%s:%d]\n", msg, xline, col, file, line);
 }

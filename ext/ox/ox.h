@@ -40,7 +40,7 @@ extern "C" {
 
 #include "ruby.h"
 #ifdef HAVE_RUBY_ENCODING_H
-// RUBY_T_NIL defined for Ruby 1.9
+// HAVE_RUBY_ENCODING_H defined for Ruby 1.9
 #include "ruby/encoding.h"
 #endif
 #include "cache.h"

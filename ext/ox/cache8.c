@@ -15,8 +15,8 @@
 
 struct _Cache8 {
     union {
-        struct _Cache8 *slots[SLOT_CNT];
-        unsigned long   values[SLOT_CNT];
+        struct _Cache8  *slots[SLOT_CNT];
+        uint64_t        values[SLOT_CNT];
     };
 };
 
@@ -56,8 +56,8 @@ cache8_delete(Cache8 cache, int depth) {
     free(cache);
 }
 
-unsigned long
-ox_cache8_get(Cache8 cache, VALUE key, unsigned long **slot) {
+uint64_t
+ox_cache8_get(Cache8 cache, VALUE key, uint64_t **slot) {
     Cache8      *cp;
     int         i;
     VALUE       k;
