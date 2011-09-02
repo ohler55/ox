@@ -3,7 +3,9 @@ rvm:
   - 1.9.1
   - 1.9.2
 
-script: "gem build ox.gemspec"
-
-# need to figure out where this gets called from for it to work
-#script: "ruby -I lib -I ext test/func.rb"
+script: "cd ext/ox"
+script: "ruby extconf.rb"
+script: "make clean"
+script: "make"
+script: "cd ../.."
+script: "ruby -I lib -I ext test/func.rb"
