@@ -4,5 +4,5 @@ rvm:
   - 1.9.2
 
 script:
-  - gem build
+  - gem build ox.gemspec
   - gem install ox-*
