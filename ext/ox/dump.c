@@ -35,7 +35,11 @@
 #include <string.h>
 
 #include "ruby.h"
-#include "ruby/st.h" // where is this file on linux 32 bit ruby 1.8.7
+#ifdef HAVE_RUBY_ENCODING_H
+#include "ruby/st.h"
+#else
+#include "st.h"
+#endif
 #include "base64.h"
 #include "cache8.h"
 #include "ox.h"
