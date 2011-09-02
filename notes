@@ -5,7 +5,7 @@
 
 
 - changes for 1.2.14
-
+ - changed the header file path for st.h to compile with Ruby 1.8 on Linux
 
 
 - TBDs

@@ -355,7 +355,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_IO
-    f = File.open("func.rb", "r")
+    f = File.open(__FILE__, "r")
     assert_raise(NotImplementedError) {
       xml = Ox.dump(f, :effort => :strict)
     }
