@@ -3,9 +3,11 @@ rvm:
   - 1.9.1
   - 1.9.2
 
-script: "cd ext/ox"
-script: "ruby extconf.rb"
-script: "make clean"
-script: "make"
-script: "cd ../.."
+before_script:
+  - cd ext/ox
+  - ruby extconf.rb
+  - make clean
+  - make
+  - cd ../..
+
 script: "ruby -I lib -I ext test/func.rb"
