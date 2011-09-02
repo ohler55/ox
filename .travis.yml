@@ -2,4 +2,6 @@ rvm:
   - 1.8.7
   - 1.9.1
   - 1.9.2
-script: "ruby -I lib -I ext test/func.rb"
+
+script: "gem build ox.gemspec"
+#script: "ruby -I lib -I ext test/func.rb"
