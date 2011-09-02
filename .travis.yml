@@ -5,4 +5,4 @@ rvm:
 
 script:
   - gem build
-  - gem install
+  - gem install ox-*
