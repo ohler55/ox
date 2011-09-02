@@ -35,7 +35,7 @@
 #include <string.h>
 
 #include "ruby.h"
-#include "ruby/st.h"
+#include "ruby/st.h" // where is this file on linux 32 bit ruby 1.8.7
 #include "base64.h"
 #include "cache8.h"
 #include "ox.h"
