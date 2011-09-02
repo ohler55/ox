@@ -4,4 +4,6 @@ rvm:
   - 1.9.2
 
 script: "gem build ox.gemspec"
-script: "ruby -I lib -I ext test/func.rb"
+
+# need to figure out where this gets called from for it to work
+#script: "ruby -I lib -I ext test/func.rb"
