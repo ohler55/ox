@@ -617,7 +617,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     }
     case T_STRUCT:
     {
-#ifdef JRUBY
+#ifdef NO_RSTRUCT
         e.type = NilClassCode;
         e.closed = 1;
         out->w_start(out, &e);

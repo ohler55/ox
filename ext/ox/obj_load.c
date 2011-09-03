@@ -132,7 +132,7 @@ classname2obj(const char *name, PInfo pi) {
     }
 }
 
-#ifndef JRUBY
+#ifndef NO_RSTRUCT
 inline static VALUE
 structname2obj(const char *name) {
     VALUE       ost;
@@ -224,7 +224,7 @@ get_obj_from_attrs(Attr a, PInfo pi) {
     return Qundef;
 }
 
-#ifndef JRUBY
+#ifndef NO_RSTRUCT
 static VALUE
 get_struct_from_attrs(Attr a) {
     for (; 0 != a->name; a++) {
@@ -617,8 +617,8 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         }
         break;
     case StructCode:
-#ifdef JRUBY
-        raise_error("JRuby does not support Ruby structs", pi->str, pi->s);
+#ifdef NO_RSTRUCT
+        raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
 #else
         h->obj = get_struct_from_attrs(attrs);
         if (0 != pi->circ_array) {
@@ -682,8 +682,8 @@ end_element(PInfo pi, const char *ename) {
                 }
                 break;
             case StructCode:
-#ifdef JRUBY
-                raise_error("JRuby does not support Ruby structs", pi->str, pi->s);
+#ifdef NO_RSTRUCT
+                raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
 #else
                 rb_struct_aset(pi->h->obj, h->var, h->obj);
 #endif
@@ -693,8 +693,8 @@ end_element(PInfo pi, const char *ename) {
                 pi->h++;
                 break;
             case RangeCode:
-#ifdef JRUBY
-                raise_error("JRuby does not support Ruby structs", pi->str, pi->s);
+#ifdef NO_RSTRUCT
+                raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
 #else
                 if (beg_id == h->var) {
                     RSTRUCT_PTR(pi->h->obj)[0] = h->obj;

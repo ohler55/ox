@@ -4,8 +4,8 @@
 ^c^s show subtree
 
 
-- changes for 1.2.14
- - changed the header file path for st.h to compile with Ruby 1.8 on Linux
+- changes for 1.2.15
+ - added support for JRuby
 
 
 - TBDs

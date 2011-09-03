@@ -45,6 +45,13 @@ extern "C" {
 #endif
 #include "cache.h"
 
+#ifdef JRUBY
+#define NO_RSTRUCT 1
+#endif
+#ifdef RBX_Qnil
+#define NO_RSTRUCT 1
+#endif
+
 #define raise_error(msg, xml, current) _raise_error(msg, xml, current, __FILE__, __LINE__)
 
 #define MAX_TEXT_LEN    4096
