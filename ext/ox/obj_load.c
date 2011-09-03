@@ -132,6 +132,7 @@ classname2obj(const char *name, PInfo pi) {
     }
 }
 
+#ifndef JRUBY
 inline static VALUE
 structname2obj(const char *name) {
     VALUE       ost;
@@ -154,6 +155,7 @@ structname2obj(const char *name) {
     return rb_struct_new(ost);
 #endif
 }
+#endif
 
 // 2010-07-09T10:47:45.895826162+09:00
 inline static VALUE
@@ -222,6 +224,7 @@ get_obj_from_attrs(Attr a, PInfo pi) {
     return Qundef;
 }
 
+#ifndef JRUBY
 static VALUE
 get_struct_from_attrs(Attr a) {
     for (; 0 != a->name; a++) {
@@ -231,6 +234,7 @@ get_struct_from_attrs(Attr a) {
     }
     return Qundef;
 }
+#endif
 
 static VALUE
 get_class_from_attrs(Attr a, PInfo pi) {
@@ -613,10 +617,14 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         }
         break;
     case StructCode:
+#ifdef JRUBY
+        raise_error("JRuby does not support Ruby structs", pi->str, pi->s);
+#else
         h->obj = get_struct_from_attrs(attrs);
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
         }
+#endif
         break;
     case ClassCode:
         h->obj = get_class_from_attrs(attrs, pi);
@@ -674,13 +682,20 @@ end_element(PInfo pi, const char *ename) {
                 }
                 break;
             case StructCode:
+#ifdef JRUBY
+                raise_error("JRuby does not support Ruby structs", pi->str, pi->s);
+#else
                 rb_struct_aset(pi->h->obj, h->var, h->obj);
+#endif
                 break;
             case HashCode:
                 h->type = KeyCode;
                 pi->h++;
                 break;
             case RangeCode:
+#ifdef JRUBY
+                raise_error("JRuby does not support Ruby structs", pi->str, pi->s);
+#else
                 if (beg_id == h->var) {
                     RSTRUCT_PTR(pi->h->obj)[0] = h->obj;
                 } else if (end_id == h->var) {
@@ -690,6 +705,7 @@ end_element(PInfo pi, const char *ename) {
                 } else {
                     raise_error("Invalid range attribute", pi->str, pi->s);
                 }
+#endif
                 break;
             case KeyCode:
                 rb_hash_aset((pi->h - 1)->obj, pi->h->obj, h->obj);

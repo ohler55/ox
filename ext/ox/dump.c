@@ -617,6 +617,11 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     }
     case T_STRUCT:
     {
+#ifdef JRUBY
+        e.type = NilClassCode;
+        e.closed = 1;
+        out->w_start(out, &e);
+#else
         VALUE   clas;
 
         if (0 != out->circ_cache && check_circular(out, obj, &e)) {
@@ -651,6 +656,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             }
             out->w_end(out, &e);
         }
+#endif
         break;
     }
     case T_OBJECT:
@@ -689,8 +695,11 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
                 out->w_end(out, &e);
             }
 #else
+#ifdef JRUBY
+            VALUE       vars = rb_funcall2(obj, rb_intern("instance_variables"), 0, 0);
+#else
             VALUE       vars = rb_obj_instance_variables(obj);
-            
+#endif            
             e.type = ObjectCode;
             cnt = (int)RARRAY_LEN(vars);
             e.closed = (0 >= cnt);
