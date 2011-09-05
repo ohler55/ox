@@ -32,6 +32,12 @@
 #define __OX_CACHE8_H__
 
 #include "ruby.h"
+#include RUBY_EXTCONF_H
+
+#ifdef HAVE_STDINT_H
+#include "stdint.h"
+#endif
+
 
 typedef struct _Cache8   *Cache8;
 
