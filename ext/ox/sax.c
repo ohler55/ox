@@ -36,6 +36,8 @@
 #include "ruby.h"
 #include "ox.h"
 
+// 65536 = 0x00010000
+#define BUF_SIZE = 0x00010000
 
 void
 ox_sax_parse(VALUE handler, SaxControl sc) {

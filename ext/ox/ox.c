@@ -443,6 +443,18 @@ load_file(int argc, VALUE *argv, VALUE self) {
     return load(xml, argc - 1, argv + 1, self);
 }
 
+static size_t
+read_from_io(SaxControl ctrl, char *buf, size_t max_len) {
+    // TBD
+    return 0;
+}
+
+static size_t
+read_from_file(SaxControl ctrl, char *buf, size_t max_len) {
+    // TBD
+    return 0;
+}
+
 /* call-seq: sax_parse(handler, io, options) => Ox::Document or Ox::Element or Object
  *
  * Parses and IO stream or file containing an XML document into an
@@ -457,10 +469,11 @@ sax_parse(VALUE self, VALUE handler, VALUE io) {
     struct _SaxControl  ctrl;
 
     if (T_STRING == rb_type(io)) {
-        ctrl.read_func = 0; // TBD
+        ctrl.read_func = read_from_file;
         ctrl.fp = fopen(StringValuePtr(io), "r");
     } else if (rb_respond_to(io, read_nonblock_id)) {
-        printf("*** a valid IO object\n");
+        ctrl.read_func = read_from_io;
+        ctrl.io = io;
     } else {
         rb_raise(rb_eArgError, "sax_parser io argument must respond to read_nonblock().\n");
     }
