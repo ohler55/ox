@@ -33,12 +33,13 @@
 
 #include "ruby.h"
 
-typedef struct _Cache8   *Cache8;
+typedef struct _Cache8  *Cache8;
+typedef unsigned long   slot_t;
 
 extern void     ox_cache8_new(Cache8 *cache);
 extern void     ox_cache8_delete(Cache8 cache);
 
-extern uint64_t ox_cache8_get(Cache8 cache, VALUE key, uint64_t **slot);
+extern slot_t   ox_cache8_get(Cache8 cache, VALUE key, slot_t **slot);
 
 extern void     ox_cache8_print(Cache8 cache);
 

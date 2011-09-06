@@ -44,6 +44,8 @@
 #include "cache8.h"
 #include "ox.h"
 
+typedef unsigned long   ulong;
+
 typedef struct _Str {
     const char  *str;
     size_t      len;
@@ -192,7 +194,7 @@ fill_attr(Out out, char name, const char *value, size_t len) {
 }
 
 inline static const char*
-ulong2str(uint64_t num, char *end) {
+ulong2str(ulong num, char *end) {
     char        *b;
 
     *end-- = '\0';
@@ -206,8 +208,8 @@ ulong2str(uint64_t num, char *end) {
 
 static int
 check_circular(Out out, VALUE obj, Element e) {
-    uint64_t    *slot;
-    uint64_t    id;
+    ulong       *slot;
+    ulong       id;
     int         result;
     
     if (0 == (id = ox_cache8_get(out->circ_cache, obj, &slot))) {
@@ -541,7 +543,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         } else {
             char        buf64[4096];
             char        *b64 = buf64;
-            uint64_t    size = b64_size(cnt);
+            ulong       size = b64_size(cnt);
 
             e.type = String64Code;
             if (sizeof(buf64) < size) {
@@ -574,7 +576,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         } else {
             char        buf64[4096];
             char        *b64 = buf64;
-            uint64_t    size = b64_size(cnt);
+            ulong       size = b64_size(cnt);
 
             e.type = Symbol64Code;
             if (sizeof(buf64) < size) {
@@ -743,7 +745,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         } else {
             char        buf64[4096];
             char        *b64 = buf64;
-            uint64_t    size = b64_size(cnt);
+            ulong       size = b64_size(cnt);
 
             if (sizeof(buf64) < size) {
                 if (0 == (b64 = (char*)malloc(size + 1))) {
