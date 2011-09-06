@@ -4,9 +4,7 @@
 ^c^s show subtree
 
 
-- changes for 1.2.15
- - added support for JRuby
- - added support for RBX
+- changes for 1.2.16
 
 
 - TBDs
