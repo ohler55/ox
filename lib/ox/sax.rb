@@ -7,7 +7,21 @@ module Ox
   # 
   #  require 'ox'
   #
-  # 
+  #  class MySax < ::Ox::Sax
+  #    def initialize()
+  #      @element_name = []
+  #    end
+  #
+  #    def start_element(name, attrs)
+  #      @element_names << name
+  #    end
+  #  end
+  #
+  #  any = MySax.new()
+  #  File.open('any.xml', 'r') do |f|
+  #    Xml.sax_parse(any, f)
+  #  end
+  #
   # To make the desired methods active while parsing the desired method should
   # be made public in the subclasses. If the methods remain private they will
   # not be called during parsing.
@@ -19,7 +33,7 @@ module Ox
   #    def text(value); end
   #    def start_element(name, attrs); end
   #    def end_element(name); end
-
+  #
   class Sax
     # Create a new instance of the Sax handler class.
     def initialize()
@@ -49,6 +63,9 @@ module Ox
     end
 
     def end_element(name)
+    end
+    
+    def error(message, line, column)
     end
     
   end # Sax

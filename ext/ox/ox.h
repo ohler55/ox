@@ -195,8 +195,27 @@ typedef struct _Options {
     char        effort;         // Effort
 } *Options;
 
+typedef struct _SaxControl {
+    // TBD reader function
+    void        *read_func;
+    union {
+        FILE    *fp;
+        VALUE   io;
+    };
+    int         has_instruct;
+    int         has_doctype;
+    int         has_comment;
+    int         has_cdata;
+    int         has_text;
+    int         has_start_element;
+    int         has_end_element;
+    int         has_error;
+} *SaxControl;
+
 extern VALUE    parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort);
 extern void     _raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
+
+extern void     ox_sax_parse(VALUE handler, SaxControl ctrl);
 
 extern char*    write_obj_to_str(VALUE obj, Options copts);
 extern void     write_obj_to_file(VALUE obj, const char *path, Options copts);

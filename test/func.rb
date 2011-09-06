@@ -5,7 +5,7 @@ $: << '../lib'
 $: << '../ext'
 
 if __FILE__ == $0
-  if (i = ARGV.index('-I'))
+  while (i = ARGV.index('-I'))
     x,path = ARGV.slice!(i, 2)
     $: << path
   end

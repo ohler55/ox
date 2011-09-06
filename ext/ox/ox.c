@@ -48,15 +48,24 @@ VALUE    Ox = Qnil;
 ID      at_id;
 ID      attributes_id;
 ID      beg_id;
+ID      cdata_id;
+ID      comment_id;
 ID      den_id;
+ID      doctype_id;
+ID      end_element_id;
 ID      end_id;
+ID      error_id;
 ID      excl_id;
 ID      inspect_id;
+ID      instruct_id;
 ID      keys_id;
 ID      local_id;
 ID      nodes_id;
 ID      num_id;
 ID      parse_id;
+ID      read_nonblock_id;
+ID      start_element_id;
+ID      text_id;
 ID      to_c_id;
 ID      to_s_id;
 ID      tv_sec_id;
@@ -434,6 +443,41 @@ load_file(int argc, VALUE *argv, VALUE self) {
     return load(xml, argc - 1, argv + 1, self);
 }
 
+/* call-seq: sax_parse(handler, io, options) => Ox::Document or Ox::Element or Object
+ *
+ * Parses and IO stream or file containing an XML document into an
+ * Ox::Document, or Ox::Element, or Object depending on the options.  Raises
+ * an exception if the XML is malformed or the classes specified are not
+ * valid.
+ * @param [Ox::Sax] handler SAX like handler
+ * @param [IO|String] io IO Object or file path to read from
+ */
+static VALUE
+sax_parse(VALUE self, VALUE handler, VALUE io) {
+    struct _SaxControl  ctrl;
+
+    if (T_STRING == rb_type(io)) {
+        ctrl.read_func = 0; // TBD
+        ctrl.fp = fopen(StringValuePtr(io), "r");
+    } else if (rb_respond_to(io, read_nonblock_id)) {
+        printf("*** a valid IO object\n");
+    } else {
+        rb_raise(rb_eArgError, "sax_parser io argument must respond to read_nonblock().\n");
+    }
+    ctrl.has_instruct = rb_respond_to(handler, instruct_id);
+    ctrl.has_doctype = rb_respond_to(handler, doctype_id);
+    ctrl.has_comment = rb_respond_to(handler, comment_id);
+    ctrl.has_cdata = rb_respond_to(handler, cdata_id);
+    ctrl.has_text = rb_respond_to(handler, text_id);
+    ctrl.has_start_element = rb_respond_to(handler, start_element_id);
+    ctrl.has_end_element = rb_respond_to(handler, end_element_id);
+    ctrl.has_error = rb_respond_to(handler, error_id);
+
+    ox_sax_parse(handler, &ctrl);
+
+    return Qnil;
+}
+
 static void
 parse_dump_options(VALUE ropts, Options copts) {
     struct _YesNoOpt    ynos[] = {
@@ -583,6 +627,7 @@ void Init_ox() {
     rb_define_module_function(Ox, "parse_obj", to_obj, 1);
     rb_define_module_function(Ox, "parse", to_gen, 1);
     rb_define_module_function(Ox, "load", load_str, -1);
+    rb_define_module_function(Ox, "sax_parse", sax_parse, 2);
 
     rb_define_module_function(Ox, "to_xml", dump, -1);
     rb_define_module_function(Ox, "dump", dump, -1);
@@ -608,6 +653,15 @@ void Init_ox() {
     tv_usec_id = rb_intern("tv_usec");
     to_c_id = rb_intern("to_c");
     to_s_id = rb_intern("to_s");
+    read_nonblock_id = rb_intern("read_nonblock");
+    instruct_id = rb_intern("instruct");
+    doctype_id = rb_intern("doctype");
+    comment_id = rb_intern("comment");
+    cdata_id = rb_intern("cdata");
+    text_id = rb_intern("text");
+    start_element_id = rb_intern("start_element");
+    end_element_id = rb_intern("end_element");
+    error_id = rb_intern("error");
 
     time_class = rb_const_get(rb_cObject, rb_intern("Time"));
     struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
