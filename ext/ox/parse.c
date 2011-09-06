@@ -41,11 +41,13 @@ static void     read_doctype(PInfo pi);
 static void     read_comment(PInfo pi);
 static void     read_element(PInfo pi);
 static void     read_text(PInfo pi);
+//static void     read_reduced_text(PInfo pi);
 static void     read_cdata(PInfo pi);
 static char*    read_name_token(PInfo pi);
 static char*    read_quoted_value(PInfo pi);
 static int      read_coded_char(PInfo pi);
 static void     next_non_white(PInfo pi);
+static int      collapse_special(char *str);
 
 /* This XML parser is a single pass, destructive, callback parser. It is a
  * single pass parse since it only make one pass over the characters in the
@@ -94,7 +96,9 @@ parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
     pi.pcb = pcb;
     pi.obj = Qnil;
     pi.circ_array = 0;
+#ifdef ENCODING_INLINE_MAX
     pi.encoding = 0;
+#endif
     pi.trace = trace;
     pi.effort = effort;
     while (1) {
@@ -338,6 +342,11 @@ read_element(PInfo pi) {
 	    // read value
 	    next_non_white(pi);
 	    ap->value = read_quoted_value(pi);
+            if (0 != strchr(ap->value, '&')) {
+                if (0 != collapse_special((char*)ap->value)) {
+                    raise_error("invalid format, special character does not end with a semicolon", pi->str, pi->s);
+                }
+            }
             ap++;
             if (MAX_ATTRS <= (ap - attrs)) {
 		raise_error("too many attributes", pi->str, pi->s);
@@ -399,6 +408,8 @@ read_element(PInfo pi) {
 		pi->s = start;
 		//pi->s--;
 		read_text(pi);
+		//read_reduced_text(pi);
+
 		// to exit read_text with no errors the next character must be <
 		if ('/' == *(pi->s + 1) &&
 		    0 == strncmp(ename, pi->s + 2, elen) &&
@@ -415,6 +426,63 @@ read_element(PInfo pi) {
 
 static void
 read_text(PInfo pi) {
+    char        buf[MAX_TEXT_LEN];
+    char	*b = buf;
+    char        *alloc_buf = 0;
+    char	*end = b + sizeof(buf) - 2;
+    char	c;
+    int		done = 0;
+
+    while (!done) {
+	c = *pi->s++;
+	switch(c) {
+	case '<':
+	    done = 1;
+	    pi->s--;
+	    break;
+	case '\0':
+	    raise_error("invalid format, document not terminated", pi->str, pi->s);
+	default:
+	    if ('&' == c) {
+		c = read_coded_char(pi);
+	    }
+	    if (end <= b) {
+                unsigned long   size;
+                
+                if (0 == alloc_buf) {
+                    size = sizeof(buf) * 2;
+                    if (0 == (alloc_buf = (char*)malloc(size))) {
+                        raise_error("text too long", pi->str, pi->s);
+                    }
+                    memcpy(alloc_buf, buf, b - buf);
+                    b = alloc_buf + (b - buf);
+                } else {
+                    unsigned long       pos = b - alloc_buf;
+
+                    size = (end - alloc_buf) * 2;
+                    if (0 == (alloc_buf = (char*)realloc(alloc_buf, size))) {
+                        raise_error("text too long", pi->str, pi->s);
+                    }
+                    b = alloc_buf + pos;
+                }
+                end = alloc_buf + size - 2;
+	    }
+	    *b++ = c;
+	    break;
+	}
+    }
+    *b = '\0';
+    if (0 != alloc_buf) {
+        pi->pcb->add_text(pi, alloc_buf, ('/' == *(pi->s + 1)));
+        free(alloc_buf);
+    } else {
+        pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
+    }
+}
+
+#if 0
+static void
+read_reduced_text(PInfo pi) {
     char        buf[MAX_TEXT_LEN];
     char	*b = buf;
     char        *alloc_buf = 0;
@@ -480,6 +548,7 @@ read_text(PInfo pi) {
         pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
     }
 }
+#endif
 
 static char*
 read_name_token(PInfo pi) {
@@ -542,7 +611,7 @@ read_quoted_value(PInfo pi) {
     for (; *pi->s != '"'; pi->s++) {
 	if ('\0' == *pi->s) {
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
-	}
+        }
     }
     *pi->s = '\0'; // terminate value
     pi->s++;       // move past quote
@@ -599,3 +668,53 @@ read_coded_char(PInfo pi) {
     return *pi->s;
 }
 
+static int
+collapse_special(char *str) {
+    char        *s = str;
+    char        *b = str;
+
+    while ('\0' != *s) {
+        if ('&' == *s) {
+            int         c;
+            char        *end;
+            
+            s++;
+            if ('#' == *s) {
+                c = (int)strtol(s, &end, 10);
+                if (';' != *end) {
+                    return EDOM;
+                }
+                s = end + 1;
+            } else if (0 == strncasecmp(s, "lt;", 3)) {
+                c = '<';
+                s += 3;
+            } else if (0 == strncasecmp(s, "gt;", 3)) {
+                c = '>';
+                s += 3;
+            } else if (0 == strncasecmp(s, "amp;", 4)) {
+                c = '&';
+                s += 4;
+            } else if (0 == strncasecmp(s, "quot;", 5)) {
+                c = '"';
+                s += 5;
+            } else if (0 == strncasecmp(s, "apos;", 5)) {
+                c = '\'';
+                s += 5;
+            } else {
+                c = '?';
+                while (';' != *s++) {
+                    if ('\0' == *s) {
+                        return EDOM;
+                    }
+                }
+                s++;
+            }
+            *b++ = (char)c;
+        } else {
+            *b++ = *s++;
+        }
+    }
+    *b = '\0';
+
+    return 0;
+}

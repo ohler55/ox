@@ -31,24 +31,24 @@
 #include <stdio.h>
 #include "cache8.h"
 
-static unsigned long    data[] = {
-    0x000000A0A0A0A0A0,
-    0x0000000000ABCDEF,
-    0x0123456789ABCDEF,
-    0x0000000000000001,
-    0x0000000000000002,
-    0x0000000000000003,
-    0x0000000000000004,
+static slot_t data[] = {
+    0x000000A0A0A0A0A0UL,
+    0x0000000000ABCDEFUL,
+    0x0123456789ABCDEFUL,
+    0x0000000000000001UL,
+    0x0000000000000002UL,
+    0x0000000000000003UL,
+    0x0000000000000004UL,
     0
 };
 
 void
 ox_cache8_test() {
-    Cache8              c;
-    unsigned long       v;
-    unsigned long       *d;
-    unsigned long       cnt = 1;
-    unsigned long       *slot = 0;
+    Cache8      c;
+    slot_t      v;
+    slot_t      *d;
+    slot_t      cnt = 1;
+    slot_t      *slot = 0;
 
     ox_cache8_new(&c);
     for (d = data; 0 != *d; d++) {

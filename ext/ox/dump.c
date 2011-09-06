@@ -35,10 +35,16 @@
 #include <string.h>
 
 #include "ruby.h"
-#include "ruby/oniguruma.h"
+#ifdef HAVE_RUBY_ENCODING_H
+#include "ruby/st.h"
+#else
+#include "st.h"
+#endif
 #include "base64.h"
 #include "cache8.h"
 #include "ox.h"
+
+typedef unsigned long   ulong;
 
 typedef struct _Str {
     const char  *str;
@@ -118,28 +124,32 @@ is_xml_friendly(const u_char *str, int len) {
 inline static Type
 obj_class_code(VALUE obj) {
     switch (rb_type(obj)) {
-    case RUBY_T_NIL:            return NilClassCode;
-    case RUBY_T_ARRAY:          return ArrayCode;
-    case RUBY_T_HASH:           return HashCode;
-    case RUBY_T_TRUE:           return TrueClassCode;
-    case RUBY_T_FALSE:          return FalseClassCode;
-    case RUBY_T_FIXNUM:         return FixnumCode;
-    case RUBY_T_FLOAT:          return FloatCode;
-    case RUBY_T_STRING:         return (is_xml_friendly((u_char*)StringValuePtr(obj), (int)RSTRING_LEN(obj))) ? StringCode : String64Code;
-    case RUBY_T_SYMBOL:
+    case T_NIL:            return NilClassCode;
+    case T_ARRAY:          return ArrayCode;
+    case T_HASH:           return HashCode;
+    case T_TRUE:           return TrueClassCode;
+    case T_FALSE:          return FalseClassCode;
+    case T_FIXNUM:         return FixnumCode;
+    case T_FLOAT:          return FloatCode;
+    case T_STRING:         return (is_xml_friendly((u_char*)StringValuePtr(obj), (int)RSTRING_LEN(obj))) ? StringCode : String64Code;
+    case T_SYMBOL:
     {
         const char      *sym = rb_id2name(SYM2ID(obj));
 
         return (is_xml_friendly((u_char*)sym, (int)strlen(sym))) ? SymbolCode : Symbol64Code;
     }
-    case RUBY_T_DATA:           return (rb_cTime == rb_obj_class(obj)) ? TimeCode : 0;
-    case RUBY_T_STRUCT:         return (rb_cRange == rb_obj_class(obj)) ? RangeCode : StructCode;
-    case RUBY_T_OBJECT:         return (ox_document_clas == rb_obj_class(obj) || ox_element_clas == rb_obj_class(obj)) ? RawCode : ObjectCode;
-    case RUBY_T_REGEXP:         return RegexpCode;
-    case RUBY_T_BIGNUM:         return BignumCode;
-    case RUBY_T_COMPLEX:        return ComplexCode;
-    case RUBY_T_RATIONAL:       return RationalCode;
-    case RUBY_T_CLASS:          return ClassCode;
+    case T_DATA:           return (rb_cTime == rb_obj_class(obj)) ? TimeCode : 0;
+    case T_STRUCT:         return (rb_cRange == rb_obj_class(obj)) ? RangeCode : StructCode;
+    case T_OBJECT:         return (ox_document_clas == rb_obj_class(obj) || ox_element_clas == rb_obj_class(obj)) ? RawCode : ObjectCode;
+    case T_REGEXP:         return RegexpCode;
+    case T_BIGNUM:         return BignumCode;
+#ifdef T_COMPLEX
+    case T_COMPLEX:        return ComplexCode;
+#endif
+#ifdef T_RATIONAL
+    case T_RATIONAL:       return RationalCode;
+#endif
+    case T_CLASS:          return ClassCode;
     default:                    return 0;
     }
 }
@@ -184,7 +194,7 @@ fill_attr(Out out, char name, const char *value, size_t len) {
 }
 
 inline static const char*
-ulong2str(unsigned long num, char *end) {
+ulong2str(ulong num, char *end) {
     char        *b;
 
     *end-- = '\0';
@@ -198,9 +208,9 @@ ulong2str(unsigned long num, char *end) {
 
 static int
 check_circular(Out out, VALUE obj, Element e) {
-    unsigned long       *slot;
-    unsigned long       id;
-    int                 result;
+    ulong       *slot;
+    ulong       id;
+    int         result;
     
     if (0 == (id = ox_cache8_get(out->circ_cache, obj, &slot))) {
         out->circ_cnt++;
@@ -447,14 +457,14 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     }
     e.id = 0;
     e.clas.len = 0;
-    e.clas.str = 0;    
+    e.clas.str = 0;
     switch (rb_type(obj)) {
-    case RUBY_T_NIL:
+    case T_NIL:
         e.type = NilClassCode;
         e.closed = 1;
         out->w_start(out, &e);
         break;
-    case RUBY_T_ARRAY:
+    case T_ARRAY:
         if (0 != out->circ_cache && check_circular(out, obj, &e)) {
             break;
         }
@@ -473,7 +483,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             out->w_end(out, &e);
         }
         break;
-    case RUBY_T_HASH:
+    case T_HASH:
         if (0 != out->circ_cache && check_circular(out, obj, &e)) {
             break;
         }
@@ -490,24 +500,24 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             out->w_end(out, &e);
         }
         break;
-    case RUBY_T_TRUE:
+    case T_TRUE:
         e.type = TrueClassCode;
         e.closed = 1;
         out->w_start(out, &e);
         break;
-    case RUBY_T_FALSE:
+    case T_FALSE:
         e.type = FalseClassCode;
         e.closed = 1;
         out->w_start(out, &e);
         break;
-    case RUBY_T_FIXNUM:
+    case T_FIXNUM:
         e.type = FixnumCode;
         out->w_start(out, &e);
         dump_num(out, obj);
         e.indent = -1;
         out->w_end(out, &e);
         break;
-    case RUBY_T_FLOAT:
+    case T_FLOAT:
         e.type = FloatCode;
         cnt = sprintf(value_buf, "%0.16g", RFLOAT_VALUE(obj)); // used sprintf due to bug in snprintf
         out->w_start(out, &e);
@@ -515,7 +525,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         e.indent = -1;
         out->w_end(out, &e);
         break;
-    case RUBY_T_STRING:
+    case T_STRING:
     {
         const char      *str;
 
@@ -531,9 +541,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             e.indent = -1;
             out->w_end(out, &e);
         } else {
-            char                buf64[4096];
-            char                *b64 = buf64;
-            unsigned long       size = b64_size(cnt);
+            char        buf64[4096];
+            char        *b64 = buf64;
+            ulong       size = b64_size(cnt);
 
             e.type = String64Code;
             if (sizeof(buf64) < size) {
@@ -552,7 +562,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         }
         break;
     }
-    case RUBY_T_SYMBOL:
+    case T_SYMBOL:
     {
         const char      *sym = rb_id2name(SYM2ID(obj));
 
@@ -564,9 +574,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             e.indent = -1;
             out->w_end(out, &e);
         } else {
-            char                buf64[4096];
-            char                *b64 = buf64;
-            unsigned long       size = b64_size(cnt);
+            char        buf64[4096];
+            char        *b64 = buf64;
+            ulong       size = b64_size(cnt);
 
             e.type = Symbol64Code;
             if (sizeof(buf64) < size) {
@@ -585,7 +595,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         }
         break;
     }
-    case RUBY_T_DATA:
+    case T_DATA:
     {
         VALUE   clas;
 
@@ -597,12 +607,23 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             e.indent = -1;
             out->w_end(out, &e);
         } else {
-            printf("*** dumpAttr: RUBY_T_DATA class: %s\n", rb_class2name(clas));
+            if (StrictEffort == out->opts->effort) {
+                rb_raise(rb_eNotImpError, "Failed to dump T_DATA %s\n", rb_class2name(clas));
+            } else {
+                e.type = NilClassCode;
+                e.closed = 1;
+                out->w_start(out, &e);
+            }
         }
         break;
     }
-    case RUBY_T_STRUCT:
+    case T_STRUCT:
     {
+#ifdef NO_RSTRUCT
+        e.type = NilClassCode;
+        e.closed = 1;
+        out->w_start(out, &e);
+#else
         VALUE   clas;
 
         if (0 != out->circ_cache && check_circular(out, obj, &e)) {
@@ -610,9 +631,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         }
         clas = rb_obj_class(obj);
         if (rb_cRange == clas) {
-            VALUE       beg = RSTRUCT(obj)->as.ary[0];
-            VALUE       end = RSTRUCT(obj)->as.ary[1];
-            VALUE       excl = RSTRUCT(obj)->as.ary[2];
+            VALUE       beg = RSTRUCT_PTR(obj)[0];
+            VALUE       end = RSTRUCT_PTR(obj)[1];
+            VALUE       excl = RSTRUCT_PTR(obj)[2];
             int         d2 = depth + 1;
 
             e.type = RangeCode;  e.clas.len = 5;  e.clas.str = "Range";
@@ -637,9 +658,10 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             }
             out->w_end(out, &e);
         }
+#endif
         break;
     }
-    case RUBY_T_OBJECT:
+    case T_OBJECT:
     {
         VALUE   clas;
 
@@ -660,22 +682,49 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             dump_gen_element(obj, depth + 1, out);
             out->w_end(out, &e);
         } else { // Object
+// use encoding as the indicator for Ruby 1.8.7 or 1.9.x
+#ifdef HAVE_RUBY_ENCODING_H
             e.type = ObjectCode;
             cnt = (int)rb_ivar_count(obj);
             e.closed = (0 >= cnt);
             out->w_start(out, &e);
             if (0 < cnt) {
                 unsigned int        od = out->depth;
-            
+
                 out->depth = depth + 1;
                 rb_ivar_foreach(obj, dump_var, (VALUE)out);
                 out->depth = od;
                 out->w_end(out, &e);
             }
+#else
+#ifdef JRUBY
+            VALUE       vars = rb_funcall2(obj, rb_intern("instance_variables"), 0, 0);
+#else
+            VALUE       vars = rb_obj_instance_variables(obj);
+#endif            
+            e.type = ObjectCode;
+            cnt = (int)RARRAY_LEN(vars);
+            e.closed = (0 >= cnt);
+            out->w_start(out, &e);
+            if (0 < cnt) {
+                VALUE           *np = RARRAY_PTR(vars);
+                ID              vid;
+                unsigned int    od = out->depth;
+                int             i;
+
+                out->depth = depth + 1;
+                for (i = cnt; 0 < i; i--, np++) {
+                    vid = rb_to_id(*np);
+                    dump_var(vid, rb_ivar_get(obj, vid), out);
+                }
+                out->depth = od;
+                out->w_end(out, &e);
+            }
+#endif
         }
         break;
     }
-    case RUBY_T_REGEXP:
+    case T_REGEXP:
     {
 #if 1
         VALUE           rs = rb_funcall2(obj, inspect_id, 0, 0);
@@ -694,9 +743,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             //dump_value(out, "/", 1);
             dump_value(out, s, cnt);
         } else {
-            char                buf64[4096];
-            char                *b64 = buf64;
-            unsigned long       size = b64_size(cnt);
+            char        buf64[4096];
+            char        *b64 = buf64;
+            ulong       size = b64_size(cnt);
 
             if (sizeof(buf64) < size) {
                 if (0 == (b64 = (char*)malloc(size + 1))) {
@@ -725,7 +774,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         out->w_end(out, &e);
         break;
     }
-    case RUBY_T_BIGNUM:
+    case T_BIGNUM:
     {
         VALUE   rs = rb_big2str(obj, 10);
         
@@ -736,21 +785,25 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         out->w_end(out, &e);
         break;
     }
-    case RUBY_T_COMPLEX:
+#ifdef T_COMPLEX
+    case T_COMPLEX:
         e.type = ComplexCode;
         out->w_start(out, &e);
         dump_obj(0, RCOMPLEX(obj)->real, depth + 1, out);
         dump_obj(0, RCOMPLEX(obj)->imag, depth + 1, out);
         out->w_end(out, &e);
         break;
-    case RUBY_T_RATIONAL:
+#endif
+#ifdef T_RATIONAL
+    case T_RATIONAL:
         e.type = RationalCode;
         out->w_start(out, &e);
         dump_obj(0, RRATIONAL(obj)->num, depth + 1, out);
         dump_obj(0, RRATIONAL(obj)->den, depth + 1, out);
         out->w_end(out, &e);
         break;
-    case RUBY_T_CLASS:
+#endif
+    case T_CLASS:
     {
         e.type = ClassCode;
         e.clas.str = rb_class2name(obj);
@@ -774,8 +827,19 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
 
 static int
 dump_var(ID key, VALUE value, Out out) {
+    if (T_DATA == rb_type(value) && rb_cTime != rb_obj_class(value)) {
+        /* There is a secret recipe that keeps Exception mesg attributes as a
+         * T_DATA until it is needed. StringValue() makes the value needed and
+         * it is converted to a regular Ruby Object. It might seem reasonable
+         * to expect that this would be done before calling the foreach
+         * callback but it isn't. A slight hack fixes the inconsistency. If
+         * the var is not something that can be represented as a String then
+         * this will fail.
+         */
+        StringValue(value);
+    }
     dump_obj(key, value, out->depth, out);
-    
+
     return ST_CONTINUE;
 }
 
@@ -892,7 +956,7 @@ dump_gen_nodes(VALUE obj, unsigned int depth, Out out) {
 
 static int
 dump_gen_attr(VALUE key, VALUE value, Out out) {
-    const char  *ks = (RUBY_T_SYMBOL == rb_type(key)) ? rb_id2name(SYM2ID(key)) : StringValuePtr(key);
+    const char  *ks = (T_SYMBOL == rb_type(key)) ? rb_id2name(SYM2ID(key)) : StringValuePtr(key);
     size_t      klen = strlen(ks);
     size_t      size = 4 + klen + RSTRING_LEN(value);
     
@@ -919,7 +983,7 @@ dump_gen_val_node(VALUE obj, unsigned int depth,
     size_t      size;
     int         indent;
 
-    if (RUBY_T_STRING != rb_type(v)) {
+    if (T_STRING != rb_type(v)) {
         return;
     }
     val = StringValuePtr(v);

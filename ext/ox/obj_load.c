@@ -36,7 +36,6 @@
 #include <time.h>
 
 #include "ruby.h"
-#include "ruby/oniguruma.h"
 #include "base64.h"
 #include "ox.h"
 
@@ -133,6 +132,7 @@ classname2obj(const char *name, PInfo pi) {
     }
 }
 
+#ifndef NO_RSTRUCT
 inline static VALUE
 structname2obj(const char *name) {
     VALUE       ost;
@@ -148,9 +148,14 @@ structname2obj(const char *name) {
         }
     }
     ost = rb_const_get(struct_class, rb_intern(s));
-
+// use encoding as the indicator for Ruby 1.8.7 or 1.9.x
+#ifdef HAVE_RUBY_ENCODING_H
     return rb_struct_alloc_noinit(ost);
+#else
+    return rb_struct_new(ost);
+#endif
 }
+#endif
 
 // 2010-07-09T10:47:45.895826162+09:00
 inline static VALUE
@@ -219,6 +224,7 @@ get_obj_from_attrs(Attr a, PInfo pi) {
     return Qundef;
 }
 
+#ifndef NO_RSTRUCT
 static VALUE
 get_struct_from_attrs(Attr a) {
     for (; 0 != a->name; a++) {
@@ -228,6 +234,7 @@ get_struct_from_attrs(Attr a) {
     }
     return Qundef;
 }
+#endif
 
 static VALUE
 get_class_from_attrs(Attr a, PInfo pi) {
@@ -330,6 +337,7 @@ parse_regexp(const char *text) {
     int         options = 0;
             
     te = text + strlen(text) - 1;
+#ifdef HAVE_RUBY_ENCODING_H
     for (; text < te && '/' != *te; te--) {
         switch (*te) {
         case 'i':       options |= ONIG_OPTION_IGNORECASE;      break;
@@ -338,17 +346,20 @@ parse_regexp(const char *text) {
         default:                                                break;
         }
     }
+#endif
     return rb_reg_new(text + 1, te - text - 1, options);
 }
 
 static void
 instruct(PInfo pi, const char *target, Attr attrs) {
     if (0 == strcmp("xml", target)) {
+#ifdef HAVE_RUBY_ENCODING_H
         for (; 0 != attrs->name; attrs++) {
             if (0 == strcmp("encoding", attrs->name)) {
                 pi->encoding = rb_enc_find(attrs->value);
             }
         }
+#endif
     }
 }
 
@@ -367,9 +378,11 @@ add_text(PInfo pi, char *text, int closed) {
     case NoCode:
     case StringCode:
         pi->h->obj = rb_str_new2(text);
+#ifdef HAVE_RUBY_ENCODING_H
         if (0 != pi->encoding) {
             rb_enc_associate(pi->h->obj, pi->encoding);
         }
+#endif
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, pi->h->obj, (unsigned long)pi->id);
         }
@@ -430,9 +443,11 @@ add_text(PInfo pi, char *text, int closed) {
         }
         from_base64(text, (u_char*)str);
         v = rb_str_new(str, str_size);
+#ifdef HAVE_RUBY_ENCODING_H
         if (0 != pi->encoding) {
             rb_enc_associate(v, pi->encoding);
         }
+#endif
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, v, (unsigned long)pi->h->obj);
         }
@@ -602,10 +617,14 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         }
         break;
     case StructCode:
+#ifdef NO_RSTRUCT
+        raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+#else
         h->obj = get_struct_from_attrs(attrs);
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
         }
+#endif
         break;
     case ClassCode:
         h->obj = get_class_from_attrs(attrs, pi);
@@ -663,40 +682,56 @@ end_element(PInfo pi, const char *ename) {
                 }
                 break;
             case StructCode:
+#ifdef NO_RSTRUCT
+                raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+#else
                 rb_struct_aset(pi->h->obj, h->var, h->obj);
+#endif
                 break;
             case HashCode:
                 h->type = KeyCode;
                 pi->h++;
                 break;
             case RangeCode:
+#ifdef NO_RSTRUCT
+                raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+#else
                 if (beg_id == h->var) {
-                    RSTRUCT(pi->h->obj)->as.ary[0] = h->obj;
+                    RSTRUCT_PTR(pi->h->obj)[0] = h->obj;
                 } else if (end_id == h->var) {
-                    RSTRUCT(pi->h->obj)->as.ary[1] = h->obj;
+                    RSTRUCT_PTR(pi->h->obj)[1] = h->obj;
                 } else if (excl_id == h->var) {
-                    RSTRUCT(pi->h->obj)->as.ary[2] = h->obj;
+                    RSTRUCT_PTR(pi->h->obj)[2] = h->obj;
                 } else {
                     raise_error("Invalid range attribute", pi->str, pi->s);
                 }
+#endif
                 break;
             case KeyCode:
                 rb_hash_aset((pi->h - 1)->obj, pi->h->obj, h->obj);
                 pi->h--;
                 break;
             case ComplexCode:
+#ifdef T_COMPLEX
                 if (Qundef == pi->h->obj) {
                     pi->h->obj = h->obj;
                 } else {
                     pi->h->obj = rb_complex_new(pi->h->obj, h->obj);
                 }
+#else
+                raise_error("Complex Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
+#endif
                 break;
             case RationalCode:
+#ifdef T_RATIONAL
                 if (Qundef == pi->h->obj) {
                     pi->h->obj = h->obj;
                 } else {
                     pi->h->obj = rb_rational_new(pi->h->obj, h->obj);
                 }
+#else
+                raise_error("Rational Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
+#endif
                 break;
             default:
                 raise_error("Corrupt parse stack, container is wrong type", pi->str, pi->s);

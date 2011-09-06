@@ -519,9 +519,11 @@ dump(int argc, VALUE *argv, VALUE self) {
         rb_raise(rb_eNoMemError, "Not enough memory.\n");
     }
     rstr = rb_str_new2(xml);
+#ifdef ENCODING_INLINE_MAX
     if ('\0' != *copts.encoding) {
         rb_enc_associate(rstr, rb_enc_find(copts.encoding));
     }
+#endif
     free(xml);
 
     return rstr;
@@ -665,5 +667,5 @@ _raise_error(const char *msg, const char *xml, const char *current, const char* 
             xline++;
         }
     }
-    rb_raise(rb_eEncodingError, "%s at line %d, column %d [%s:%d]\n", msg, xline, col, file, line);
+    rb_raise(rb_eSyntaxError, "%s at line %d, column %d [%s:%d]\n", msg, xline, col, file, line);
 }
