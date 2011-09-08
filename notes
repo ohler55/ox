@@ -16,6 +16,7 @@
      - if word spans blocks then create new buffer and copy into that or maybe memmove
    - given a file name, open and start reading in blocks
    - given an IO, start reading in blocks
+  - general object/generic parser
 
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml

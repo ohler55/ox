@@ -149,7 +149,7 @@ static VALUE
 get_def_opts(VALUE self) {
     VALUE       opts = rb_hash_new();
     int         elen = (int)strlen(default_options.encoding);
-    
+
     rb_hash_aset(opts, encoding_sym, (0 == elen) ? Qnil : rb_str_new(default_options.encoding, elen));
     rb_hash_aset(opts, indent_sym, INT2FIX(default_options.indent));
     rb_hash_aset(opts, trace_sym, INT2FIX(default_options.trace));
@@ -443,50 +443,16 @@ load_file(int argc, VALUE *argv, VALUE self) {
     return load(xml, argc - 1, argv + 1, self);
 }
 
-static size_t
-read_from_io(SaxControl ctrl, char *buf, size_t max_len) {
-    // TBD
-    return 0;
-}
-
-static size_t
-read_from_file(SaxControl ctrl, char *buf, size_t max_len) {
-    // TBD
-    return 0;
-}
-
-/* call-seq: sax_parse(handler, io, options) => Ox::Document or Ox::Element or Object
+/* call-seq: sax_parse(handler, io)
  *
- * Parses and IO stream or file containing an XML document into an
- * Ox::Document, or Ox::Element, or Object depending on the options.  Raises
- * an exception if the XML is malformed or the classes specified are not
- * valid.
- * @param [Ox::Sax] handler SAX like handler
+ * Parses an IO stream or file containing an XML document. Raises an exception
+ * if the XML is malformed or the classes specified are not valid.
+ * @param [Ox::Sax] handler SAX (responds to OX::Sax methods) like handler
  * @param [IO|String] io IO Object or file path to read from
  */
 static VALUE
 sax_parse(VALUE self, VALUE handler, VALUE io) {
-    struct _SaxControl  ctrl;
-
-    if (T_STRING == rb_type(io)) {
-        ctrl.read_func = read_from_file;
-        ctrl.fp = fopen(StringValuePtr(io), "r");
-    } else if (rb_respond_to(io, read_nonblock_id)) {
-        ctrl.read_func = read_from_io;
-        ctrl.io = io;
-    } else {
-        rb_raise(rb_eArgError, "sax_parser io argument must respond to read_nonblock().\n");
-    }
-    ctrl.has_instruct = rb_respond_to(handler, instruct_id);
-    ctrl.has_doctype = rb_respond_to(handler, doctype_id);
-    ctrl.has_comment = rb_respond_to(handler, comment_id);
-    ctrl.has_cdata = rb_respond_to(handler, cdata_id);
-    ctrl.has_text = rb_respond_to(handler, text_id);
-    ctrl.has_start_element = rb_respond_to(handler, start_element_id);
-    ctrl.has_end_element = rb_respond_to(handler, end_element_id);
-    ctrl.has_error = rb_respond_to(handler, error_id);
-
-    ox_sax_parse(handler, &ctrl);
+    ox_sax_parse(handler, io);
 
     return Qnil;
 }
