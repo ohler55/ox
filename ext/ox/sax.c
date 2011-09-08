@@ -36,11 +36,12 @@
 #include "ruby.h"
 #include "ox.h"
 
-// 65536 = 0x00010000
-#define BUF_SIZE = 0x00010000
-
 typedef struct _SaxDrive {
-    // TBD reader function
+    char        buf[0x00010000];
+    char        *buf_end;
+    char        *cur;
+    char        *read_end;
+    char        *str;           // start of current string being read
     void        *read_func;
     union {
         FILE    *fp;
