@@ -41,5 +41,14 @@ class Func < ::Test::Unit::TestCase
     puts ms
   end
 
+  def test_sax_io_pipe
+    ms = MySax.new()
+    input,w = IO.pipe
+    w << %{<top/>}
+    w.close
+    Ox.sax_parse(ms, input)
+    puts ms
+  end
+
 end
 
