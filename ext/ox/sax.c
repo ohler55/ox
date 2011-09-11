@@ -78,7 +78,7 @@ ox_sax_parse(VALUE handler, VALUE io) {
     char                c;
 
     sax_drive_init(&dr, handler, io);
-    
+#if 0
     printf("*** sax_parse with these flags\n");
     printf("    has_instruct = %s\n", dr.has_instruct ? "true" : "false");
     printf("    has_doctype = %s\n", dr.has_doctype ? "true" : "false");
@@ -88,7 +88,7 @@ ox_sax_parse(VALUE handler, VALUE io) {
     printf("    has_start_element = %s\n", dr.has_start_element ? "true" : "false");
     printf("    has_end_element = %s\n", dr.has_end_element ? "true" : "false");
     printf("    has_error = %s\n", dr.has_error ? "true" : "false");
-
+#endif
     while (0 != (c = sax_drive_get(&dr))) {
         printf("%c", c);
     }
@@ -132,7 +132,7 @@ sax_drive_read(SaxDrive dr) {
     // if no room for more then alloc more space
     err = dr->read_func(dr); // TBD temporary
 
-    printf("*** '%s'\n", dr->buf);
+    printf("*** sax_drive_read: '%s'\n", dr->buf);
 
     return err;
 }
@@ -161,10 +161,9 @@ read_from_io(SaxDrive dr) {
     int ex = 0;
 
     rb_protect(io_cb, (VALUE)dr, &ex);
-    printf("*** io_cb exception = %d\n", ex);
-    // TBD check for EOF error and return -1 if EOF else raise something else
-    
-    return 0;
+    // printf("*** io_cb exception = %d\n", ex);
+    // An error code of 6 is always returned not matter what kind of Exception is raised.
+    return ex;
 }
 
 static int

@@ -50,5 +50,13 @@ class Func < ::Test::Unit::TestCase
     puts ms
   end
 
+  def test_sax_io_file
+    ms = MySax.new()
+    input = IO.open(IO.sysopen('basic.xml'))
+    Ox.sax_parse(ms, input)
+    input.close
+    puts ms
+  end
+
 end
 
