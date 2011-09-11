@@ -40,9 +40,9 @@ typedef struct _SaxDrive {
     char        buf[0x00010000];
     char        *buf_end;
     char        *cur;
-    char        *read_end;
+    char        *read_end;      // one past last character read
     char        *str;           // start of current string being read
-    void        *read_func;
+    int         (*read_func)(struct _SaxDrive *dr);
     union {
         FILE    *fp;
         VALUE   io;
@@ -57,15 +57,27 @@ typedef struct _SaxDrive {
     int         has_error;
 } *SaxDrive;
 
-static void     ox_sax_drive_init(SaxDrive dr, VALUE handler, VALUE io);
-static size_t   read_from_io(SaxDrive dr, char *buf, size_t max_len);
-static size_t   read_from_file(SaxDrive dr, char *buf, size_t max_len);
+static void     sax_drive_init(SaxDrive dr, VALUE handler, VALUE io);
+static int      sax_drive_read(SaxDrive dr);
+static int      read_from_io(SaxDrive dr);
+static int      read_from_file(SaxDrive dr);
+
+static inline char
+sax_drive_get(SaxDrive dr) {
+    if (dr->read_end <= dr->cur) {
+        if (0 != sax_drive_read(dr)) {
+            return 0;
+        }
+    }
+    return *dr->cur++;
+}
 
 void
 ox_sax_parse(VALUE handler, VALUE io) {
-    struct _SaxDrive       dr;
+    struct _SaxDrive    dr;
+    char                c;
 
-    ox_sax_drive_init(&dr, handler, io);
+    sax_drive_init(&dr, handler, io);
     
     printf("*** sax_parse with these flags\n");
     printf("    has_instruct = %s\n", dr.has_instruct ? "true" : "false");
@@ -76,10 +88,14 @@ ox_sax_parse(VALUE handler, VALUE io) {
     printf("    has_start_element = %s\n", dr.has_start_element ? "true" : "false");
     printf("    has_end_element = %s\n", dr.has_end_element ? "true" : "false");
     printf("    has_error = %s\n", dr.has_error ? "true" : "false");
+
+    while (0 != (c = sax_drive_get(&dr))) {
+        printf("%c", c);
+    }
 }
 
 static void
-ox_sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
+sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     if (T_STRING == rb_type(io)) {
         dr->read_func = read_from_file;
         dr->fp = fopen(StringValuePtr(io), "r");
@@ -89,6 +105,11 @@ ox_sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     } else {
         rb_raise(rb_eArgError, "sax_parser io argument must respond to read_nonblock().\n");
     }
+    *dr->buf = '\0';
+    dr->buf_end = dr->buf + sizeof(dr->buf);
+    dr->cur = dr->buf;
+    dr->read_end = dr->buf;
+    dr->str = 0;
     dr->has_instruct = rb_respond_to(handler, instruct_id);
     dr->has_doctype = rb_respond_to(handler, doctype_id);
     dr->has_comment = rb_respond_to(handler, comment_id);
@@ -99,14 +120,55 @@ ox_sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     dr->has_error = rb_respond_to(handler, error_id);
 }
 
-static size_t
-read_from_io(SaxDrive dr, char *buf, size_t max_len) {
-    // TBD
+static int
+sax_drive_read(SaxDrive dr) {
+    int err;
+
+    //  compact() 
+
+    // TBD slide str to the start or else slide the cur to the start
+    // slide the end as well
+    // load from end, at most the remining length
+    // if no room for more then alloc more space
+    err = dr->read_func(dr); // TBD temporary
+
+    printf("*** '%s'\n", dr->buf);
+
+    return err;
+}
+
+static VALUE
+io_cb(VALUE rdr) {
+    SaxDrive    dr = (SaxDrive)rdr;
+    VALUE       args[1];
+    VALUE       rstr;
+    char        *str;
+    size_t      cnt;
+
+    args[0] = SIZET2NUM(dr->buf_end - dr->cur);
+    rstr = rb_funcall2(dr->io, rb_intern("readpartial"), 1, args);
+    str = StringValuePtr(rstr);
+    cnt = strlen(str);
+    printf("*** read %lu bytes, str: '%s'\n", cnt, str);
+    strcpy(dr->cur, str);
+    dr->read_end = dr->cur + cnt;
+
+    return Qnil;
+}
+
+static int
+read_from_io(SaxDrive dr) {
+    int ex = 0;
+
+    rb_protect(io_cb, (VALUE)dr, &ex);
+    printf("*** io_cb exception = %d\n", ex);
+    // TBD check for EOF error and return -1 if EOF else raise something else
+    
     return 0;
 }
 
-static size_t
-read_from_file(SaxDrive dr, char *buf, size_t max_len) {
+static int
+read_from_file(SaxDrive dr) {
     // TBD
     return 0;
 }
