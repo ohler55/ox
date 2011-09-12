@@ -355,11 +355,10 @@ static char
 read_name_token(SaxDrive dr) {
     char        c = *dr->cur;
 
-    if (is_white(*dr->cur)) {
+    dr->str = dr->cur; // make sure the start doesn't get compacted out
+    if (is_white(c)) {
         c = next_non_white(dr);
         dr->str = dr->cur - 1;
-    } else {
-        dr->str = dr->cur;
     }
     while (1) {
 	switch (c) {
