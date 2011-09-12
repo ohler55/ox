@@ -37,11 +37,16 @@
 #include "ox.h"
 
 typedef struct _SaxDrive {
-    char        buf[0x00010000];
+    //char        base_buf[0x00010000];
+    char        base_buf[0x00000010];
+    char        *buf;
     char        *buf_end;
     char        *cur;
     char        *read_end;      // one past last character read
     char        *str;           // start of current string being read
+    int         line;
+    int         col;
+    VALUE       handler;
     int         (*read_func)(struct _SaxDrive *dr);
     union {
         FILE    *fp;
@@ -58,7 +63,15 @@ typedef struct _SaxDrive {
 } *SaxDrive;
 
 static void     sax_drive_init(SaxDrive dr, VALUE handler, VALUE io);
+static void     sax_drive_cleanup(SaxDrive dr);
 static int      sax_drive_read(SaxDrive dr);
+static int      sax_drive_expect(SaxDrive dr, const char *str, int len);
+static void     sax_drive_error(SaxDrive dr, const char *msg);
+
+static int      read_instruction(SaxDrive dr);
+static char     read_name_token(SaxDrive dr);
+
+static VALUE    io_cb(VALUE rdr);
 static int      read_from_io(SaxDrive dr);
 static int      read_from_file(SaxDrive dr);
 
@@ -72,11 +85,46 @@ sax_drive_get(SaxDrive dr) {
     return *dr->cur++;
 }
 
+inline static char
+next_non_white(SaxDrive dr) {
+    char        c;
+
+    while ('\0' != (c = sax_drive_get(dr))) {
+	switch(c) {
+	case ' ':
+	case '\t':
+	case '\f':
+	case '\n':
+	case '\r':
+	    break;
+	default:
+	    return c;
+	}
+    }
+    return '\0';
+}
+
+inline static int
+is_white(char c) {
+    switch(c) {
+    case ' ':
+    case '\t':
+    case '\f':
+    case '\n':
+    case '\r':
+        return 1;
+    default:
+        break;
+    }
+    return 0;
+}
+
 void
 ox_sax_parse(VALUE handler, VALUE io) {
     struct _SaxDrive    dr;
     char                c;
-
+    int                 err = 0;
+    
     sax_drive_init(&dr, handler, io);
 #if 0
     printf("*** sax_parse with these flags\n");
@@ -89,9 +137,50 @@ ox_sax_parse(VALUE handler, VALUE io) {
     printf("    has_end_element = %s\n", dr.has_end_element ? "true" : "false");
     printf("    has_error = %s\n", dr.has_error ? "true" : "false");
 #endif
-    while (0 != (c = sax_drive_get(&dr))) {
-        printf("%c", c);
+    while (!err) {
+        if ('\0' == (c = next_non_white(&dr))) {
+            break; // normal completion
+        }
+	if ('<' != c) { // all top level entities start with <
+            sax_drive_error(&dr, "invalid format, expected <");
+            break; // unrecoverable
+	}
+        c = sax_drive_get(&dr);
+	switch (c) {
+	case '?':	// instructions (xml or otherwise)
+	    err = read_instruction(&dr);
+	    break;
+	case '!':	/* comment or doctype */
+            c = sax_drive_get(&dr);
+	    if ('\0' == c) {
+                sax_drive_error(&dr, "invalid format, DOCTYPE or comment not terminated");
+                err = 1;
+	    } else if ('-' == c) {
+                c = sax_drive_get(&dr); // skip first - and get next character
+		if ('-' != c) {
+                    sax_drive_error(&dr, "invalid format, bad comment format");
+                    err = 1;
+		} else {
+                    c = sax_drive_get(&dr); // skip second -
+		    //read_comment(&dr);
+		}
+	    } else if (0 == sax_drive_expect(&dr, "DOCTYPE", 7)) {
+		//read_doctype(&dr);
+	    } else {
+                sax_drive_error(&dr, "invalid format, DOCTYPE or comment expected");
+                err = 1;
+	    }
+	    break;
+	case '\0':
+            sax_drive_error(&dr, "invalid format, document not terminated");
+            err = 1;
+            break;
+	default:
+	    //read_element(&dr);
+	    break;
+	}
     }
+    sax_drive_cleanup(&dr);
 }
 
 static void
@@ -99,17 +188,21 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     if (T_STRING == rb_type(io)) {
         dr->read_func = read_from_file;
         dr->fp = fopen(StringValuePtr(io), "r");
-    } else if (rb_respond_to(io, read_nonblock_id)) {
+    } else if (rb_respond_to(io, readpartial_id)) {
         dr->read_func = read_from_io;
         dr->io = io;
     } else {
         rb_raise(rb_eArgError, "sax_parser io argument must respond to read_nonblock().\n");
     }
+    dr->buf = dr->base_buf;
     *dr->buf = '\0';
-    dr->buf_end = dr->buf + sizeof(dr->buf);
+    dr->buf_end = dr->buf + sizeof(dr->base_buf) - 1; // 1 less to make debugging easier
     dr->cur = dr->buf;
     dr->read_end = dr->buf;
     dr->str = 0;
+    dr->line = 0;
+    dr->col = 0;
+    dr->handler = handler;
     dr->has_instruct = rb_respond_to(handler, instruct_id);
     dr->has_doctype = rb_respond_to(handler, doctype_id);
     dr->has_comment = rb_respond_to(handler, comment_id);
@@ -120,21 +213,187 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     dr->has_error = rb_respond_to(handler, error_id);
 }
 
+static void
+sax_drive_cleanup(SaxDrive dr) {
+    if (dr->base_buf != dr->buf) {
+        free(dr->buf);
+    }
+}
+
 static int
 sax_drive_read(SaxDrive dr) {
-    int err;
-
-    //  compact() 
-
-    // TBD slide str to the start or else slide the cur to the start
-    // slide the end as well
-    // load from end, at most the remining length
-    // if no room for more then alloc more space
+    int         err;
+    size_t      shift = 0;
+    
+    if (dr->buf < dr->cur) {
+        if (0 == dr->str) {
+            shift = dr->cur - dr->buf;
+        } else {
+            shift = dr->str - dr->buf;
+        }
+        //printf("\n*** shift: %lu\n", shift);
+        if (0 == shift) { // no space left so allocate more
+            char        *old = dr->buf;
+            size_t      size = dr->buf_end - dr->buf;
+        
+            if (dr->buf == dr->base_buf) {
+                if (0 == (dr->buf = (char*)malloc(size * 2))) {
+                    rb_raise(rb_eNoMemError, "Could not allocate memory for large element.\n");
+                }
+                memcpy(dr->buf, old, size);
+            } else {
+                if (0 == (dr->buf = (char*)realloc(dr->buf, size * 2))) {
+                    rb_raise(rb_eNoMemError, "Could not allocate memory for large element.\n");
+                }
+            }
+            dr->buf_end = dr->buf + size * 2;
+            dr->cur = dr->buf + (dr->cur - old);
+            dr->read_end = dr->buf + (dr->read_end - old);
+            if (0 != dr->str) {
+                dr->str = dr->buf + (dr->str - old);
+            }
+        } else {
+            memmove(dr->buf, dr->buf + shift, dr->read_end - (dr->buf + shift));
+            dr->cur -= shift;
+            dr->read_end -= shift;
+            if (0 != dr->str) {
+                dr->str -= shift;
+            }
+        }
+    }
     err = dr->read_func(dr); // TBD temporary
 
-    printf("*** sax_drive_read: '%s'\n", dr->buf);
+    *dr->read_end = '\0';
+    //printf("\n*** sax_drive_read: '%s'\n", dr->buf);
 
     return err;
+}
+
+static int
+sax_drive_expect(SaxDrive dr, const char *str, int len) {
+    // TBD
+    return 0;
+}
+
+static void
+sax_drive_error(SaxDrive dr, const char *msg) {
+    if (dr->has_error) {
+        VALUE       args[3];
+
+        args[0] = rb_str_new2(msg);
+        args[1] = INT2FIX(dr->line);
+        args[2] = INT2FIX(dr->col);
+        rb_funcall2(dr->io, error_id, 3, args);
+    } else {
+        rb_raise(rb_eSyntaxError, "%s at line %d, column %d\n", msg, dr->line, dr->col);
+    }
+}
+
+/* Entered after the "<?" sequence. Ready to read the rest.
+ */
+static int
+read_instruction(SaxDrive dr) {
+    VALUE       target = Qnil;
+    VALUE       attrs = Qnil;
+    char        c;
+
+    if ('\0' == (c = read_name_token(dr))) {
+        return -1;
+    }
+    if (dr->has_instruct) {
+        target = rb_str_new2(dr->str);
+        attrs = rb_hash_new();
+    }
+    dr->str = 0;
+    if (is_white(c)) {
+        c = next_non_white(dr);
+    }
+    //printf("*** cur: %s\n", dr->cur);
+    if ('?' != c) {
+#if 0
+        while ('?' != *pi->s) {
+            if ('\0' == *pi->s) {
+                raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
+            }
+            next_non_white(pi);
+            a->name = read_name_token(pi);
+            end = pi->s;
+            next_non_white(pi);
+            if ('=' != *pi->s++) {
+                raise_error("invalid format, no attribute value", pi->str, pi->s);
+            }
+            *end = '\0'; // terminate name
+            // read value
+            next_non_white(pi);
+            a->value = read_quoted_value(pi);
+            a++;
+            if (MAX_ATTRS <= (a - attrs)) {
+                raise_error("too many attributes", pi->str, pi->s);
+            }
+        }
+        if ('?' == *pi->s) {
+            pi->s++;
+        }
+#endif
+    }
+    c = next_non_white(dr);
+    if ('>' != c) {
+        sax_drive_error(dr, "invalid format, instruction not terminated");
+        return -1;
+    }
+    if (0 != dr->has_instruct) {
+        VALUE       args[2];
+
+        args[0] = target;
+        args[1] = attrs;
+        rb_funcall2(dr->handler, instruct_id, 2, args);
+    }
+    return 0;
+}
+
+static char
+read_name_token(SaxDrive dr) {
+    char        c = *dr->cur;
+
+    if (is_white(*dr->cur)) {
+        c = next_non_white(dr);
+        dr->str = dr->cur - 1;
+    } else {
+        dr->str = dr->cur;
+    }
+    while (1) {
+	switch (c) {
+	case ' ':
+	case '\t':
+	case '\f':
+	case '?':
+	case '=':
+	case '/':
+	case '>':
+	case '\n':
+	case '\r':
+            *(dr->cur - 1) = '\0';
+	    return c;
+	case '\0':
+            // documents never terminate after a name token
+            sax_drive_error(dr, "invalid format, document not terminated");
+            return '\0';
+	default:
+	    break;
+	}
+        c = sax_drive_get(dr);
+    }
+    return '\0';
+}
+
+static int
+read_from_io(SaxDrive dr) {
+    int ex = 0;
+
+    rb_protect(io_cb, (VALUE)dr, &ex);
+    // printf("*** io_cb exception = %d\n", ex);
+    // An error code of 6 is always returned not matter what kind of Exception is raised.
+    return ex;
 }
 
 static VALUE
@@ -146,24 +405,14 @@ io_cb(VALUE rdr) {
     size_t      cnt;
 
     args[0] = SIZET2NUM(dr->buf_end - dr->cur);
-    rstr = rb_funcall2(dr->io, rb_intern("readpartial"), 1, args);
+    rstr = rb_funcall2(dr->io, readpartial_id, 1, args);
     str = StringValuePtr(rstr);
     cnt = strlen(str);
-    printf("*** read %lu bytes, str: '%s'\n", cnt, str);
+    //printf("*** read %lu bytes, str: '%s'\n", cnt, str);
     strcpy(dr->cur, str);
     dr->read_end = dr->cur + cnt;
 
     return Qnil;
-}
-
-static int
-read_from_io(SaxDrive dr) {
-    int ex = 0;
-
-    rb_protect(io_cb, (VALUE)dr, &ex);
-    // printf("*** io_cb exception = %d\n", ex);
-    // An error code of 6 is always returned not matter what kind of Exception is raised.
-    return ex;
 }
 
 static int

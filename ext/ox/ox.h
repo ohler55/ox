@@ -223,7 +223,7 @@ extern ID       local_id;
 extern ID       nodes_id;
 extern ID       num_id;
 extern ID       parse_id;
-extern ID       read_nonblock_id;
+extern ID       readpartial_id;
 extern ID       start_element_id;
 extern ID       text_id;
 extern ID       to_c_id;

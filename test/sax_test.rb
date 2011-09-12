@@ -25,6 +25,10 @@ class MySax < ::Ox::Sax
     @element_name = []
   end
 
+  def instruct(target, attrs)
+    puts "*** target #{target}, attrs: #{attrs}"
+  end
+
   def start_element(name, attrs)
     puts "*** start #{name}, attrs: #{attrs}"
     @element_names << name
@@ -34,14 +38,39 @@ end
 
 class Func < ::Test::Unit::TestCase
 
-  def test_sax_basic
+  def test_sax_instruct
+    ms = MySax.new()
+    input = StringIO.new(%{<?xml?>})
+    Ox.sax_parse(ms, input)
+    puts ms
+  end
+
+  def xtest_sax_basic
     ms = MySax.new()
     input = StringIO.new(%{<top/>})
     Ox.sax_parse(ms, input)
     puts ms
   end
 
-  def test_sax_io_pipe
+  def xtest_sax_nested
+    ms = MySax.new()
+    xml = %{<?xml version="1.0"?>
+<top>
+  <child>
+    <grandchild/>
+  <child/>
+  <child>
+    <grandchild/>
+    <grandchild/>
+  <child/>
+</top>
+}
+    input = StringIO.new(xml)
+    Ox.sax_parse(ms, input)
+    puts ms
+  end
+
+  def xtest_sax_io_pipe
     ms = MySax.new()
     input,w = IO.pipe
     w << %{<top/>}
@@ -50,7 +79,7 @@ class Func < ::Test::Unit::TestCase
     puts ms
   end
 
-  def test_sax_io_file
+  def xtest_sax_io_file
     ms = MySax.new()
     input = IO.open(IO.sysopen('basic.xml'))
     Ox.sax_parse(ms, input)
