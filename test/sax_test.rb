@@ -107,16 +107,16 @@ encoding = "UTF-8" ?>},
                    [:end_element, 'top']])
   end
 
-  def xtest_sax_nested
+  def test_sax_nested
     parse_compare(%{<?xml version="1.0"?>
 <top>
   <child>
     <grandchild/>
-  <child/>
+  </child>
   <child>
     <grandchild/>
     <grandchild/>
-  <child/>
+  </child>
 </top>
 },
                   [[:instruct, 'xml', {'version' => '1.0'}],

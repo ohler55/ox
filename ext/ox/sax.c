@@ -68,6 +68,7 @@ static int      sax_drive_read(SaxDrive dr);
 static int      sax_drive_expect(SaxDrive dr, const char *str, int len);
 static void     sax_drive_error(SaxDrive dr, const char *msg);
 
+static int      read_children(SaxDrive dr, int first);
 static int      read_instruction(SaxDrive dr);
 static int      read_element(SaxDrive dr);
 static int      read_attrs(SaxDrive dr, VALUE attrs, char c, char termc, char term2);
@@ -143,6 +144,9 @@ ox_sax_parse(VALUE handler, VALUE io) {
     printf("    has_end_element = %s\n", dr.has_end_element ? "true" : "false");
     printf("    has_error = %s\n", dr.has_error ? "true" : "false");
 #endif
+#if 0
+    read_children(&dr, 1);
+#else
     while (!err) {
         if ('\0' == (c = next_non_white(&dr))) {
             break; // normal completion
@@ -187,6 +191,7 @@ ox_sax_parse(VALUE handler, VALUE io) {
 	    break;
 	}
     }
+#endif
     sax_drive_cleanup(&dr);
 }
 
@@ -296,6 +301,12 @@ sax_drive_error(SaxDrive dr, const char *msg) {
     }
 }
 
+static int
+read_children(SaxDrive dr, int first) {
+    // TBD
+    return 0;
+}
+
 /* Entered after the "<?" sequence. Ready to read the rest.
  */
 static int
@@ -365,22 +376,30 @@ read_element(SaxDrive dr) {
             return -1;
         }
     }
-    printf("*** cur: %s  %c\n", dr->cur, c);
     if (0 != dr->has_start_element) {
         VALUE       args[2];
 
         args[0] = name;
         args[1] = attrs;
         rb_funcall2(dr->handler, start_element_id, 2, args);
-        if (closed) {
+        if (closed && dr->has_end_element) {
             rb_funcall2(dr->handler, end_element_id, 1, args);
         }
     }
+    if (!closed) {
+        printf("*** closed cur: %s  %c\n", dr->cur, c);
+        
+        // TBD read children or text
 
-    // TBD read children or text
+        // TBD if read in end_element, compare name, and, call end_element
 
-    // TBD if not closed read in end_element, compare name, and, call end_element
+        if (0 != dr->has_end_element) {
+            VALUE       args[1];
 
+            args[0] = name;
+            rb_funcall2(dr->handler, end_element_id, 1, args);
+        }
+    }
     dr->str = 0;
 
     return 0;
