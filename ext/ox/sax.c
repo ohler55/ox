@@ -69,7 +69,8 @@ static int      sax_drive_expect(SaxDrive dr, const char *str, int len);
 static void     sax_drive_error(SaxDrive dr, const char *msg);
 
 static int      read_instruction(SaxDrive dr);
-static int      read_attrs(SaxDrive dr, VALUE attrs, char c, char termc);
+static int      read_element(SaxDrive dr);
+static int      read_attrs(SaxDrive dr, VALUE attrs, char c, char termc, char term2);
 static char     read_name_token(SaxDrive dr);
 static int      read_quoted_value(SaxDrive dr);
 
@@ -181,7 +182,8 @@ ox_sax_parse(VALUE handler, VALUE io) {
             err = 1;
             break;
 	default:
-	    //read_element(&dr);
+            dr.cur--; // safe since no read occurred after getting last character
+	    err = read_element(&dr);
 	    break;
 	}
     }
@@ -197,7 +199,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
         dr->read_func = read_from_io;
         dr->io = io;
     } else {
-        rb_raise(rb_eArgError, "sax_parser io argument must respond to read_nonblock().\n");
+        rb_raise(rb_eArgError, "sax_parser io argument must respond to readpartial().\n");
     }
     dr->buf = dr->base_buf;
     *dr->buf = '\0';
@@ -309,7 +311,7 @@ read_instruction(SaxDrive dr) {
         target = rb_str_new2(dr->str);
         attrs = rb_hash_new();
     }
-    if (0 != read_attrs(dr, attrs, c, '?')) {
+    if (0 != read_attrs(dr, attrs, c, '?', '?')) {
         return -1;
     }
     c = next_non_white(dr);
@@ -329,15 +331,70 @@ read_instruction(SaxDrive dr) {
     return 0;
 }
 
+/* Entered after the '<' and the first character after that. Returns status
+ * code.
+ */
 static int
-read_attrs(SaxDrive dr, VALUE attrs, char c, char termc) {
+read_element(SaxDrive dr) {
+    VALUE       name = Qnil;
+    VALUE       attrs = Qnil;
+    char        c;
+    int         closed;
+
+    if ('\0' == (c = read_name_token(dr))) {
+        return -1;
+    }
+    if (dr->has_start_element) {
+        name = rb_str_new2(dr->str);
+        attrs = rb_hash_new();
+    }
+    if ('/' == c) {
+        closed = 1;
+    } else if ('>' == c) {
+        closed = 0;
+    } else {
+        if (0 != read_attrs(dr, attrs, c, '/', '>')) {
+            return -1;
+        }
+        closed = ('/' == *(dr->cur - 1));
+    }
+    if (closed) {
+        c = next_non_white(dr);
+        if ('>' != c) {
+            sax_drive_error(dr, "invalid format, element not closed");
+            return -1;
+        }
+    }
+    printf("*** cur: %s  %c\n", dr->cur, c);
+    if (0 != dr->has_start_element) {
+        VALUE       args[2];
+
+        args[0] = name;
+        args[1] = attrs;
+        rb_funcall2(dr->handler, start_element_id, 2, args);
+        if (closed) {
+            rb_funcall2(dr->handler, end_element_id, 1, args);
+        }
+    }
+
+    // TBD read children or text
+
+    // TBD if not closed read in end_element, compare name, and, call end_element
+
+    dr->str = 0;
+
+    return 0;
+}
+
+static int
+read_attrs(SaxDrive dr, VALUE attrs, char c, char termc, char term2) {
     VALUE       name = Qnil;
     
     dr->str = dr->cur; // lock it down
     if (is_white(c)) {
         c = next_non_white(dr);
     }
-    while (termc != c) {
+    while (termc != c && term2 != c) {
         dr->cur--;
         if ('\0' == c) {
             sax_drive_error(dr, "invalid format, processing instruction not terminated");
@@ -372,7 +429,7 @@ read_name_token(SaxDrive dr) {
     char        c;
 
     dr->str = dr->cur; // make sure the start doesn't get compacted out
-    c = *dr->cur; // TBD use get here instead
+    c = sax_drive_get(dr);
     if (is_white(c)) {
         c = next_non_white(dr);
         dr->str = dr->cur - 1;
@@ -407,11 +464,9 @@ read_quoted_value(SaxDrive dr) {
     char        c;
 
     dr->str = dr->cur;
-    c = *dr->cur; // TBD use get here instead
+    c = sax_drive_get(dr);
     if (is_white(c)) {
         c = next_non_white(dr);
-    } else {
-        c = sax_drive_get(dr);
     }
     if ('"' != c) {
         sax_drive_error(dr, "invalid format, attibute value not in quotes");

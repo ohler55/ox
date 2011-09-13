@@ -72,7 +72,7 @@ class Func < ::Test::Unit::TestCase
     handler = handler_class.new()
     input = StringIO.new(xml)
     Ox.sax_parse(handler, input)
-    assert_equal(handler.calls, expected)
+    assert_equal(expected, handler.calls)
   end
   
   def test_sax_instruct_simple
@@ -95,8 +95,16 @@ encoding = "UTF-8" ?>},
                   [[:instruct, 'xml', {'version' => '1.0', 'encoding' => 'UTF-8'}]])
   end
 
-  def xtest_sax_element
-    parse_compare(%{<top/>}, [[:start_element, 'top', {}], [:end_element, 'top']])
+  def test_sax_element_simple
+    parse_compare(%{<top/>},
+                  [[:start_element, 'top', {}],
+                   [:end_element, 'top']])
+  end
+
+  def test_sax_element_attrs
+    parse_compare(%{<top x="57" y="42"/>}, 
+                  [[:start_element, 'top', {'x' => '57', 'y' => '42'}],
+                   [:end_element, 'top']])
   end
 
   def xtest_sax_nested
