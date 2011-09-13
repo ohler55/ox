@@ -37,8 +37,8 @@
 #include "ox.h"
 
 typedef struct _SaxDrive {
-    //char        base_buf[0x00010000];
-    char        base_buf[0x00000010];
+    char        base_buf[0x00010000];
+    //char        base_buf[0x00000010];
     char        *buf;
     char        *buf_end;
     char        *cur;
@@ -69,7 +69,9 @@ static int      sax_drive_expect(SaxDrive dr, const char *str, int len);
 static void     sax_drive_error(SaxDrive dr, const char *msg);
 
 static int      read_instruction(SaxDrive dr);
+static int      read_attrs(SaxDrive dr, VALUE attrs, char c, char termc);
 static char     read_name_token(SaxDrive dr);
+static int      read_quoted_value(SaxDrive dr);
 
 static VALUE    io_cb(VALUE rdr);
 static int      read_from_io(SaxDrive dr);
@@ -85,6 +87,9 @@ sax_drive_get(SaxDrive dr) {
     return *dr->cur++;
 }
 
+/* Starts by reading a character so it is safe to use with an empty or
+ * compacted buffer.
+ */
 inline static char
 next_non_white(SaxDrive dr) {
     char        c;
@@ -283,7 +288,7 @@ sax_drive_error(SaxDrive dr, const char *msg) {
         args[0] = rb_str_new2(msg);
         args[1] = INT2FIX(dr->line);
         args[2] = INT2FIX(dr->col);
-        rb_funcall2(dr->io, error_id, 3, args);
+        rb_funcall2(dr->handler, error_id, 3, args);
     } else {
         rb_raise(rb_eSyntaxError, "%s at line %d, column %d\n", msg, dr->line, dr->col);
     }
@@ -304,37 +309,8 @@ read_instruction(SaxDrive dr) {
         target = rb_str_new2(dr->str);
         attrs = rb_hash_new();
     }
-    dr->str = 0;
-    if (is_white(c)) {
-        c = next_non_white(dr);
-    }
-    //printf("*** cur: %s\n", dr->cur);
-    if ('?' != c) {
-#if 0
-        while ('?' != *pi->s) {
-            if ('\0' == *pi->s) {
-                raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
-            }
-            next_non_white(pi);
-            a->name = read_name_token(pi);
-            end = pi->s;
-            next_non_white(pi);
-            if ('=' != *pi->s++) {
-                raise_error("invalid format, no attribute value", pi->str, pi->s);
-            }
-            *end = '\0'; // terminate name
-            // read value
-            next_non_white(pi);
-            a->value = read_quoted_value(pi);
-            a++;
-            if (MAX_ATTRS <= (a - attrs)) {
-                raise_error("too many attributes", pi->str, pi->s);
-            }
-        }
-        if ('?' == *pi->s) {
-            pi->s++;
-        }
-#endif
+    if (0 != read_attrs(dr, attrs, c, '?')) {
+        return -1;
     }
     c = next_non_white(dr);
     if ('>' != c) {
@@ -348,14 +324,55 @@ read_instruction(SaxDrive dr) {
         args[1] = attrs;
         rb_funcall2(dr->handler, instruct_id, 2, args);
     }
+    dr->str = 0;
+
+    return 0;
+}
+
+static int
+read_attrs(SaxDrive dr, VALUE attrs, char c, char termc) {
+    VALUE       name = Qnil;
+    
+    dr->str = dr->cur; // lock it down
+    if (is_white(c)) {
+        c = next_non_white(dr);
+    }
+    while (termc != c) {
+        dr->cur--;
+        if ('\0' == c) {
+            sax_drive_error(dr, "invalid format, processing instruction not terminated");
+            return -1;
+        }
+        if ('\0' == (c = read_name_token(dr))) {
+            return -1;
+        }
+        if (dr->has_instruct) {
+            name = rb_str_new2(dr->str);
+        }
+        if (is_white(c)) {
+            c = next_non_white(dr);
+        }
+        if ('=' != c) {
+            sax_drive_error(dr, "invalid format, no attribute value");
+            return -1;
+        }
+        if (0 != read_quoted_value(dr)) {
+            return -1;
+        }
+        if (dr->has_instruct) {
+            rb_hash_aset(attrs, name, rb_str_new2(dr->str));
+        }
+        c = next_non_white(dr);
+    }
     return 0;
 }
 
 static char
 read_name_token(SaxDrive dr) {
-    char        c = *dr->cur;
+    char        c;
 
     dr->str = dr->cur; // make sure the start doesn't get compacted out
+    c = *dr->cur; // TBD use get here instead
     if (is_white(c)) {
         c = next_non_white(dr);
         dr->str = dr->cur - 1;
@@ -383,6 +400,33 @@ read_name_token(SaxDrive dr) {
         c = sax_drive_get(dr);
     }
     return '\0';
+}
+
+static int
+read_quoted_value(SaxDrive dr) {
+    char        c;
+
+    dr->str = dr->cur;
+    c = *dr->cur; // TBD use get here instead
+    if (is_white(c)) {
+        c = next_non_white(dr);
+    } else {
+        c = sax_drive_get(dr);
+    }
+    if ('"' != c) {
+        sax_drive_error(dr, "invalid format, attibute value not in quotes");
+        return -1;
+    }
+    dr->str = dr->cur;
+    while ('"' != (c = sax_drive_get(dr))) {
+        if ('\0' == c) {
+            sax_drive_error(dr, "invalid format, quoted value not terminated");
+            return -1;
+        }
+    }
+    *(dr->cur - 1) = '\0'; // terminate value
+
+    return 0;
 }
 
 static int

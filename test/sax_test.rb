@@ -20,41 +20,87 @@ opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 files = opts.parse(ARGV)
 
-class MySax < ::Ox::Sax
-  def initialize()
-    @element_name = []
-  end
+class StartSax < ::Ox::Sax
+  attr_accessor :calls
 
-  def instruct(target, attrs)
-    puts "*** target #{target}, attrs: #{attrs}"
+  def initialize()
+    @calls = []
   end
 
   def start_element(name, attrs)
-    puts "*** start #{name}, attrs: #{attrs}"
-    @element_names << name
+    @calls << [:start_element, name, attrs]
   end
 end
+
+class AllSax < StartSax
+  def initialize()
+    super
+  end
+
+  def instruct(target, attrs)
+    @calls << [:instruct, target, attrs]
+  end
+
+  def doctype(value)
+    @calls << [:doctype, value]
+  end
+
+  def comment(value)
+    @calls << [:comment, value]
+  end
+
+  def cdata(value)
+    @calls << [:cdata, value]
+  end
+
+  def text(value)
+    @calls << [:text, value]
+  end
+
+  def end_element(name)
+    @calls << [:end_element, name]
+  end
   
+  def error(message, line, column)
+    @calls << [:error, message, line, column]
+  end
+end
 
 class Func < ::Test::Unit::TestCase
 
-  def test_sax_instruct
-    ms = MySax.new()
-    input = StringIO.new(%{<?xml?>})
-    Ox.sax_parse(ms, input)
-    puts ms
+  def parse_compare(xml, expected, handler_class=AllSax)
+    handler = handler_class.new()
+    input = StringIO.new(xml)
+    Ox.sax_parse(handler, input)
+    assert_equal(handler.calls, expected)
+  end
+  
+  def test_sax_instruct_simple
+    parse_compare(%{<?xml?>}, [[:instruct, 'xml', {}]])
   end
 
-  def xtest_sax_basic
-    ms = MySax.new()
-    input = StringIO.new(%{<top/>})
-    Ox.sax_parse(ms, input)
-    puts ms
+  def test_sax_instruct_blank
+    parse_compare(%{<?xml?>}, [], StartSax)
+  end
+
+  def test_sax_instruct_attrs
+    parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>},
+                  [[:instruct, 'xml', {'version' => '1.0', 'encoding' => 'UTF-8'}]])
+  end
+
+  def test_sax_instruct_loose
+    parse_compare(%{<? xml
+version = "1.0"
+encoding = "UTF-8" ?>},
+                  [[:instruct, 'xml', {'version' => '1.0', 'encoding' => 'UTF-8'}]])
+  end
+
+  def xtest_sax_element
+    parse_compare(%{<top/>}, [[:start_element, 'top', {}], [:end_element, 'top']])
   end
 
   def xtest_sax_nested
-    ms = MySax.new()
-    xml = %{<?xml version="1.0"?>
+    parse_compare(%{<?xml version="1.0"?>
 <top>
   <child>
     <grandchild/>
@@ -64,27 +110,39 @@ class Func < ::Test::Unit::TestCase
     <grandchild/>
   <child/>
 </top>
-}
-    input = StringIO.new(xml)
-    Ox.sax_parse(ms, input)
-    puts ms
+},
+                  [[:instruct, 'xml', {'version' => '1.0'}],
+                   [:start_element, 'top', {}],
+                   [:start_element, 'child', {}],
+                   [:start_element, 'grandchild', {}],
+                   [:end_element, 'grandchild'],
+                   [:end_element, 'child'],
+                   [:start_element, 'child', {}],
+                   [:start_element, 'grandchild', {}],
+                   [:end_element, 'grandchild'],
+                   [:start_element, 'grandchild', {}],
+                   [:end_element, 'grandchild'],
+                   [:end_element, 'child'],
+                   [:end_element, 'top'],
+                  ])
   end
 
   def xtest_sax_io_pipe
-    ms = MySax.new()
+    handler = AllSax.new()
     input,w = IO.pipe
     w << %{<top/>}
     w.close
-    Ox.sax_parse(ms, input)
-    puts ms
+    Ox.sax_parse(handler, input)
+    assert_equal(handler.calls, [[:start_element, 'top', {}], [:end_element, 'top']])
   end
 
   def xtest_sax_io_file
-    ms = MySax.new()
+    handler = AllSax.new()
     input = IO.open(IO.sysopen('basic.xml'))
-    Ox.sax_parse(ms, input)
+    Ox.sax_parse(handler, input)
     input.close
-    puts ms
+    Ox.sax_parse(handler, input)
+    assert_equal(handler.calls, [[:start_element, 'top', {}], [:end_element, 'top']])
   end
 
 end
