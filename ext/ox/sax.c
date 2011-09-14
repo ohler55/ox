@@ -65,12 +65,12 @@ typedef struct _SaxDrive {
 static void     sax_drive_init(SaxDrive dr, VALUE handler, VALUE io);
 static void     sax_drive_cleanup(SaxDrive dr);
 static int      sax_drive_read(SaxDrive dr);
-static int      sax_drive_expect(SaxDrive dr, const char *str, int len);
-static void     sax_drive_error(SaxDrive dr, const char *msg);
+static void     sax_drive_error(SaxDrive dr, const char *msg, int critical);
 
 static int      read_children(SaxDrive dr, int first);
 static int      read_instruction(SaxDrive dr);
 static int      read_element(SaxDrive dr);
+static int      read_text(SaxDrive dr);
 static int      read_attrs(SaxDrive dr, VALUE attrs, char c, char termc, char term2);
 static char     read_name_token(SaxDrive dr);
 static int      read_quoted_value(SaxDrive dr);
@@ -129,8 +129,6 @@ is_white(char c) {
 void
 ox_sax_parse(VALUE handler, VALUE io) {
     struct _SaxDrive    dr;
-    char                c;
-    int                 err = 0;
     
     sax_drive_init(&dr, handler, io);
 #if 0
@@ -144,54 +142,7 @@ ox_sax_parse(VALUE handler, VALUE io) {
     printf("    has_end_element = %s\n", dr.has_end_element ? "true" : "false");
     printf("    has_error = %s\n", dr.has_error ? "true" : "false");
 #endif
-#if 0
     read_children(&dr, 1);
-#else
-    while (!err) {
-        if ('\0' == (c = next_non_white(&dr))) {
-            break; // normal completion
-        }
-	if ('<' != c) { // all top level entities start with <
-            sax_drive_error(&dr, "invalid format, expected <");
-            break; // unrecoverable
-	}
-        c = sax_drive_get(&dr);
-	switch (c) {
-	case '?':	// instructions (xml or otherwise)
-	    err = read_instruction(&dr);
-	    break;
-	case '!':	/* comment or doctype */
-            c = sax_drive_get(&dr);
-	    if ('\0' == c) {
-                sax_drive_error(&dr, "invalid format, DOCTYPE or comment not terminated");
-                err = 1;
-	    } else if ('-' == c) {
-                c = sax_drive_get(&dr); // skip first - and get next character
-		if ('-' != c) {
-                    sax_drive_error(&dr, "invalid format, bad comment format");
-                    err = 1;
-		} else {
-                    c = sax_drive_get(&dr); // skip second -
-		    //read_comment(&dr);
-		}
-	    } else if (0 == sax_drive_expect(&dr, "DOCTYPE", 7)) {
-		//read_doctype(&dr);
-	    } else {
-                sax_drive_error(&dr, "invalid format, DOCTYPE or comment expected");
-                err = 1;
-	    }
-	    break;
-	case '\0':
-            sax_drive_error(&dr, "invalid format, document not terminated");
-            err = 1;
-            break;
-	default:
-            dr.cur--; // safe since no read occurred after getting last character
-	    err = read_element(&dr);
-	    break;
-	}
-    }
-#endif
     sax_drive_cleanup(&dr);
 }
 
@@ -273,22 +224,14 @@ sax_drive_read(SaxDrive dr) {
             }
         }
     }
-    err = dr->read_func(dr); // TBD temporary
-
+    err = dr->read_func(dr);
     *dr->read_end = '\0';
-    //printf("\n*** sax_drive_read: '%s'\n", dr->buf);
 
     return err;
 }
 
-static int
-sax_drive_expect(SaxDrive dr, const char *str, int len) {
-    // TBD
-    return 0;
-}
-
 static void
-sax_drive_error(SaxDrive dr, const char *msg) {
+sax_drive_error(SaxDrive dr, const char *msg, int critical) {
     if (dr->has_error) {
         VALUE       args[3];
 
@@ -296,15 +239,91 @@ sax_drive_error(SaxDrive dr, const char *msg) {
         args[1] = INT2FIX(dr->line);
         args[2] = INT2FIX(dr->col);
         rb_funcall2(dr->handler, error_id, 3, args);
-    } else {
+    } else if (critical) {
+        sax_drive_cleanup(dr);
         rb_raise(rb_eSyntaxError, "%s at line %d, column %d\n", msg, dr->line, dr->col);
     }
 }
 
 static int
 read_children(SaxDrive dr, int first) {
-    // TBD
-    return 0;
+    int         err = 0;
+    int         element_read = !first;
+    char        c;
+    
+    while (!err) {
+        dr->str = dr->cur; // protect the start
+        if ('\0' == (c = next_non_white(dr))) {
+            if (!first) {
+                sax_drive_error(dr, "invalid format, element not terminated", 1);
+                err = 1;
+            }
+            break; // normal completion if first
+        }
+	if ('<' != c) {
+            if (first) { // all top level entities start with <
+                sax_drive_error(dr, "invalid format, expected <", 1);
+                break; // unrecoverable
+            }
+            if (0 != read_text(dr)) { // finished when < is reached
+                break;
+            }
+	}
+        dr->str = dr->cur; // protect the start for elements
+        c = sax_drive_get(dr);
+	switch (c) {
+	case '?': // instructions (xml or otherwise)
+            if (!first || element_read) {
+                sax_drive_error(dr, "invalid format, instruction must come before elements", 0);
+            }
+	    err = read_instruction(dr);
+	    break;
+	case '!': // comment or doctype
+            c = sax_drive_get(dr);
+	    if ('\0' == c) {
+                sax_drive_error(dr, "invalid format, DOCTYPE or comment not terminated", 1);
+                err = 1;
+	    } else if ('-' == c) {
+                c = sax_drive_get(dr); // skip first - and get next character
+		if ('-' != c) {
+                    sax_drive_error(dr, "invalid format, bad comment format", 1);
+                    err = 1;
+		} else {
+                    c = sax_drive_get(dr); // skip second -
+		    // TBD read_comment(dr);
+		}
+            } else {
+                int     i;
+
+                dr->str = dr->cur;
+                for (i = 7; 0 < i; i--) {
+                    sax_drive_get(dr);
+                }
+                if (0 == strncmp("DOCTYPE", dr->str, 7)) {
+                    // TBD err = read_doctype(dr);
+                } else if (0 == strncmp("[CDATA[", dr->str, 7)) {
+                    // TBD err = read_cdata(dr);
+                } else {
+                    sax_drive_error(dr, "invalid format, DOCTYPE or comment expected", 1);
+                    err = 1;
+                }
+	    }
+	    break;
+	case '/': // element end
+            return ('\0' == read_name_token(dr));
+            break;
+	case '\0':
+            sax_drive_error(dr, "invalid format, document not terminated", 1);
+            err = 1;
+            break;
+	default:
+            dr->cur--; // safe since no read occurred after getting last character
+	    err = read_element(dr);
+            element_read = 1;
+	    break;
+	}
+    }
+    return err;
 }
 
 /* Entered after the "<?" sequence. Ready to read the rest.
@@ -327,7 +346,7 @@ read_instruction(SaxDrive dr) {
     }
     c = next_non_white(dr);
     if ('>' != c) {
-        sax_drive_error(dr, "invalid format, instruction not terminated");
+        sax_drive_error(dr, "invalid format, instruction not terminated", 1);
         return -1;
     }
     if (0 != dr->has_instruct) {
@@ -355,8 +374,8 @@ read_element(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
     }
+    name = rb_str_new2(dr->str);
     if (dr->has_start_element) {
-        name = rb_str_new2(dr->str);
         attrs = rb_hash_new();
     }
     if ('/' == c) {
@@ -372,7 +391,7 @@ read_element(SaxDrive dr) {
     if (closed) {
         c = next_non_white(dr);
         if ('>' != c) {
-            sax_drive_error(dr, "invalid format, element not closed");
+            sax_drive_error(dr, "invalid format, element not closed", 1);
             return -1;
         }
     }
@@ -387,12 +406,13 @@ read_element(SaxDrive dr) {
         }
     }
     if (!closed) {
-        printf("*** closed cur: %s  %c\n", dr->cur, c);
-        
-        // TBD read children or text
-
-        // TBD if read in end_element, compare name, and, call end_element
-
+        if (0 != read_children(dr, 0)) {
+            return -1;
+        }
+        if (0 != strcmp(dr->str, StringValuePtr(name))) {
+            sax_drive_error(dr, "invalid format, element start and end names do not match", 1);
+            return -1;
+        }
         if (0 != dr->has_end_element) {
             VALUE       args[1];
 
@@ -402,6 +422,27 @@ read_element(SaxDrive dr) {
     }
     dr->str = 0;
 
+    return 0;
+}
+
+static int
+read_text(SaxDrive dr) {
+    char        c;
+
+    dr->str = dr->cur - 1; // mark the start
+    while ('<' != (c = sax_drive_get(dr))) {
+        if ('\0' == c) {
+            sax_drive_error(dr, "invalid format, text terminated unexpectedly", 1);
+            return -1;
+        }
+    }
+    *(dr->cur - 1) = '\0';
+    if (dr->has_text) {
+        VALUE       args[1];
+
+        args[0] = rb_str_new2(dr->str);
+        rb_funcall2(dr->handler, text_id, 1, args);
+    }
     return 0;
 }
 
@@ -416,7 +457,7 @@ read_attrs(SaxDrive dr, VALUE attrs, char c, char termc, char term2) {
     while (termc != c && term2 != c) {
         dr->cur--;
         if ('\0' == c) {
-            sax_drive_error(dr, "invalid format, processing instruction not terminated");
+            sax_drive_error(dr, "invalid format, processing instruction not terminated", 1);
             return -1;
         }
         if ('\0' == (c = read_name_token(dr))) {
@@ -429,7 +470,7 @@ read_attrs(SaxDrive dr, VALUE attrs, char c, char termc, char term2) {
             c = next_non_white(dr);
         }
         if ('=' != c) {
-            sax_drive_error(dr, "invalid format, no attribute value");
+            sax_drive_error(dr, "invalid format, no attribute value", 1);
             return -1;
         }
         if (0 != read_quoted_value(dr)) {
@@ -468,7 +509,7 @@ read_name_token(SaxDrive dr) {
 	    return c;
 	case '\0':
             // documents never terminate after a name token
-            sax_drive_error(dr, "invalid format, document not terminated");
+            sax_drive_error(dr, "invalid format, document not terminated", 1);
             return '\0';
 	default:
 	    break;
@@ -488,13 +529,13 @@ read_quoted_value(SaxDrive dr) {
         c = next_non_white(dr);
     }
     if ('"' != c) {
-        sax_drive_error(dr, "invalid format, attibute value not in quotes");
+        sax_drive_error(dr, "invalid format, attibute value not in quotes", 1);
         return -1;
     }
     dr->str = dr->cur;
     while ('"' != (c = sax_drive_get(dr))) {
         if ('\0' == c) {
-            sax_drive_error(dr, "invalid format, quoted value not terminated");
+            sax_drive_error(dr, "invalid format, quoted value not terminated", 1);
             return -1;
         }
     }

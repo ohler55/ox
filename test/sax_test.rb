@@ -107,6 +107,47 @@ encoding = "UTF-8" ?>},
                    [:end_element, 'top']])
   end
 
+  def test_sax_nested1
+    parse_compare(%{<?xml version="1.0"?>
+<top>
+  <child>
+    <grandchild/>
+  </child>
+</top>
+},
+                  [[:instruct, 'xml', {'version' => '1.0'}],
+                   [:start_element, 'top', {}],
+                   [:start_element, 'child', {}],
+                   [:start_element, 'grandchild', {}],
+                   [:end_element, 'grandchild'],
+                   [:end_element, 'child'],
+                   [:end_element, 'top'],
+                  ])
+  end
+
+  def test_sax_nested1_tight
+    parse_compare(%{<?xml version="1.0"?><top><child><grandchild/></child></top>},
+                  [[:instruct, 'xml', {'version' => '1.0'}],
+                   [:start_element, 'top', {}],
+                   [:start_element, 'child', {}],
+                   [:start_element, 'grandchild', {}],
+                   [:end_element, 'grandchild'],
+                   [:end_element, 'child'],
+                   [:end_element, 'top'],
+                  ])
+  end
+
+  def test_sax_element_name_mismatch
+    parse_compare(%{<?xml version="1.0"?><top><child><grandchild/></parent></top>},
+                  [[:instruct, 'xml', {'version' => '1.0'}],
+                   [:start_element, 'top', {}],
+                   [:start_element, 'child', {}],
+                   [:start_element, 'grandchild', {}],
+                   [:end_element, 'grandchild'],
+                   [:error, "invalid format, element start and end names do not match", 0, 0]
+                  ])
+  end
+
   def test_sax_nested
     parse_compare(%{<?xml version="1.0"?>
 <top>
@@ -134,6 +175,22 @@ encoding = "UTF-8" ?>},
                    [:end_element, 'top'],
                   ])
   end
+
+  def test_sax_text
+    parse_compare(%{<top>This is some text.</top>},
+                  [[:start_element, "top", {}],
+                   [:text, "This is some text."],
+                   [:end_element, "top"]
+                  ])
+  end
+
+  # TBD mix of elements, text, and attributes - tight and loose
+  # TBD comments
+  # TBD doctype
+  # TBD cdata
+  # TBD 
+  # TBD 
+  # TBD read invalid xml
 
   def xtest_sax_io_pipe
     handler = AllSax.new()
