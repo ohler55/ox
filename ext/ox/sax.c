@@ -71,7 +71,7 @@ static int      read_children(SaxDrive dr, int first);
 static int      read_instruction(SaxDrive dr);
 static int      read_element(SaxDrive dr);
 static int      read_text(SaxDrive dr);
-static int      read_attrs(SaxDrive dr, VALUE attrs, char c, char termc, char term2);
+static int      read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2);
 static char     read_name_token(SaxDrive dr);
 static int      read_quoted_value(SaxDrive dr);
 
@@ -339,9 +339,8 @@ read_instruction(SaxDrive dr) {
     }
     if (dr->has_instruct) {
         target = rb_str_new2(dr->str);
-        attrs = rb_hash_new();
     }
-    if (0 != read_attrs(dr, attrs, c, '?', '?')) {
+    if (0 != read_attrs(dr, &attrs, c, '?', '?')) {
         return -1;
     }
     c = next_non_white(dr);
@@ -375,15 +374,12 @@ read_element(SaxDrive dr) {
         return -1;
     }
     name = rb_str_new2(dr->str);
-    if (dr->has_start_element) {
-        attrs = rb_hash_new();
-    }
     if ('/' == c) {
         closed = 1;
     } else if ('>' == c) {
         closed = 0;
     } else {
-        if (0 != read_attrs(dr, attrs, c, '/', '>')) {
+        if (0 != read_attrs(dr, &attrs, c, '/', '>')) {
             return -1;
         }
         closed = ('/' == *(dr->cur - 1));
@@ -447,7 +443,7 @@ read_text(SaxDrive dr) {
 }
 
 static int
-read_attrs(SaxDrive dr, VALUE attrs, char c, char termc, char term2) {
+read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2) {
     VALUE       name = Qnil;
     
     dr->str = dr->cur; // lock it down
@@ -477,7 +473,10 @@ read_attrs(SaxDrive dr, VALUE attrs, char c, char termc, char term2) {
             return -1;
         }
         if (dr->has_instruct) {
-            rb_hash_aset(attrs, name, rb_str_new2(dr->str));
+            if (Qnil == *attrs) {
+                *attrs = rb_hash_new();
+            }
+            rb_hash_aset(*attrs, name, rb_str_new2(dr->str));
         }
         c = next_non_white(dr);
     }

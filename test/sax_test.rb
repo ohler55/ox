@@ -76,7 +76,7 @@ class Func < ::Test::Unit::TestCase
   end
   
   def test_sax_instruct_simple
-    parse_compare(%{<?xml?>}, [[:instruct, 'xml', {}]])
+    parse_compare(%{<?xml?>}, [[:instruct, 'xml', nil]])
   end
 
   def test_sax_instruct_blank
@@ -97,7 +97,7 @@ encoding = "UTF-8" ?>},
 
   def test_sax_element_simple
     parse_compare(%{<top/>},
-                  [[:start_element, 'top', {}],
+                  [[:start_element, 'top', nil],
                    [:end_element, 'top']])
   end
 
@@ -116,9 +116,9 @@ encoding = "UTF-8" ?>},
 </top>
 },
                   [[:instruct, 'xml', {'version' => '1.0'}],
-                   [:start_element, 'top', {}],
-                   [:start_element, 'child', {}],
-                   [:start_element, 'grandchild', {}],
+                   [:start_element, 'top', nil],
+                   [:start_element, 'child', nil],
+                   [:start_element, 'grandchild', nil],
                    [:end_element, 'grandchild'],
                    [:end_element, 'child'],
                    [:end_element, 'top'],
@@ -128,9 +128,9 @@ encoding = "UTF-8" ?>},
   def test_sax_nested1_tight
     parse_compare(%{<?xml version="1.0"?><top><child><grandchild/></child></top>},
                   [[:instruct, 'xml', {'version' => '1.0'}],
-                   [:start_element, 'top', {}],
-                   [:start_element, 'child', {}],
-                   [:start_element, 'grandchild', {}],
+                   [:start_element, 'top', nil],
+                   [:start_element, 'child', nil],
+                   [:start_element, 'grandchild', nil],
                    [:end_element, 'grandchild'],
                    [:end_element, 'child'],
                    [:end_element, 'top'],
@@ -140,9 +140,9 @@ encoding = "UTF-8" ?>},
   def test_sax_element_name_mismatch
     parse_compare(%{<?xml version="1.0"?><top><child><grandchild/></parent></top>},
                   [[:instruct, 'xml', {'version' => '1.0'}],
-                   [:start_element, 'top', {}],
-                   [:start_element, 'child', {}],
-                   [:start_element, 'grandchild', {}],
+                   [:start_element, 'top', nil],
+                   [:start_element, 'child', nil],
+                   [:start_element, 'grandchild', nil],
                    [:end_element, 'grandchild'],
                    [:error, "invalid format, element start and end names do not match", 0, 0]
                   ])
@@ -161,15 +161,15 @@ encoding = "UTF-8" ?>},
 </top>
 },
                   [[:instruct, 'xml', {'version' => '1.0'}],
-                   [:start_element, 'top', {}],
-                   [:start_element, 'child', {}],
-                   [:start_element, 'grandchild', {}],
+                   [:start_element, 'top', nil],
+                   [:start_element, 'child', nil],
+                   [:start_element, 'grandchild', nil],
                    [:end_element, 'grandchild'],
                    [:end_element, 'child'],
-                   [:start_element, 'child', {}],
-                   [:start_element, 'grandchild', {}],
+                   [:start_element, 'child', nil],
+                   [:start_element, 'grandchild', nil],
                    [:end_element, 'grandchild'],
-                   [:start_element, 'grandchild', {}],
+                   [:start_element, 'grandchild', nil],
                    [:end_element, 'grandchild'],
                    [:end_element, 'child'],
                    [:end_element, 'top'],
@@ -178,7 +178,7 @@ encoding = "UTF-8" ?>},
 
   def test_sax_text
     parse_compare(%{<top>This is some text.</top>},
-                  [[:start_element, "top", {}],
+                  [[:start_element, "top", nil],
                    [:text, "This is some text."],
                    [:end_element, "top"]
                   ])
@@ -188,9 +188,9 @@ encoding = "UTF-8" ?>},
   # TBD comments
   # TBD doctype
   # TBD cdata
-  # TBD 
-  # TBD 
   # TBD read invalid xml
+
+  # TBD performance test/comparison in separate file
 
   def xtest_sax_io_pipe
     handler = AllSax.new()
@@ -198,7 +198,7 @@ encoding = "UTF-8" ?>},
     w << %{<top/>}
     w.close
     Ox.sax_parse(handler, input)
-    assert_equal(handler.calls, [[:start_element, 'top', {}], [:end_element, 'top']])
+    assert_equal(handler.calls, [[:start_element, 'top', nil], [:end_element, 'top']])
   end
 
   def xtest_sax_io_file
@@ -207,7 +207,7 @@ encoding = "UTF-8" ?>},
     Ox.sax_parse(handler, input)
     input.close
     Ox.sax_parse(handler, input)
-    assert_equal(handler.calls, [[:start_element, 'top', {}], [:end_element, 'top']])
+    assert_equal(handler.calls, [[:start_element, 'top', nil], [:end_element, 'top']])
   end
 
 end
