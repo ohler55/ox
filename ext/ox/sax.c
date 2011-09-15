@@ -32,6 +32,9 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <unistd.h>
 
 #include "ruby.h"
 #include "ox.h"
@@ -49,7 +52,7 @@ typedef struct _SaxDrive {
     VALUE       handler;
     int         (*read_func)(struct _SaxDrive *dr);
     union {
-        FILE    *fp;
+        int     fd;
         VALUE   io;
     };
     int         has_instruct;
@@ -77,7 +80,7 @@ static int      read_quoted_value(SaxDrive dr);
 
 static VALUE    io_cb(VALUE rdr);
 static int      read_from_io(SaxDrive dr);
-static int      read_from_file(SaxDrive dr);
+static int      read_from_fd(SaxDrive dr);
 
 static inline char
 sax_drive_get(SaxDrive dr) {
@@ -148,12 +151,17 @@ ox_sax_parse(VALUE handler, VALUE io) {
 
 static void
 sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
-    if (T_STRING == rb_type(io)) {
-        dr->read_func = read_from_file;
-        dr->fp = fopen(StringValuePtr(io), "r");
-    } else if (rb_respond_to(io, readpartial_id)) {
-        dr->read_func = read_from_io;
-        dr->io = io;
+    if (rb_respond_to(io, readpartial_id)) {
+        VALUE   rfd;
+        VALUE   args[1];
+
+        if (rb_respond_to(io, rb_intern("fileno")) && Qnil != (rfd = rb_funcall2(io, rb_intern("fileno"), 0, args))) {
+            dr->read_func = read_from_fd;
+            dr->fd = FIX2INT(rfd);
+        } else {
+            dr->read_func = read_from_io;
+            dr->io = io;
+        }
     } else {
         rb_raise(rb_eArgError, "sax_parser io argument must respond to readpartial().\n");
     }
@@ -573,7 +581,16 @@ io_cb(VALUE rdr) {
 }
 
 static int
-read_from_file(SaxDrive dr) {
-    // TBD
+read_from_fd(SaxDrive dr) {
+    ssize_t     cnt;
+    size_t      max = dr->buf_end - dr->cur;
+
+    cnt = read(dr->fd, dr->cur, max);
+    if (cnt < 0) {
+        sax_drive_error(dr, "failed to read from file", 1);
+        return -1;
+    } else if (0 != cnt) {
+        dr->read_end = dr->cur + cnt;
+    }
     return 0;
 }

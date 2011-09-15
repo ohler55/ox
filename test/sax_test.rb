@@ -201,11 +201,9 @@ encoding = "UTF-8" ?>},
     assert_equal(handler.calls, [[:start_element, 'top', nil], [:end_element, 'top']])
   end
 
-  def xtest_sax_io_file
+  def test_sax_io_file
     handler = AllSax.new()
     input = IO.open(IO.sysopen('basic.xml'))
-    Ox.sax_parse(handler, input)
-    input.close
     Ox.sax_parse(handler, input)
     assert_equal(handler.calls, [[:start_element, 'top', nil], [:end_element, 'top']])
   end
