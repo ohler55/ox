@@ -1,10 +1,32 @@
-= Ox: A fast XML parser and Object marshaller.
+# Ox gem
+A fast XML parser and Object marshaller as a Ruby gem.
+
+## <a name="installation">Installation</a>
+    gem install ox
+
+## <a name="source">Source</a>
 
 *GitHub* *repo*: https://github.com/ohler55/ox
 
 *RubyGems* *repo*: https://rubygems.org/gems/ox
 
-=== Description:
+## <a name="follow">Follow @oxgem on Twitter</a>
+
+[Follow @oxgem on Twitter](http://twitter.com/#!/oxgem) for announcements and news about the Ox gem.
+
+## <a name="build_status">Build Status</a>
+
+[![Build Status](https://travis-ci.org/ohler/ox.png)](http://travis-ci.org/ohler/ox)
+
+## <a name="release">Release Notes</a>
+
+### Release 1.2.15
+
+ - added support for JRuby
+ - added support for RBX
+
+
+# Description:
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
 XML handling. It was designed to be an alternative to Nokogiri in generic XML
