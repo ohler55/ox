@@ -16,7 +16,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="build_status">Build Status</a>
 
-[![Build Status](https://travis-ci.org/ohler/ox.png)](http://travis-ci.org/ohler/ox)
+[![Build Status](https://travis-ci.org/ohler55/ox.png)](http://travis-ci.org/ohler55/ox)
 
 ## <a name="release">Release Notes</a>
 
@@ -25,8 +25,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
  - added support for JRuby
  - added support for RBX
 
-
-# Description:
+## <a name="description">Description</a>
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
 XML handling. It was designed to be an alternative to Nokogiri in generic XML
@@ -61,47 +60,47 @@ Marshal.dump() and up to 3 times faster than Marshal.load().
 
 ### Object Dump Sample:
 
-  require 'ox'
-
-  class Sample
-    attr_accessor :a, :b, :c
-
-    def initialize(a, b, c)
-      @a = a
-      @b = b
-      @c = c
+    require 'ox'
+  
+    class Sample
+      attr_accessor :a, :b, :c
+  
+      def initialize(a, b, c)
+        @a = a
+        @b = b
+        @c = c
+      end
     end
-  end
-
-  # Create Object
-  obj = Sample.new(1, "bee", ['x', :y, 7.0])
-  # Now dump the Object to an XML String.
-  xml = Ox.dump(obj)
-  # Convert the object back into a Sample Object.
-  obj2 = Ox.parse_obj(xml)
+  
+    # Create Object
+    obj = Sample.new(1, "bee", ['x', :y, 7.0])
+    # Now dump the Object to an XML String.
+    xml = Ox.dump(obj)
+    # Convert the object back into a Sample Object.
+    obj2 = Ox.parse_obj(xml)
 
 ### Generic XML Writing and Parsing:
 
-  require 'ox'
-
-  doc = Ox::Document.new(:version => '1.0')
-
-  top = Ox::Element.new('top')
-  top[:name] = 'sample'
-  doc << top
-
-  mid = Ox::Element.new('middle')
-  mid[:name] = 'second'
-  top << mid
-
-  bot = Ox::Element.new('bottom')
-  bot[:name] = 'third'
-  mid << bot
-
-  xml = Ox.dump(doc)
-  puts xml
-  doc2 = Ox.parse(xml)
-  puts "Same? #{doc == doc2}"
+    require 'ox'
+  
+    doc = Ox::Document.new(:version => '1.0')
+  
+    top = Ox::Element.new('top')
+    top[:name] = 'sample'
+    doc << top
+  
+    mid = Ox::Element.new('middle')
+    mid[:name] = 'second'
+    top << mid
+  
+    bot = Ox::Element.new('bottom')
+    bot[:name] = 'third'
+    mid << bot
+  
+    xml = Ox.dump(doc)
+    puts xml
+    doc2 = Ox.parse(xml)
+    puts "Same? #{doc == doc2}"
 
 
 ### Object XML format
@@ -149,25 +148,25 @@ interpreter.)
 Values are encoded as the text portion of an element or in the sub-elements
 of the principle. For example, a Fixnum is encoded as:
 
-  <i>123</i>
+    <i>123</i>
 
 An Array has sub-elements and is encoded similar to this example.
 
-  <a>
-    <i>1</i>
-    <s>abc</s>
-  </a>
+    <a>
+      <i>1</i>
+      <s>abc</s>
+    </a>
 
 A Hash is encoded with an even number of elements where the first element is
 the key and the second is the value. This is repeated for each entry in the
 Hash. An example is of { 1 => 'one', 2 => 'two' } encoding is:
 
-  <h>
-    <i>1</i>
-    <s>one</s>
-    <i>2</i>
-    <s>two</s>
-  </h>
+    <h>
+      <i>1</i>
+      <s>one</s>
+      <i>2</i>
+      <s>two</s>
+    </h>
 
 Strings with characters not allowed in XML are base64 encoded amd will be
 converted back into a String when loaded.

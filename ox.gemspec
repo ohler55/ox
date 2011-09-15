@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.summary = "A fast XML parser and object serializer."
   s.description = "A fast XML parser and object serializer that uses only standard C lib."
 
-  s.files = Dir["{lib,ext,test}/**/*.{rb,h,c,graffle}"] + ['LICENSE', 'README.rdoc']
+  s.files = Dir["{lib,ext,test}/**/*.{rb,h,c,graffle}"] + ['LICENSE', 'README.md']
 
   s.extensions = ["ext/ox/extconf.rb"]
   # s.executables = []
