@@ -20,8 +20,8 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib", "ext"]
 
   s.has_rdoc = true
-  s.extra_rdoc_files = ['README.rdoc']
-  s.rdoc_options = ['--main', 'README.rdoc']
+  s.extra_rdoc_files = ['README.md']
+  s.rdoc_options = ['--main', 'README.md']
   
   s.rubyforge_project = 'ox' # dummy to keep the build quiet
 end

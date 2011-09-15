@@ -59,7 +59,7 @@ As an Object serializer Ox is up to 6 times faster than the standard Ruby
 Marshal.dump() and up to 3 times faster than Marshal.load().
 
 
-=== Object Dump Sample:
+### Object Dump Sample:
 
   require 'ox'
 
@@ -80,7 +80,7 @@ Marshal.dump() and up to 3 times faster than Marshal.load().
   # Convert the object back into a Sample Object.
   obj2 = Ox.parse_obj(xml)
 
-=== Generic XML Writing and Parsing:
+### Generic XML Writing and Parsing:
 
   require 'ox'
 
@@ -104,7 +104,7 @@ Marshal.dump() and up to 3 times faster than Marshal.load().
   puts "Same? #{doc == doc2}"
 
 
-=== Object XML format
+### Object XML format
 
 The XML format used for Object encoding follows the structure of the
 Object. Each XML element is encoded so that the XML element name is a type
