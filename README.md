@@ -13,8 +13,6 @@ A fast XML parser and Object marshaller as a Ruby gem.
 ## <a name="follow">Follow @oxgem on Twitter</a>
 
 [Follow @oxgem on Twitter](http://twitter.com/#!/oxgem) for announcements and news about the Ox gem.
-<a href="http://twitter.com/{screen_name}" class="twitter-follow-button" data-show-count="false">Follow @OxGem</a>
-<script src="http://platform.twitter.com/widgets.js" type="text/javascript"></script>
 
 ## <a name="build_status">Build Status</a>
 
