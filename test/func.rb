@@ -333,6 +333,29 @@ class Func < ::Test::Unit::TestCase
     loaded
   end
 
+  def test_nameerror
+    begin
+      "x".foo
+    rescue Exception => e
+      xml = Ox.dump(e, :effort => :tolerant)
+      o = Ox.load(xml, mode: :object)
+      xml2 = Ox.dump(o, :effort => :tolerant)
+      assert_equal(xml, xml2)
+    end
+  end
+  
+  def test_mutex
+    # Mutex can not be serialize but it should not raise an exception.
+    xml = Ox.dump(Mutex.new, :indent => 2, :effort => :tolerant)
+    assert_equal(%{<z/>
+}, xml)
+    xml = Ox.dump(Bag.new(:@x => Mutex.new), :indent => 2, :effort => :tolerant)
+    assert_equal(%{<o c="Bag">
+  <z a="@x"/>
+</o>
+}, xml)
+  end
+  
   def test_encoding
     if RUBY_VERSION.start_with?('1.8')
       assert(true)

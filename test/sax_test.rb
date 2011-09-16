@@ -68,6 +68,26 @@ end
 
 class Func < ::Test::Unit::TestCase
 
+  def test_sax_io_pipe
+    handler = AllSax.new()
+    input,w = IO.pipe
+    w << %{<top/>}
+    w.close
+    Ox.sax_parse(handler, input)
+    assert_equal(handler.calls,
+                 [[:start_element, 'top', nil],
+                  [:end_element, 'top']])
+  end
+
+  def test_sax_io_file
+    handler = AllSax.new()
+    input = IO.open(IO.sysopen('basic.xml'))
+    Ox.sax_parse(handler, input)
+    assert_equal(handler.calls,
+                 [[:start_element, 'top', nil],
+                  [:end_element, 'top']])
+  end
+
   def parse_compare(xml, expected, handler_class=AllSax)
     handler = handler_class.new()
     input = StringIO.new(xml)
@@ -175,6 +195,7 @@ encoding = "UTF-8" ?>},
                    [:end_element, 'top'],
                   ])
   end
+  # TBD no end element
 
   def test_sax_text
     parse_compare(%{<top>This is some text.</top>},
@@ -184,29 +205,72 @@ encoding = "UTF-8" ?>},
                   ])
   end
 
+  def test_sax_text_no_term
+    parse_compare(%{<top>This is some text.},
+                  [[:start_element, "top", nil],
+                   [:error, "invalid format, text terminated unexpectedly", 0, 0],
+                  ])
+  end
+  # TBD invalid chacters in text
+
+  def test_sax_doctype
+    parse_compare(%{<?xml version="1.0"?>
+<!DOCTYPE top PUBLIC "top.dtd">
+<top/>
+},
+                  [[:instruct, 'xml', {'version' => '1.0'}],
+                   [:doctype, ' top PUBLIC "top.dtd"'],
+                   [:start_element, 'top', nil],
+                   [:end_element, 'top']])
+  end
+
+    def test_sax_doctype_bad_order
+    parse_compare(%{<?xml version="1.0"?>
+<top/>
+<!DOCTYPE top PUBLIC "top.dtd">
+},
+                  [[:instruct, 'xml', {'version' => '1.0'}],
+                   [:start_element, 'top', nil],
+                   [:end_element, 'top'],
+                   [:error, '???'],
+                   [:doctype, ' top PUBLIC "top.dtd"']])
+  end
+  
+  def test_sax_comment
+    parse_compare(%{<?xml version="1.0"?>
+<!--First comment.-->
+<top>Before<!--Nested comment.-->After</top>
+},
+                  [[:instruct, 'xml', {'version' => '1.0'}],
+                   [:comment, 'First comment.'],
+                   [:start_element, 'top', nil],
+                   [:text, 'Before'],
+                   [:comment, 'Nested comment.'],
+                   [:text, 'After'],
+                   [:end_element, 'top']])
+  end
+  # TBD non terminated comment
+
+  def test_sax_cdata
+    parse_compare(%{<?xml version="1.0"?>
+<top>
+  <![CDATA[This is CDATA.]]>
+</top>
+},
+                  [[:instruct, 'xml', {'version' => '1.0'}],
+                   [:start_element, 'top', nil],
+                   [:cdata, 'This is CDATA.'],
+                   [:end_element, 'top']])
+  end
+  # TBD cdata with ] in it
+  # TBD non-terminated cdata
+  
   # TBD mix of elements, text, and attributes - tight and loose
-  # TBD comments
-  # TBD doctype
-  # TBD cdata
-  # TBD read invalid xml
-
-  # TBD performance test/comparison in separate file
-
-  def xtest_sax_io_pipe
-    handler = AllSax.new()
-    input,w = IO.pipe
-    w << %{<top/>}
-    w.close
-    Ox.sax_parse(handler, input)
-    assert_equal(handler.calls, [[:start_element, 'top', nil], [:end_element, 'top']])
-  end
-
-  def test_sax_io_file
-    handler = AllSax.new()
-    input = IO.open(IO.sysopen('basic.xml'))
-    Ox.sax_parse(handler, input)
-    assert_equal(handler.calls, [[:start_element, 'top', nil], [:end_element, 'top']])
-  end
+  # TBD read invalid xml with recoverable errors (elements out of order, multiple top elements)
+  # TBD read invalid xml (missing 
+  
+  # TBD check line and column on errors
+  # TBD test encoding
 
 end
 

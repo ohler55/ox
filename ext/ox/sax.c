@@ -72,6 +72,9 @@ static void     sax_drive_error(SaxDrive dr, const char *msg, int critical);
 
 static int      read_children(SaxDrive dr, int first);
 static int      read_instruction(SaxDrive dr);
+static int      read_doctype(SaxDrive dr);
+static int      read_cdata(SaxDrive dr);
+static int      read_comment(SaxDrive dr);
 static int      read_element(SaxDrive dr);
 static int      read_text(SaxDrive dr);
 static int      read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2);
@@ -153,9 +156,8 @@ static void
 sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     if (rb_respond_to(io, readpartial_id)) {
         VALUE   rfd;
-        VALUE   args[1];
 
-        if (rb_respond_to(io, rb_intern("fileno")) && Qnil != (rfd = rb_funcall2(io, rb_intern("fileno"), 0, args))) {
+        if (rb_respond_to(io, rb_intern("fileno")) && Qnil != (rfd = rb_funcall(io, rb_intern("fileno"), 0))) {
             dr->read_func = read_from_fd;
             dr->fd = FIX2INT(rfd);
         } else {
@@ -273,7 +275,7 @@ read_children(SaxDrive dr, int first) {
                 sax_drive_error(dr, "invalid format, expected <", 1);
                 break; // unrecoverable
             }
-            if (0 != read_text(dr)) { // finished when < is reached
+            if (0 != (err = read_text(dr))) { // finished when < is reached
                 break;
             }
 	}
@@ -287,6 +289,7 @@ read_children(SaxDrive dr, int first) {
 	    err = read_instruction(dr);
 	    break;
 	case '!': // comment or doctype
+            dr->str = dr->cur;
             c = sax_drive_get(dr);
 	    if ('\0' == c) {
                 sax_drive_error(dr, "invalid format, DOCTYPE or comment not terminated", 1);
@@ -298,19 +301,18 @@ read_children(SaxDrive dr, int first) {
                     err = 1;
 		} else {
                     c = sax_drive_get(dr); // skip second -
-		    // TBD read_comment(dr);
+		    err = read_comment(dr);
 		}
             } else {
                 int     i;
 
-                dr->str = dr->cur;
                 for (i = 7; 0 < i; i--) {
                     sax_drive_get(dr);
                 }
                 if (0 == strncmp("DOCTYPE", dr->str, 7)) {
-                    // TBD err = read_doctype(dr);
+                    err = read_doctype(dr);
                 } else if (0 == strncmp("[CDATA[", dr->str, 7)) {
-                    // TBD err = read_cdata(dr);
+                    err = read_cdata(dr);
                 } else {
                     sax_drive_error(dr, "invalid format, DOCTYPE or comment expected", 1);
                     err = 1;
@@ -362,6 +364,109 @@ read_instruction(SaxDrive dr) {
         args[0] = target;
         args[1] = attrs;
         rb_funcall2(dr->handler, instruct_id, 2, args);
+    }
+    dr->str = 0;
+
+    return 0;
+}
+
+/* Entered after the "<!DOCTYPE" sequence. Ready to read the rest.
+ */
+static int
+read_doctype(SaxDrive dr) {
+    char        c;
+
+    dr->str = dr->cur - 1; // mark the start
+    while ('>' != (c = sax_drive_get(dr))) {
+        if ('\0' == c) {
+            sax_drive_error(dr, "invalid format, doctype terminated unexpectedly", 1);
+            return -1;
+        }
+    }
+    *(dr->cur - 1) = '\0';
+    if (dr->has_doctype) {
+        VALUE       args[1];
+
+        args[0] = rb_str_new2(dr->str);
+        rb_funcall2(dr->handler, doctype_id, 1, args);
+    }
+    dr->str = 0;
+
+    return 0;
+}
+
+/* Entered after the "<![CDATA[" sequence. Ready to read the rest.
+ */
+static int
+read_cdata(SaxDrive dr) {
+    char        c;
+    int         end = 0;
+
+    dr->str = dr->cur - 1; // mark the start
+    while (1) {
+        c = sax_drive_get(dr);
+        if (']' == c) {
+            if (end) {
+                *(dr->cur - 2) = '\0';
+                break;
+            } else {
+                end = 1;
+            }
+        } else if ('\0' == c) {
+            sax_drive_error(dr, "invalid format, doctype terminated unexpectedly", 1);
+            return -1;
+        } else {
+            end = 0;
+        }
+    }
+    c = sax_drive_get(dr);
+    if ('>' != c) {
+        sax_drive_error(dr, "invalid format, doctype terminated unexpectedly", 1);
+    }
+    if (dr->has_cdata) {
+        VALUE       args[1];
+
+        args[0] = rb_str_new2(dr->str);
+        rb_funcall2(dr->handler, cdata_id, 1, args);
+    }
+    dr->str = 0;
+
+    return 0;
+}
+
+/* Entered after the "<!--" sequence. Ready to read the rest.
+ */
+static int
+read_comment(SaxDrive dr) {
+    char        c;
+    int         end = 0;
+
+    dr->str = dr->cur - 1; // mark the start
+    while (1) {
+        c = sax_drive_get(dr);
+        if ('-' == c) {
+            if (end) {
+                *(dr->cur - 2) = '\0';
+                break;
+            } else {
+                end = 1;
+            }
+        } else if ('\0' == c) {
+            sax_drive_error(dr, "invalid format, comment terminated unexpectedly", 1);
+            return -1;
+        } else {
+            end = 0;
+        }
+    }
+    c = sax_drive_get(dr);
+    if ('>' != c) {
+        sax_drive_error(dr, "invalid format, comment terminated unexpectedly", 1);
+    }
+    if (dr->has_comment) {
+        VALUE       args[1];
+
+        args[0] = rb_str_new2(dr->str);
+        rb_funcall2(dr->handler, comment_id, 1, args);
     }
     dr->str = 0;
 

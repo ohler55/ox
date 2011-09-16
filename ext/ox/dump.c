@@ -829,14 +829,14 @@ static int
 dump_var(ID key, VALUE value, Out out) {
     if (T_DATA == rb_type(value) && rb_cTime != rb_obj_class(value)) {
         /* There is a secret recipe that keeps Exception mesg attributes as a
-         * T_DATA until it is needed. StringValue() makes the value needed and
-         * it is converted to a regular Ruby Object. It might seem reasonable
-         * to expect that this would be done before calling the foreach
-         * callback but it isn't. A slight hack fixes the inconsistency. If
-         * the var is not something that can be represented as a String then
-         * this will fail.
+         * T_DATA until it is needed. StringValue() or a safer method of
+         * calling to_s() makes the value needed and it is converted to a
+         * regular Ruby Object. It might seem reasonable to expect that this
+         * would be done before calling the foreach callback but it isn't. A
+         * slight hack fixes the inconsistency. If the var is not something
+         * that can be represented as a String then this will fail.
          */
-        StringValue(value);
+        rb_funcall(value, to_s_id, 0);
     }
     dump_obj(key, value, out->depth, out);
 
