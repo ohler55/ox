@@ -448,7 +448,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
  * Parses an IO stream or file containing an XML document. Raises an exception
  * if the XML is malformed or the classes specified are not valid.
  * @param [Ox::Sax] handler SAX (responds to OX::Sax methods) like handler
- * @param [IO|String] io IO Object or file path to read from
+ * @param [IO|String] io IO Object to read from
  */
 static VALUE
 sax_parse(VALUE self, VALUE handler, VALUE io) {

@@ -127,6 +127,17 @@ encoding = "UTF-8" ?>},
                    [:end_element, 'top']])
   end
 
+  def test_sax_two_top
+    parse_compare(%{<top/><top/>},
+                  [[:start_element, 'top', nil],
+                   [:end_element, 'top'],
+                   [:error, "invalid format, multiple top level elements", 1, 9],
+                   [:start_element, "top", nil],
+                   [:end_element, "top"]])
+
+
+  end
+
   def test_sax_nested1
     parse_compare(%{<?xml version="1.0"?>
 <top>
@@ -158,13 +169,18 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_element_name_mismatch
-    parse_compare(%{<?xml version="1.0"?><top><child><grandchild/></parent></top>},
+    parse_compare(%{<?xml version="1.0"?>
+<top>
+  <child>
+    <grandchild/>
+  </parent>
+</top>},
                   [[:instruct, 'xml', {'version' => '1.0'}],
                    [:start_element, 'top', nil],
                    [:start_element, 'child', nil],
                    [:start_element, 'grandchild', nil],
                    [:end_element, 'grandchild'],
-                   [:error, "invalid format, element start and end names do not match", 0, 0]
+                   [:error, "invalid format, element start and end names do not match", 5, 12]
                   ])
   end
 
@@ -195,7 +211,17 @@ encoding = "UTF-8" ?>},
                    [:end_element, 'top'],
                   ])
   end
-  # TBD no end element
+  def test_sax_element_no_term
+    parse_compare(%{
+<top>
+  <child/>
+},
+                  [[:start_element, "top", nil],
+                   [:start_element, 'child', nil],
+                   [:end_element, 'child'],
+                   [:error, "invalid format, element not terminated", 4, 1]
+                  ])
+  end
 
   def test_sax_text
     parse_compare(%{<top>This is some text.</top>},
@@ -208,7 +234,7 @@ encoding = "UTF-8" ?>},
   def test_sax_text_no_term
     parse_compare(%{<top>This is some text.},
                   [[:start_element, "top", nil],
-                   [:error, "invalid format, text terminated unexpectedly", 0, 0],
+                   [:error, "invalid format, text terminated unexpectedly", 1, 24],
                   ])
   end
   # TBD invalid chacters in text
@@ -224,7 +250,7 @@ encoding = "UTF-8" ?>},
                    [:end_element, 'top']])
   end
 
-    def test_sax_doctype_bad_order
+  def test_sax_doctype_bad_order
     parse_compare(%{<?xml version="1.0"?>
 <top/>
 <!DOCTYPE top PUBLIC "top.dtd">
@@ -232,8 +258,21 @@ encoding = "UTF-8" ?>},
                   [[:instruct, 'xml', {'version' => '1.0'}],
                    [:start_element, 'top', nil],
                    [:end_element, 'top'],
-                   [:error, '???'],
+                   [:error, "invalid format, DOCTYPE can not come after an element", 3, 11],
                    [:doctype, ' top PUBLIC "top.dtd"']])
+  end
+  
+  def test_sax_instruct_bad_order
+    parse_compare(%{
+<!DOCTYPE top PUBLIC "top.dtd">
+<?xml version="1.0"?>
+<top/>
+},
+                  [[:doctype, " top PUBLIC \"top.dtd\""],
+                   [:error, "invalid format, instruction must come before elements", 3, 3],
+                   [:instruct, "xml", {"version"=>"1.0"}],
+                   [:start_element, 'top', nil],
+                   [:end_element, 'top']])
   end
   
   def test_sax_comment
@@ -249,7 +288,18 @@ encoding = "UTF-8" ?>},
                    [:text, 'After'],
                    [:end_element, 'top']])
   end
-  # TBD non terminated comment
+
+  def test_sax_comment_no_term
+    parse_compare(%{<?xml version="1.0"?>
+<!--First comment.--
+<top/>
+},
+                  [[:instruct, 'xml', {'version' => '1.0'}],
+                   [:error, "invalid format, comment terminated unexpectedly", 3, 1], # continue on
+                   [:comment, 'First comment.'],
+                   [:start_element, 'top', nil],
+                   [:end_element, 'top']])
+  end
 
   def test_sax_cdata
     parse_compare(%{<?xml version="1.0"?>
@@ -262,14 +312,22 @@ encoding = "UTF-8" ?>},
                    [:cdata, 'This is CDATA.'],
                    [:end_element, 'top']])
   end
-  # TBD cdata with ] in it
-  # TBD non-terminated cdata
+
+  def test_sax_cdata_no_term
+    parse_compare(%{<?xml version="1.0"?>
+<top>
+  <![CDATA[This is CDATA.]]
+</top>
+},
+                  [[:instruct, 'xml', {'version' => '1.0'}],
+                   [:start_element, 'top', nil],
+                   [:error, "invalid format, cdata terminated unexpectedly", 5, 1]])
+  end
   
   # TBD mix of elements, text, and attributes - tight and loose
   # TBD read invalid xml with recoverable errors (elements out of order, multiple top elements)
   # TBD read invalid xml (missing 
   
-  # TBD check line and column on errors
   # TBD test encoding
 
 end

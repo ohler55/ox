@@ -4,19 +4,18 @@
 ^c^s show subtree
 
 
-- changes for 1.2.16
+- changes for 1.3.0
+ - fixed Mutex dump bug
+ - added SAX parser, 20+ times faster than Nokogiri and 6+ times faster than LibXML
 
+- docs
+ - added SAX info to docs with example
 
-- TBDs
- - dump - free flag on error
- - streaming parsing
-  - SAX
-   - create a buffered reader
-    - keep two blocks and leapfrog
-     - if word spans blocks then create new buffer and copy into that or maybe memmove
-   - given a file name, open and start reading in blocks
-   - given an IO, start reading in blocks
-  - general object/generic parser
+This release includes a new feature, a SAX like parser for large files and stream IO parsing.
+
+- sax
+ - encoding
+ - bad order of doctype and instruction
 
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml

@@ -92,6 +92,12 @@ sax_drive_get(SaxDrive dr) {
             return 0;
         }
     }
+    if ('\n' == *dr->cur) {
+        dr->line++;
+        dr->col = 0;
+    }
+    dr->col++;
+    
     return *dr->cur++;
 }
 
@@ -173,7 +179,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     dr->cur = dr->buf;
     dr->read_end = dr->buf;
     dr->str = 0;
-    dr->line = 0;
+    dr->line = 1;
     dr->col = 0;
     dr->handler = handler;
     dr->has_instruct = rb_respond_to(handler, instruct_id);
@@ -243,7 +249,7 @@ sax_drive_read(SaxDrive dr) {
 static void
 sax_drive_error(SaxDrive dr, const char *msg, int critical) {
     if (dr->has_error) {
-        VALUE       args[3];
+        VALUE   args[3];
 
         args[0] = rb_str_new2(msg);
         args[1] = INT2FIX(dr->line);
@@ -259,6 +265,7 @@ static int
 read_children(SaxDrive dr, int first) {
     int         err = 0;
     int         element_read = !first;
+    int         doctype_read = !first;
     char        c;
     
     while (!err) {
@@ -283,7 +290,7 @@ read_children(SaxDrive dr, int first) {
         c = sax_drive_get(dr);
 	switch (c) {
 	case '?': // instructions (xml or otherwise)
-            if (!first || element_read) {
+            if (!first || element_read || doctype_read) {
                 sax_drive_error(dr, "invalid format, instruction must come before elements", 0);
             }
 	    err = read_instruction(dr);
@@ -310,6 +317,10 @@ read_children(SaxDrive dr, int first) {
                     sax_drive_get(dr);
                 }
                 if (0 == strncmp("DOCTYPE", dr->str, 7)) {
+                    if (element_read || !first) {
+                        sax_drive_error(dr, "invalid format, DOCTYPE can not come after an element", 0);
+                    }
+                    doctype_read = 1;
                     err = read_doctype(dr);
                 } else if (0 == strncmp("[CDATA[", dr->str, 7)) {
                     err = read_cdata(dr);
@@ -328,6 +339,9 @@ read_children(SaxDrive dr, int first) {
             break;
 	default:
             dr->cur--; // safe since no read occurred after getting last character
+            if (first && element_read) {
+                sax_drive_error(dr, "invalid format, multiple top level elements", 0);
+            }
 	    err = read_element(dr);
             element_read = 1;
 	    break;
@@ -406,22 +420,19 @@ read_cdata(SaxDrive dr) {
     while (1) {
         c = sax_drive_get(dr);
         if (']' == c) {
-            if (end) {
-                *(dr->cur - 2) = '\0';
+            end++;
+        } else if ('>' == c) {
+            if (2 <= end) {
+                *(dr->cur - 3) = '\0';
                 break;
-            } else {
-                end = 1;
             }
+            end = 0;
         } else if ('\0' == c) {
-            sax_drive_error(dr, "invalid format, doctype terminated unexpectedly", 1);
+            sax_drive_error(dr, "invalid format, cdata terminated unexpectedly", 1);
             return -1;
         } else {
             end = 0;
         }
-    }
-    c = sax_drive_get(dr);
-    if ('>' != c) {
-        sax_drive_error(dr, "invalid format, doctype terminated unexpectedly", 1);
     }
     if (dr->has_cdata) {
         VALUE       args[1];
