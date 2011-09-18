@@ -138,6 +138,20 @@ is_white(char c) {
     return 0;
 }
 
+inline static VALUE
+str2value(const char *str) {
+    VALUE       *slot;
+    VALUE       val;
+    
+    if (Qundef == (val = ox_cache_get(str_cache, str, &slot))) {
+        val = rb_str_new2(str);
+        *slot = val;
+    }
+    return val;
+}
+
+
+
 void
 ox_sax_parse(VALUE handler, VALUE io) {
     struct _SaxDrive    dr;
@@ -497,7 +511,8 @@ read_element(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
     }
-    name = rb_str_new2(dr->str);
+    //name = rb_str_new2(dr->str);
+    name = str2value(dr->str);
     if ('/' == c) {
         closed = 1;
     } else if ('>' == c) {
@@ -584,7 +599,8 @@ read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2) {
             return -1;
         }
         if (dr->has_instruct) {
-            name = rb_str_new2(dr->str);
+            name = str2value(dr->str);
+            //name = rb_str_new2(dr->str);
         }
         if (is_white(c)) {
             c = next_non_white(dr);

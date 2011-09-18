@@ -28,23 +28,53 @@ end
 $verbose = 0
 $ox_only = false
 $all_cbs = false
-$filename = 'Sample.graffle'
-$iter = 1000
+$filename = nil # nil indicates new file names perf.xml will be created and used
+$filesize = 1000 # KBytes
+$iter = 100
 
 opts = OptionParser.new
-opts.on("-v", "increase verbosity")                         { $verbose += 1 }
-opts.on("-x", "ox only")                                    { $ox_only = true }
-opts.on("-a", "all callbacks")                              { $all_cbs = true }
-opts.on("-f", "--file [String]", String, "filename")        { |f| $filename = f }
-opts.on("-i", "--iterations [Int]", Integer, "iterations")  { |i| $iter = i }
-opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
+opts.on("-v", "increase verbosity")                            { $verbose += 1 }
+opts.on("-x", "ox only")                                       { $ox_only = true }
+opts.on("-a", "all callbacks")                                 { $all_cbs = true }
+opts.on("-f", "--file [String]", String, "filename")           { |f| $filename = f }
+opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |i| $iter = i }
+opts.on("-s", "--size [Int]", Integer, "file size in KBytes")  { |s| $filesize = s }
+opts.on("-h", "--help", "Show this display")                   { puts opts; Process.exit!(0) }
 rest = opts.parse(ARGV)
 
-$xml_str = File.read($filename)
-
+$xml_str = nil
 $ox_time = 0
 $no_time = 0
 $lx_time = 0
+
+# size is in Kbytes
+def create_file(filename, size)
+  head = %{<?xml version="1.0"?>
+<?ox version="1.0" mode="object" circular="no" xsd_date="no"?>
+<!DOCTYPE table PUBLIC "-//ox//DTD TABLE 1.0//EN" "http://www.ohler.com/DTDs/TestTable-1.0.dtd">
+<table>
+}
+  tail = %{</table>
+}
+  row = %{  <!-- row %08d element -->
+  <row id="%08d">
+    <cell id="A" type="Fixnum">1234</cell>
+    <cell id="B" type="String">A string.</cell>
+    <cell id="C" type="String">This is a longer string that stretches over a larger number of characters.</cell>
+    <cell id="D" type="Float">-12.345</cell>
+    <cell id="E" type="Date">2011-09-18 23:07:26 +0900</cell>
+    <cell id="F" type="Image"><![CDATA[xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00]]></cell>
+  </row>
+}
+  cnt = (size * 1000 - head.size - tail.size) / row.size
+  File.open(filename, "w") do |f|
+    f.write(head)
+    cnt.times do |i|
+      f.write(row % [i,i])
+    end
+    f.write(tail)
+  end
+end
 
 class OxSax < ::Ox::Sax
   def start_element(name, attrs);  end
@@ -147,6 +177,9 @@ def perf_stringio()
 end
 
 def perf_fileio()
+  puts "\n"
+  puts "A #{$filesize} KByte XML file was parsed #{$iter} for this test."
+  puts "\n"
   start = Time.now
   handler = $all_cbs ? OxAllSax.new() : OxSax.new()
   $iter.times do
@@ -190,5 +223,11 @@ def perf_fileio()
   puts "\n"
 end
 
-perf_stringio()
+if $filename.nil?
+  create_file('perf.xml', $filesize)
+  $filename = 'perf.xml'
+end
+$xml_str = File.read($filename)
+
+# perf_stringio()
 perf_fileio()
