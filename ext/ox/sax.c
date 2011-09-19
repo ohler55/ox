@@ -63,7 +63,9 @@ typedef struct _SaxDrive {
     int         has_start_element;
     int         has_end_element;
     int         has_error;
+#ifdef HAVE_RUBY_ENCODING_H
     rb_encoding *encoding;
+#endif
 } *SaxDrive;
 
 static void     sax_drive_init(SaxDrive dr, VALUE handler, VALUE io);
@@ -204,7 +206,9 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     dr->has_start_element = rb_respond_to(handler, start_element_id);
     dr->has_end_element = rb_respond_to(handler, end_element_id);
     dr->has_error = rb_respond_to(handler, error_id);
+#ifdef HAVE_RUBY_ENCODING_H
     dr->encoding = 0;
+#endif
 }
 
 static void
