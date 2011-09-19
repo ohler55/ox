@@ -77,7 +77,7 @@ def create_file(filename, size)
 end
 
 class OxSax < ::Ox::Sax
-  def start_element(name, attrs);  end
+  def start_element(name, attrs); end
   def error(message, line, column); puts message; end
 end
 

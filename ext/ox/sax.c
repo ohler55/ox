@@ -139,17 +139,16 @@ is_white(char c) {
 }
 
 inline static VALUE
-str2value(const char *str) {
+str2sym(const char *str) {
     VALUE       *slot;
-    VALUE       val;
-    
-    if (Qundef == (val = ox_cache_get(str_cache, str, &slot))) {
-        val = rb_str_new2(str);
-        *slot = val;
-    }
-    return val;
-}
+    VALUE       sym;
 
+    if (Qundef == (sym = ox_cache_get(symbol_cache, str, &slot))) {
+        sym = ID2SYM(rb_intern(str));
+        *slot = sym;
+    }
+    return sym;
+}
 
 
 void
@@ -503,6 +502,7 @@ read_comment(SaxDrive dr) {
  */
 static int
 read_element(SaxDrive dr) {
+    char        start_name[1024];
     VALUE       name = Qnil;
     VALUE       attrs = Qnil;
     char        c;
@@ -511,8 +511,9 @@ read_element(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
     }
+    strcpy(start_name, dr->str);
     //name = rb_str_new2(dr->str);
-    name = str2value(dr->str);
+    name = str2sym(dr->str);
     if ('/' == c) {
         closed = 1;
     } else if ('>' == c) {
@@ -544,7 +545,8 @@ read_element(SaxDrive dr) {
         if (0 != read_children(dr, 0)) {
             return -1;
         }
-        if (0 != strcmp(dr->str, StringValuePtr(name))) {
+        //if (0 != strcmp(dr->str, rb_id2name(SYM2ID(name)))) {
+        if (0 != strcmp(dr->str, start_name)) {
             sax_drive_error(dr, "invalid format, element start and end names do not match", 1);
             return -1;
         }
@@ -599,7 +601,7 @@ read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2) {
             return -1;
         }
         if (dr->has_instruct) {
-            name = str2value(dr->str);
+            name = str2sym(dr->str);
             //name = rb_str_new2(dr->str);
         }
         if (is_white(c)) {

@@ -16,7 +16,6 @@ This release includes a new feature, a SAX like parser for large files and strea
 - sax
  - encoding
 
-
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
 
