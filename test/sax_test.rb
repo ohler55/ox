@@ -324,11 +324,58 @@ encoding = "UTF-8" ?>},
                    [:error, "invalid format, cdata terminated unexpectedly", 5, 1]])
   end
   
-  # TBD mix of elements, text, and attributes - tight and loose
-  # TBD read invalid xml with recoverable errors (elements out of order, multiple top elements)
-  # TBD read invalid xml (missing 
-  
-  # TBD test encoding
+
+  def test_sax_mixed
+    parse_compare(%{<?xml version="1.0"?>
+<?ox version="1.0" mode="object" circular="no" xsd_date="no"?>
+<!DOCTYPE table PUBLIC "-//ox//DTD TABLE 1.0//EN" "http://www.ohler.com/DTDs/TestTable-1.0.dtd">
+<table>
+  <row id="00004">
+    <cell id="A" type="Fixnum">1234</cell>
+    <cell id="B" type="String">A string.</cell>
+    <cell id="C" type="String">This is a longer string that stretches over a larger number of characters.</cell>
+    <cell id="D" type="Float">-12.345</cell>
+    <cell id="E" type="Date">2011-09-18 23:07:26 +0900</cell>
+    <cell id="F" type="Image"><![CDATA[xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00]]></cell>
+  </row>
+</table>
+},
+                  [[:instruct, 'xml', {:version => '1.0'}],
+                   [:instruct, "ox", {:version=>"1.0", :mode=>"object", :circular=>"no", :xsd_date=>"no"}],
+                   [:doctype, " table PUBLIC \"-//ox//DTD TABLE 1.0//EN\" \"http://www.ohler.com/DTDs/TestTable-1.0.dtd\""],
+                   [:start_element, :table, nil],
+                   [:start_element, :row, {:id=>"00004"}],
+                   [:start_element, :cell, {:id=>"A", :type=>"Fixnum"}],
+                   [:text, "1234"],
+                   [:end_element, :cell],
+                   [:start_element, :cell, {:id=>"B", :type=>"String"}],
+                   [:text, "A string."],
+                   [:end_element, :cell],
+                   [:start_element, :cell, {:id=>"C", :type=>"String"}],
+                   [:text, "This is a longer string that stretches over a larger number of characters."],
+                   [:end_element, :cell],
+                   [:start_element, :cell, {:id=>"D", :type=>"Float"}],
+                   [:text, "-12.345"],
+                   [:end_element, :cell],
+                   [:start_element, :cell, {:id=>"E", :type=>"Date"}],
+                   [:text, "2011-09-18 23:07:26 +0900"],
+                   [:end_element, :cell],
+                   [:start_element, :cell, {:id=>"F", :type=>"Image"}],
+                   [:cdata, "xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00"],
+                   [:end_element, :cell],
+                   [:end_element, :row],
+                   [:end_element, :table]])
+  end
+
+  def test_sax_encoding
+    parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
+<top>ピーター</top>
+},
+                  [[:instruct, 'xml', {:version => '1.0', :encoding => 'UTF-8'}],
+                   [:start_element, :top, nil],
+                   [:text, 'ピーター'],
+                   [:end_element, :top]])
+  end
 
 end
 

@@ -109,7 +109,6 @@ VALUE   time_class;
 Cache   symbol_cache = 0;
 Cache   class_cache = 0;
 Cache   attr_cache = 0;
-Cache   str_cache = 0;
 
 static struct _Options  default_options = {
     { '\0' },           // encoding
@@ -683,7 +682,6 @@ void Init_ox() {
     ox_cache_new(&symbol_cache);
     ox_cache_new(&class_cache);
     ox_cache_new(&attr_cache);
-    ox_cache_new(&str_cache);
 
     rb_define_module_function(Ox, "cache_test", cache_test, 0);
     rb_define_module_function(Ox, "cache8_test", cache8_test, 0);

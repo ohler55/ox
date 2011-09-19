@@ -6,7 +6,7 @@
 
 - changes for 1.3.0
  - fixed Mutex dump bug
- - added SAX parser, 20+ times faster than Nokogiri and 6+ times faster than LibXML
+ - added SAX parser, 30+ times faster than Nokogiri and 10+ times faster than LibXML
 
 - docs
  - added SAX info to docs with example

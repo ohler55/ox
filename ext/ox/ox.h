@@ -250,7 +250,6 @@ extern VALUE    ox_cdata_clas;
 extern Cache    symbol_cache;
 extern Cache    class_cache;
 extern Cache    attr_cache;
-extern Cache    str_cache;
 
 #if defined(__cplusplus)
 #if 0

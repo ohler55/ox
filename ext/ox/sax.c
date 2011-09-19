@@ -63,6 +63,7 @@ typedef struct _SaxDrive {
     int         has_start_element;
     int         has_end_element;
     int         has_error;
+    rb_encoding *encoding;
 } *SaxDrive;
 
 static void     sax_drive_init(SaxDrive dr, VALUE handler, VALUE io);
@@ -203,6 +204,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     dr->has_start_element = rb_respond_to(handler, start_element_id);
     dr->has_end_element = rb_respond_to(handler, end_element_id);
     dr->has_error = rb_respond_to(handler, error_id);
+    dr->encoding = 0;
 }
 
 static void
@@ -451,6 +453,11 @@ read_cdata(SaxDrive dr) {
         VALUE       args[1];
 
         args[0] = rb_str_new2(dr->str);
+#ifdef HAVE_RUBY_ENCODING_H
+        if (0 != dr->encoding) {
+            rb_enc_associate(args[0], dr->encoding);
+        }
+#endif
         rb_funcall2(dr->handler, cdata_id, 1, args);
     }
     dr->str = 0;
@@ -490,6 +497,11 @@ read_comment(SaxDrive dr) {
         VALUE       args[1];
 
         args[0] = rb_str_new2(dr->str);
+#ifdef HAVE_RUBY_ENCODING_H
+        if (0 != dr->encoding) {
+            rb_enc_associate(args[0], dr->encoding);
+        }
+#endif
         rb_funcall2(dr->handler, comment_id, 1, args);
     }
     dr->str = 0;
@@ -502,7 +514,6 @@ read_comment(SaxDrive dr) {
  */
 static int
 read_element(SaxDrive dr) {
-    char        start_name[1024];
     VALUE       name = Qnil;
     VALUE       attrs = Qnil;
     char        c;
@@ -511,8 +522,6 @@ read_element(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
     }
-    strcpy(start_name, dr->str);
-    //name = rb_str_new2(dr->str);
     name = str2sym(dr->str);
     if ('/' == c) {
         closed = 1;
@@ -545,8 +554,7 @@ read_element(SaxDrive dr) {
         if (0 != read_children(dr, 0)) {
             return -1;
         }
-        //if (0 != strcmp(dr->str, rb_id2name(SYM2ID(name)))) {
-        if (0 != strcmp(dr->str, start_name)) {
+        if (0 != strcmp(dr->str, rb_id2name(SYM2ID(name)))) {
             sax_drive_error(dr, "invalid format, element start and end names do not match", 1);
             return -1;
         }
@@ -578,6 +586,11 @@ read_text(SaxDrive dr) {
         VALUE       args[1];
 
         args[0] = rb_str_new2(dr->str);
+#ifdef HAVE_RUBY_ENCODING_H
+        if (0 != dr->encoding) {
+            rb_enc_associate(args[0], dr->encoding);
+        }
+#endif
         rb_funcall2(dr->handler, text_id, 1, args);
     }
     return 0;
@@ -586,6 +599,7 @@ read_text(SaxDrive dr) {
 static int
 read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2) {
     VALUE       name = Qnil;
+    int         is_encoding = 0;
     
     dr->str = dr->cur; // lock it down
     if (is_white(c)) {
@@ -600,9 +614,11 @@ read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2) {
         if ('\0' == (c = read_name_token(dr))) {
             return -1;
         }
+        if ('?' == termc && 0 == strcmp("encoding", dr->str)) {
+            is_encoding = 1;
+        }
         if (dr->has_instruct) {
             name = str2sym(dr->str);
-            //name = rb_str_new2(dr->str);
         }
         if (is_white(c)) {
             c = next_non_white(dr);
@@ -614,11 +630,23 @@ read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2) {
         if (0 != read_quoted_value(dr)) {
             return -1;
         }
+#ifdef HAVE_RUBY_ENCODING_H
+        if (is_encoding) {
+            dr->encoding = rb_enc_find(dr->str);
+        }
+#endif
         if (dr->has_instruct) {
+            VALUE       rstr = rb_str_new2(dr->str);
+            
             if (Qnil == *attrs) {
                 *attrs = rb_hash_new();
             }
-            rb_hash_aset(*attrs, name, rb_str_new2(dr->str));
+#ifdef HAVE_RUBY_ENCODING_H
+            if (0 != dr->encoding) {
+                rb_enc_associate(rstr, dr->encoding);
+            }
+#endif
+            rb_hash_aset(*attrs, name, rstr);
         }
         c = next_non_white(dr);
     }
