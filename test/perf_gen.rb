@@ -145,7 +145,7 @@ def perf_dump(d)
     obj = d[:nokogiri]
     start = Time.now
     (1..$iter).each do
-      xml = obj.to_xml(:indent => 0)
+      xml = obj.to_xml(:indent => 2)
     end
     $no_dump_time = Time.now - start
     puts "Nokogiri to_xml #{$iter} times took #{$no_dump_time} seconds."

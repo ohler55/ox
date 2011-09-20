@@ -20,10 +20,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.3.0
+### Release 1.3.2
 
- - fixed Mutex dump bug
- - added SAX parser, 30+ times faster than Nokogiri and 10+ times faster than LibXML
+ - SAX parser bug fix that missed element attributes, 7.5 times faster than Nokogiri and 2.6 times faster than LibXML
 
 ## <a name="description">Description</a>
 
@@ -57,8 +56,8 @@ files may result in slightly different times.
 As an Object serializer Ox is up to 6 times faster than the standard Ruby
 Marshal.dump() and up to 3 times faster than Marshal.load().
 
-The SAX like stream parser is over 30 times faster than Nokogiri and more than
-10 times faster than LibXML when using a trivial Ruby side set of
+The SAX like stream parser is over 7 times faster than Nokogiri and more than
+2.5 times faster than LibXML when using a trivial Ruby side set of
 callbacks. Unlike Nokogiri and LibXML, Ox can be tuned to use only the SAX
 callbacks that are of interest to the caller. (See the perf_sax.rb file for an
 example.)

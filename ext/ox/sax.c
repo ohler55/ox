@@ -80,7 +80,7 @@ static int      read_cdata(SaxDrive dr);
 static int      read_comment(SaxDrive dr);
 static int      read_element(SaxDrive dr);
 static int      read_text(SaxDrive dr);
-static int      read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2);
+static int      read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2, int gather);
 static char     read_name_token(SaxDrive dr);
 static int      read_quoted_value(SaxDrive dr);
 
@@ -383,7 +383,7 @@ read_instruction(SaxDrive dr) {
     if (dr->has_instruct) {
         target = rb_str_new2(dr->str);
     }
-    if (0 != read_attrs(dr, &attrs, c, '?', '?')) {
+    if (0 != read_attrs(dr, &attrs, c, '?', '?', dr->has_instruct)) {
         return -1;
     }
     c = next_non_white(dr);
@@ -391,7 +391,7 @@ read_instruction(SaxDrive dr) {
         sax_drive_error(dr, "invalid format, instruction not terminated", 1);
         return -1;
     }
-    if (0 != dr->has_instruct) {
+    if (dr->has_instruct) {
         VALUE       args[2];
 
         args[0] = target;
@@ -532,7 +532,7 @@ read_element(SaxDrive dr) {
     } else if ('>' == c) {
         closed = 0;
     } else {
-        if (0 != read_attrs(dr, &attrs, c, '/', '>')) {
+        if (0 != read_attrs(dr, &attrs, c, '/', '>', dr->has_start_element)) {
             return -1;
         }
         closed = ('/' == *(dr->cur - 1));
@@ -544,7 +544,7 @@ read_element(SaxDrive dr) {
             return -1;
         }
     }
-    if (0 != dr->has_start_element) {
+    if (dr->has_start_element) {
         VALUE       args[2];
 
         args[0] = name;
@@ -601,7 +601,7 @@ read_text(SaxDrive dr) {
 }
 
 static int
-read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2) {
+read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2, int gather) {
     VALUE       name = Qnil;
     int         is_encoding = 0;
     
@@ -621,7 +621,7 @@ read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2) {
         if ('?' == termc && 0 == strcmp("encoding", dr->str)) {
             is_encoding = 1;
         }
-        if (dr->has_instruct) {
+        if (gather) {
             name = str2sym(dr->str);
         }
         if (is_white(c)) {
@@ -639,7 +639,7 @@ read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2) {
             dr->encoding = rb_enc_find(dr->str);
         }
 #endif
-        if (dr->has_instruct) {
+        if (gather) {
             VALUE       rstr = rb_str_new2(dr->str);
             
             if (Qnil == *attrs) {
