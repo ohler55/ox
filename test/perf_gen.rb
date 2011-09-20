@@ -17,7 +17,14 @@ require 'ox'
 require 'sample'
 require 'test/ox/doc'
 require 'files'
-require 'nokogiri'
+begin
+  require 'nokogiri'
+rescue Exception => e
+end
+begin
+  require 'libxml'
+rescue Exception => e
+end
 
 $verbose = 0
 $ox_only = false
@@ -54,25 +61,31 @@ if files.empty?
   data = []
   obj = do_sample ? sample_doc(2) : files('..')
   xml = Ox.dump(obj, :indent => 2, :opt_format => true)
-  gen = Ox.parse(xml)
-  no = Nokogiri::XML::Document.parse(xml)
   File.open('sample.xml', 'w') { |f| f.write(xml) }
-  data << { :file => 'sample.xml', :xml => xml, :ox => gen, :nokogiri => no }
+  gen = Ox.parse(xml)
+  h = { :file => 'sample.xml', :xml => xml, :ox => gen }
+  h[:nokogiri] = Nokogiri::XML::Document.parse(xml) unless defined?(::Nokogiri).nil?
+  h[:libxml] = LibXML::XML::Document.string(xml) unless defined?(::LibXML).nil?
+  data << h
 else
   puts "loading and parsing #{files}\n\n"
   data = files.map do |f|
     xml = File.read(f)
     obj = Ox.parse(xml);
     gen = Ox.parse(xml)
-    no = Nokogiri::XML::Document.parse(xml)
-    { :file => f, :xml => xml, :ox => gen, :nokogiri => no }
+    h = { :file => f, :xml => xml, :ox => gen }
+    h[:nokogiri] = Nokogiri::XML::Document.parse(xml) unless defined?(::Nokogiri).nil?
+    h[:libxml] = LibXML::XML::Document.string(xml) unless defined?(::LibXML).nil?
+    h
   end
 end
 
 $ox_load_time = 0
 $no_load_time = 0
+$lx_load_time = 0
 $ox_dump_time = 0
 $no_dump_time = 0
+$lx_dump_time = 0
 
 def perf_load(d)
   xml = d[:xml]
@@ -91,14 +104,28 @@ def perf_load(d)
 
   return if $ox_only
   
-  start = Time.now
-  (1..$iter).each do
-    obj = Nokogiri::XML::Document.parse(xml)
-    #obj = Nokogiri::XML::Document.parse(xml, nil, nil, Nokogiri::XML::ParseOptions::DEFAULT_XML | Nokogiri::XML::ParseOptions::NOBLANKS)
+  unless defined?(::Nokogiri).nil?
+    start = Time.now
+    (1..$iter).each do
+      obj = Nokogiri::XML::Document.parse(xml)
+      #obj = Nokogiri::XML::Document.parse(xml, nil, nil, Nokogiri::XML::ParseOptions::DEFAULT_XML | Nokogiri::XML::ParseOptions::NOBLANKS)
+    end
+    $no_load_time = Time.now - start
+    puts "Nokogiri parse #{$iter} times took #{$no_load_time} seconds."
   end
-  $no_load_time = Time.now - start
-  puts "Nokogiri parse #{$iter} times took #{$no_load_time} seconds."
-  puts ">>> Ox is %0.1f faster than Nokogiri parsing.\n\n" % [$no_load_time/$ox_load_time]
+
+  unless defined?(::LibXML).nil?
+    start = Time.now
+    (1..$iter).each do
+      obj = LibXML::XML::Document.string(xml)
+    end
+    $lx_load_time = Time.now - start
+    puts "LibXML parse #{$iter} times took #{$lx_load_time} seconds."
+  end
+  puts "\n"
+  puts ">>> Ox is %0.1f faster than Nokogiri parsing." % [$no_load_time/$ox_load_time] unless defined?(::Nokogiri).nil?
+  puts ">>> Ox is %0.1f faster than LibXML parsing." % [$lx_load_time/$ox_load_time] unless defined?(::LibXML).nil?
+  puts "\n"
 end
 
 def perf_dump(d)
@@ -114,14 +141,29 @@ def perf_dump(d)
 
   return if $ox_only
 
-  obj = d[:nokogiri]
-  start = Time.now
-  (1..$iter).each do
-    xml = obj.to_xml(:indent => 0)
+  unless defined?(::Nokogiri).nil?
+    obj = d[:nokogiri]
+    start = Time.now
+    (1..$iter).each do
+      xml = obj.to_xml(:indent => 0)
+    end
+    $no_dump_time = Time.now - start
+    puts "Nokogiri to_xml #{$iter} times took #{$no_dump_time} seconds."
   end
-  $no_dump_time = Time.now - start
-  puts "Nokogiri to_xml #{$iter} times took #{$no_dump_time} seconds."
-  puts ">>> Ox is %0.1f faster than Nokkgiri to_xml.\n\n" % [$no_dump_time/$ox_dump_time]
+
+  unless defined?(::LibXML).nil?
+    obj = d[:libxml]
+    start = Time.now
+    (1..$iter).each do
+      xml = obj.to_s()
+    end
+    $lx_dump_time = Time.now - start
+    puts "LibML to_s #{$iter} times took #{$lx_dump_time} seconds."
+  end
+  puts "\n"
+  puts ">>> Ox is %0.1f faster than Nokkgiri to_xml." % [$no_dump_time/$ox_dump_time] unless defined?(::Nokogiri).nil?
+  puts ">>> Ox is %0.1f faster than LibXML to_xml." % [$lx_dump_time/$ox_dump_time] unless defined?(::LibXML).nil?
+  puts "\n"
 end
 
 def perf_read(d)
@@ -137,7 +179,9 @@ def perf_read(d)
   ox_read_time = Time.now - start
   puts "Loading and parsing #{$iter} times with ox took #{ox_read_time} seconds."
 
-  if !$ox_only
+  return if $ox_only
+
+  unless defined?(::Nokogiri).nil?
     start = Time.now
     (1..$iter).each do
       xml = File.read(filename)
@@ -146,7 +190,6 @@ def perf_read(d)
     no_read_time = Time.now - start
     puts "Reading and parsing #{$iter} times took #{no_read_time} seconds."
     puts ">>> Ox is %0.1f faster than Nokogiri loading and parsing.\n\n" % [no_read_time/ox_read_time]
-
   end
 end
 
@@ -164,7 +207,9 @@ def perf_write(d)
   ox_write_time = Time.now - start
   puts "Ox dumping #{$iter} times with ox took #{ox_write_time} seconds."
 
-  if !$ox_only
+  return if $ox_only
+
+  unless defined?(::Nokogiri).nil?
     obj = d[:nokogiri]
     start = Time.now
     (1..$iter).each do
@@ -174,7 +219,6 @@ def perf_write(d)
     no_write_time = Time.now - start
     puts "Nokogiri dumping and writing #{$iter} times took #{no_write_time} seconds."
     puts ">>> Ox is %0.1f faster than Nokogiri writing.\n\n" % [no_write_time/ox_write_time]
-
   end
 end
 

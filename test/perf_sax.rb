@@ -77,13 +77,18 @@ def create_file(filename, size)
 end
 
 class OxSax < ::Ox::Sax
-  def start_element(name, attrs); end
+  def start_element(name, attrs); puts "#{name} #{attrs}"; end
   def error(message, line, column); puts message; end
+end
+
+class OxTypicalSax < OxSax
+  def end_element(name);  end
+  def text(value); end
 end
 
 class OxAllSax < OxSax
   def end_element(name);  end
-  def instruct(target, attrs); end
+  def instruct(target, attrs); puts "#{target} #{attrs}"; end
   def doctype(value); end
   def comment(value); end
   def cdata(value); end
