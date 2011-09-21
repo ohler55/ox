@@ -26,12 +26,13 @@ module Ox
   # be made public in the subclasses. If the methods remain private they will
   # not be called during parsing.
   #
-  #    def instruct(target, attrs); end
+  #    def instruct(target); end
+  #    def attr(name, value); end
   #    def doctype(value); end
   #    def comment(value); end
   #    def cdata(value); end
   #    def text(value); end
-  #    def start_element(name, attrs); end
+  #    def start_element(name); end
   #    def end_element(name); end
   #
   class Sax
@@ -44,7 +45,10 @@ module Ox
     # they will not be called during parsing.
     private
 
-    def instruct(target, attrs)
+    def instruct(target)
+    end
+
+    def attr(name, value)
     end
 
     def doctype(value)
@@ -59,7 +63,7 @@ module Ox
     def text(value)
     end
 
-    def start_element(name, attrs)
+    def start_element(name)
     end
 
     def end_element(name)

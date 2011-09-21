@@ -206,6 +206,7 @@ extern void     write_obj_to_file(VALUE obj, const char *path, Options copts);
 extern VALUE    Ox;
 
 extern ID       at_id;
+extern ID       attr_id;
 extern ID       attributes_id;
 extern ID       beg_id;
 extern ID       cdata_id;

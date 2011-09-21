@@ -46,6 +46,7 @@ void Init_ox();
 VALUE    Ox = Qnil;
 
 ID      at_id;
+ID      attr_id;
 ID      attributes_id;
 ID      beg_id;
 ID      cdata_id;
@@ -616,6 +617,7 @@ void Init_ox() {
 
     rb_require("time");
     at_id = rb_intern("at");
+    attr_id = rb_intern("attr");
     attributes_id = rb_intern("@attributes");
     beg_id = rb_intern("@beg");
     cdata_id = rb_intern("cdata");

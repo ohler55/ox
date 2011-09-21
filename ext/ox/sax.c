@@ -56,6 +56,7 @@ typedef struct _SaxDrive {
         VALUE   io;
     };
     int         has_instruct;
+    int         has_attr;
     int         has_doctype;
     int         has_comment;
     int         has_cdata;
@@ -80,7 +81,7 @@ static int      read_cdata(SaxDrive dr);
 static int      read_comment(SaxDrive dr);
 static int      read_element(SaxDrive dr);
 static int      read_text(SaxDrive dr);
-static int      read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2, int gather);
+static int      read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml);
 static char     read_name_token(SaxDrive dr);
 static int      read_quoted_value(SaxDrive dr);
 
@@ -162,6 +163,7 @@ ox_sax_parse(VALUE handler, VALUE io) {
 #if 0
     printf("*** sax_parse with these flags\n");
     printf("    has_instruct = %s\n", dr.has_instruct ? "true" : "false");
+    printf("    has_attr = %s\n", dr.has_attr ? "true" : "false");
     printf("    has_doctype = %s\n", dr.has_doctype ? "true" : "false");
     printf("    has_comment = %s\n", dr.has_comment ? "true" : "false");
     printf("    has_cdata = %s\n", dr.has_cdata ? "true" : "false");
@@ -199,6 +201,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     dr->col = 0;
     dr->handler = handler;
     dr->has_instruct = rb_respond_to(handler, instruct_id);
+    dr->has_attr = rb_respond_to(handler, attr_id);
     dr->has_doctype = rb_respond_to(handler, doctype_id);
     dr->has_comment = rb_respond_to(handler, comment_id);
     dr->has_cdata = rb_respond_to(handler, cdata_id);
@@ -373,30 +376,24 @@ read_children(SaxDrive dr, int first) {
  */
 static int
 read_instruction(SaxDrive dr) {
-    VALUE       target = Qnil;
-    VALUE       attrs = Qnil;
     char        c;
 
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
     }
     if (dr->has_instruct) {
-        target = rb_str_new2(dr->str);
+        VALUE       args[1];
+
+        args[0] = rb_str_new2(dr->str);
+        rb_funcall2(dr->handler, instruct_id, 1, args);
     }
-    if (0 != read_attrs(dr, &attrs, c, '?', '?', dr->has_instruct)) {
+    if (0 != read_attrs(dr, c, '?', '?', (0 == strcmp("xml", dr->str)))) {
         return -1;
     }
     c = next_non_white(dr);
     if ('>' != c) {
         sax_drive_error(dr, "invalid format, instruction not terminated", 1);
         return -1;
-    }
-    if (dr->has_instruct) {
-        VALUE       args[2];
-
-        args[0] = target;
-        args[1] = attrs;
-        rb_funcall2(dr->handler, instruct_id, 2, args);
     }
     dr->str = 0;
 
@@ -519,7 +516,6 @@ read_comment(SaxDrive dr) {
 static int
 read_element(SaxDrive dr) {
     VALUE       name = Qnil;
-    VALUE       attrs = Qnil;
     char        c;
     int         closed;
 
@@ -527,12 +523,18 @@ read_element(SaxDrive dr) {
         return -1;
     }
     name = str2sym(dr->str);
+    if (dr->has_start_element) {
+        VALUE       args[1];
+
+        args[0] = name;
+        rb_funcall2(dr->handler, start_element_id, 1, args);
+    }
     if ('/' == c) {
         closed = 1;
     } else if ('>' == c) {
         closed = 0;
     } else {
-        if (0 != read_attrs(dr, &attrs, c, '/', '>', dr->has_start_element)) {
+        if (0 != read_attrs(dr, c, '/', '>', 0)) {
             return -1;
         }
         closed = ('/' == *(dr->cur - 1));
@@ -544,17 +546,14 @@ read_element(SaxDrive dr) {
             return -1;
         }
     }
-    if (dr->has_start_element) {
-        VALUE       args[2];
+    if (closed) {
+        if (dr->has_end_element) {
+            VALUE       args[1];
 
-        args[0] = name;
-        args[1] = attrs;
-        rb_funcall2(dr->handler, start_element_id, 2, args);
-        if (closed && dr->has_end_element) {
+            args[0] = name;
             rb_funcall2(dr->handler, end_element_id, 1, args);
         }
-    }
-    if (!closed) {
+    } else {
         if (0 != read_children(dr, 0)) {
             return -1;
         }
@@ -601,7 +600,7 @@ read_text(SaxDrive dr) {
 }
 
 static int
-read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2, int gather) {
+read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
     VALUE       name = Qnil;
     int         is_encoding = 0;
     
@@ -618,10 +617,10 @@ read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2, int gather
         if ('\0' == (c = read_name_token(dr))) {
             return -1;
         }
-        if ('?' == termc && 0 == strcmp("encoding", dr->str)) {
+        if (is_xml && 0 == strcmp("encoding", dr->str)) {
             is_encoding = 1;
         }
-        if (gather) {
+        if (dr->has_attr) {
             name = str2sym(dr->str);
         }
         if (is_white(c)) {
@@ -639,18 +638,17 @@ read_attrs(SaxDrive dr, VALUE *attrs, char c, char termc, char term2, int gather
             dr->encoding = rb_enc_find(dr->str);
         }
 #endif
-        if (gather) {
-            VALUE       rstr = rb_str_new2(dr->str);
-            
-            if (Qnil == *attrs) {
-                *attrs = rb_hash_new();
-            }
+        if (dr->has_attr) {
+            VALUE       args[2];
+
+            args[0] = name;
+            args[1] = rb_str_new2(dr->str);
 #ifdef HAVE_RUBY_ENCODING_H
             if (0 != dr->encoding) {
-                rb_enc_associate(rstr, dr->encoding);
+                rb_enc_associate(args[1], dr->encoding);
             }
 #endif
-            rb_hash_aset(*attrs, name, rstr);
+            rb_funcall2(dr->handler, attr_id, 2, args);
         }
         c = next_non_white(dr);
     }

@@ -27,8 +27,12 @@ class StartSax < ::Ox::Sax
     @calls = []
   end
 
-  def start_element(name, attrs)
-    @calls << [:start_element, name, attrs]
+  def start_element(name)
+    @calls << [:start_element, name]
+  end
+
+  def attr(name, value)
+    @calls << [:attr, name, value]
   end
 end
 
@@ -37,8 +41,8 @@ class AllSax < StartSax
     super
   end
 
-  def instruct(target, attrs)
-    @calls << [:instruct, target, attrs]
+  def instruct(target)
+    @calls << [:instruct, target]
   end
 
   def doctype(value)
@@ -75,7 +79,7 @@ class Func < ::Test::Unit::TestCase
     w.close
     Ox.sax_parse(handler, input)
     assert_equal(handler.calls,
-                 [[:start_element, :top, nil],
+                 [[:start_element, :top],
                   [:end_element, :top]])
   end
 
@@ -84,7 +88,7 @@ class Func < ::Test::Unit::TestCase
     input = IO.open(IO.sysopen('basic.xml'))
     Ox.sax_parse(handler, input)
     assert_equal(handler.calls,
-                 [[:start_element, :top, nil],
+                 [[:start_element, :top],
                   [:end_element, :top]])
   end
 
@@ -96,7 +100,7 @@ class Func < ::Test::Unit::TestCase
   end
   
   def test_sax_instruct_simple
-    parse_compare(%{<?xml?>}, [[:instruct, 'xml', nil]])
+    parse_compare(%{<?xml?>}, [[:instruct, 'xml']])
   end
 
   def test_sax_instruct_blank
@@ -105,34 +109,40 @@ class Func < ::Test::Unit::TestCase
 
   def test_sax_instruct_attrs
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>},
-                  [[:instruct, 'xml', {:version => '1.0', :encoding => 'UTF-8'}]])
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:attr, :encoding, "UTF-8"]])
   end
 
   def test_sax_instruct_loose
     parse_compare(%{<? xml
 version = "1.0"
 encoding = "UTF-8" ?>},
-                  [[:instruct, 'xml', {:version => '1.0', :encoding => 'UTF-8'}]])
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:attr, :encoding, "UTF-8"]])
   end
 
   def test_sax_element_simple
     parse_compare(%{<top/>},
-                  [[:start_element, :top, nil],
+                  [[:start_element, :top],
                    [:end_element, :top]])
   end
 
   def test_sax_element_attrs
     parse_compare(%{<top x="57" y="42"/>}, 
-                  [[:start_element, :top, {:x => '57', :y => '42'}],
+                  [[:start_element, :top],
+                   [:attr, :x, "57"],
+                   [:attr, :y, "42"],
                    [:end_element, :top]])
   end
 
   def test_sax_two_top
     parse_compare(%{<top/><top/>},
-                  [[:start_element, :top, nil],
+                  [[:start_element, :top],
                    [:end_element, :top],
                    [:error, "invalid format, multiple top level elements", 1, 9],
-                   [:start_element, :top, nil],
+                   [:start_element, :top],
                    [:end_element, :top]])
 
 
@@ -146,10 +156,11 @@ encoding = "UTF-8" ?>},
   </child>
 </top>
 },
-                  [[:instruct, 'xml', {:version => '1.0'}],
-                   [:start_element, :top, nil],
-                   [:start_element, :child, nil],
-                   [:start_element, :grandchild, nil],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:start_element, :top],
+                   [:start_element, :child],
+                   [:start_element, :grandchild],
                    [:end_element, :grandchild],
                    [:end_element, :child],
                    [:end_element, :top],
@@ -158,10 +169,11 @@ encoding = "UTF-8" ?>},
 
   def test_sax_nested1_tight
     parse_compare(%{<?xml version="1.0"?><top><child><grandchild/></child></top>},
-                  [[:instruct, 'xml', {:version => '1.0'}],
-                   [:start_element, :top, nil],
-                   [:start_element, :child, nil],
-                   [:start_element, :grandchild, nil],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:start_element, :top],
+                   [:start_element, :child],
+                   [:start_element, :grandchild],
                    [:end_element, :grandchild],
                    [:end_element, :child],
                    [:end_element, :top],
@@ -175,10 +187,11 @@ encoding = "UTF-8" ?>},
     <grandchild/>
   </parent>
 </top>},
-                  [[:instruct, 'xml', {:version => '1.0'}],
-                   [:start_element, :top, nil],
-                   [:start_element, :child, nil],
-                   [:start_element, :grandchild, nil],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:start_element, :top],
+                   [:start_element, :child],
+                   [:start_element, :grandchild],
                    [:end_element, :grandchild],
                    [:error, "invalid format, element start and end names do not match", 5, 12]
                   ])
@@ -196,16 +209,17 @@ encoding = "UTF-8" ?>},
   </child>
 </top>
 },
-                  [[:instruct, 'xml', {:version => '1.0'}],
-                   [:start_element, :top, nil],
-                   [:start_element, :child, nil],
-                   [:start_element, :grandchild, nil],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:start_element, :top],
+                   [:start_element, :child],
+                   [:start_element, :grandchild],
                    [:end_element, :grandchild],
                    [:end_element, :child],
-                   [:start_element, :child, nil],
-                   [:start_element, :grandchild, nil],
+                   [:start_element, :child],
+                   [:start_element, :grandchild],
                    [:end_element, :grandchild],
-                   [:start_element, :grandchild, nil],
+                   [:start_element, :grandchild],
                    [:end_element, :grandchild],
                    [:end_element, :child],
                    [:end_element, :top],
@@ -216,8 +230,8 @@ encoding = "UTF-8" ?>},
 <top>
   <child/>
 },
-                  [[:start_element, :top, nil],
-                   [:start_element, :child, nil],
+                  [[:start_element, :top],
+                   [:start_element, :child],
                    [:end_element, :child],
                    [:error, "invalid format, element not terminated", 4, 1]
                   ])
@@ -225,7 +239,7 @@ encoding = "UTF-8" ?>},
 
   def test_sax_text
     parse_compare(%{<top>This is some text.</top>},
-                  [[:start_element, :top, nil],
+                  [[:start_element, :top],
                    [:text, "This is some text."],
                    [:end_element, :top]
                   ])
@@ -233,7 +247,7 @@ encoding = "UTF-8" ?>},
 
   def test_sax_text_no_term
     parse_compare(%{<top>This is some text.},
-                  [[:start_element, :top, nil],
+                  [[:start_element, :top],
                    [:error, "invalid format, text terminated unexpectedly", 1, 24],
                   ])
   end
@@ -244,9 +258,10 @@ encoding = "UTF-8" ?>},
 <!DOCTYPE top PUBLIC "top.dtd">
 <top/>
 },
-                  [[:instruct, 'xml', {:version => '1.0'}],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
                    [:doctype, ' top PUBLIC "top.dtd"'],
-                   [:start_element, :top, nil],
+                   [:start_element, :top],
                    [:end_element, :top]])
   end
 
@@ -255,8 +270,9 @@ encoding = "UTF-8" ?>},
 <top/>
 <!DOCTYPE top PUBLIC "top.dtd">
 },
-                  [[:instruct, 'xml', {:version => '1.0'}],
-                   [:start_element, :top, nil],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:start_element, :top],
                    [:end_element, :top],
                    [:error, "invalid format, DOCTYPE can not come after an element", 3, 11],
                    [:doctype, ' top PUBLIC "top.dtd"']])
@@ -270,8 +286,9 @@ encoding = "UTF-8" ?>},
 },
                   [[:doctype, " top PUBLIC \"top.dtd\""],
                    [:error, "invalid format, instruction must come before elements", 3, 3],
-                   [:instruct, "xml", {:version => "1.0"}],
-                   [:start_element, :top, nil],
+                   [:instruct, "xml"],
+                   [:attr, :version, "1.0"],
+                   [:start_element, :top],
                    [:end_element, :top]])
   end
   
@@ -280,9 +297,10 @@ encoding = "UTF-8" ?>},
 <!--First comment.-->
 <top>Before<!--Nested comment.-->After</top>
 },
-                  [[:instruct, 'xml', {:version => '1.0'}],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
                    [:comment, 'First comment.'],
-                   [:start_element, :top, nil],
+                   [:start_element, :top],
                    [:text, 'Before'],
                    [:comment, 'Nested comment.'],
                    [:text, 'After'],
@@ -294,10 +312,11 @@ encoding = "UTF-8" ?>},
 <!--First comment.--
 <top/>
 },
-                  [[:instruct, 'xml', {:version => '1.0'}],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
                    [:error, "invalid format, comment terminated unexpectedly", 3, 1], # continue on
                    [:comment, 'First comment.'],
-                   [:start_element, :top, nil],
+                   [:start_element, :top],
                    [:end_element, :top]])
   end
 
@@ -307,8 +326,9 @@ encoding = "UTF-8" ?>},
   <![CDATA[This is CDATA.]]>
 </top>
 },
-                  [[:instruct, 'xml', {:version => '1.0'}],
-                   [:start_element, :top, nil],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:start_element, :top],
                    [:cdata, 'This is CDATA.'],
                    [:end_element, :top]])
   end
@@ -319,8 +339,9 @@ encoding = "UTF-8" ?>},
   <![CDATA[This is CDATA.]]
 </top>
 },
-                  [[:instruct, 'xml', {:version => '1.0'}],
-                   [:start_element, :top, nil],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:start_element, :top],
                    [:error, "invalid format, cdata terminated unexpectedly", 5, 1]])
   end
   
@@ -340,27 +361,45 @@ encoding = "UTF-8" ?>},
   </row>
 </table>
 },
-                  [[:instruct, 'xml', {:version => '1.0'}],
-                   [:instruct, "ox", {:version=>"1.0", :mode=>"object", :circular=>"no", :xsd_date=>"no"}],
+                  [[:instruct, "xml"],
+                   [:attr, :version, "1.0"],
+                   [:instruct, "ox"],
+                   [:attr, :version, "1.0"],
+                   [:attr, :mode, "object"],
+                   [:attr, :circular, "no"],
+                   [:attr, :xsd_date, "no"],
                    [:doctype, " table PUBLIC \"-//ox//DTD TABLE 1.0//EN\" \"http://www.ohler.com/DTDs/TestTable-1.0.dtd\""],
-                   [:start_element, :table, nil],
-                   [:start_element, :row, {:id=>"00004"}],
-                   [:start_element, :cell, {:id=>"A", :type=>"Fixnum"}],
+                   [:start_element, :table],
+                   [:start_element, :row],
+                   [:attr, :id, "00004"],
+                   [:start_element, :cell],
+                   [:attr, :id, "A"],
+                   [:attr, :type, "Fixnum"],
                    [:text, "1234"],
                    [:end_element, :cell],
-                   [:start_element, :cell, {:id=>"B", :type=>"String"}],
+                   [:start_element, :cell],
+                   [:attr, :id, "B"],
+                   [:attr, :type, "String"],
                    [:text, "A string."],
                    [:end_element, :cell],
-                   [:start_element, :cell, {:id=>"C", :type=>"String"}],
+                   [:start_element, :cell],
+                   [:attr, :id, "C"],
+                   [:attr, :type, "String"],
                    [:text, "This is a longer string that stretches over a larger number of characters."],
                    [:end_element, :cell],
-                   [:start_element, :cell, {:id=>"D", :type=>"Float"}],
+                   [:start_element, :cell],
+                   [:attr, :id, "D"],
+                   [:attr, :type, "Float"],
                    [:text, "-12.345"],
                    [:end_element, :cell],
-                   [:start_element, :cell, {:id=>"E", :type=>"Date"}],
+                   [:start_element, :cell],
+                   [:attr, :id, "E"],
+                   [:attr, :type, "Date"],
                    [:text, "2011-09-18 23:07:26 +0900"],
                    [:end_element, :cell],
-                   [:start_element, :cell, {:id=>"F", :type=>"Image"}],
+                   [:start_element, :cell],
+                   [:attr, :id, "F"],
+                   [:attr, :type, "Image"],
                    [:cdata, "xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00"],
                    [:end_element, :cell],
                    [:end_element, :row],
@@ -371,8 +410,10 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
 <top>ピーター</top>
 },
-                  [[:instruct, 'xml', {:version => '1.0', :encoding => 'UTF-8'}],
-                   [:start_element, :top, nil],
+                  [[:instruct, "xml"],
+                   [:attr, :version, "1.0"],
+                   [:attr, :encoding, "UTF-8"],
+                   [:start_element, :top],
                    [:text, 'ピーター'],
                    [:end_element, :top]])
   end

@@ -28,7 +28,6 @@ end
 $verbose = 0
 $ox_only = false
 $all_cbs = false
-$type_cbs = false
 $filename = nil # nil indicates new file names perf.xml will be created and used
 $filesize = 1000 # KBytes
 $iter = 100
@@ -37,7 +36,6 @@ opts = OptionParser.new
 opts.on("-v", "increase verbosity")                            { $verbose += 1 }
 opts.on("-x", "ox only")                                       { $ox_only = true }
 opts.on("-a", "all callbacks")                                 { $all_cbs = true }
-opts.on("-t", "typical callbacks")                             { $typ_cbs = true }
 opts.on("-f", "--file [String]", String, "filename")           { |f| $filename = f }
 opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |i| $iter = i }
 opts.on("-s", "--size [Int]", Integer, "file size in KBytes")  { |s| $filesize = s }
@@ -79,31 +77,27 @@ def create_file(filename, size)
 end
 
 class OxSax < ::Ox::Sax
-  def start_element(name, attrs); end
   def error(message, line, column); puts message; end
 end
 
-class OxTypSax < OxSax
+class OxAllSax < OxSax
+  def start_element(name); end
+  def attr(name, value); end
   def end_element(name); end
   def text(value); end
-end
-
-class OxAllSax < OxSax
-  def end_element(name); end
-  def instruct(target, attrs); end
+  def instruct(target); end
   def doctype(value); end
   def comment(value); end
   def cdata(value); end
-  def text(value); end
 end
 
 unless defined?(::Nokogiri).nil?
   class NoSax < Nokogiri::XML::SAX::Document
-    def start_element(name, attrs = []); end
     def error(message); puts message; end
     def warning(message); puts message; end
   end
   class NoAllSax < NoSax
+    def start_element(name, attrs = []); end
     def characters(text); end
     def cdata_block(string); end
     def comment(string); end
@@ -117,9 +111,9 @@ end
 unless defined?(::LibXML).nil?
   class LxSax
     include LibXML::XML::SaxParser::Callbacks
-    def on_start_element(element, attributes); end
   end
   class LxAllSax < LxSax
+    def on_start_element(element, attributes); end
     def on_cdata_block(cdata); end
     def on_characters(chars); end
     def on_comment(msg); end
@@ -141,7 +135,7 @@ end
 
 def perf_stringio()
   start = Time.now
-  handler = $all_cbs ? OxAllSax.new() : ($typ_cbs ? OxTypSax.new() : OxSax.new())
+  handler = $all_cbs ? OxAllSax.new() : OxSax.new()
   $iter.times do
     input = StringIO.new($xml_str)
     Ox.sax_parse(handler, input)
@@ -188,7 +182,7 @@ def perf_fileio()
   puts "A #{$filesize} KByte XML file was parsed #{$iter} times for this test."
   puts "\n"
   start = Time.now
-  handler = $all_cbs ? OxAllSax.new() : ($typ_cbs ? OxTypSax.new() : OxSax.new())
+  handler = $all_cbs ? OxAllSax.new() : OxSax.new()
   $iter.times do
     input = IO.open(IO.sysopen($filename))
     Ox.sax_parse(handler, input)
