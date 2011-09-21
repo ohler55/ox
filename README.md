@@ -18,6 +18,12 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 [![Build Status](http://travis-ci.org/ohler55/ox.png)](http://travis-ci.org/ohler55/ox)
 
+## <a name="links">Links of Interest</a>
+
+[Ruby XML Gem Comparison](http://www.ohler.com/software/thoughts/Blog/Entries/2011/9/21_XML_with_Ruby.html) for a perfomance comparison between Ox, Nokogiri, and LibXML.
+
+[Fast Ruby XML Serialization](http://www.ohler.com/software/thoughts/Blog/Entries/2011/9/20_Ruby_Object_XML_Serialization.html) to see how Ox can be used as a faster replacement for Marshal.
+
 ## <a name="release">Release Notes</a>
 
 ### Release 1.3.2
