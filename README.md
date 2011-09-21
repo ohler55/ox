@@ -125,27 +125,27 @@ necessary.
 
 The type indicator map is:
 
-- +a+ => Array
-- +b+ => Base64
-- +c+ => Class
-- +f+ => Float
-- +g+ => Regexp
-- +h+ => Hash
-- +i+ => Fixnum
-- +j+ => Bignum
-- +l+ => Rational
-- +m+ => Symbol
-- +n+ => FalseClass
-- +o+ => Object
-- +p+ => Ref
-- +r+ => Range
-- +s+ => String
-- +t+ => Time
-- +u+ => Struct
-- +v+ => Complex
-- +x+ => Raw
-- +y+ => TrueClass
-- +z+ => NilClass
+- **a** => Array
+- **b** => Base64
+- **c** => Class
+- **f** => Float
+- **g** => Regexp
+- **h** => Hash
+- **i** => Fixnum
+- **j** => Bignum
+- **l** => Rational
+- **m** => Symbol
+- **n** => FalseClass
+- **o** => Object
+- **p** => Ref
+- **r** => Range
+- **s** => String
+- **t** => Time
+- **u** => Struct
+- **v** => Complex
+- **x** => Raw
+- **y** => TrueClass
+- **z** => NilClass
 
 If the type is an Object, type 'o' then an attribute named 'c' should be set
 with the full Class name including the Module names. If the XML element
