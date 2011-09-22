@@ -94,26 +94,66 @@ Ox is compatible with Ruby 1.8.7, 1.9.2, JRuby, and RBX.
 ### Generic XML Writing and Parsing:
 
     require 'ox'
-  
+
     doc = Ox::Document.new(:version => '1.0')
-  
+    
     top = Ox::Element.new('top')
     top[:name] = 'sample'
     doc << top
-  
+    
     mid = Ox::Element.new('middle')
     mid[:name] = 'second'
     top << mid
-  
+    
     bot = Ox::Element.new('bottom')
     bot[:name] = 'third'
     mid << bot
-  
+    
     xml = Ox.dump(doc)
-    puts xml
+    
+    # xml =
+    # <top name="sample">
+    #   <middle name="second">
+    #     <bottom name="third"/>
+    #   </middle>
+    # </top>
+    
     doc2 = Ox.parse(xml)
     puts "Same? #{doc == doc2}"
+    # true
 
+### SAX XML Parsing:
+
+    require 'stringio'
+    require 'ox'
+    
+    class Sample < ::Ox::Sax
+      def start_element(name); puts "start: #{name}";        end
+      def end_element(name);   puts "end: #{name}";          end
+      def attr(name, value);   puts "  #{name} => #{value}"; end
+      def text(value);         puts "text #{value}";         end
+    end
+    
+    io = StringIO.new(%{
+    <top name="sample">
+      <middle name="second">
+        <bottom name="third"/>
+      </middle>
+    </top>
+    })
+    
+    handler = Sample.new()
+    Ox.sax_parse(handler, io)
+    # outputs
+    # start: top
+    #   name => sample
+    # start: middle
+    #   name => second
+    # start: bottom
+    #   name => third
+    # end: bottom
+    # end: middle
+    # end: top
 
 ### Object XML format
 

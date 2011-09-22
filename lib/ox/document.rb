@@ -16,5 +16,15 @@ module Ox
       @attributes[:standalone] = prolog[:standalone] unless prolog[:standalone].nil?
     end
     
+    # Returns the first Element in the document.
+    def root()
+      unless @nodes.nil?
+        @nodes.each do |n|
+          return n if n.is_a?(::Ox::Element)
+        end
+      end
+      nil
+    end
+
   end # Document
 end # Ox
