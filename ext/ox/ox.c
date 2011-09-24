@@ -94,6 +94,7 @@ VALUE   trace_sym;
 VALUE   strict_sym;
 VALUE   with_dtd_sym;
 VALUE   with_instruct_sym;
+VALUE   convert_special_sym;
 VALUE   with_xml_sym;
 VALUE   empty_string;
 VALUE   zero_fixnum;
@@ -111,7 +112,7 @@ Cache   symbol_cache = 0;
 Cache   class_cache = 0;
 Cache   attr_cache = 0;
 
-static struct _Options  default_options = {
+struct _Options  default_options = {
     { '\0' },           // encoding
     2,                  // indent
     0,                  // trace
@@ -452,9 +453,23 @@ load_file(int argc, VALUE *argv, VALUE self) {
  * @param [IO|String] io IO Object to read from
  */
 static VALUE
-sax_parse(VALUE self, VALUE handler, VALUE io) {
-    ox_sax_parse(handler, io);
+sax_parse(int argc, VALUE *argv, VALUE self) {
+    int convert = 0;
 
+    if (argc < 2) {
+        rb_raise(rb_eArgError, "Wrong number of arguments to sax_parse.\n");
+    }
+    if (3 <= argc && rb_cHash == rb_obj_class(argv[2])) {
+        VALUE   h = argv[2];
+        VALUE   v;
+        
+        if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
+            convert = (Qtrue == v);
+        }
+    }
+    ox_sax_parse(argv[0], argv[1], convert);
+    //sax_parse(VALUE self, VALUE handler, VALUE io) {
+    //ox_sax_parse(handler, io, convert);
     return Qnil;
 }
 
@@ -607,7 +622,7 @@ void Init_ox() {
     rb_define_module_function(Ox, "parse_obj", to_obj, 1);
     rb_define_module_function(Ox, "parse", to_gen, 1);
     rb_define_module_function(Ox, "load", load_str, -1);
-    rb_define_module_function(Ox, "sax_parse", sax_parse, 2);
+    rb_define_module_function(Ox, "sax_parse", sax_parse, -1);
 
     rb_define_module_function(Ox, "to_xml", dump, -1);
     rb_define_module_function(Ox, "dump", dump, -1);
@@ -668,6 +683,7 @@ void Init_ox() {
     with_dtd_sym = ID2SYM(rb_intern("with_dtd"));               rb_ary_push(keep, with_dtd_sym);
     with_instruct_sym = ID2SYM(rb_intern("with_instructions")); rb_ary_push(keep, with_instruct_sym);
     with_xml_sym = ID2SYM(rb_intern("with_xml"));               rb_ary_push(keep, with_xml_sym);
+    convert_special_sym = ID2SYM(rb_intern("convert_special")); rb_ary_push(keep, convert_special_sym);
 
     empty_string = rb_str_new2("");                             rb_ary_push(keep, empty_string);
     zero_fixnum = INT2NUM(0);                                   rb_ary_push(keep, zero_fixnum);

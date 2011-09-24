@@ -4,17 +4,22 @@
 ^c^s show subtree
 
 
-- changes for 1.3.0
- - fixed Mutex dump bug
- - added SAX parser, 30+ times faster than Nokogiri and 10+ times faster than LibXML
+- changes for 1.3.3
+ - added an option to the SAX parser to convert special characters
+ - the default options encoding is now used as the default for SAX parsing
 
-- docs
- - added SAX info to docs with example
 
-This release includes a new feature, a SAX like parser for large files and stream IO parsing.
-
-- sax
- - encoding
+- thoughs
+ - compare parsing techniques
+  - pick plist format or something like it
+   - sax
+    - direct to hash
+   - in memory
+    - extra hop, slower
+   - object mode (only with Ox)
+    - if control over xml format
+    - if to and from object anyway then use object format
+ 
 
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
@@ -22,4 +27,11 @@ xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
 #rsync -vru --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/code/ox/ ~/git/ox
 rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/code/ox/ ~/git/ox
 rsync -vrI --exclude ".*" --exclude "*~" --exclude "#*" --exclude misc --exclude "*.o" ~/git/ox/ ~/code/ox
+
+
+- release 1.3.3
+- cleanup and pull request multixml
+ - include timing test
+ - email, worked before, similar results but sax is able to hanlde larger files at same speed
+
 

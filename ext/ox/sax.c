@@ -51,6 +51,7 @@ typedef struct _SaxDrive {
     int         col;
     VALUE       handler;
     int         (*read_func)(struct _SaxDrive *dr);
+    int         convert_special;
     union {
         int     fd;
         VALUE   io;
@@ -69,7 +70,7 @@ typedef struct _SaxDrive {
 #endif
 } *SaxDrive;
 
-static void     sax_drive_init(SaxDrive dr, VALUE handler, VALUE io);
+static void     sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert);
 static void     sax_drive_cleanup(SaxDrive dr);
 static int      sax_drive_read(SaxDrive dr);
 static void     sax_drive_error(SaxDrive dr, const char *msg, int critical);
@@ -84,6 +85,7 @@ static int      read_text(SaxDrive dr);
 static int      read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml);
 static char     read_name_token(SaxDrive dr);
 static int      read_quoted_value(SaxDrive dr);
+static int      collapse_special(char *str);
 
 static VALUE    io_cb(VALUE rdr);
 static int      read_from_io(SaxDrive dr);
@@ -156,10 +158,10 @@ str2sym(const char *str) {
 
 
 void
-ox_sax_parse(VALUE handler, VALUE io) {
+ox_sax_parse(VALUE handler, VALUE io, int convert) {
     struct _SaxDrive    dr;
     
-    sax_drive_init(&dr, handler, io);
+    sax_drive_init(&dr, handler, io, convert);
 #if 0
     printf("*** sax_parse with these flags\n");
     printf("    has_instruct = %s\n", dr.has_instruct ? "true" : "false");
@@ -177,7 +179,7 @@ ox_sax_parse(VALUE handler, VALUE io) {
 }
 
 static void
-sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
+sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
     if (rb_respond_to(io, readpartial_id)) {
         VALUE   rfd;
 
@@ -200,6 +202,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     dr->line = 1;
     dr->col = 0;
     dr->handler = handler;
+    dr->convert_special = convert;
     dr->has_instruct = rb_respond_to(handler, instruct_id);
     dr->has_attr = rb_respond_to(handler, attr_id);
     dr->has_doctype = rb_respond_to(handler, doctype_id);
@@ -210,7 +213,11 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io) {
     dr->has_end_element = rb_respond_to(handler, end_element_id);
     dr->has_error = rb_respond_to(handler, error_id);
 #ifdef HAVE_RUBY_ENCODING_H
-    dr->encoding = 0;
+    if ('\0' == *default_options.encoding) {
+        dr->encoding = 0;
+    } else {
+        dr->encoding = rb_enc_find(default_options.encoding);
+    }
 #endif
 }
 
@@ -586,8 +593,13 @@ read_text(SaxDrive dr) {
     }
     *(dr->cur - 1) = '\0';
     if (dr->has_text) {
-        VALUE       args[1];
-
+        VALUE   args[1];
+        
+        if (dr->convert_special) {
+            if (0 != collapse_special(dr->str) && 0 != strchr(dr->str, '&')) {
+                sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
+            }
+        }
         args[0] = rb_str_new2(dr->str);
 #ifdef HAVE_RUBY_ENCODING_H
         if (0 != dr->encoding) {
@@ -642,6 +654,9 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
             VALUE       args[2];
 
             args[0] = name;
+            if (0 != collapse_special(dr->str) && 0 != strchr(dr->str, '&')) {
+                sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
+            }
             args[1] = rb_str_new2(dr->str);
 #ifdef HAVE_RUBY_ENCODING_H
             if (0 != dr->encoding) {
@@ -756,5 +771,58 @@ read_from_fd(SaxDrive dr) {
     } else if (0 != cnt) {
         dr->read_end = dr->cur + cnt;
     }
+    return 0;
+}
+
+
+static int
+collapse_special(char *str) {
+    char        *s = str;
+    char        *b = str;
+
+    while ('\0' != *s) {
+        if ('&' == *s) {
+            int         c;
+            char        *end;
+            
+            s++;
+            if ('#' == *s) {
+                s++;
+                c = (int)strtol(s, &end, 10);
+                if (';' != *end) {
+                    return EDOM;
+                }
+                s = end + 1;
+            } else if (0 == strncasecmp(s, "lt;", 3)) {
+                c = '<';
+                s += 3;
+            } else if (0 == strncasecmp(s, "gt;", 3)) {
+                c = '>';
+                s += 3;
+            } else if (0 == strncasecmp(s, "amp;", 4)) {
+                c = '&';
+                s += 4;
+            } else if (0 == strncasecmp(s, "quot;", 5)) {
+                c = '"';
+                s += 5;
+            } else if (0 == strncasecmp(s, "apos;", 5)) {
+                c = '\'';
+                s += 5;
+            } else {
+                c = '?';
+                while (';' != *s++) {
+                    if ('\0' == *s) {
+                        return EDOM;
+                    }
+                }
+                s++;
+            }
+            *b++ = (char)c;
+        } else {
+            *b++ = *s++;
+        }
+    }
+    *b = '\0';
+
     return 0;
 }

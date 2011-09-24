@@ -92,10 +92,14 @@ class Func < ::Test::Unit::TestCase
                   [:end_element, :top]])
   end
 
-  def parse_compare(xml, expected, handler_class=AllSax)
+  def parse_compare(xml, expected, handler_class=AllSax, special=false)
     handler = handler_class.new()
     input = StringIO.new(xml)
-    Ox.sax_parse(handler, input)
+    if special
+      Ox.sax_parse(handler, input, :convert_special => true)
+    else
+      Ox.sax_parse(handler, input)
+    end
     assert_equal(expected, handler.calls)
   end
   
@@ -243,6 +247,15 @@ encoding = "UTF-8" ?>},
                    [:text, "This is some text."],
                    [:end_element, :top]
                   ])
+  end
+
+  def test_sax_special
+    parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
+                  [[:start_element, :top],
+                   [:attr, :name, 'A&Z'],
+                   [:text, "This is <some> text."],
+                   [:end_element, :top]
+                  ], AllSax, true)
   end
 
   def test_sax_text_no_term

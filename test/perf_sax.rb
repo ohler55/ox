@@ -14,7 +14,6 @@ end
 
 require 'optparse'
 require 'ox'
-require 'sample'
 require 'files'
 begin
   require 'nokogiri'
