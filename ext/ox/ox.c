@@ -445,12 +445,14 @@ load_file(int argc, VALUE *argv, VALUE self) {
     return load(xml, argc - 1, argv + 1, self);
 }
 
-/* call-seq: sax_parse(handler, io)
+/* call-seq: sax_parse(handler, io, options)
  *
  * Parses an IO stream or file containing an XML document. Raises an exception
  * if the XML is malformed or the classes specified are not valid.
  * @param [Ox::Sax] handler SAX (responds to OX::Sax methods) like handler
  * @param [IO|String] io IO Object to read from
+ * @param [Hash] options parse options
+ * @param [true|false] :convert_special flag indicating special special characters like &lt; are converted
  */
 static VALUE
 sax_parse(int argc, VALUE *argv, VALUE self) {
@@ -468,8 +470,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
         }
     }
     ox_sax_parse(argv[0], argv[1], convert);
-    //sax_parse(VALUE self, VALUE handler, VALUE io) {
-    //ox_sax_parse(handler, io, convert);
+
     return Qnil;
 }
 

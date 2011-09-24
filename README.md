@@ -26,9 +26,12 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.3.2
+### Release 1.3.3
 
- - Changed SAX parser API for element and instruction attributes
+ - Added an option to the SAX parser to convert special characters.
+
+ - The default options encoding is now used as the default for SAX parsing.
+
 
 ## <a name="description">Description</a>
 
