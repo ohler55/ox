@@ -23,5 +23,5 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = ['README.md']
   s.rdoc_options = ['--main', 'README.md']
   
-  s.rubyforge_project = 'ox' # dummy to keep the build quiet
+  s.rubyforge_project = 'ox'
 end

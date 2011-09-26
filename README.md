@@ -26,12 +26,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.3.3
+### Release 1.3.4
 
- - Added an option to the SAX parser to convert special characters.
-
- - The default options encoding is now used as the default for SAX parsing.
-
+ - Made Ox SAX compatible with Ruby 1.8.7 when readpartial is not implemented on IO.
 
 ## <a name="description">Description</a>
 
