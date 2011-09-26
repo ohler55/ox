@@ -10,4 +10,5 @@ rvm:
 script:
   - gem build ox.gemspec
   - gem install ox-*
-  - rake test
+  - test/func.rb
+  - test/sax_test.rb
