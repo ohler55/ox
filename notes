@@ -9,6 +9,10 @@
  - the default options encoding is now used as the default for SAX parsing
 
 
+
+
+
+
 - thoughs
  - compare parsing techniques
   - pick plist format or something like it

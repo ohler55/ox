@@ -64,6 +64,7 @@ ID      local_id;
 ID      nodes_id;
 ID      num_id;
 ID      parse_id;
+ID      read_id;
 ID      readpartial_id;
 ID      start_element_id;
 ID      text_id;
@@ -652,6 +653,7 @@ void Init_ox() {
     num_id = rb_intern("@num");
     parse_id = rb_intern("parse");
     readpartial_id = rb_intern("readpartial");
+    read_id = rb_intern("read");
     start_element_id = rb_intern("start_element");
     text_id = rb_intern("text");
     to_c_id = rb_intern("to_c");

@@ -1,15 +1,8 @@
 #!/usr/bin/env ruby -wW1
 # encoding: UTF-8
 
-$: << '../lib'
-$: << '../ext'
-
-if __FILE__ == $0
-  while (i = ARGV.index('-I'))
-    x,path = ARGV.slice!(i, 2)
-    $: << path
-  end
-end
+$: << File.join(File.dirname(__FILE__), "../lib")
+$: << File.join(File.dirname(__FILE__), "../ext")
 
 require 'stringio'
 require 'test/unit'
@@ -85,7 +78,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_sax_io_file
     handler = AllSax.new()
-    input = IO.open(IO.sysopen('basic.xml'))
+    input = IO.open(IO.sysopen(File.join(File.dirname(__FILE__), 'basic.xml')))
     Ox.sax_parse(handler, input)
     assert_equal(handler.calls,
                  [[:start_element, :top],
@@ -420,16 +413,19 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_encoding
-    parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
+    if RUBY_VERSION.start_with?('1.8')
+      assert(true)
+    else
+      parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
 <top>ピーター</top>
 },
-                  [[:instruct, "xml"],
-                   [:attr, :version, "1.0"],
-                   [:attr, :encoding, "UTF-8"],
-                   [:start_element, :top],
-                   [:text, 'ピーター'],
-                   [:end_element, :top]])
+                    [[:instruct, "xml"],
+                     [:attr, :version, "1.0"],
+                     [:attr, :encoding, "UTF-8"],
+                     [:start_element, :top],
+                     [:text, 'ピーター'],
+                     [:end_element, :top]])
+    end
   end
 
 end
-

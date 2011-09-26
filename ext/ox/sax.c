@@ -88,8 +88,10 @@ static int      read_quoted_value(SaxDrive dr);
 static int      collapse_special(char *str);
 
 static VALUE    io_cb(VALUE rdr);
+static VALUE    partial_io_cb(VALUE rdr);
 static int      read_from_io(SaxDrive dr);
 static int      read_from_fd(SaxDrive dr);
+static int      read_from_io_partial(SaxDrive dr);
 
 static inline char
 sax_drive_get(SaxDrive dr) {
@@ -187,11 +189,21 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
             dr->read_func = read_from_fd;
             dr->fd = FIX2INT(rfd);
         } else {
+            dr->read_func = read_from_io_partial;
+            dr->io = io;
+        }
+    } else if (rb_respond_to(io, read_id)) {
+        VALUE   rfd;
+
+        if (rb_respond_to(io, rb_intern("fileno")) && Qnil != (rfd = rb_funcall(io, rb_intern("fileno"), 0))) {
+            dr->read_func = read_from_fd;
+            dr->fd = FIX2INT(rfd);
+        } else {
             dr->read_func = read_from_io;
             dr->io = io;
         }
     } else {
-        rb_raise(rb_eArgError, "sax_parser io argument must respond to readpartial().\n");
+        rb_raise(rb_eArgError, "sax_parser io argument must respond to readpartial() or read().\n");
     }
     dr->buf = dr->base_buf;
     *dr->buf = '\0';
@@ -731,6 +743,35 @@ read_quoted_value(SaxDrive dr) {
 }
 
 static int
+read_from_io_partial(SaxDrive dr) {
+    int ex = 0;
+
+    rb_protect(partial_io_cb, (VALUE)dr, &ex);
+    // printf("*** io_cb exception = %d\n", ex);
+    // An error code of 6 is always returned not matter what kind of Exception is raised.
+    return ex;
+}
+
+static VALUE
+partial_io_cb(VALUE rdr) {
+    SaxDrive    dr = (SaxDrive)rdr;
+    VALUE       args[1];
+    VALUE       rstr;
+    char        *str;
+    size_t      cnt;
+
+    args[0] = ULONG2NUM(dr->buf_end - dr->cur);
+    rstr = rb_funcall2(dr->io, readpartial_id, 1, args);
+    str = StringValuePtr(rstr);
+    cnt = strlen(str);
+    //printf("*** read %lu bytes, str: '%s'\n", cnt, str);
+    strcpy(dr->cur, str);
+    dr->read_end = dr->cur + cnt;
+
+    return Qnil;
+}
+
+static int
 read_from_io(SaxDrive dr) {
     int ex = 0;
 
@@ -748,8 +789,9 @@ io_cb(VALUE rdr) {
     char        *str;
     size_t      cnt;
 
-    args[0] = SIZET2NUM(dr->buf_end - dr->cur);
-    rstr = rb_funcall2(dr->io, readpartial_id, 1, args);
+    args[0] = ULONG2NUM(dr->buf_end - dr->cur);
+    //args[0] = SIZET2NUM(dr->buf_end - dr->cur);
+    rstr = rb_funcall2(dr->io, read_id, 1, args);
     str = StringValuePtr(rstr);
     cnt = strlen(str);
     //printf("*** read %lu bytes, str: '%s'\n", cnt, str);

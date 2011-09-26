@@ -1,15 +1,8 @@
 #!/usr/bin/env ruby -wW1
 # encoding: UTF-8
 
-$: << '../lib'
-$: << '../ext'
-
-if __FILE__ == $0
-  while (i = ARGV.index('-I'))
-    x,path = ARGV.slice!(i, 2)
-    $: << path
-  end
-end
+$: << File.join(File.dirname(__FILE__), "../lib")
+$: << File.join(File.dirname(__FILE__), "../ext")
 
 require 'test/unit'
 require 'optparse'
@@ -338,22 +331,26 @@ class Func < ::Test::Unit::TestCase
       "x".foo
     rescue Exception => e
       xml = Ox.dump(e, :effort => :tolerant)
-      o = Ox.load(xml, mode: :object)
+      o = Ox.load(xml, :mode => :object)
       xml2 = Ox.dump(o, :effort => :tolerant)
       assert_equal(xml, xml2)
     end
   end
   
   def test_mutex
-    # Mutex can not be serialize but it should not raise an exception.
-    xml = Ox.dump(Mutex.new, :indent => 2, :effort => :tolerant)
-    assert_equal(%{<z/>
+    if defined?(Mutex)
+      # Mutex can not be serialize but it should not raise an exception.
+      xml = Ox.dump(Mutex.new, :indent => 2, :effort => :tolerant)
+      assert_equal(%{<z/>
 }, xml)
-    xml = Ox.dump(Bag.new(:@x => Mutex.new), :indent => 2, :effort => :tolerant)
-    assert_equal(%{<o c="Bag">
+      xml = Ox.dump(Bag.new(:@x => Mutex.new), :indent => 2, :effort => :tolerant)
+      assert_equal(%{<o c="Bag">
   <z a="@x"/>
 </o>
 }, xml)
+    else
+      assert(true)
+    end
   end
   
   def test_encoding
