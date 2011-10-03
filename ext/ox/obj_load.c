@@ -774,8 +774,8 @@ parse_double_time(const char *text, VALUE clas) {
     for (; text - dot <= 6; text++) {
         v2 *= 10;
     }
-    args[0] = INT2FIX(v);
-    args[1] = INT2FIX(v2);
+    args[0] = LONG2FIX(v);
+    args[1] = LONG2FIX(v2);
 
     return rb_funcall2(clas, at_id, 2, args);
 }
@@ -831,8 +831,8 @@ parse_xsd_time(const char *text, VALUE clas) {
     tm.tm_min = (int)cargs[4];
     tm.tm_sec = (int)cargs[5];
 
-    args[0] = INT2FIX(mktime(&tm));
-    args[1] = INT2FIX(cargs[6]);
+    args[0] = LONG2FIX(mktime(&tm));
+    args[1] = LONG2FIX(cargs[6]);
 
     return rb_funcall2(clas, at_id, 2, args);
 }
