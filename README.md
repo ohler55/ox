@@ -26,9 +26,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.3.4
+### Release 1.3.5
 
- - Made Ox SAX compatible with Ruby 1.8.7 when readpartial is not implemented on IO.
+ - Fixed date and fixnum conversion bug with 32 bit OS.
 
 ## <a name="description">Description</a>
 
