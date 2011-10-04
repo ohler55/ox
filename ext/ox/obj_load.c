@@ -408,11 +408,8 @@ add_text(PInfo pi, char *text, int closed) {
         if (neg) {
             n = -n;
         }
-        if (FIXABLE(n)) {
-            pi->h->obj = LONG2FIX(n);
-        } else {
-            pi->h->obj = LONG2NUM(n);
-        }
+        pi->h->obj = LONG2NUM(n);
+
         break;
     }
     case FloatCode:
