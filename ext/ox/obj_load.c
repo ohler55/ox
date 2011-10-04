@@ -409,7 +409,6 @@ add_text(PInfo pi, char *text, int closed) {
             n = -n;
         }
         pi->h->obj = LONG2NUM(n);
-
         break;
     }
     case FloatCode:
