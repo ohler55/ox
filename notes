@@ -8,17 +8,13 @@
  - fixed date and fixnum conversion bug with 32 bit OS
 
 
-- thoughs
- - compare parsing techniques
-  - pick plist format or something like it
-   - sax
-    - direct to hash
-   - in memory
-    - extra hop, slower
-   - object mode (only with Ox)
-    - if control over xml format
-    - if to and from object anyway then use object format
- 
+- Element.locate(path)
+ - foo/bar
+ - foo/bar[1]
+ - foo/bar[1]/baz
+ - foo/bar[<3]/baz
+ - foo/bar[-1]/@attr
+ - foo/bar[@attr="xxx"] // later
 
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
