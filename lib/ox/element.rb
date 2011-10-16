@@ -117,7 +117,7 @@ module Ox
       if step.start_with?('@') # attribute
         # TBD if not the last step in the path, raise exception
       else # element name
-        if (i = step.index).nil? # just name
+        if (i = step.index('[')).nil? # just name
           # TBD just name or wildcard
           name = step
           qual = nil
@@ -131,14 +131,18 @@ module Ox
           qual = '+'
           index = step[i..-2].to_i
         end
-        cnt = -1
-        nodes.each do |e|
-          cnt += 1
-          # next if not matching
-          # locate_dig on e if there is another step and node is en element
+        if '?' == name or '*' == name
+          match = nodes
+        else
+          match = @nodes.select { |e| e.is_a?(Element) and name == e.name }
+        end
+        # TBD consider qual and index
+        if (1 == path.size)
+          match.each { |n| found << n }
+        else
+          locate_dig(path[1..-1], found)
         end
       end
-      # TBD 
     end
 
   end # Element

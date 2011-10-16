@@ -189,6 +189,8 @@ read_instruction(PInfo pi) {
         if ('?' == *pi->s) {
             pi->s++;
         }
+    } else {
+        pi->s++;
     }
     if ('>' != *pi->s++) {
         raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);

@@ -4,8 +4,9 @@
 ^c^s show subtree
 
 
-- changes for 1.3.5
- - fixed date and fixnum conversion bug with 32 bit OS
+- changes for 1.4.0
+ - fixed bug in parsing the xml instruction
+
 
 
 - Element.locate(path)

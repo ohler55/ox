@@ -383,6 +383,37 @@ class Func < ::Test::Unit::TestCase
     obj = Ox.load(xml, :mode => :object) # should convert it to an object
     assert_equal(nil, obj)
   end
+  
+  def test_locate_self
+    xml = %{<?xml?>
+<Family>
+  <Pete age="57">
+    <Kid1 age="32"/>
+    <Kid2 age="31"/>
+  </Pete>
+</Family>
+}
+    doc = Ox.parse(xml)
+    nodes = doc.locate(nil)
+    assert_equal(doc, nodes[0])
+  end
+
+  def test_locate_top
+    xml = %{<?xml?>
+<Family real="false">
+  <Pete age="57">
+    <Kid1 age="32"/>
+    <Kid2 age="31"/>
+  </Pete>
+</Family>
+}
+    doc = Ox.parse(xml)
+    puts "*** #{Ox.dump(doc)}"
+    nodes = doc.locate('Family')
+    puts "*** nodes: #{nodes}"
+    nodes = doc.locate('?')
+    puts "*** nodes: #{nodes}"
+  end
 
 end
 
