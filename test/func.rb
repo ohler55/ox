@@ -384,22 +384,8 @@ class Func < ::Test::Unit::TestCase
     assert_equal(nil, obj)
   end
   
-  def test_locate_self
-    xml = %{<?xml?>
-<Family>
-  <Pete age="57">
-    <Kid1 age="32"/>
-    <Kid2 age="31"/>
-  </Pete>
-</Family>
-}
-    doc = Ox.parse(xml)
-    nodes = doc.locate(nil)
-    assert_equal(doc, nodes[0])
-  end
-
-  def test_locate_top
-    xml = %{<?xml?>
+  def locate_xml()
+    %{<?xml?>
 <Family real="false">
   <Pete age="57">
     <Kid1 age="32"/>
@@ -407,12 +393,63 @@ class Func < ::Test::Unit::TestCase
   </Pete>
 </Family>
 }
-    doc = Ox.parse(xml)
-    puts "*** #{Ox.dump(doc)}"
+  end
+  
+  def test_locate_self
+    doc = Ox.parse(locate_xml)
+    nodes = doc.locate(nil)
+    assert_equal(doc, nodes[0])
+  end
+
+  def test_locate_top
+    doc = Ox.parse(locate_xml)
+    family = doc.nodes[0]
+
     nodes = doc.locate('Family')
-    puts "*** nodes: #{nodes}"
+    assert_equal([family], nodes)
+
     nodes = doc.locate('?')
-    puts "*** nodes: #{nodes}"
+    assert_equal([family], nodes)
+  end
+
+  def test_locate_child
+    doc = Ox.parse(locate_xml)
+
+    nodes = doc.locate('Family/?')
+    assert_equal(['Pete'], nodes.map { |n| n.name })
+
+    nodes = doc.locate('Family/?/?')
+    assert_equal(['Kid1', 'Kid2'], nodes.map { |n| n.name })
+
+    nodes = doc.locate('Family/Pete/?')
+    assert_equal(['Kid1', 'Kid2'], nodes.map { |n| n.name })
+
+    nodes = doc.locate('Family/Makie/?')
+    assert_equal([], nodes.map { |n| n.name })
+  end
+
+  def test_locate_attribute
+    doc = Ox.parse(locate_xml)
+
+    nodes = doc.locate('Family/@?')
+    assert_equal(['false'], nodes)
+
+    nodes = doc.locate('Family/@real')
+    assert_equal(['false'], nodes)
+
+    nodes = doc.locate('Family/Pete/@?')
+    assert_equal(['57'], nodes)
+
+    nodes = doc.locate('Family/Pete/@age')
+    assert_equal(['57'], nodes)
+
+    nodes = doc.locate('Family/Makie/@?')
+    assert_equal([], nodes)
+
+    # TBD
+    #nodes = doc.locate('*/@?')
+    #assert_equal(['real', '57', '32', '31'], nodes)
+
   end
 
 end

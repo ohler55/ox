@@ -108,14 +108,19 @@ module Ox
       found
     end
     
-    private
-    
     # @param [Array] path array of steps in a path
     # @param [Array] found matching nodes
     def locate_dig(path, found)
+      #puts "*** locate_dig(#{path}, #{found})"
       step = path[0]
+      #puts "***  #{step}"
       if step.start_with?('@') # attribute
-        # TBD if not the last step in the path, raise exception
+        raise "Attributes (@) must be the last step in a path." unless 1 == path.size
+        step = step[1..-1]
+        sym_step = step.to_sym
+        @attributes.each do |k,v|
+          found << v if ('?' == step or k == step or k == sym_step)
+        end
       else # element name
         if (i = step.index('[')).nil? # just name
           # TBD just name or wildcard
@@ -137,10 +142,12 @@ module Ox
           match = @nodes.select { |e| e.is_a?(Element) and name == e.name }
         end
         # TBD consider qual and index
+        #puts "***   near end: path.size: #{path.size}  match: #{match.map { |n| n.name }})"
+
         if (1 == path.size)
           match.each { |n| found << n }
         else
-          locate_dig(path[1..-1], found)
+          match.each { |n| n.locate_dig(path[1..-1], found) if n.is_a?(Element) }
         end
       end
     end
