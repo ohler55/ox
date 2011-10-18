@@ -26,9 +26,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.3.5
+### Release 1.4.0
 
- - Fixed date and fixnum conversion bug with 32 bit OS.
+ - Fixed bug in parsing the xml instruction.
+ - Added locate() method that provides simple and limited xpath like functionality.
 
 ## <a name="description">Description</a>
 
