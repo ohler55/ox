@@ -112,9 +112,7 @@ module Ox
     # @param [Array] path array of steps in a path
     # @param [Array] found matching nodes
     def alocate(path, found)
-      #puts "*** locate_dig(#{path}, #{found})"
       step = path[0]
-      #puts "***  #{step}"
       if step.start_with?('@') # attribute
         raise InvalidPath.new(path) unless 1 == path.size
         step = step[1..-1]
