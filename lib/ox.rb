@@ -88,6 +88,7 @@ module Ox
 end
 
 require 'ox/version'
+require 'ox/invalidpath'
 require 'ox/node'
 require 'ox/comment'
 require 'ox/cdata'

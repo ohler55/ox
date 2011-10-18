@@ -387,7 +387,7 @@ class Func < ::Test::Unit::TestCase
   def locate_xml()
     %{<?xml?>
 <Family real="false">
-  <Pete age="57">
+  <Pete age="57" type="male">
     <Kid1 age="32"/>
     <Kid2 age="31"/>
   </Pete>
@@ -403,13 +403,14 @@ class Func < ::Test::Unit::TestCase
 
   def test_locate_top
     doc = Ox.parse(locate_xml)
-    family = doc.nodes[0]
-
     nodes = doc.locate('Family')
-    assert_equal([family], nodes)
+    assert_equal([doc.nodes[0]], nodes)
+  end
 
+  def test_locate_top_wild
+    doc = Ox.parse(locate_xml)
     nodes = doc.locate('?')
-    assert_equal([family], nodes)
+    assert_equal([doc.nodes[0]], nodes)
   end
 
   def test_locate_child
@@ -428,6 +429,24 @@ class Func < ::Test::Unit::TestCase
     assert_equal([], nodes.map { |n| n.name })
   end
 
+  def test_locate_child_wild_wild
+    doc = Ox.parse(locate_xml)
+    nodes = doc.locate('Family/?/?')
+    assert_equal(['Kid1', 'Kid2'], nodes.map { |n| n.name })
+  end
+
+  def test_locate_child_wild
+    doc = Ox.parse(locate_xml)
+    nodes = doc.locate('Family/Pete/?')
+    assert_equal(['Kid1', 'Kid2'], nodes.map { |n| n.name })
+  end
+
+  def test_locate_child_wild_missing
+    doc = Ox.parse(locate_xml)
+    nodes = doc.locate('Family/Makie/?')
+    assert_equal([], nodes.map { |n| n.name })
+  end
+
   def test_locate_attribute
     doc = Ox.parse(locate_xml)
 
@@ -438,7 +457,7 @@ class Func < ::Test::Unit::TestCase
     assert_equal(['false'], nodes)
 
     nodes = doc.locate('Family/Pete/@?')
-    assert_equal(['57'], nodes)
+    assert_equal(['57', 'male'], nodes.sort)
 
     nodes = doc.locate('Family/Pete/@age')
     assert_equal(['57'], nodes)
@@ -446,12 +465,55 @@ class Func < ::Test::Unit::TestCase
     nodes = doc.locate('Family/Makie/@?')
     assert_equal([], nodes)
 
-    # TBD
-    #nodes = doc.locate('*/@?')
-    #assert_equal(['real', '57', '32', '31'], nodes)
+    nodes = doc.locate('Family/Pete/?/@age')
+    assert_equal(['31', '32'], nodes.sort)
 
+    nodes = doc.locate('Family/*/@age')
+    assert_equal(['31', '32', '57'], nodes.sort)
+
+    nodes = doc.locate('*/@?')
+    assert_equal(['31', '32', '57', 'false', 'male'], nodes.sort)
+
+    assert_raise(::Ox::InvalidPath) {
+      nodes = doc.locate('Family/@age/?')
+    }
+
+    assert_raise(::Ox::InvalidPath) {
+      nodes = doc.locate('Family/?[/?')
+    }
   end
 
+  def test_locate_qual_index
+    doc = Ox.parse(locate_xml)
+    nodes = doc.locate('Family/Pete/?[0]')
+    assert_equal(['Kid1'], nodes.map { |e| e.name } )
+    nodes = doc.locate('Family/Pete/?[1]')
+    assert_equal(['Kid2'], nodes.map { |e| e.name } )
+  end
+
+  def test_locate_qual_less
+    doc = Ox.parse(locate_xml)
+    nodes = doc.locate('Family/Pete/?[<1]')
+    assert_equal(['Kid1'], nodes.map { |e| e.name } )
+  end
+
+  def test_locate_qual_great
+    doc = Ox.parse(locate_xml)
+    nodes = doc.locate('Family/Pete/?[>0]')
+    assert_equal(['Kid2'], nodes.map { |e| e.name } )
+  end
+
+  def test_locate_qual_last
+    doc = Ox.parse(locate_xml)
+    nodes = doc.locate('Family/Pete/?[-1]')
+    assert_equal(['Kid2'], nodes.map { |e| e.name } )
+  end
+
+  def test_locate_qual_last_attr
+    doc = Ox.parse(locate_xml)
+    nodes = doc.locate('Family/Pete/?[-1]/@age')
+    assert_equal(['31'], nodes )
+  end
 end
 
 class Bag

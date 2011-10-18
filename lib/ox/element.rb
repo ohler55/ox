@@ -1,5 +1,6 @@
 
 module Ox
+
   # An Element represents a element of an XML document. It has a name,
   # attributes, and sub-nodes.
   class Element < Node
@@ -104,18 +105,18 @@ module Ox
       return [self] if path.nil?
       found = []
       pa = path.split('/')
-      locate_dig(pa, found)
+      alocate(pa, found)
       found
     end
     
     # @param [Array] path array of steps in a path
     # @param [Array] found matching nodes
-    def locate_dig(path, found)
+    def alocate(path, found)
       #puts "*** locate_dig(#{path}, #{found})"
       step = path[0]
       #puts "***  #{step}"
       if step.start_with?('@') # attribute
-        raise "Attributes (@) must be the last step in a path." unless 1 == path.size
+        raise InvalidPath.new(path) unless 1 == path.size
         step = step[1..-1]
         sym_step = step.to_sym
         @attributes.each do |k,v|
@@ -123,17 +124,18 @@ module Ox
         end
       else # element name
         if (i = step.index('[')).nil? # just name
-          # TBD just name or wildcard
           name = step
           qual = nil
         else
           name = step[0..i-1]
-          # TBD if last character not a ] then raise
-          # 
+          raise InvalidPath.new(path) unless step.end_with?(']')
           i += 1
-          # TBD check qualifier or digit
-          #
-          qual = '+'
+          qual = step[i]
+          if '0' <= qual and qual <= '9'
+            qual = '+'
+          else
+            i += 1
+          end
           index = step[i..-2].to_i
         end
         if '?' == name or '*' == name
@@ -141,13 +143,27 @@ module Ox
         else
           match = @nodes.select { |e| e.is_a?(Element) and name == e.name }
         end
-        # TBD consider qual and index
-        #puts "***   near end: path.size: #{path.size}  match: #{match.map { |n| n.name }})"
-
+        unless qual.nil? or match.empty?
+          case qual
+          when '+'
+            match = index < match.size ? [match[index]] : []
+          when '-'
+            match = index <= match.size ? [match[-index]] : []
+          when '<'
+            match = 0 < index ? match[0..index - 1] : []
+          when '>'
+            match = index <= match.size ? match[index + 1..-1] : []
+          else
+            raise InvalidPath.new(path)
+          end
+        end
         if (1 == path.size)
           match.each { |n| found << n }
+        elsif '*' == name
+          match.each { |n| n.alocate(path, found) if n.is_a?(Element) }
+          match.each { |n| n.alocate(path[1..-1], found) if n.is_a?(Element) }
         else
-          match.each { |n| n.locate_dig(path[1..-1], found) if n.is_a?(Element) }
+          match.each { |n| n.alocate(path[1..-1], found) if n.is_a?(Element) }
         end
       end
     end

@@ -6,16 +6,8 @@
 
 - changes for 1.4.0
  - fixed bug in parsing the xml instruction
+ - added locate() method that provides simple and limited xpath like functionality
 
-
-
-- Element.locate(path)
- - foo/bar
- - foo/bar[1]
- - foo/bar[1]/baz
- - foo/bar[<3]/baz
- - foo/bar[-1]/@attr
- - foo/bar[@attr="xxx"] // later
 
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
