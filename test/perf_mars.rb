@@ -50,7 +50,7 @@ data = {
   :Rational => ::Test::Ox::Wrap.new(),
   :Struct => ::Test::Ox::Wrap.new(),
   :Class => ::Test::Ox::Wrap.new(),
-  :Object => ::Test::Ox::Wrap.new()
+  :Object => ::Test::Ox::Wrap.new(),
 }
 
 s = Struct.new('Zoo', :x, :y, :z)
@@ -74,7 +74,8 @@ s = Struct.new('Zoo', :x, :y, :z)
   data[:Object].values << ::Test::Ox::Wrap.new(i)
 end
 
-puts "type      Ox      Marshal  ratio"
+puts "           load                        dump"
+puts "type       Ox      Marshal  ratio      Ox      Marshal  ratio"
 data.each do |type,a|
   #xml = Ox.dump(a, :indent => -1, :xsd_date => true)
   xml = Ox.dump(a, :indent => -1)
@@ -85,13 +86,29 @@ data.each do |type,a|
     obj = Ox.load(xml, :mode => :object)
     #pp obj
   end
-  ox_time = Time.now - start
+  ox_load_time = Time.now - start
   
   m = Marshal.dump(a)
   start = Time.now
   (1..it).each do
     obj = Marshal.load(m)
   end
-  marshal_time = Time.now - start
-  puts "%8s  %6.3f  %6.3f    %0.1f" % [type.to_s, ox_time, marshal_time, marshal_time / ox_time]
+  mars_load_time = Time.now - start
+
+  obj = Ox.load(xml, :mode => :object)
+  start = Time.now
+  (1..it).each do
+    xml = Ox.dump(a, :indent => -1)
+  end
+  ox_dump_time = Time.now - start
+
+  start = Time.now
+  (1..it).each do
+    m = Marshal.dump(a)
+  end
+  mars_dump_time = Time.now - start
+
+  puts "%8s  %6.3f  %6.3f    %0.1f       %6.3f  %6.3f    %0.1f" % [type.to_s,
+                                       ox_load_time, mars_load_time, mars_load_time / ox_load_time,
+                                       ox_dump_time, mars_dump_time, mars_dump_time / ox_dump_time]
 end
