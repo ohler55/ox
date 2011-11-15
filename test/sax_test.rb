@@ -351,6 +351,24 @@ encoding = "UTF-8" ?>},
                    [:error, "invalid format, cdata terminated unexpectedly", 5, 1]])
   end
   
+  def test_sax_cdata_empty
+    parse_compare(%{<?xml version="1.0"?>
+<top>
+  <child><![CDATA[]]></child>
+  <child><![CDATA[This is CDATA.]]></child>
+</top>
+},
+                  [[:instruct, 'xml'],
+                   [:attr, :version, '1.0'],
+                   [:start_element, :top],
+                   [:start_element, :child],
+                   [:cdata, ''],
+                   [:end_element, :child],
+                   [:start_element, :child],
+                   [:cdata, 'This is CDATA.'],
+                   [:end_element, :child],
+                   [:end_element, :top]])
+  end
 
   def test_sax_mixed
     parse_compare(%{<?xml version="1.0"?>
