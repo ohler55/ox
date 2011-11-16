@@ -451,9 +451,8 @@ read_cdata(SaxDrive dr) {
     char        c;
     int         end = 0;
 
-    dr->str = dr->cur - 1; // mark the start
     dr->cur--; // back up to the start in case the cdata is empty
-
+    dr->str = dr->cur; // mark the start
     while (1) {
         c = sax_drive_get(dr);
         if (']' == c) {
