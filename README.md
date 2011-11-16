@@ -26,10 +26,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.4.0
+### Release 1.4.1
 
- - Fixed bug in parsing the xml instruction.
- - Added locate() method that provides simple and limited xpath like functionality.
+ - Empty CDATA buf found and fixed by adamvaughan on github
 
 ## <a name="description">Description</a>
 
