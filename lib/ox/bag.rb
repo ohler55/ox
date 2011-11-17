@@ -16,10 +16,6 @@ module Ox
     def initialize(args={ })
       args.each do |k,v|
         self.instance_variable_set(k, v)
-        m = k.to_s[1..-1].to_sym
-        unless respond_to?(m)
-          self.class.define_get(m, k)
-        end
       end
     end
 
@@ -28,6 +24,7 @@ module Ox
     # @return [Boolean] true for any method that matches an instance
     #                   variable reader, otherwise false.
     def respond_to?(m)
+      return true if super
       at_m = ('@' + m.to_s).to_sym
       instance_variables.include?(at_m)
     end
