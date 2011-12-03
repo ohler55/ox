@@ -38,6 +38,7 @@
 #include "ox.h"
 
 static void     instruct(PInfo pi, const char *target, Attr attrs);
+static void	create_doc(PInfo pi);
 static void     create_prolog_doc(PInfo pi, const char *target, Attr attrs);
 static void     nomode_instruct(PInfo pi, const char *target, Attr attrs);
 static void     add_doctype(PInfo pi, const char *docType);

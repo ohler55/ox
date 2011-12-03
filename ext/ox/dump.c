@@ -697,7 +697,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
                 out->w_end(out, &e);
             }
 #else
-#ifdef JRUBY
+#if (defined JRUBY || defined RBX_Qnil)
             VALUE       vars = rb_funcall2(obj, rb_intern("instance_variables"), 0, 0);
 #else
             VALUE       vars = rb_obj_instance_variables(obj);
@@ -785,7 +785,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         out->w_end(out, &e);
         break;
     }
-#ifdef T_COMPLEX
+#if (defined T_COMPLEX || defined RCOMPLEX)
     case T_COMPLEX:
         e.type = ComplexCode;
         out->w_start(out, &e);
@@ -794,7 +794,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         out->w_end(out, &e);
         break;
 #endif
-#ifdef T_RATIONAL
+#if (defined T_RATIONAL || defined RRATIONAL)
     case T_RATIONAL:
         e.type = RationalCode;
         out->w_start(out, &e);
