@@ -785,7 +785,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         out->w_end(out, &e);
         break;
     }
-#if (defined T_COMPLEX || defined RCOMPLEX)
+#if (defined T_COMPLEX && defined RCOMPLEX)
     case T_COMPLEX:
         e.type = ComplexCode;
         out->w_start(out, &e);
@@ -794,7 +794,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         out->w_end(out, &e);
         break;
 #endif
-#if (defined T_RATIONAL || defined RRATIONAL)
+#if (defined T_RATIONAL && defined RRATIONAL)
     case T_RATIONAL:
         e.type = RationalCode;
         out->w_start(out, &e);
