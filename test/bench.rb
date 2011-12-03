@@ -13,7 +13,7 @@
 # unpack: marshal                  0.609927
 # unpack: ox                       0.287053
 
-require 'msgpack'
+#require 'msgpack'
 require 'json'
 require 'ox'
 
@@ -32,14 +32,14 @@ end
 
 def bench_all(title, iter, obj)
   puts "\n#{title} Packing"
-  bench('pack: message pack', iter) { MessagePack.pack(obj) }
+#  bench('pack: message pack', iter) { MessagePack.pack(obj) }
   bench('pack: marshall', iter) { Marshal.dump(obj) }
   bench('pack: json', iter) { JSON.dump(obj) }
   bench('pack: ox', iter) { Ox.dump(obj) }
 
   puts "\n#{title} Unpacking"
-  mp_obj = MessagePack.pack(obj)
-  bench('unpack: message pack', iter) { MessagePack.unpack(mp_obj) }
+#  mp_obj = MessagePack.pack(obj)
+#  bench('unpack: message pack', iter) { MessagePack.unpack(mp_obj) }
   mars_obj = Marshal.dump(obj)
   bench('unpack: marshal', iter) { Marshal.load(mars_obj) }
   json_obj = JSON.dump(obj)

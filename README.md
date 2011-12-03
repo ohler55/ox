@@ -26,9 +26,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.4.1
+### Release 1.4.2
 
- - Empty CDATA buf found and fixed by adamvaughan on github
+ - Made Ox more tolerant when parsing invalid XML files without a prolog.
+ - DOCTYPE value was one character too long.
 
 ## <a name="description">Description</a>
 

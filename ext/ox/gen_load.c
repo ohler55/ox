@@ -86,6 +86,20 @@ struct _ParseCallbacks   _ox_nomode_callbacks = {
 ParseCallbacks   ox_nomode_callbacks = &_ox_nomode_callbacks;
 
 static void
+create_doc(PInfo pi) {
+    VALUE       doc;
+    VALUE       nodes;
+
+    pi->h = pi->helpers;
+    doc = rb_obj_alloc(ox_document_clas);
+    nodes = rb_ary_new();
+    rb_ivar_set(doc, attributes_id, rb_hash_new());
+    rb_ivar_set(doc, nodes_id, nodes);
+    pi->h->obj = nodes;
+    pi->obj = doc;
+}
+
+static void
 create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     VALUE       doc;
     VALUE       ah;
@@ -111,8 +125,6 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     pi->h->obj = nodes;
     pi->obj = doc;
 }
-
-
 
 static void
 instruct(PInfo pi, const char *target, Attr attrs) {
@@ -178,6 +190,9 @@ add_doctype(PInfo pi, const char *docType) {
     }
 #endif
     rb_ivar_set(n, value_id, s);
+    if (0 == pi->h) { // top level object
+	create_doc(pi);
+    }
     rb_ary_push(pi->h->obj, n);
 }
 
@@ -192,6 +207,9 @@ add_comment(PInfo pi, const char *comment) {
     }
 #endif
     rb_ivar_set(n, value_id, s);
+    if (0 == pi->h) { // top level object
+	create_doc(pi);
+    }
     rb_ary_push(pi->h->obj, n);
 }
 
@@ -206,6 +224,9 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
     }
 #endif
     rb_ivar_set(n, value_id, s);
+    if (0 == pi->h) { // top level object
+	create_doc(pi);
+    }
     rb_ary_push(pi->h->obj, n);
 }
 
@@ -218,6 +239,9 @@ add_text(PInfo pi, char *text, int closed) {
         rb_enc_associate(s, pi->encoding);
     }
 #endif
+    if (0 == pi->h) { // top level object
+	create_doc(pi);
+    }
     rb_ary_push(pi->h->obj, s);
 }
 

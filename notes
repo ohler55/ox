@@ -4,9 +4,7 @@
 ^c^s show subtree
 
 
-- changes for 1.4.0
- - fixed bug in parsing the xml instruction
- - added locate() method that provides simple and limited xpath like functionality
+- allow single quotes as well as double
 
 
 - hints

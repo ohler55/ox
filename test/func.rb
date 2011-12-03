@@ -216,6 +216,12 @@ class Func < ::Test::Unit::TestCase
     assert_equal("<!DOCTYPE s SYSTEM \"ox.dtd\">\n<s>test</s>\n", xml)
   end
 
+  def test_lone_dtd
+    xml = "<!DOCTYPE html>" # not really a valid xml but should pass anyway
+    doc = Ox.parse(xml)
+    assert_equal('html', doc.nodes[0].value)
+  end
+
   def test_class
     dump_and_load(Bag, false)
   end

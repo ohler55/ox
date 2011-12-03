@@ -36,18 +36,18 @@
 #include "ruby.h"
 #include "ox.h"
 
-static void     read_instruction(PInfo pi);
-static void     read_doctype(PInfo pi);
-static void     read_comment(PInfo pi);
-static void     read_element(PInfo pi);
-static void     read_text(PInfo pi);
-//static void     read_reduced_text(PInfo pi);
-static void     read_cdata(PInfo pi);
-static char*    read_name_token(PInfo pi);
-static char*    read_quoted_value(PInfo pi);
-static int      read_coded_char(PInfo pi);
-static void     next_non_white(PInfo pi);
-static int      collapse_special(char *str);
+static void	read_instruction(PInfo pi);
+static void	read_doctype(PInfo pi);
+static void	read_comment(PInfo pi);
+static void	read_element(PInfo pi);
+static void	read_text(PInfo pi);
+//static void	  read_reduced_text(PInfo pi);
+static void	read_cdata(PInfo pi);
+static char*	read_name_token(PInfo pi);
+static char*	read_quoted_value(PInfo pi);
+static int	read_coded_char(PInfo pi);
+static void	next_non_white(PInfo pi);
+static int	collapse_special(char *str);
 
 /* This XML parser is a single pass, destructive, callback parser. It is a
  * single pass parse since it only make one pass over the characters in the
@@ -80,14 +80,14 @@ next_non_white(PInfo pi) {
 
 VALUE
 parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
-    struct _PInfo       pi;
-    int                 body_read = 0;
+    struct _PInfo	pi;
+    int			body_read = 0;
 
     if (0 == xml) {
 	raise_error("Invalid arg, xml string can not be null", xml, 0);
     }
     if (DEBUG <= trace) {
-        printf("Parsing xml:\n%s\n", xml);
+	printf("Parsing xml:\n%s\n", xml);
     }
     /* initialize parse info */
     pi.str = xml;
@@ -106,10 +106,10 @@ parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
 	if ('\0' == *pi.s) {
 	    break;
 	}
-        if (body_read && 0 != endp) {
-            *endp = pi.s;
-            break;
-        }
+	if (body_read && 0 != endp) {
+	    *endp = pi.s;
+	    break;
+	}
 	if ('<' != *pi.s) {		// all top level entities start with <
 	    raise_error("invalid format, expected <", pi.str, pi.s);
 	}
@@ -142,7 +142,7 @@ parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
 	    raise_error("invalid format, document not terminated", pi.str, pi.s);
 	default:
 	    read_element(&pi);
-            body_read = 1;
+	    body_read = 1;
 	    break;
 	}
     }
@@ -153,12 +153,12 @@ parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
  */
 static void
 read_instruction(PInfo pi) {
-    struct _Attr        attrs[MAX_ATTRS + 1];
-    Attr                a = attrs;
-    char                *target;
-    char                *end;
-    char                c;
-        
+    struct _Attr	attrs[MAX_ATTRS + 1];
+    Attr		a = attrs;
+    char		*target;
+    char		*end;
+    char		c;
+	
     memset(attrs, 0, sizeof(attrs));
     target = read_name_token(pi);
     end = pi->s;
@@ -166,37 +166,37 @@ read_instruction(PInfo pi) {
     c = *pi->s;
     *end = '\0'; // terminate name
     if ('?' != c) {
-        while ('?' != *pi->s) {
-            if ('\0' == *pi->s) {
-                raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
-            }
-            next_non_white(pi);
-            a->name = read_name_token(pi);
-            end = pi->s;
-            next_non_white(pi);
-            if ('=' != *pi->s++) {
-                raise_error("invalid format, no attribute value", pi->str, pi->s);
-            }
-            *end = '\0'; // terminate name
-            // read value
-            next_non_white(pi);
-            a->value = read_quoted_value(pi);
-            a++;
-            if (MAX_ATTRS <= (a - attrs)) {
-                raise_error("too many attributes", pi->str, pi->s);
-            }
-        }
-        if ('?' == *pi->s) {
-            pi->s++;
-        }
+	while ('?' != *pi->s) {
+	    if ('\0' == *pi->s) {
+		raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
+	    }
+	    next_non_white(pi);
+	    a->name = read_name_token(pi);
+	    end = pi->s;
+	    next_non_white(pi);
+	    if ('=' != *pi->s++) {
+		raise_error("invalid format, no attribute value", pi->str, pi->s);
+	    }
+	    *end = '\0'; // terminate name
+	    // read value
+	    next_non_white(pi);
+	    a->value = read_quoted_value(pi);
+	    a++;
+	    if (MAX_ATTRS <= (a - attrs)) {
+		raise_error("too many attributes", pi->str, pi->s);
+	    }
+	}
+	if ('?' == *pi->s) {
+	    pi->s++;
+	}
     } else {
-        pi->s++;
+	pi->s++;
     }
     if ('>' != *pi->s++) {
-        raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
+	raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
     }
     if (0 != pi->pcb->instruct) {
-        pi->pcb->instruct(pi, target, attrs);
+	pi->pcb->instruct(pi, target, attrs);
     }
 }
 
@@ -205,7 +205,7 @@ read_instruction(PInfo pi) {
  */
 static void
 read_doctype(PInfo pi) {
-    char        *docType;
+    char	*docType;
     int		depth = 1;
     char	c;
 
@@ -220,6 +220,7 @@ read_doctype(PInfo pi) {
 	} else if ('>' == c) {
 	    depth--;
 	    if (0 == depth) {	/* done, at the end */
+		pi->s--;
 		break;
 	    }
 	}
@@ -227,7 +228,7 @@ read_doctype(PInfo pi) {
     *pi->s = '\0';
     pi->s++;
     if (0 != pi->pcb->add_doctype) {
-        pi->pcb->add_doctype(pi, docType);
+	pi->pcb->add_doctype(pi, docType);
     }
 }
 
@@ -237,8 +238,8 @@ static void
 read_comment(PInfo pi) {
     char	*end;
     char	*s;
-    char        *comment;
-    int         done = 0;
+    char	*comment;
+    int		done = 0;
     
     next_non_white(pi);
     comment = pi->s;
@@ -255,7 +256,7 @@ read_comment(PInfo pi) {
 	case '\r':
 	    break;
 	default:
-            *(s + 1) = '\0';
+	    *(s + 1) = '\0';
 	    done = 1;
 	    break;
 	}
@@ -263,7 +264,7 @@ read_comment(PInfo pi) {
     *end = '\0'; // in case the comment was blank
     pi->s = end + 3;
     if (0 != pi->pcb->add_comment) {
-        pi->pcb->add_comment(pi, comment);
+	pi->pcb->add_comment(pi, comment);
     }
 }
 
@@ -272,15 +273,15 @@ read_comment(PInfo pi) {
  */
 static void
 read_element(PInfo pi) {
-    struct _Attr        attrs[MAX_ATTRS];
-    Attr                ap = attrs;
-    char	        *name;
-    char                *ename;
-    char                *end;
-    char        	c;
-    long	        elen;
-    int 		hasChildren = 0;
-    int	        	done = 0;
+    struct _Attr	attrs[MAX_ATTRS];
+    Attr		ap = attrs;
+    char		*name;
+    char		*ename;
+    char		*end;
+    char		c;
+    long		elen;
+    int			hasChildren = 0;
+    int			done = 0;
 
     ename = read_name_token(pi);
     end = pi->s;
@@ -292,22 +293,22 @@ read_element(PInfo pi) {
 	/* empty element, no attributes and no children */
 	pi->s++;
 	if ('>' != *pi->s) {
-            printf("*** '%s'***\n", pi->s);
+	    //printf("*** '%s' ***\n", pi->s);
 	    raise_error("invalid format, element not closed", pi->str, pi->s);
 	}
 	pi->s++;	/* past > */
-        ap->name = 0;
-        pi->pcb->add_element(pi, ename, attrs, hasChildren);
-        pi->pcb->end_element(pi, ename);
+	ap->name = 0;
+	pi->pcb->add_element(pi, ename, attrs, hasChildren);
+	pi->pcb->end_element(pi, ename);
 
 	return;
     }
     /* read attribute names until the close (/ or >) is reached */
     while (!done) {
-        if ('\0' == c) {
-            next_non_white(pi);
-            c = *pi->s;
-        }
+	if ('\0' == c) {
+	    next_non_white(pi);
+	    c = *pi->s;
+	}
 	switch (c) {
 	case '\0':
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
@@ -318,9 +319,9 @@ read_element(PInfo pi) {
 		raise_error("invalid format, element not closed", pi->str, pi->s);
 	    }
 	    pi->s++;
-            ap->name = 0;
-            pi->pcb->add_element(pi, ename, attrs, hasChildren);
-            pi->pcb->end_element(pi, ename);
+	    ap->name = 0;
+	    pi->pcb->add_element(pi, ename, attrs, hasChildren);
+	    pi->pcb->end_element(pi, ename);
 
 	    return;
 	case '>':
@@ -328,34 +329,34 @@ read_element(PInfo pi) {
 	    pi->s++;
 	    hasChildren = 1;
 	    done = 1;
-            ap->name = 0;
-            pi->pcb->add_element(pi, ename, attrs, hasChildren);
+	    ap->name = 0;
+	    pi->pcb->add_element(pi, ename, attrs, hasChildren);
 	    break;
 	default:
 	    // Attribute name so it's an element and the attribute will be
 	    // added to it.
 	    ap->name = read_name_token(pi);
-            end = pi->s;
+	    end = pi->s;
 	    next_non_white(pi);
 	    if ('=' != *pi->s++) {
 		raise_error("invalid format, no attribute value", pi->str, pi->s);
 	    }
-            *end = '\0'; // terminate name
+	    *end = '\0'; // terminate name
 	    // read value
 	    next_non_white(pi);
 	    ap->value = read_quoted_value(pi);
-            if (0 != strchr(ap->value, '&')) {
-                if (0 != collapse_special((char*)ap->value)) {
-                    raise_error("invalid format, special character does not end with a semicolon", pi->str, pi->s);
-                }
-            }
-            ap++;
-            if (MAX_ATTRS <= (ap - attrs)) {
+	    if (0 != strchr(ap->value, '&')) {
+		if (0 != collapse_special((char*)ap->value)) {
+		    raise_error("invalid format, special character does not end with a semicolon", pi->str, pi->s);
+		}
+	    }
+	    ap++;
+	    if (MAX_ATTRS <= (ap - attrs)) {
 		raise_error("too many attributes", pi->str, pi->s);
-            }
+	    }
 	    break;
 	}
-        c = '\0';
+	c = '\0';
     }
     if (hasChildren) {
 	char	*start;
@@ -386,18 +387,18 @@ read_element(PInfo pi) {
 		case '/':
 		    pi->s++;
 		    name = read_name_token(pi);
-                    end = pi->s;
+		    end = pi->s;
 		    next_non_white(pi);
-                    c = *pi->s;
-                    *end = '\0';
+		    c = *pi->s;
+		    *end = '\0';
 		    if (0 != strcmp(name, ename)) {
 			raise_error("invalid format, elements overlap", pi->str, pi->s);
 		    }
 		    if ('>' != c) {
 			raise_error("invalid format, element not closed", pi->str, pi->s);
 		    }
-                    pi->s++;
-                    pi->pcb->end_element(pi, ename);
+		    pi->s++;
+		    pi->pcb->end_element(pi, ename);
 		    return;
 		case '\0':
 		    raise_error("invalid format, document not terminated", pi->str, pi->s);
@@ -418,7 +419,7 @@ read_element(PInfo pi) {
 		    '>' == *(pi->s + elen + 2)) {
 		    // close tag after text so treat as a value
 		    pi->s += elen + 3;
-                    pi->pcb->end_element(pi, ename);
+		    pi->pcb->end_element(pi, ename);
 		    return;
 		}
 	    }
@@ -428,9 +429,9 @@ read_element(PInfo pi) {
 
 static void
 read_text(PInfo pi) {
-    char        buf[MAX_TEXT_LEN];
+    char	buf[MAX_TEXT_LEN];
     char	*b = buf;
-    char        *alloc_buf = 0;
+    char	*alloc_buf = 0;
     char	*end = b + sizeof(buf) - 2;
     char	c;
     int		done = 0;
@@ -449,25 +450,25 @@ read_text(PInfo pi) {
 		c = read_coded_char(pi);
 	    }
 	    if (end <= b) {
-                unsigned long   size;
-                
-                if (0 == alloc_buf) {
-                    size = sizeof(buf) * 2;
-                    if (0 == (alloc_buf = (char*)malloc(size))) {
-                        raise_error("text too long", pi->str, pi->s);
-                    }
-                    memcpy(alloc_buf, buf, b - buf);
-                    b = alloc_buf + (b - buf);
-                } else {
-                    unsigned long       pos = b - alloc_buf;
+		unsigned long	size;
+		
+		if (0 == alloc_buf) {
+		    size = sizeof(buf) * 2;
+		    if (0 == (alloc_buf = (char*)malloc(size))) {
+			raise_error("text too long", pi->str, pi->s);
+		    }
+		    memcpy(alloc_buf, buf, b - buf);
+		    b = alloc_buf + (b - buf);
+		} else {
+		    unsigned long	pos = b - alloc_buf;
 
-                    size = (end - alloc_buf) * 2;
-                    if (0 == (alloc_buf = (char*)realloc(alloc_buf, size))) {
-                        raise_error("text too long", pi->str, pi->s);
-                    }
-                    b = alloc_buf + pos;
-                }
-                end = alloc_buf + size - 2;
+		    size = (end - alloc_buf) * 2;
+		    if (0 == (alloc_buf = (char*)realloc(alloc_buf, size))) {
+			raise_error("text too long", pi->str, pi->s);
+		    }
+		    b = alloc_buf + pos;
+		}
+		end = alloc_buf + size - 2;
 	    }
 	    *b++ = c;
 	    break;
@@ -475,19 +476,19 @@ read_text(PInfo pi) {
     }
     *b = '\0';
     if (0 != alloc_buf) {
-        pi->pcb->add_text(pi, alloc_buf, ('/' == *(pi->s + 1)));
-        free(alloc_buf);
+	pi->pcb->add_text(pi, alloc_buf, ('/' == *(pi->s + 1)));
+	free(alloc_buf);
     } else {
-        pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
+	pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
     }
 }
 
 #if 0
 static void
 read_reduced_text(PInfo pi) {
-    char        buf[MAX_TEXT_LEN];
+    char	buf[MAX_TEXT_LEN];
     char	*b = buf;
-    char        *alloc_buf = 0;
+    char	*alloc_buf = 0;
     char	*end = b + sizeof(buf) - 2;
     char	c;
     int		spc = 0;
@@ -514,25 +515,25 @@ read_reduced_text(PInfo pi) {
 		c = read_coded_char(pi);
 	    }
 	    if (end <= b + spc) {
-                unsigned long   size;
-                
-                if (0 == alloc_buf) {
-                    size = sizeof(buf) * 2;
-                    if (0 == (alloc_buf = (char*)malloc(size))) {
-                        raise_error("text too long", pi->str, pi->s);
-                    }
-                    memcpy(alloc_buf, buf, b - buf);
-                    b = alloc_buf + (b - buf);
-                } else {
-                    unsigned long       pos = b - alloc_buf;
+		unsigned long	size;
+		
+		if (0 == alloc_buf) {
+		    size = sizeof(buf) * 2;
+		    if (0 == (alloc_buf = (char*)malloc(size))) {
+			raise_error("text too long", pi->str, pi->s);
+		    }
+		    memcpy(alloc_buf, buf, b - buf);
+		    b = alloc_buf + (b - buf);
+		} else {
+		    unsigned long	pos = b - alloc_buf;
 
-                    size = (end - alloc_buf) * 2;
-                    if (0 == (alloc_buf = (char*)realloc(alloc_buf, size))) {
-                        raise_error("text too long", pi->str, pi->s);
-                    }
-                    b = alloc_buf + pos;
-                }
-                end = alloc_buf + size - 2;
+		    size = (end - alloc_buf) * 2;
+		    if (0 == (alloc_buf = (char*)realloc(alloc_buf, size))) {
+			raise_error("text too long", pi->str, pi->s);
+		    }
+		    b = alloc_buf + pos;
+		}
+		end = alloc_buf + size - 2;
 	    }
 	    if (spc) {
 		*b++ = ' ';
@@ -544,17 +545,17 @@ read_reduced_text(PInfo pi) {
     }
     *b = '\0';
     if (0 != alloc_buf) {
-        pi->pcb->add_text(pi, alloc_buf, ('/' == *(pi->s + 1)));
-        free(alloc_buf);
+	pi->pcb->add_text(pi, alloc_buf, ('/' == *(pi->s + 1)));
+	free(alloc_buf);
     } else {
-        pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
+	pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
     }
 }
 #endif
 
 static char*
 read_name_token(PInfo pi) {
-    char        *start;
+    char	*start;
 
     next_non_white(pi);
     start = pi->s;
@@ -571,9 +572,9 @@ read_name_token(PInfo pi) {
 	case '\r':
 	    return start;
 	case '\0':
-            // documents never terminate after a name token
+	    // documents never terminate after a name token
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
-            break; // to avoid warnings
+	    break; // to avoid warnings
 	default:
 	    break;
 	}
@@ -584,7 +585,7 @@ read_name_token(PInfo pi) {
 static void
 read_cdata(PInfo pi) {
     char	*start;
-    char        *end;
+    char	*end;
 
     start = pi->s;
     end = strstr(pi->s, "]]>");
@@ -594,7 +595,7 @@ read_cdata(PInfo pi) {
     *end = '\0';
     pi->s = end + 3;
     if (0 != pi->pcb->add_cdata) {
-        pi->pcb->add_cdata(pi, start, end - start);
+	pi->pcb->add_cdata(pi, start, end - start);
     }
 }
 
@@ -603,7 +604,7 @@ read_cdata(PInfo pi) {
  */
 static char*
 read_quoted_value(PInfo pi) {
-    char        *value;
+    char	*value;
     
     if ('"' != *pi->s) {
 	raise_error("invalid format, expected a quote character", pi->str, pi->s);
@@ -613,10 +614,10 @@ read_quoted_value(PInfo pi) {
     for (; *pi->s != '"'; pi->s++) {
 	if ('\0' == *pi->s) {
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
-        }
+	}
     }
     *pi->s = '\0'; // terminate value
-    pi->s++;       // move past quote
+    pi->s++;	   // move past quote
 
     return value;
 }
@@ -672,49 +673,49 @@ read_coded_char(PInfo pi) {
 
 static int
 collapse_special(char *str) {
-    char        *s = str;
-    char        *b = str;
+    char	*s = str;
+    char	*b = str;
 
     while ('\0' != *s) {
-        if ('&' == *s) {
-            int         c;
-            char        *end;
-            
-            s++;
-            if ('#' == *s) {
-                c = (int)strtol(s, &end, 10);
-                if (';' != *end) {
-                    return EDOM;
-                }
-                s = end + 1;
-            } else if (0 == strncasecmp(s, "lt;", 3)) {
-                c = '<';
-                s += 3;
-            } else if (0 == strncasecmp(s, "gt;", 3)) {
-                c = '>';
-                s += 3;
-            } else if (0 == strncasecmp(s, "amp;", 4)) {
-                c = '&';
-                s += 4;
-            } else if (0 == strncasecmp(s, "quot;", 5)) {
-                c = '"';
-                s += 5;
-            } else if (0 == strncasecmp(s, "apos;", 5)) {
-                c = '\'';
-                s += 5;
-            } else {
-                c = '?';
-                while (';' != *s++) {
-                    if ('\0' == *s) {
-                        return EDOM;
-                    }
-                }
-                s++;
-            }
-            *b++ = (char)c;
-        } else {
-            *b++ = *s++;
-        }
+	if ('&' == *s) {
+	    int		c;
+	    char	*end;
+	    
+	    s++;
+	    if ('#' == *s) {
+		c = (int)strtol(s, &end, 10);
+		if (';' != *end) {
+		    return EDOM;
+		}
+		s = end + 1;
+	    } else if (0 == strncasecmp(s, "lt;", 3)) {
+		c = '<';
+		s += 3;
+	    } else if (0 == strncasecmp(s, "gt;", 3)) {
+		c = '>';
+		s += 3;
+	    } else if (0 == strncasecmp(s, "amp;", 4)) {
+		c = '&';
+		s += 4;
+	    } else if (0 == strncasecmp(s, "quot;", 5)) {
+		c = '"';
+		s += 5;
+	    } else if (0 == strncasecmp(s, "apos;", 5)) {
+		c = '\'';
+		s += 5;
+	    } else {
+		c = '?';
+		while (';' != *s++) {
+		    if ('\0' == *s) {
+			return EDOM;
+		    }
+		}
+		s++;
+	    }
+	    *b++ = (char)c;
+	} else {
+	    *b++ = *s++;
+	}
     }
     *b = '\0';
 
