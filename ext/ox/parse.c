@@ -78,6 +78,23 @@ next_non_white(PInfo pi) {
     }
 }
 
+inline static void
+next_white(PInfo pi) {
+    for (; 1; pi->s++) {
+	switch(*pi->s) {
+	case ' ':
+	case '\t':
+	case '\f':
+	case '\n':
+	case '\r':
+	case '\0':
+	    return;
+	default:
+	    break;
+	}
+    }
+}
+
 VALUE
 parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
     struct _PInfo	pi;
@@ -599,26 +616,53 @@ read_cdata(PInfo pi) {
     }
 }
 
+inline static void
+next_non_token(PInfo pi) {
+    for (; 1; pi->s++) {
+	switch(*pi->s) {
+	case ' ':
+	case '\t':
+	case '\f':
+	case '\n':
+	case '\r':
+	case '/':
+	case '>':
+	    return;
+	default:
+	    break;
+	}
+    }
+}
+
 /* Assume the value starts immediately and goes until the quote character is
  * reached again. Do not read the character after the terminating quote.
  */
 static char*
 read_quoted_value(PInfo pi) {
-    char	*value;
+    char	*value = 0;
     
-    if ('"' != *pi->s) {
+    if ('"' == *pi->s || ('\'' == *pi->s && StrictEffort != pi->effort)) {
+        char	term = *pi->s;
+        
+        pi->s++;	// skip quote character
+        value = pi->s;
+        for (; *pi->s != term; pi->s++) {
+            if ('\0' == *pi->s) {
+                raise_error("invalid format, document not terminated", pi->str, pi->s);
+            }
+        }
+        *pi->s = '\0'; // terminate value
+        pi->s++;	   // move past quote
+    } else if (StrictEffort == pi->effort) {
 	raise_error("invalid format, expected a quote character", pi->str, pi->s);
-    }
-    pi->s++;	// skip quote character
-    value = pi->s;
-    for (; *pi->s != '"'; pi->s++) {
+    } else {
+        value = pi->s;
+        next_white(pi);
 	if ('\0' == *pi->s) {
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
-	}
+        }
+        *pi->s++ = '\0'; // terminate value
     }
-    *pi->s = '\0'; // terminate value
-    pi->s++;	   // move past quote
-
     return value;
 }
 

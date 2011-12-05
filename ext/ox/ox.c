@@ -355,16 +355,16 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
         obj = parse(xml, ox_obj_callbacks, 0, options.trace, options.effort);
         break;
     case GenMode:
-        obj = parse(xml, ox_gen_callbacks, 0, options.trace, StrictEffort);
+        obj = parse(xml, ox_gen_callbacks, 0, options.trace, options.effort);
         break;
     case LimMode:
-        obj = parse(xml, ox_limited_callbacks, 0, options.trace, StrictEffort);
+        obj = parse(xml, ox_limited_callbacks, 0, options.trace, options.effort);
         break;
     case NoMode:
         obj = parse(xml, ox_nomode_callbacks, 0, options.trace, options.effort);
         break;
     default:
-        obj = parse(xml, ox_gen_callbacks, 0, options.trace, StrictEffort);
+        obj = parse(xml, ox_gen_callbacks, 0, options.trace, options.effort);
         break;
     }
     free(xml);

@@ -222,6 +222,24 @@ class Func < ::Test::Unit::TestCase
     assert_equal('html', doc.nodes[0].value)
   end
 
+  def test_quote_value
+    xml = %{<top name="Pete"/>}
+    doc = Ox.parse(xml)
+    assert_equal('Pete', doc.attributes[:name])
+  end
+
+  def test_single_quote
+    xml = %{<top name='Pete'/>}
+    doc = Ox.load(xml, :effort => :tolerant)
+    assert_equal('Pete', doc.attributes[:name])
+  end
+
+  def test_no_quote
+    xml = %{<top name=Pete />}
+    doc = Ox.load(xml, :effort => :tolerant)
+    assert_equal('Pete', doc.attributes[:name])
+  end
+
   def test_class
     dump_and_load(Bag, false)
   end

@@ -26,10 +26,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.4.2
+### Release 1.4.3
 
- - Made Ox more tolerant when parsing invalid XML files without a prolog.
- - DOCTYPE value was one character too long.
+ - In tolerant mode attribute values can now be surrounded by single quotes.
+ - In tolerant mode attribute values can now be without quotes as long as they do not contain spaces and are followed by a white space character.
 
 ## <a name="description">Description</a>
 

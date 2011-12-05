@@ -4,9 +4,6 @@
 ^c^s show subtree
 
 
-- allow single quotes as well as double
-
-
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
 

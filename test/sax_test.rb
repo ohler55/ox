@@ -127,10 +127,11 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_element_attrs
-    parse_compare(%{<top x="57" y="42"/>}, 
+    parse_compare(%{<top x="57" y='42' z=33 />}, 
                   [[:start_element, :top],
                    [:attr, :x, "57"],
                    [:attr, :y, "42"],
+                   [:attr, :z, "33"],
                    [:end_element, :top]])
   end
 

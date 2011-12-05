@@ -131,6 +131,29 @@ next_non_white(SaxDrive dr) {
     return '\0';
 }
 
+/* Starts by reading a character so it is safe to use with an empty or
+ * compacted buffer.
+ */
+inline static char
+next_white(SaxDrive dr) {
+    char        c;
+
+    while ('\0' != (c = sax_drive_get(dr))) {
+	switch(c) {
+	case ' ':
+	case '\t':
+	case '\f':
+	case '\n':
+	case '\r':
+	case '\0':
+	    return c;
+	default:
+	    break;
+	}
+    }
+    return '\0';
+}
+
 inline static int
 is_white(char c) {
     switch(c) {
@@ -727,19 +750,23 @@ read_quoted_value(SaxDrive dr) {
     if (is_white(c)) {
         c = next_non_white(dr);
     }
-    if ('"' != c) {
-        sax_drive_error(dr, "invalid format, attibute value not in quotes", 1);
-        return -1;
-    }
-    dr->str = dr->cur;
-    while ('"' != (c = sax_drive_get(dr))) {
-        if ('\0' == c) {
-            sax_drive_error(dr, "invalid format, quoted value not terminated", 1);
-            return -1;
-        }
-    }
-    *(dr->cur - 1) = '\0'; // terminate value
+    if ('"' == c || '\'' == c) {
+	char	term = c;
 
+        dr->str = dr->cur;
+        while (term != (c = sax_drive_get(dr))) {
+            if ('\0' == c) {
+                sax_drive_error(dr, "invalid format, quoted value not terminated", 1);
+                return -1;
+            }
+        }
+    } else {
+        dr->str = dr->cur - 1;
+        if ('\0' == (c = next_white(dr))) {
+	    sax_drive_error(dr, "invalid format, attibute value not in quotes", 1);
+	}
+    }        
+    *(dr->cur - 1) = '\0'; // terminate value
     return 0;
 }
 
