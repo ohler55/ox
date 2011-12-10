@@ -10,7 +10,12 @@ Gem::Specification.new do |s|
   s.email = "peter@ohler.com"
   s.homepage = "https://github.com/ohler55/ox"
   s.summary = "A fast XML parser and object serializer."
-  s.description = "A fast XML parser and object serializer that uses only standard C lib."
+  s.description = %{A fast XML parser and object serializer that uses only standard C lib.
+            
+Optimized XML (Ox), as the name implies was written to provide speed optimized
+XML handling. It was designed to be an alternative to Nokogiri and other Ruby
+XML parsers for generic XML parsing and as an alternative to Marshal for Object
+serialization. }
 
   s.files = Dir["{lib,ext,test}/**/*.{rb,h,c,graffle}"] + ['LICENSE', 'README.md']
 

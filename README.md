@@ -34,11 +34,13 @@ A fast XML parser and Object marshaller as a Ruby gem.
 ## <a name="description">Description</a>
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
-XML handling. It was designed to be an alternative to Nokogiri in generic XML
-parsing and as an alternative to Marshal for Object serialization. 
+XML handling. It was designed to be an alternative to Nokogiri and other Ruby
+XML parsers in generic XML parsing and as an alternative to Marshal for Object
+serialization.
 
-Unlike Nokogiri Ox is self contained. Ox uses nothing other than standard C
-libraries so version issues with libXml are not an issue.
+Unlike some other Ruby XML parsers, Ox is self contained. Ox uses nothing
+other than standard C libraries so version issues with libXml are not an
+issue.
 
 Marshal uses a binary format for serializing Objects. That binary format
 changes with releases making Marshal dumped Object incompatible between some
@@ -48,9 +50,9 @@ used for inspecting the serialize Object. Ox on the other hand uses human
 readable XML. Ox also includes options that allow strict, tolerant, or a mode
 that automatically defines missing classes.
 
-It is possible to write an XML serialization gem with Nokogiri but writing
-such a package in Ruby results in a module significantly slower than
-Marshal. This is what triggered the start of Ox development.
+It is possible to write an XML serialization gem with Nokogiri or other XML
+parsers but writing such a package in Ruby results in a module significantly
+slower than Marshal. This is what triggered the start of Ox development.
 
 Ox handles XML documents in three ways. It is a generic XML parser and writer,
 a fast Object / XML marshaller, and a stream SAX parser. Ox was written for
