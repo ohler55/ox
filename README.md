@@ -26,10 +26,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.4.3
+### Release 1.4.4
 
- - In tolerant mode attribute values can now be surrounded by single quotes.
- - In tolerant mode attribute values can now be without quotes as long as they do not contain spaces and are followed by a white space character.
+ - Fixed off by 1 error that caused reallocation error for long XML messages.
 
 ## <a name="description">Description</a>
 

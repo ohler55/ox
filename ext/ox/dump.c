@@ -1012,7 +1012,7 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
 
     out->w_time = (Yes == copts->xsd_date) ? dump_time_xsd : dump_time_thin;
     out->buf = (char*)malloc(65336);
-    out->end = out->buf + 65336;
+    out->end = out->buf + 65325; // 1 less than end plus extra for possible errors
     out->cur = out->buf;
     out->circ_cache = 0;
     out->circ_cnt = 0;
