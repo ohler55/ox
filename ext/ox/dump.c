@@ -697,7 +697,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
                 out->w_end(out, &e);
             }
 #else
-#if (defined JRUBY || defined RBX_Qnil)
+#if (defined JRUBY || defined RUBINIUS)
             VALUE       vars = rb_funcall2(obj, rb_intern("instance_variables"), 0, 0);
 #else
             VALUE       vars = rb_obj_instance_variables(obj);

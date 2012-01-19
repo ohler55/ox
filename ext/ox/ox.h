@@ -48,7 +48,14 @@ extern "C" {
 #ifdef JRUBY
 #define NO_RSTRUCT 1
 #endif
-#ifdef RBX_Qnil
+
+#if (defined RBX_Qnil && !defined RUBINIUS)
+#define RUBINIUS
+#endif
+
+#ifdef RUBINIUS
+#undef T_RATIONAL
+#undef T_COMPLEX
 #define NO_RSTRUCT 1
 #endif
 
