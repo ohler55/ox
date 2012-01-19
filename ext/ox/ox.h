@@ -176,6 +176,8 @@ struct _PInfo {
     CircArray           circ_array;
 #ifdef HAVE_RUBY_ENCODING_H
     rb_encoding         *encoding;
+#else
+    void		*encoding;
 #endif
     unsigned long       id;             /* set for text types when cirs_array is set */
     int                 trace;

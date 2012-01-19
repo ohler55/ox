@@ -49,7 +49,7 @@ static VALUE    parse_xsd_time(const char *text, VALUE clas);
 static VALUE    parse_double_time(const char *text, VALUE clas);
 static VALUE    parse_regexp(const char *text);
 
-static VALUE            get_var_sym_from_attrs(Attr a, rb_encoding *encoding);
+static VALUE            get_var_sym_from_attrs(Attr a, void *encoding);
 static VALUE            get_obj_from_attrs(Attr a, PInfo pi);
 static VALUE            get_class_from_attrs(Attr a, PInfo pi);
 static VALUE            classname2class(const char *name, PInfo pi);
@@ -79,14 +79,14 @@ extern ParseCallbacks   ox_gen_callbacks;
 
 
 inline static VALUE
-str2sym(const char *str, rb_encoding *encoding) {
+str2sym(const char *str, void *encoding) {
     VALUE	sym;
     
 #ifdef HAVE_RUBY_ENCODING_H
     if (0 != encoding) {
 	VALUE	rstr = rb_str_new2(str);
 
-	rb_enc_associate(rstr, encoding);
+	rb_enc_associate(rstr, (rb_encoding*)encoding);
 	sym = rb_funcall(rstr, to_sym_id, 0);
     } else {
 	sym = ID2SYM(rb_intern(str));
@@ -98,7 +98,7 @@ str2sym(const char *str, rb_encoding *encoding) {
 }
 
 inline static ID
-name2var(const char *name, rb_encoding *encoding) {
+name2var(const char *name, void *encoding) {
     VALUE       *slot;
     ID          var_id;
 
@@ -110,7 +110,7 @@ name2var(const char *name, rb_encoding *encoding) {
 	    VALUE	rstr = rb_str_new2(name);
 	    VALUE	sym;
 	    
-	    rb_enc_associate(rstr, encoding);
+	    rb_enc_associate(rstr, (rb_encoding*)encoding);
 	    sym = rb_funcall(rstr, to_sym_id, 0);
 	    var_id = SYM2ID(sym);
 	} else {
@@ -237,7 +237,7 @@ classname2class(const char *name, PInfo pi) {
 }
 
 static VALUE
-get_var_sym_from_attrs(Attr a, rb_encoding *encoding) {
+get_var_sym_from_attrs(Attr a, void *encoding) {
     for (; 0 != a->name; a++) {
         if ('a' == *a->name && '\0' == *(a->name + 1)) {
             return name2var(a->value, encoding);
