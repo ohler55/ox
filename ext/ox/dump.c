@@ -856,6 +856,15 @@ dump_gen_doc(VALUE obj, unsigned int depth, Out out) {
     VALUE       attrs = rb_attr_get(obj, attributes_id);
     VALUE       nodes = rb_attr_get(obj, nodes_id);
 
+    if ('\0' == *out->opts->encoding && Qnil != attrs) {
+	VALUE	renc = rb_hash_lookup(attrs, encoding_sym);
+
+        if (Qnil != renc) {
+	    const char  *enc = StringValuePtr(renc);
+
+	    strncpy(out->opts->encoding, enc, sizeof(out->opts->encoding) - 1);
+        }
+    }
     if (Yes == out->opts->with_xml) {
         dump_value(out, "<?xml", 5);
         if (Qnil != attrs) {
@@ -1022,9 +1031,9 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
     }
     out->indent = copts->indent;
     if (ox_document_clas == clas) {
-        dump_gen_doc(obj, -1, out);
+	dump_gen_doc(obj, -1, out);
     } else if (ox_element_clas == clas) {
-        dump_gen_element(obj, 0, out);
+	dump_gen_element(obj, 0, out);
     } else {
         out->w_start = dump_start;
         out->w_end = dump_end;

@@ -391,6 +391,38 @@ class Func < ::Test::Unit::TestCase
     end
   end
 
+  def test_full_encoding
+    if RUBY_VERSION.start_with?('1.8')
+      assert(true)
+    else
+      xml = %{<?xml version="1.0" encoding="UTF-8"?>
+<いち name="ピーター" つま="まきえ">ピーター</いち>
+}
+      obj = Ox.load(xml)
+      dumped = Ox.dump(obj, :with_xml => true)
+      assert_equal('UTF-8', dumped.encoding.to_s)
+      assert_equal(xml, dumped)
+    end
+  end
+
+  def test_obj_encoding
+    if RUBY_VERSION.start_with?('1.8')
+      assert(true)
+    else
+      orig = Ox.default_options
+      opts = orig.clone
+      opts[:encoding] = 'UTF-8'
+      opts[:with_xml] = true
+      Ox.default_options = opts
+      begin
+        dump_and_load(Bag.new(:@tsuma => :まきえ), false)
+        dump_and_load(Bag.new(:@つま => :まきえ), false)
+      ensure
+        Ox.default_options = orig
+      end
+    end
+  end
+
   def test_instructions
     xml = Ox.dump("test", :with_instructions => true)
     #puts xml

@@ -57,6 +57,7 @@ ID      end_element_id;
 ID      end_id;
 ID      error_id;
 ID      excl_id;
+ID	fileno_id;
 ID      inspect_id;
 ID      instruct_id;
 ID      keys_id;
@@ -70,6 +71,7 @@ ID      start_element_id;
 ID      text_id;
 ID      to_c_id;
 ID      to_s_id;
+ID	to_sym_id;
 ID      tv_sec_id;
 ID      tv_usec_id;
 ID      value_id;
@@ -97,6 +99,7 @@ VALUE   with_dtd_sym;
 VALUE   with_instruct_sym;
 VALUE   convert_special_sym;
 VALUE   with_xml_sym;
+
 VALUE   empty_string;
 VALUE   zero_fixnum;
 
@@ -645,6 +648,7 @@ void Init_ox() {
     end_id = rb_intern("@end");
     error_id = rb_intern("error");
     excl_id = rb_intern("@excl");
+    fileno_id = rb_intern("fileno");
     inspect_id = rb_intern("inspect");
     instruct_id = rb_intern("instruct");
     keys_id = rb_intern("keys");
@@ -658,6 +662,7 @@ void Init_ox() {
     text_id = rb_intern("text");
     to_c_id = rb_intern("to_c");
     to_s_id = rb_intern("to_s");
+    to_sym_id = rb_intern("to_sym");
     tv_sec_id = rb_intern("tv_sec");
     tv_usec_id = rb_intern("tv_usec");
     value_id = rb_intern("@value");

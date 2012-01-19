@@ -447,4 +447,22 @@ encoding = "UTF-8" ?>},
     end
   end
 
+  def test_sax_full_encoding
+    if RUBY_VERSION.start_with?('1.8')
+      assert(true)
+    else
+      parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
+<いち name="ピーター" つま="まきえ">ピーター</いち>
+},
+                    [[:instruct, "xml"],
+                     [:attr, :version, "1.0"],
+                     [:attr, :encoding, "UTF-8"],
+                     [:start_element, :いち],
+                     [:attr, :name, 'ピーター'],
+                     [:attr, :つま, 'まきえ'],
+                     [:text, 'ピーター'],
+                     [:end_element, :いち]])
+    end
+  end
+
 end

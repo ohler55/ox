@@ -49,7 +49,7 @@ static VALUE    parse_xsd_time(const char *text, VALUE clas);
 static VALUE    parse_double_time(const char *text, VALUE clas);
 static VALUE    parse_regexp(const char *text);
 
-static VALUE            get_var_sym_from_attrs(Attr a);
+static VALUE            get_var_sym_from_attrs(Attr a, rb_encoding *encoding);
 static VALUE            get_obj_from_attrs(Attr a, PInfo pi);
 static VALUE            get_class_from_attrs(Attr a, PInfo pi);
 static VALUE            classname2class(const char *name, PInfo pi);
@@ -78,15 +78,47 @@ ParseCallbacks   ox_obj_callbacks = &_ox_obj_callbacks;
 extern ParseCallbacks   ox_gen_callbacks;
 
 
+inline static VALUE
+str2sym(const char *str, rb_encoding *encoding) {
+    VALUE	sym;
+    
+#ifdef HAVE_RUBY_ENCODING_H
+    if (0 != encoding) {
+	VALUE	rstr = rb_str_new2(str);
+
+	rb_enc_associate(rstr, encoding);
+	sym = rb_funcall(rstr, to_sym_id, 0);
+    } else {
+	sym = ID2SYM(rb_intern(str));
+    }
+#else
+    sym = ID2SYM(rb_intern(str));
+#endif
+    return sym;
+}
+
 inline static ID
-name2var(const char *name) {
+name2var(const char *name, rb_encoding *encoding) {
     VALUE       *slot;
     ID          var_id;
 
     if ('0' <= *name && *name <= '9') {
         var_id = INT2NUM(atoi(name));
     } else if (Qundef == (var_id = ox_cache_get(attr_cache, name, &slot))) {
-        var_id = rb_intern(name);
+#ifdef HAVE_RUBY_ENCODING_H
+	if (0 != encoding) {
+	    VALUE	rstr = rb_str_new2(name);
+	    VALUE	sym;
+	    
+	    rb_enc_associate(rstr, encoding);
+	    sym = rb_funcall(rstr, to_sym_id, 0);
+	    var_id = SYM2ID(sym);
+	} else {
+	    var_id = rb_intern(name);
+	}
+#else
+	var_id = rb_intern(name);
+#endif
         *slot = var_id;
     }
     return var_id;
@@ -205,10 +237,10 @@ classname2class(const char *name, PInfo pi) {
 }
 
 static VALUE
-get_var_sym_from_attrs(Attr a) {
+get_var_sym_from_attrs(Attr a, rb_encoding *encoding) {
     for (; 0 != a->name; a++) {
         if ('a' == *a->name && '\0' == *(a->name + 1)) {
-            return name2var(a->value);
+            return name2var(a->value, encoding);
         }
     }
     return Qundef;
@@ -420,7 +452,7 @@ add_text(PInfo pi, char *text, int closed) {
         VALUE   *slot;
 
         if (Qundef == (sym = ox_cache_get(symbol_cache, text, &slot))) {
-            sym = ID2SYM(rb_intern(text));
+	    sym = str2sym(text, pi->encoding);
             *slot = sym;
         }
         pi->h->obj = sym;
@@ -472,7 +504,7 @@ add_text(PInfo pi, char *text, int closed) {
         }
         from_base64(text, (u_char*)str);
         if (Qundef == (sym = ox_cache_get(symbol_cache, str, &slot))) {
-            sym = ID2SYM(rb_intern(str));
+	    sym = str2sym(str, pi->encoding);
             *slot = sym;
         }
         pi->h->obj = sym;
@@ -548,7 +580,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     }
     h = pi->h;
     h->type = *ename;
-    h->var = get_var_sym_from_attrs(attrs);
+    h->var = get_var_sym_from_attrs(attrs, pi->encoding);
     switch (h->type) {
     case NilClassCode:
         h->obj = Qnil;

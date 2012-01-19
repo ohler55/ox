@@ -3,6 +3,11 @@
 ^c^d hide subtree
 ^c^s show subtree
 
+- encoding
+ - tag names and attribute names should all be encoded
+  - what about embedded ", =, space, >
+
+
 
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml

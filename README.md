@@ -26,9 +26,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.4.4
+### Release 1.4.5
 
- - Fixed off by 1 error that caused reallocation error for long XML messages.
+ - Fixed encoding issues with all parsers so that attribute and element names can now be encoded with something other than ASCII.
 
 ## <a name="description">Description</a>
 

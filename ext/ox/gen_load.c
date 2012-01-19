@@ -105,6 +105,7 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     VALUE       doc;
     VALUE       ah;
     VALUE       nodes;
+    VALUE	sym;
 
     if (0 != pi->h) { // top level object
         rb_raise(rb_eSyntaxError, "Prolog must be the first element in an XML document.\n");
@@ -113,7 +114,19 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     doc = rb_obj_alloc(ox_document_clas);
     ah = rb_hash_new();
     for (; 0 != attrs->name; attrs++) {
-        rb_hash_aset(ah, ID2SYM(rb_intern(attrs->name)), rb_str_new2(attrs->value));
+#ifdef HAVE_RUBY_ENCODING_H
+	if (0 != pi->encoding) {
+	    VALUE	rstr = rb_str_new2(attrs->name);
+
+	    rb_enc_associate(rstr, pi->encoding);
+	    sym = rb_funcall(rstr, to_sym_id, 0);
+	} else {
+	    sym = ID2SYM(rb_intern(attrs->name));
+	}
+#else
+	sym = ID2SYM(rb_intern(attrs->name));
+#endif
+        rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
 #ifdef HAVE_RUBY_ENCODING_H
         if (0 == strcmp("encoding", attrs->name)) {
             pi->encoding = rb_enc_find(attrs->value);
@@ -266,7 +279,18 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
             VALUE   *slot;
 
             if (Qundef == (sym = ox_cache_get(symbol_cache, attrs->name, &slot))) {
+#ifdef HAVE_RUBY_ENCODING_H
+		if (0 != pi->encoding) {
+		    VALUE	rstr = rb_str_new2(attrs->name);
+
+		    rb_enc_associate(rstr, pi->encoding);
+		    sym = rb_funcall(rstr, to_sym_id, 0);
+		} else {
+		    sym = ID2SYM(rb_intern(attrs->name));
+		}
+#else
                 sym = ID2SYM(rb_intern(attrs->name));
+#endif
                 *slot = sym;
             }
             s = rb_str_new2(attrs->value);

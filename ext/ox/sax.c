@@ -170,12 +170,23 @@ is_white(char c) {
 }
 
 inline static VALUE
-str2sym(const char *str) {
+str2sym(const char *str, SaxDrive dr) {
     VALUE       *slot;
     VALUE       sym;
 
     if (Qundef == (sym = ox_cache_get(symbol_cache, str, &slot))) {
+#ifdef HAVE_RUBY_ENCODING_H
+        if (0 != dr->encoding) {
+	    VALUE	rstr = rb_str_new2(str);
+
+            rb_enc_associate(rstr, dr->encoding);
+	    sym = rb_funcall(rstr, to_sym_id, 0);
+        } else {
+	    sym = ID2SYM(rb_intern(str));
+	}
+#else
         sym = ID2SYM(rb_intern(str));
+#endif
         *slot = sym;
     }
     return sym;
@@ -208,7 +219,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
     if (rb_respond_to(io, readpartial_id)) {
         VALUE   rfd;
 
-        if (rb_respond_to(io, rb_intern("fileno")) && Qnil != (rfd = rb_funcall(io, rb_intern("fileno"), 0))) {
+        if (rb_respond_to(io, fileno_id) && Qnil != (rfd = rb_funcall(io, fileno_id, 0))) {
             dr->read_func = read_from_fd;
             dr->fd = FIX2INT(rfd);
         } else {
@@ -218,7 +229,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
     } else if (rb_respond_to(io, read_id)) {
         VALUE   rfd;
 
-        if (rb_respond_to(io, rb_intern("fileno")) && Qnil != (rfd = rb_funcall(io, rb_intern("fileno"), 0))) {
+        if (rb_respond_to(io, fileno_id) && Qnil != (rfd = rb_funcall(io, fileno_id, 0))) {
             dr->read_func = read_from_fd;
             dr->fd = FIX2INT(rfd);
         } else {
@@ -565,7 +576,8 @@ read_element(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
     }
-    name = str2sym(dr->str);
+    // TBD encode is needed
+    name = str2sym(dr->str, dr);
     if (dr->has_start_element) {
         VALUE       args[1];
 
@@ -669,7 +681,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
             is_encoding = 1;
         }
         if (dr->has_attr) {
-            name = str2sym(dr->str);
+            name = str2sym(dr->str, dr);
         }
         if (is_white(c)) {
             c = next_non_white(dr);
