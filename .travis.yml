@@ -4,7 +4,7 @@ rvm:
   - 1.9.3
   - jruby
   - rbx
-  - rbx-2.0
+  - rbx-19mode
   - ree
 
 script:
