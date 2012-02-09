@@ -26,9 +26,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.4.5
+### Release 1.4.6
 
- - Fixed encoding issues with all parsers so that attribute and element names can now be encoded with something other than ASCII.
+ - Adopted the Exception message encoding hack to work for the latests ruby versions.
 
 ## <a name="description">Description</a>
 
