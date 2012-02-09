@@ -233,6 +233,8 @@ extern ID       inspect_id;
 extern ID       instruct_id;
 extern ID       keys_id;
 extern ID       local_id;
+extern ID       mesg_id;
+extern ID       message_id;
 extern ID       nodes_id;
 extern ID       num_id;
 extern ID       parse_id;

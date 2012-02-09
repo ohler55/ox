@@ -3,6 +3,9 @@
 ^c^d hide subtree
 ^c^s show subtree
 
+- release 1.4.6
+ - adopted the Exception message encoding hack to work for the latests ruby version
+
 - encoding
  - tag names and attribute names should all be encoded
   - what about embedded ", =, space, >

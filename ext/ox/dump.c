@@ -72,6 +72,7 @@ typedef struct _Out {
     int                 indent;
     int                 depth; // used by dumpHash
     Options             opts;
+    VALUE		obj;
 } *Out;
 
 static void     dump_obj_to_xml(VALUE obj, Options copts, Out out);
@@ -435,9 +436,11 @@ dump_first_obj(VALUE obj, Out out) {
 static void
 dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     struct _Element     e;
+    VALUE		prev_obj = out->obj;
     char                value_buf[64];
     int                 cnt;
 
+    out->obj = obj;
     if (0 == aid) {
         //e.attr.str = 0;
         e.attr.len = 0;
@@ -823,20 +826,20 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         }
         break;
     }
+    out->obj = prev_obj;
 }
 
 static int
 dump_var(ID key, VALUE value, Out out) {
-    if (T_DATA == rb_type(value) && rb_cTime != rb_obj_class(value)) {
+    if (T_DATA == rb_type(value) && key == mesg_id) {
         /* There is a secret recipe that keeps Exception mesg attributes as a
-         * T_DATA until it is needed. StringValue() or a safer method of
-         * calling to_s() makes the value needed and it is converted to a
-         * regular Ruby Object. It might seem reasonable to expect that this
-         * would be done before calling the foreach callback but it isn't. A
-         * slight hack fixes the inconsistency. If the var is not something
-         * that can be represented as a String then this will fail.
+         * T_DATA until it is needed. The safe way around this hack is to call
+         * the message() method and use the returned string as the
+         * message. Not pretty but it solves the most common use of this
+         * hack. If there are others they will have to be handled one at a
+         * time.
          */
-        rb_funcall(value, to_s_id, 0);
+	value = rb_funcall(out->obj, message_id, 0);
     }
     dump_obj(key, value, out->depth, out);
 
@@ -1026,6 +1029,7 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
     out->circ_cache = 0;
     out->circ_cnt = 0;
     out->opts = copts;
+    out->obj = obj;
     if (Yes == copts->circular) {
         ox_cache8_new(&out->circ_cache);
     }

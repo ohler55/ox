@@ -62,6 +62,8 @@ ID      inspect_id;
 ID      instruct_id;
 ID      keys_id;
 ID      local_id;
+ID      mesg_id;
+ID      message_id;
 ID      nodes_id;
 ID      num_id;
 ID      parse_id;
@@ -653,6 +655,8 @@ void Init_ox() {
     instruct_id = rb_intern("instruct");
     keys_id = rb_intern("keys");
     local_id = rb_intern("local");
+    mesg_id = rb_intern("mesg");
+    message_id = rb_intern("message");
     nodes_id = rb_intern("@nodes");
     num_id = rb_intern("@num");
     parse_id = rb_intern("parse");
