@@ -87,7 +87,7 @@ str2sym(const char *str, void *encoding) {
 	VALUE	rstr = rb_str_new2(str);
 
 	rb_enc_associate(rstr, (rb_encoding*)encoding);
-	sym = rb_funcall(rstr, to_sym_id, 0);
+	sym = rb_funcall(rstr, ox_to_sym_id, 0);
     } else {
 	sym = ID2SYM(rb_intern(str));
     }
@@ -104,14 +104,14 @@ name2var(const char *name, void *encoding) {
 
     if ('0' <= *name && *name <= '9') {
         var_id = INT2NUM(atoi(name));
-    } else if (Qundef == (var_id = ox_cache_get(attr_cache, name, &slot))) {
+    } else if (Qundef == (var_id = ox_cache_get(ox_attr_cache, name, &slot))) {
 #ifdef HAVE_RUBY_ENCODING_H
 	if (0 != encoding) {
 	    VALUE	rstr = rb_str_new2(name);
 	    VALUE	sym;
 	    
 	    rb_enc_associate(rstr, (rb_encoding*)encoding);
-	    sym = rb_funcall(rstr, to_sym_id, 0);
+	    sym = rb_funcall(rstr, ox_to_sym_id, 0);
 	    var_id = SYM2ID(sym);
 	} else {
 	    var_id = rb_intern(name);
@@ -179,7 +179,7 @@ structname2obj(const char *name) {
             break;
         }
     }
-    ost = rb_const_get(struct_class, rb_intern(s));
+    ost = rb_const_get(ox_struct_class, rb_intern(s));
 // use encoding as the indicator for Ruby 1.8.7 or 1.9.x
 #ifdef HAVE_RUBY_ENCODING_H
     return rb_struct_alloc_noinit(ost);
@@ -200,7 +200,7 @@ parse_time(const char *text, VALUE clas) {
 
         //printf("**** time parse\n");
         *args = rb_str_new2(text);
-        t = rb_funcall2(time_class, parse_id, 1, args);
+        t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
     }
     return t;
 }
@@ -210,7 +210,7 @@ classname2class(const char *name, PInfo pi) {
     VALUE       *slot;
     VALUE       clas;
             
-    if (Qundef == (clas = ox_cache_get(class_cache, name, &slot))) {
+    if (Qundef == (clas = ox_cache_get(ox_class_cache, name, &slot))) {
         char            class_name[1024];
         char            *s;
         const char      *n = name;
@@ -451,7 +451,7 @@ add_text(PInfo pi, char *text, int closed) {
         VALUE   sym;
         VALUE   *slot;
 
-        if (Qundef == (sym = ox_cache_get(symbol_cache, text, &slot))) {
+        if (Qundef == (sym = ox_cache_get(ox_symbol_cache, text, &slot))) {
 	    sym = str2sym(text, pi->encoding);
             *slot = sym;
         }
@@ -459,7 +459,7 @@ add_text(PInfo pi, char *text, int closed) {
         break;
     }
     case TimeCode:
-        pi->h->obj = parse_time(text, time_class);
+        pi->h->obj = parse_time(text, ox_time_class);
         break;
     case String64Code:
     {
@@ -503,7 +503,7 @@ add_text(PInfo pi, char *text, int closed) {
             }
         }
         from_base64(text, (u_char*)str);
-        if (Qundef == (sym = ox_cache_get(symbol_cache, str, &slot))) {
+        if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot))) {
 	    sym = str2sym(str, pi->encoding);
             *slot = sym;
         }
@@ -593,7 +593,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         break;
     case StringCode:
         // h->obj will be replaced by add_text if it is called
-        h->obj = empty_string;
+        h->obj = ox_empty_string;
         if (0 != pi->circ_array) {
             pi->id = get_id_from_attrs(pi, attrs);
             circ_array_set(pi->circ_array, h->obj, pi->id);
@@ -630,11 +630,11 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         }
         break;
     case RangeCode:
-        h->obj = rb_range_new(zero_fixnum, zero_fixnum, Qfalse);
+        h->obj = rb_range_new(ox_zero_fixnum, ox_zero_fixnum, Qfalse);
         break;
     case RawCode:
         if (hasChildren) {
-            h->obj = parse(pi->s, ox_gen_callbacks, &pi->s, pi->trace, pi->effort);
+            h->obj = ox_parse(pi->s, ox_gen_callbacks, &pi->s, pi->trace, pi->effort);
             if (0 != pi->circ_array) {
                 circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
             }
@@ -697,7 +697,7 @@ end_element(PInfo pi, const char *ename) {
     if (0 != pi->h && pi->helpers <= pi->h) {
         Helper  h = pi->h;
 
-        if (empty_string == h->obj) {
+        if (ox_empty_string == h->obj) {
             // special catch for empty strings
             h->obj = rb_str_new2("");
         }
@@ -728,11 +728,11 @@ end_element(PInfo pi, const char *ename) {
 #ifdef NO_RSTRUCT
                 raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
 #else
-                if (beg_id == h->var) {
+                if (ox_beg_id == h->var) {
                     RSTRUCT_PTR(pi->h->obj)[0] = h->obj;
-                } else if (end_id == h->var) {
+                } else if (ox_end_id == h->var) {
                     RSTRUCT_PTR(pi->h->obj)[1] = h->obj;
-                } else if (excl_id == h->var) {
+                } else if (ox_excl_id == h->var) {
                     RSTRUCT_PTR(pi->h->obj)[2] = h->obj;
                 } else {
                     raise_error("Invalid range attribute", pi->str, pi->s);
@@ -809,7 +809,7 @@ parse_double_time(const char *text, VALUE clas) {
     args[0] = LONG2NUM(v);
     args[1] = LONG2NUM(v2);
 
-    return rb_funcall2(clas, at_id, 2, args);
+    return rb_funcall2(clas, ox_at_id, 2, args);
 }
 
 typedef struct _Tp {
@@ -866,7 +866,7 @@ parse_xsd_time(const char *text, VALUE clas) {
     args[0] = LONG2NUM(mktime(&tm));
     args[1] = LONG2NUM(cargs[6]);
 
-    return rb_funcall2(clas, at_id, 2, args);
+    return rb_funcall2(clas, ox_at_id, 2, args);
 }
 
 // debug functions

@@ -174,13 +174,13 @@ str2sym(const char *str, SaxDrive dr) {
     VALUE       *slot;
     VALUE       sym;
 
-    if (Qundef == (sym = ox_cache_get(symbol_cache, str, &slot))) {
+    if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot))) {
 #ifdef HAVE_RUBY_ENCODING_H
         if (0 != dr->encoding) {
 	    VALUE	rstr = rb_str_new2(str);
 
             rb_enc_associate(rstr, dr->encoding);
-	    sym = rb_funcall(rstr, to_sym_id, 0);
+	    sym = rb_funcall(rstr, ox_to_sym_id, 0);
         } else {
 	    sym = ID2SYM(rb_intern(str));
 	}
@@ -216,20 +216,20 @@ ox_sax_parse(VALUE handler, VALUE io, int convert) {
 
 static void
 sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
-    if (rb_respond_to(io, readpartial_id)) {
+    if (rb_respond_to(io, ox_readpartial_id)) {
         VALUE   rfd;
 
-        if (rb_respond_to(io, fileno_id) && Qnil != (rfd = rb_funcall(io, fileno_id, 0))) {
+        if (rb_respond_to(io, ox_fileno_id) && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
             dr->read_func = read_from_fd;
             dr->fd = FIX2INT(rfd);
         } else {
             dr->read_func = read_from_io_partial;
             dr->io = io;
         }
-    } else if (rb_respond_to(io, read_id)) {
+    } else if (rb_respond_to(io, ox_read_id)) {
         VALUE   rfd;
 
-        if (rb_respond_to(io, fileno_id) && Qnil != (rfd = rb_funcall(io, fileno_id, 0))) {
+        if (rb_respond_to(io, ox_fileno_id) && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
             dr->read_func = read_from_fd;
             dr->fd = FIX2INT(rfd);
         } else {
@@ -249,20 +249,20 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
     dr->col = 0;
     dr->handler = handler;
     dr->convert_special = convert;
-    dr->has_instruct = rb_respond_to(handler, instruct_id);
-    dr->has_attr = rb_respond_to(handler, attr_id);
-    dr->has_doctype = rb_respond_to(handler, doctype_id);
-    dr->has_comment = rb_respond_to(handler, comment_id);
-    dr->has_cdata = rb_respond_to(handler, cdata_id);
-    dr->has_text = rb_respond_to(handler, text_id);
-    dr->has_start_element = rb_respond_to(handler, start_element_id);
-    dr->has_end_element = rb_respond_to(handler, end_element_id);
-    dr->has_error = rb_respond_to(handler, error_id);
+    dr->has_instruct = rb_respond_to(handler, ox_instruct_id);
+    dr->has_attr = rb_respond_to(handler, ox_attr_id);
+    dr->has_doctype = rb_respond_to(handler, ox_doctype_id);
+    dr->has_comment = rb_respond_to(handler, ox_comment_id);
+    dr->has_cdata = rb_respond_to(handler, ox_cdata_id);
+    dr->has_text = rb_respond_to(handler, ox_text_id);
+    dr->has_start_element = rb_respond_to(handler, ox_start_element_id);
+    dr->has_end_element = rb_respond_to(handler, ox_end_element_id);
+    dr->has_error = rb_respond_to(handler, ox_error_id);
 #ifdef HAVE_RUBY_ENCODING_H
-    if ('\0' == *default_options.encoding) {
+    if ('\0' == *ox_default_options.encoding) {
         dr->encoding = 0;
     } else {
-        dr->encoding = rb_enc_find(default_options.encoding);
+        dr->encoding = rb_enc_find(ox_default_options.encoding);
     }
 #endif
 }
@@ -329,7 +329,7 @@ sax_drive_error(SaxDrive dr, const char *msg, int critical) {
         args[0] = rb_str_new2(msg);
         args[1] = INT2FIX(dr->line);
         args[2] = INT2FIX(dr->col);
-        rb_funcall2(dr->handler, error_id, 3, args);
+        rb_funcall2(dr->handler, ox_error_id, 3, args);
     } else if (critical) {
         sax_drive_cleanup(dr);
         rb_raise(rb_eSyntaxError, "%s at line %d, column %d\n", msg, dr->line, dr->col);
@@ -438,7 +438,7 @@ read_instruction(SaxDrive dr) {
         VALUE       args[1];
 
         args[0] = rb_str_new2(dr->str);
-        rb_funcall2(dr->handler, instruct_id, 1, args);
+        rb_funcall2(dr->handler, ox_instruct_id, 1, args);
     }
     if (0 != read_attrs(dr, c, '?', '?', (0 == strcmp("xml", dr->str)))) {
         return -1;
@@ -471,7 +471,7 @@ read_doctype(SaxDrive dr) {
         VALUE       args[1];
 
         args[0] = rb_str_new2(dr->str);
-        rb_funcall2(dr->handler, doctype_id, 1, args);
+        rb_funcall2(dr->handler, ox_doctype_id, 1, args);
     }
     dr->str = 0;
 
@@ -513,7 +513,7 @@ read_cdata(SaxDrive dr) {
             rb_enc_associate(args[0], dr->encoding);
         }
 #endif
-        rb_funcall2(dr->handler, cdata_id, 1, args);
+        rb_funcall2(dr->handler, ox_cdata_id, 1, args);
     }
     dr->str = 0;
 
@@ -557,7 +557,7 @@ read_comment(SaxDrive dr) {
             rb_enc_associate(args[0], dr->encoding);
         }
 #endif
-        rb_funcall2(dr->handler, comment_id, 1, args);
+        rb_funcall2(dr->handler, ox_comment_id, 1, args);
     }
     dr->str = 0;
 
@@ -582,7 +582,7 @@ read_element(SaxDrive dr) {
         VALUE       args[1];
 
         args[0] = name;
-        rb_funcall2(dr->handler, start_element_id, 1, args);
+        rb_funcall2(dr->handler, ox_start_element_id, 1, args);
     }
     if ('/' == c) {
         closed = 1;
@@ -606,7 +606,7 @@ read_element(SaxDrive dr) {
             VALUE       args[1];
 
             args[0] = name;
-            rb_funcall2(dr->handler, end_element_id, 1, args);
+            rb_funcall2(dr->handler, ox_end_element_id, 1, args);
         }
     } else {
         if (0 != read_children(dr, 0)) {
@@ -620,7 +620,7 @@ read_element(SaxDrive dr) {
             VALUE       args[1];
 
             args[0] = name;
-            rb_funcall2(dr->handler, end_element_id, 1, args);
+            rb_funcall2(dr->handler, ox_end_element_id, 1, args);
         }
     }
     dr->str = 0;
@@ -654,7 +654,7 @@ read_text(SaxDrive dr) {
             rb_enc_associate(args[0], dr->encoding);
         }
 #endif
-        rb_funcall2(dr->handler, text_id, 1, args);
+        rb_funcall2(dr->handler, ox_text_id, 1, args);
     }
     return 0;
 }
@@ -711,7 +711,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
                 rb_enc_associate(args[1], dr->encoding);
             }
 #endif
-            rb_funcall2(dr->handler, attr_id, 2, args);
+            rb_funcall2(dr->handler, ox_attr_id, 2, args);
         }
         c = next_non_white(dr);
     }
@@ -801,7 +801,7 @@ partial_io_cb(VALUE rdr) {
     size_t      cnt;
 
     args[0] = ULONG2NUM(dr->buf_end - dr->cur);
-    rstr = rb_funcall2(dr->io, readpartial_id, 1, args);
+    rstr = rb_funcall2(dr->io, ox_readpartial_id, 1, args);
     str = StringValuePtr(rstr);
     cnt = strlen(str);
     //printf("*** read %lu bytes, str: '%s'\n", cnt, str);
@@ -831,7 +831,7 @@ io_cb(VALUE rdr) {
 
     args[0] = ULONG2NUM(dr->buf_end - dr->cur);
     //args[0] = SIZET2NUM(dr->buf_end - dr->cur);
-    rstr = rb_funcall2(dr->io, read_id, 1, args);
+    rstr = rb_funcall2(dr->io, ox_read_id, 1, args);
     str = StringValuePtr(rstr);
     cnt = strlen(str);
     //printf("*** read %lu bytes, str: '%s'\n", cnt, str);

@@ -96,7 +96,7 @@ next_white(PInfo pi) {
 }
 
 VALUE
-parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
+ox_parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
     struct _PInfo	pi;
     int			body_read = 0;
 
