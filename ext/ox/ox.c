@@ -114,9 +114,9 @@ VALUE   ox_bag_clas;
 VALUE   struct_class;
 VALUE   time_class;
 
-Cache   symbol_cache = 0;
-Cache   class_cache = 0;
-Cache   attr_cache = 0;
+Cache   ox_symbol_cache = 0;
+Cache   ox_class_cache = 0;
+Cache   ox_attr_cache = 0;
 
 struct _Options  default_options = {
     { '\0' },           // encoding
@@ -709,9 +709,9 @@ void Init_ox() {
     ox_cdata_clas = rb_const_get_at(Ox, rb_intern("CData"));
     ox_bag_clas = rb_const_get_at(Ox, rb_intern("Bag"));
 
-    ox_cache_new(&symbol_cache);
-    ox_cache_new(&class_cache);
-    ox_cache_new(&attr_cache);
+    ox_cache_new(&ox_symbol_cache);
+    ox_cache_new(&ox_class_cache);
+    ox_cache_new(&ox_attr_cache);
 
     rb_define_module_function(Ox, "cache_test", cache_test, 0);
     rb_define_module_function(Ox, "cache8_test", cache8_test, 0);

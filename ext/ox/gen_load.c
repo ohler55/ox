@@ -278,7 +278,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
             VALUE   sym;
             VALUE   *slot;
 
-            if (Qundef == (sym = ox_cache_get(symbol_cache, attrs->name, &slot))) {
+            if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot))) {
 #ifdef HAVE_RUBY_ENCODING_H
 		if (0 != pi->encoding) {
 		    VALUE	rstr = rb_str_new2(attrs->name);

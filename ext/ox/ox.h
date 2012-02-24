@@ -264,9 +264,9 @@ extern VALUE    ox_comment_clas;
 extern VALUE    ox_doctype_clas;
 extern VALUE    ox_cdata_clas;
 
-extern Cache    symbol_cache;
-extern Cache    class_cache;
-extern Cache    attr_cache;
+extern Cache    ox_symbol_cache;
+extern Cache    ox_class_cache;
+extern Cache    ox_attr_cache;
 
 #if defined(__cplusplus)
 #if 0

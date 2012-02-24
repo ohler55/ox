@@ -174,7 +174,7 @@ str2sym(const char *str, SaxDrive dr) {
     VALUE       *slot;
     VALUE       sym;
 
-    if (Qundef == (sym = ox_cache_get(symbol_cache, str, &slot))) {
+    if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot))) {
 #ifdef HAVE_RUBY_ENCODING_H
         if (0 != dr->encoding) {
 	    VALUE	rstr = rb_str_new2(str);
