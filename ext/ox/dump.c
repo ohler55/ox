@@ -356,8 +356,8 @@ static void
 dump_time_thin(Out out, VALUE obj) {
     char        buf[64];
     char        *b = buf + sizeof(buf) - 1;
-    time_t      sec = NUM2LONG(rb_funcall2(obj, tv_sec_id, 0, 0));
-    long        usec = NUM2LONG(rb_funcall2(obj, tv_usec_id, 0, 0));
+    time_t      sec = NUM2LONG(rb_funcall2(obj, ox_tv_sec_id, 0, 0));
+    long        usec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0));
     char        *dot = b - 7;
     long        size;
 
@@ -381,8 +381,8 @@ dump_time_thin(Out out, VALUE obj) {
 static void
 dump_time_xsd(Out out, VALUE obj) {
     struct tm   *tm;
-    time_t      sec = NUM2LONG(rb_funcall2(obj, tv_sec_id, 0, 0));
-    long        usec = NUM2LONG(rb_funcall2(obj, tv_usec_id, 0, 0));
+    time_t      sec = NUM2LONG(rb_funcall2(obj, ox_tv_sec_id, 0, 0));
+    long        usec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0));
     int         tzhour, tzmin;
     char        tzsign = '+';
 
@@ -641,9 +641,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
 
             e.type = RangeCode;  e.clas.len = 5;  e.clas.str = "Range";
             out->w_start(out, &e);
-            dump_obj(beg_id, beg, d2, out);
-            dump_obj(end_id, end, d2, out);
-            dump_obj(excl_id, excl, d2, out);
+            dump_obj(ox_beg_id, beg, d2, out);
+            dump_obj(ox_end_id, end, d2, out);
+            dump_obj(ox_excl_id, excl, d2, out);
             out->w_end(out, &e);
         } else {
             char        num_buf[16];
@@ -730,7 +730,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     case T_REGEXP:
     {
 #if 1
-        VALUE           rs = rb_funcall2(obj, inspect_id, 0, 0);
+        VALUE           rs = rb_funcall2(obj, ox_inspect_id, 0, 0);
         const char      *s = StringValuePtr(rs);
 
         cnt = (int)RSTRING_LEN(rs);
@@ -831,7 +831,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
 
 static int
 dump_var(ID key, VALUE value, Out out) {
-    if (T_DATA == rb_type(value) && key == mesg_id) {
+    if (T_DATA == rb_type(value) && key == ox_mesg_id) {
         /* There is a secret recipe that keeps Exception mesg attributes as a
          * T_DATA until it is needed. The safe way around this hack is to call
          * the message() method and use the returned string as the
@@ -839,7 +839,7 @@ dump_var(ID key, VALUE value, Out out) {
          * hack. If there are others they will have to be handled one at a
          * time.
          */
-	value = rb_funcall(out->obj, message_id, 0);
+	value = rb_funcall(out->obj, ox_message_id, 0);
     }
     dump_obj(key, value, out->depth, out);
 
@@ -856,11 +856,11 @@ dump_hash(VALUE key, VALUE value, Out out) {
 
 static void
 dump_gen_doc(VALUE obj, unsigned int depth, Out out) {
-    VALUE       attrs = rb_attr_get(obj, attributes_id);
-    VALUE       nodes = rb_attr_get(obj, nodes_id);
+    VALUE       attrs = rb_attr_get(obj, ox_attributes_id);
+    VALUE       nodes = rb_attr_get(obj, ox_nodes_id);
 
     if ('\0' == *out->opts->encoding && Qnil != attrs) {
-	VALUE	renc = rb_hash_lookup(attrs, encoding_sym);
+	VALUE	renc = rb_hash_lookup(attrs, ox_encoding_sym);
 
         if (Qnil != renc) {
 	    const char  *enc = StringValuePtr(renc);
@@ -889,9 +889,9 @@ dump_gen_doc(VALUE obj, unsigned int depth, Out out) {
 
 static void
 dump_gen_element(VALUE obj, unsigned int depth, Out out) {
-    VALUE       rname = rb_attr_get(obj, value_id);
-    VALUE       attrs = rb_attr_get(obj, attributes_id);
-    VALUE       nodes = rb_attr_get(obj, nodes_id);
+    VALUE       rname = rb_attr_get(obj, ox_value_id);
+    VALUE       attrs = rb_attr_get(obj, ox_attributes_id);
+    VALUE       nodes = rb_attr_get(obj, ox_nodes_id);
     const char  *name = StringValuePtr(rname);
     long        nlen = RSTRING_LEN(rname);
     size_t      size;
@@ -989,7 +989,7 @@ static void
 dump_gen_val_node(VALUE obj, unsigned int depth,
                   const char *pre, size_t plen,
                   const char *suf, size_t slen, Out out) {
-    VALUE       v = rb_attr_get(obj, value_id);
+    VALUE       v = rb_attr_get(obj, ox_value_id);
     const char  *val;
     size_t      vlen;
     size_t      size;
@@ -1050,7 +1050,7 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
 }
 
 char*
-write_obj_to_str(VALUE obj, Options copts) {
+ox_write_obj_to_str(VALUE obj, Options copts) {
     struct _Out out;
     
     dump_obj_to_xml(obj, copts, &out);
@@ -1058,7 +1058,7 @@ write_obj_to_str(VALUE obj, Options copts) {
 }
 
 void
-write_obj_to_file(VALUE obj, const char *path, Options copts) {
+ox_write_obj_to_file(VALUE obj, const char *path, Options copts) {
     struct _Out out;
     size_t      size;
     FILE        *f;    

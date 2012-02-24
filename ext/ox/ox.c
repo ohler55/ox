@@ -45,65 +45,43 @@ void Init_ox();
 
 VALUE    Ox = Qnil;
 
-ID      at_id;
-ID      attr_id;
-ID      attributes_id;
-ID      beg_id;
-ID      cdata_id;
-ID      comment_id;
-ID      den_id;
-ID      doctype_id;
-ID      end_element_id;
-ID      end_id;
-ID      error_id;
-ID      excl_id;
-ID	fileno_id;
-ID      inspect_id;
-ID      instruct_id;
-ID      keys_id;
-ID      local_id;
-ID      mesg_id;
-ID      message_id;
-ID      nodes_id;
-ID      num_id;
-ID      parse_id;
-ID      read_id;
-ID      readpartial_id;
-ID      start_element_id;
-ID      text_id;
-ID      to_c_id;
-ID      to_s_id;
-ID	to_sym_id;
-ID      tv_sec_id;
-ID      tv_usec_id;
-ID      value_id;
+ID	ox_at_id;
+ID	ox_attr_id;
+ID	ox_attributes_id;
+ID	ox_beg_id;
+ID	ox_cdata_id;
+ID	ox_comment_id;
+ID	ox_den_id;
+ID	ox_doctype_id;
+ID	ox_end_element_id;
+ID	ox_end_id;
+ID	ox_error_id;
+ID	ox_excl_id;
+ID	ox_fileno_id;
+ID	ox_inspect_id;
+ID	ox_instruct_id;
+ID	ox_keys_id;
+ID	ox_local_id;
+ID	ox_mesg_id;
+ID	ox_message_id;
+ID	ox_nodes_id;
+ID	ox_num_id;
+ID	ox_parse_id;
+ID	ox_read_id;
+ID	ox_readpartial_id;
+ID	ox_start_element_id;
+ID	ox_text_id;
+ID	ox_to_c_id;
+ID	ox_to_s_id;
+ID	ox_to_sym_id;
+ID	ox_tv_sec_id;
+ID	ox_tv_usec_id;
+ID	ox_value_id;
 
-VALUE   version_sym;
-VALUE   standalone_sym;
-VALUE   encoding_sym;
-VALUE   indent_sym;
-VALUE   xsd_date_sym;
-VALUE   opt_format_sym;
-VALUE   circular_sym;
-VALUE   mode_sym;
-VALUE   auto_sym;
-VALUE   optimized_sym;
-VALUE   object_sym;
-VALUE   generic_sym;
-VALUE   limited_sym;
-VALUE   strict_sym;
-VALUE   tolerant_sym;
-VALUE   effort_sym;
-VALUE   auto_define_sym;
-VALUE   trace_sym;
-VALUE   strict_sym;
-VALUE   with_dtd_sym;
-VALUE   with_instruct_sym;
-VALUE   convert_special_sym;
-VALUE   with_xml_sym;
+VALUE   ox_encoding_sym;
 
-VALUE   empty_string;
-VALUE   zero_fixnum;
+VALUE   ox_empty_string;
+VALUE   ox_zero_fixnum;
 
 VALUE   ox_cdata_clas;
 VALUE   ox_comment_clas;
@@ -111,14 +89,35 @@ VALUE   ox_doctype_clas;
 VALUE   ox_document_clas;
 VALUE   ox_element_clas;
 VALUE   ox_bag_clas;
-VALUE   struct_class;
-VALUE   time_class;
+VALUE   ox_struct_class;
+VALUE   ox_time_class;
 
 Cache   ox_symbol_cache = 0;
 Cache   ox_class_cache = 0;
 Cache   ox_attr_cache = 0;
 
-struct _Options  default_options = {
+static VALUE	xsd_date_sym;
+static VALUE	opt_format_sym;
+static VALUE	circular_sym;
+static VALUE	mode_sym;
+static VALUE	auto_sym;
+static VALUE	optimized_sym;
+static VALUE	object_sym;
+static VALUE	generic_sym;
+static VALUE	limited_sym;
+static VALUE	strict_sym;
+static VALUE	tolerant_sym;
+static VALUE	effort_sym;
+static VALUE	auto_define_sym;
+static VALUE	trace_sym;
+static VALUE	strict_sym;
+static VALUE	with_dtd_sym;
+static VALUE	with_instruct_sym;
+static VALUE	convert_special_sym;
+static VALUE	with_xml_sym;
+static VALUE	indent_sym;
+
+struct _Options  ox_default_options = {
     { '\0' },           // encoding
     2,                  // indent
     0,                  // trace
@@ -138,7 +137,7 @@ extern ParseCallbacks   ox_nomode_callbacks;
 
 static void     parse_dump_options(VALUE ropts, Options copts);
 
-/* call-seq: default_options() => Hash
+/* call-seq: ox_default_options() => Hash
  *
  * Returns the default load and dump options as a Hash. The options are
  * - indent: [Fixnum] number of spaces to indent each element in an XML document
@@ -156,24 +155,24 @@ static void     parse_dump_options(VALUE ropts, Options copts);
 static VALUE
 get_def_opts(VALUE self) {
     VALUE       opts = rb_hash_new();
-    int         elen = (int)strlen(default_options.encoding);
+    int         elen = (int)strlen(ox_default_options.encoding);
 
-    rb_hash_aset(opts, encoding_sym, (0 == elen) ? Qnil : rb_str_new(default_options.encoding, elen));
-    rb_hash_aset(opts, indent_sym, INT2FIX(default_options.indent));
-    rb_hash_aset(opts, trace_sym, INT2FIX(default_options.trace));
-    rb_hash_aset(opts, with_dtd_sym, (Yes == default_options.with_dtd) ? Qtrue : ((No == default_options.with_dtd) ? Qfalse : Qnil));
-    rb_hash_aset(opts, with_xml_sym, (Yes == default_options.with_xml) ? Qtrue : ((No == default_options.with_xml) ? Qfalse : Qnil));
-    rb_hash_aset(opts, with_instruct_sym, (Yes == default_options.with_instruct) ? Qtrue : ((No == default_options.with_instruct) ? Qfalse : Qnil));
-    rb_hash_aset(opts, circular_sym, (Yes == default_options.circular) ? Qtrue : ((No == default_options.circular) ? Qfalse : Qnil));
-    rb_hash_aset(opts, xsd_date_sym, (Yes == default_options.xsd_date) ? Qtrue : ((No == default_options.xsd_date) ? Qfalse : Qnil));
-    switch (default_options.mode) {
+    rb_hash_aset(opts, ox_encoding_sym, (0 == elen) ? Qnil : rb_str_new(ox_default_options.encoding, elen));
+    rb_hash_aset(opts, indent_sym, INT2FIX(ox_default_options.indent));
+    rb_hash_aset(opts, trace_sym, INT2FIX(ox_default_options.trace));
+    rb_hash_aset(opts, with_dtd_sym, (Yes == ox_default_options.with_dtd) ? Qtrue : ((No == ox_default_options.with_dtd) ? Qfalse : Qnil));
+    rb_hash_aset(opts, with_xml_sym, (Yes == ox_default_options.with_xml) ? Qtrue : ((No == ox_default_options.with_xml) ? Qfalse : Qnil));
+    rb_hash_aset(opts, with_instruct_sym, (Yes == ox_default_options.with_instruct) ? Qtrue : ((No == ox_default_options.with_instruct) ? Qfalse : Qnil));
+    rb_hash_aset(opts, circular_sym, (Yes == ox_default_options.circular) ? Qtrue : ((No == ox_default_options.circular) ? Qfalse : Qnil));
+    rb_hash_aset(opts, xsd_date_sym, (Yes == ox_default_options.xsd_date) ? Qtrue : ((No == ox_default_options.xsd_date) ? Qfalse : Qnil));
+    switch (ox_default_options.mode) {
     case ObjMode:       rb_hash_aset(opts, mode_sym, object_sym);       break;
     case GenMode:       rb_hash_aset(opts, mode_sym, generic_sym);      break;
     case LimMode:       rb_hash_aset(opts, mode_sym, limited_sym);      break;
     case NoMode:
     default:            rb_hash_aset(opts, mode_sym, Qnil);             break;
     }
-    switch (default_options.effort) {
+    switch (ox_default_options.effort) {
     case StrictEffort:          rb_hash_aset(opts, effort_sym, strict_sym);             break;
     case TolerantEffort:        rb_hash_aset(opts, effort_sym, tolerant_sym);           break;
     case AutoEffort:            rb_hash_aset(opts, effort_sym, auto_define_sym);        break;
@@ -183,7 +182,7 @@ get_def_opts(VALUE self) {
     return opts;
 }
 
-/* call-seq: default_options=(opts)
+/* call-seq: ox_default_options=(opts)
  *
  * Sets the default options for load and dump.
  * @param [Hash] opts options to change
@@ -202,11 +201,11 @@ get_def_opts(VALUE self) {
 static VALUE
 set_def_opts(VALUE self, VALUE opts) {
     struct _YesNoOpt    ynos[] = {
-        { with_xml_sym, &default_options.with_xml },
-        { with_dtd_sym, &default_options.with_dtd },
-        { with_instruct_sym, &default_options.with_instruct },
-        { xsd_date_sym, &default_options.xsd_date },
-        { circular_sym, &default_options.circular },
+        { with_xml_sym, &ox_default_options.with_xml },
+        { with_dtd_sym, &ox_default_options.with_dtd },
+        { with_instruct_sym, &ox_default_options.with_instruct },
+        { xsd_date_sym, &ox_default_options.xsd_date },
+        { circular_sym, &ox_default_options.circular },
         { Qnil, 0 }
     };
     YesNoOpt    o;
@@ -214,48 +213,48 @@ set_def_opts(VALUE self, VALUE opts) {
     
     Check_Type(opts, T_HASH);
 
-    v = rb_hash_aref(opts, encoding_sym);
+    v = rb_hash_aref(opts, ox_encoding_sym);
     if (Qnil == v) {
-        *default_options.encoding = '\0';
+        *ox_default_options.encoding = '\0';
     } else {
         Check_Type(v, T_STRING);
-        strncpy(default_options.encoding, StringValuePtr(v), sizeof(default_options.encoding) - 1);
+        strncpy(ox_default_options.encoding, StringValuePtr(v), sizeof(ox_default_options.encoding) - 1);
     }
 
     v = rb_hash_aref(opts, indent_sym);
     if (Qnil != v) {
         Check_Type(v, T_FIXNUM);
-        default_options.indent = FIX2INT(v);
+        ox_default_options.indent = FIX2INT(v);
     }
 
     v = rb_hash_aref(opts, trace_sym);
     if (Qnil != v) {
         Check_Type(v, T_FIXNUM);
-        default_options.trace = FIX2INT(v);
+        ox_default_options.trace = FIX2INT(v);
     }
 
     v = rb_hash_aref(opts, mode_sym);
     if (Qnil == v) {
-        default_options.mode = NoMode;
+        ox_default_options.mode = NoMode;
     } else if (object_sym == v) {
-        default_options.mode = ObjMode;
+        ox_default_options.mode = ObjMode;
     } else if (generic_sym == v) {
-        default_options.mode = GenMode;
+        ox_default_options.mode = GenMode;
     } else if (limited_sym == v) {
-        default_options.mode = LimMode;
+        ox_default_options.mode = LimMode;
     } else {
         rb_raise(rb_eArgError, ":mode must be :object, :generic, :limited, or nil.\n");
     }
 
     v = rb_hash_aref(opts, effort_sym);
     if (Qnil == v) {
-        default_options.effort = NoEffort;
+        ox_default_options.effort = NoEffort;
     } else if (strict_sym == v) {
-        default_options.effort = StrictEffort;
+        ox_default_options.effort = StrictEffort;
     } else if (tolerant_sym == v) {
-        default_options.effort = TolerantEffort;
+        ox_default_options.effort = TolerantEffort;
     } else if (auto_define_sym == v) {
-        default_options.effort = AutoEffort;
+        ox_default_options.effort = AutoEffort;
     } else {
         rb_raise(rb_eArgError, ":effort must be :strict, :tolerant, :auto_define, or nil.\n");
     }
@@ -292,7 +291,7 @@ to_obj(VALUE self, VALUE ruby_xml) {
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
     xml = strdup(StringValuePtr(ruby_xml));
-    obj = parse(xml, ox_obj_callbacks, 0, 0, StrictEffort);
+    obj = ox_parse(xml, ox_obj_callbacks, 0, 0, StrictEffort);
     free(xml);
     return obj;
 }
@@ -312,7 +311,7 @@ to_gen(VALUE self, VALUE ruby_xml) {
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
     xml = strdup(StringValuePtr(ruby_xml));
-    obj = parse(xml, ox_gen_callbacks, 0, 0, StrictEffort);
+    obj = ox_parse(xml, ox_gen_callbacks, 0, 0, StrictEffort);
     free(xml);
     return obj;
 }
@@ -320,7 +319,7 @@ to_gen(VALUE self, VALUE ruby_xml) {
 static VALUE
 load(char *xml, int argc, VALUE *argv, VALUE self) {
     VALUE               obj;
-    struct _Options     options = default_options;
+    struct _Options     options = ox_default_options;
     
     if (1 == argc && rb_cHash == rb_obj_class(*argv)) {
         VALUE   h = *argv;
@@ -357,19 +356,19 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
     }
     switch (options.mode) {
     case ObjMode:
-        obj = parse(xml, ox_obj_callbacks, 0, options.trace, options.effort);
+        obj = ox_parse(xml, ox_obj_callbacks, 0, options.trace, options.effort);
         break;
     case GenMode:
-        obj = parse(xml, ox_gen_callbacks, 0, options.trace, options.effort);
+        obj = ox_parse(xml, ox_gen_callbacks, 0, options.trace, options.effort);
         break;
     case LimMode:
-        obj = parse(xml, ox_limited_callbacks, 0, options.trace, options.effort);
+        obj = ox_parse(xml, ox_limited_callbacks, 0, options.trace, options.effort);
         break;
     case NoMode:
-        obj = parse(xml, ox_nomode_callbacks, 0, options.trace, options.effort);
+        obj = ox_parse(xml, ox_nomode_callbacks, 0, options.trace, options.effort);
         break;
     default:
-        obj = parse(xml, ox_gen_callbacks, 0, options.trace, options.effort);
+        obj = ox_parse(xml, ox_gen_callbacks, 0, options.trace, options.effort);
         break;
     }
     free(xml);
@@ -507,7 +506,7 @@ parse_dump_options(VALUE ropts, Options copts) {
             }
             copts->trace = NUM2INT(v);
         }
-        if (Qnil != (v = rb_hash_lookup(ropts, encoding_sym))) {
+        if (Qnil != (v = rb_hash_lookup(ropts, ox_encoding_sym))) {
             if (rb_cString != rb_obj_class(v)) {
                 rb_raise(rb_eArgError, ":encoding must be a String.\n");
             }
@@ -555,13 +554,13 @@ parse_dump_options(VALUE ropts, Options copts) {
 static VALUE
 dump(int argc, VALUE *argv, VALUE self) {
     char                *xml;
-    struct _Options     copts = default_options;
+    struct _Options     copts = ox_default_options;
     VALUE               rstr;
     
     if (2 == argc) {
         parse_dump_options(argv[1], &copts);
     }
-    if (0 == (xml = write_obj_to_str(*argv, &copts))) {
+    if (0 == (xml = ox_write_obj_to_str(*argv, &copts))) {
         rb_raise(rb_eNoMemError, "Not enough memory.\n");
     }
     rstr = rb_str_new2(xml);
@@ -590,13 +589,13 @@ dump(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE
 to_file(int argc, VALUE *argv, VALUE self) {
-    struct _Options     copts = default_options;
+    struct _Options     copts = ox_default_options;
     
     if (3 == argc) {
         parse_dump_options(argv[2], &copts);
     }
     Check_Type(*argv, T_STRING);
-    write_obj_to_file(argv[1], StringValuePtr(*argv), &copts);
+    ox_write_obj_to_file(argv[1], StringValuePtr(*argv), &copts);
 
     return Qnil;
 }
@@ -638,45 +637,44 @@ void Init_ox() {
     rb_define_module_function(Ox, "to_file", to_file, -1);
 
     rb_require("time");
-    at_id = rb_intern("at");
-    attr_id = rb_intern("attr");
-    attributes_id = rb_intern("@attributes");
-    beg_id = rb_intern("@beg");
-    cdata_id = rb_intern("cdata");
-    comment_id = rb_intern("comment");
-    den_id = rb_intern("@den");
-    doctype_id = rb_intern("doctype");
-    end_element_id = rb_intern("end_element");
-    end_id = rb_intern("@end");
-    error_id = rb_intern("error");
-    excl_id = rb_intern("@excl");
-    fileno_id = rb_intern("fileno");
-    inspect_id = rb_intern("inspect");
-    instruct_id = rb_intern("instruct");
-    keys_id = rb_intern("keys");
-    local_id = rb_intern("local");
-    mesg_id = rb_intern("mesg");
-    message_id = rb_intern("message");
-    nodes_id = rb_intern("@nodes");
-    num_id = rb_intern("@num");
-    parse_id = rb_intern("parse");
-    readpartial_id = rb_intern("readpartial");
-    read_id = rb_intern("read");
-    start_element_id = rb_intern("start_element");
-    text_id = rb_intern("text");
-    to_c_id = rb_intern("to_c");
-    to_s_id = rb_intern("to_s");
-    to_sym_id = rb_intern("to_sym");
-    tv_sec_id = rb_intern("tv_sec");
-    tv_usec_id = rb_intern("tv_usec");
-    value_id = rb_intern("@value");
 
-    time_class = rb_const_get(rb_cObject, rb_intern("Time"));
-    struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
+    ox_at_id = rb_intern("at");
+    ox_attr_id = rb_intern("attr");
+    ox_attributes_id = rb_intern("@attributes");
+    ox_beg_id = rb_intern("@beg");
+    ox_cdata_id = rb_intern("cdata");
+    ox_comment_id = rb_intern("comment");
+    ox_den_id = rb_intern("@den");
+    ox_doctype_id = rb_intern("doctype");
+    ox_end_element_id = rb_intern("end_element");
+    ox_end_id = rb_intern("@end");
+    ox_error_id = rb_intern("error");
+    ox_excl_id = rb_intern("@excl");
+    ox_fileno_id = rb_intern("fileno");
+    ox_inspect_id = rb_intern("inspect");
+    ox_instruct_id = rb_intern("instruct");
+    ox_keys_id = rb_intern("keys");
+    ox_local_id = rb_intern("local");
+    ox_mesg_id = rb_intern("mesg");
+    ox_message_id = rb_intern("message");
+    ox_nodes_id = rb_intern("@nodes");
+    ox_num_id = rb_intern("@num");
+    ox_parse_id = rb_intern("parse");
+    ox_readpartial_id = rb_intern("readpartial");
+    ox_read_id = rb_intern("read");
+    ox_start_element_id = rb_intern("start_element");
+    ox_text_id = rb_intern("text");
+    ox_to_c_id = rb_intern("to_c");
+    ox_to_s_id = rb_intern("to_s");
+    ox_to_sym_id = rb_intern("to_sym");
+    ox_tv_sec_id = rb_intern("tv_sec");
+    ox_tv_usec_id = rb_intern("tv_usec");
+    ox_value_id = rb_intern("@value");
 
-    version_sym = ID2SYM(rb_intern("version"));                 rb_ary_push(keep, version_sym);
-    standalone_sym = ID2SYM(rb_intern("standalone"));           rb_ary_push(keep, standalone_sym);
-    encoding_sym = ID2SYM(rb_intern("encoding"));               rb_ary_push(keep, encoding_sym);
+    ox_time_class = rb_const_get(rb_cObject, rb_intern("Time"));
+    ox_struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
+
+    ox_encoding_sym = ID2SYM(rb_intern("encoding"));		rb_ary_push(keep, ox_encoding_sym);
     indent_sym = ID2SYM(rb_intern("indent"));                   rb_ary_push(keep, indent_sym);
     xsd_date_sym = ID2SYM(rb_intern("xsd_date"));               rb_ary_push(keep, xsd_date_sym);
     opt_format_sym = ID2SYM(rb_intern("opt_format"));           rb_ary_push(keep, opt_format_sym);
@@ -697,10 +695,9 @@ void Init_ox() {
     with_xml_sym = ID2SYM(rb_intern("with_xml"));               rb_ary_push(keep, with_xml_sym);
     convert_special_sym = ID2SYM(rb_intern("convert_special")); rb_ary_push(keep, convert_special_sym);
 
-    empty_string = rb_str_new2("");                             rb_ary_push(keep, empty_string);
-    zero_fixnum = INT2NUM(0);                                   rb_ary_push(keep, zero_fixnum);
+    ox_empty_string = rb_str_new2("");				rb_ary_push(keep, ox_empty_string);
+    ox_zero_fixnum = INT2NUM(0);				rb_ary_push(keep, ox_zero_fixnum);
 
-    
     //rb_require("node"); // generic xml node classes
     ox_document_clas = rb_const_get_at(Ox, rb_intern("Document"));
     ox_element_clas = rb_const_get_at(Ox, rb_intern("Element"));
@@ -718,7 +715,7 @@ void Init_ox() {
 }
 
 void
-_raise_error(const char *msg, const char *xml, const char *current, const char* file, int line) {
+_ox_raise_error(const char *msg, const char *xml, const char *current, const char* file, int line) {
     int         xline = 1;
     int         col = 1;
 

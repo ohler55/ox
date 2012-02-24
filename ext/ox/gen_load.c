@@ -94,8 +94,8 @@ create_doc(PInfo pi) {
     pi->h = pi->helpers;
     doc = rb_obj_alloc(ox_document_clas);
     nodes = rb_ary_new();
-    rb_ivar_set(doc, attributes_id, rb_hash_new());
-    rb_ivar_set(doc, nodes_id, nodes);
+    rb_ivar_set(doc, ox_attributes_id, rb_hash_new());
+    rb_ivar_set(doc, ox_nodes_id, nodes);
     pi->h->obj = nodes;
     pi->obj = doc;
 }
@@ -119,7 +119,7 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 	    VALUE	rstr = rb_str_new2(attrs->name);
 
 	    rb_enc_associate(rstr, pi->encoding);
-	    sym = rb_funcall(rstr, to_sym_id, 0);
+	    sym = rb_funcall(rstr, ox_to_sym_id, 0);
 	} else {
 	    sym = ID2SYM(rb_intern(attrs->name));
 	}
@@ -134,8 +134,8 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 #endif
     }
     nodes = rb_ary_new();
-    rb_ivar_set(doc, attributes_id, ah);
-    rb_ivar_set(doc, nodes_id, nodes);
+    rb_ivar_set(doc, ox_attributes_id, ah);
+    rb_ivar_set(doc, ox_nodes_id, nodes);
     pi->h->obj = nodes;
     pi->obj = doc;
 }
@@ -203,7 +203,7 @@ add_doctype(PInfo pi, const char *docType) {
         rb_enc_associate(s, pi->encoding);
     }
 #endif
-    rb_ivar_set(n, value_id, s);
+    rb_ivar_set(n, ox_value_id, s);
     if (0 == pi->h) { // top level object
 	create_doc(pi);
     }
@@ -220,7 +220,7 @@ add_comment(PInfo pi, const char *comment) {
         rb_enc_associate(s, pi->encoding);
     }
 #endif
-    rb_ivar_set(n, value_id, s);
+    rb_ivar_set(n, ox_value_id, s);
     if (0 == pi->h) { // top level object
 	create_doc(pi);
     }
@@ -237,7 +237,7 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
         rb_enc_associate(s, pi->encoding);
     }
 #endif
-    rb_ivar_set(n, value_id, s);
+    rb_ivar_set(n, ox_value_id, s);
     if (0 == pi->h) { // top level object
 	create_doc(pi);
     }
@@ -270,7 +270,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     }
 #endif
     e = rb_obj_alloc(ox_element_clas);
-    rb_ivar_set(e, value_id, s);
+    rb_ivar_set(e, ox_value_id, s);
     if (0 != attrs->name) {
         VALUE   ah = rb_hash_new();
         
@@ -284,7 +284,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		    VALUE	rstr = rb_str_new2(attrs->name);
 
 		    rb_enc_associate(rstr, pi->encoding);
-		    sym = rb_funcall(rstr, to_sym_id, 0);
+		    sym = rb_funcall(rstr, ox_to_sym_id, 0);
 		} else {
 		    sym = ID2SYM(rb_intern(attrs->name));
 		}
@@ -301,7 +301,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 #endif
             rb_hash_aset(ah, sym, s);
         }
-        rb_ivar_set(e, attributes_id, ah);
+        rb_ivar_set(e, ox_attributes_id, ah);
     }
     if (0 == pi->h) { // top level object
         pi->h = pi->helpers;
@@ -313,7 +313,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     if (hasChildren) {
         VALUE   nodes = rb_ary_new();
 
-        rb_ivar_set(e, nodes_id, nodes);
+        rb_ivar_set(e, ox_nodes_id, nodes);
         pi->h->obj = nodes;
     }
 }

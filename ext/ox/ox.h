@@ -59,7 +59,7 @@ extern "C" {
 #define NO_RSTRUCT 1
 #endif
 
-#define raise_error(msg, xml, current) _raise_error(msg, xml, current, __FILE__, __LINE__)
+#define raise_error(msg, xml, current) _ox_raise_error(msg, xml, current, __FILE__, __LINE__)
 
 #define MAX_TEXT_LEN    4096
 #define MAX_ATTRS       1024
@@ -204,58 +204,56 @@ typedef struct _Options {
     char        effort;         // Effort
 } *Options;
 
-extern VALUE    parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort);
-extern void     _raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
+extern VALUE	ox_parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort);
+extern void	_ox_raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
 
-extern void     ox_sax_parse(VALUE handler, VALUE io, int convert);
+extern void	ox_sax_parse(VALUE handler, VALUE io, int convert);
 
-extern char*    write_obj_to_str(VALUE obj, Options copts);
-extern void     write_obj_to_file(VALUE obj, const char *path, Options copts);
+extern char*	ox_write_obj_to_str(VALUE obj, Options copts);
+extern void	ox_write_obj_to_file(VALUE obj, const char *path, Options copts);
 
-extern struct _Options  default_options;
+extern struct _Options  ox_default_options;
 
 extern VALUE    Ox;
 
-extern ID       at_id;
-extern ID       attr_id;
-extern ID       attributes_id;
-extern ID       beg_id;
-extern ID       cdata_id;
-extern ID       comment_id;
-extern ID       den_id;
-extern ID       doctype_id;
-extern ID       end_element_id;
-extern ID       end_id;
-extern ID       error_id;
-extern ID       excl_id;
-extern ID       fileno_id;
-extern ID       inspect_id;
-extern ID       instruct_id;
-extern ID       keys_id;
-extern ID       local_id;
-extern ID       mesg_id;
-extern ID       message_id;
-extern ID       nodes_id;
-extern ID       num_id;
-extern ID       parse_id;
-extern ID       read_id;
-extern ID       readpartial_id;
-extern ID       start_element_id;
-extern ID       text_id;
-extern ID       to_c_id;
-extern ID       to_s_id;
-extern ID       to_sym_id;
-extern ID       tv_sec_id;
-extern ID       tv_usec_id;
-extern ID       value_id;
+extern ID	ox_at_id;
+extern ID	ox_attr_id;
+extern ID	ox_attributes_id;
+extern ID	ox_beg_id;
+extern ID	ox_cdata_id;
+extern ID	ox_comment_id;
+extern ID	ox_den_id;
+extern ID	ox_doctype_id;
+extern ID	ox_end_element_id;
+extern ID	ox_end_id;
+extern ID	ox_error_id;
+extern ID	ox_excl_id;
+extern ID	ox_fileno_id;
+extern ID	ox_inspect_id;
+extern ID	ox_instruct_id;
+extern ID	ox_keys_id;
+extern ID	ox_local_id;
+extern ID	ox_mesg_id;
+extern ID	ox_message_id;
+extern ID	ox_nodes_id;
+extern ID	ox_num_id;
+extern ID	ox_parse_id;
+extern ID	ox_read_id;
+extern ID	ox_readpartial_id;
+extern ID	ox_start_element_id;
+extern ID	ox_text_id;
+extern ID	ox_to_c_id;
+extern ID	ox_to_s_id;
+extern ID	ox_to_sym_id;
+extern ID	ox_tv_sec_id;
+extern ID	ox_tv_usec_id;
+extern ID	ox_value_id;
 
-extern VALUE    empty_string;
-extern VALUE    encoding_sym;
-extern VALUE    standalone_sym;
-extern VALUE    struct_class;
-extern VALUE    time_class;
-extern VALUE    version_sym;
-extern VALUE    zero_fixnum;
+extern VALUE    ox_empty_string;
+extern VALUE    ox_encoding_sym;
+extern VALUE    ox_struct_class;
+extern VALUE    ox_time_class;
+extern VALUE    ox_zero_fixnum;
 
 extern VALUE    ox_document_clas;
 extern VALUE    ox_element_clas;
