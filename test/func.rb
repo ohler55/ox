@@ -191,6 +191,17 @@ class Func < ::Test::Unit::TestCase
     assert_equal(loaded.class.superclass.to_s, 'Ox::Bag')
   end
 
+  def test_bad_class
+    xml = %{<?xml version="1.0"?>
+<o c="Bad:Boy">
+  <i a="@x">3</i>
+</o>
+}
+    assert_raise(SyntaxError) {
+      Ox.load(xml, :mode => :object, :trace => 0)
+    }
+  end
+
   def test_xml_instruction
     xml = Ox.dump("test", :mode => :object, :with_xml => false)
     assert_equal("<s>test</s>\n", xml)

@@ -220,6 +220,9 @@ classname2class(const char *name, PInfo pi) {
             if (':' == *n) {
                 *s = '\0';
                 n++;
+		if (':' != *n) {
+                    raise_error("Invalid classname, expected another ':'", pi->str, pi->s);
+		}
                 if (Qundef == (clas = resolve_classname(clas, class_name, pi->effort))) {
                     return Qundef;
                 }
