@@ -44,6 +44,8 @@
 #include "cache8.h"
 #include "ox.h"
 
+#define USE_B64	0
+
 typedef unsigned long   ulong;
 
 typedef struct _Str {
@@ -93,6 +95,7 @@ static void     dump_end(Out out, Element e);
 static void     grow(Out out, size_t len);
 
 static void     dump_value(Out out, const char *value, size_t size);
+static void     dump_str_value(Out out, const char *value, size_t size);
 static int      dump_var(ID key, VALUE value, Out out);
 static void     dump_num(Out out, VALUE obj);
 static void     dump_time_thin(Out out, VALUE obj);
@@ -101,25 +104,45 @@ static int      dump_hash(VALUE key, VALUE value, Out out);
 
 static int      is_xml_friendly(const u_char *str, int len);
 
+static const char	hex_chars[17] = "0123456789abcdef";
 
 static char     xml_friendly_chars[256] = "\
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\
-ooxoooxxooooooooooooooooooooxoxo\
-oooooooooooooooooooooooooooooooo\
-xoooooooooooooooooooooooooooooox\
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\
-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+88888888811881888888888888888888\
+11611156111111111111111111114141\
+11111111111111111111111111111111\
+1111111111111111111111111111111x\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111";
 
 inline static int
 is_xml_friendly(const u_char *str, int len) {
     for (; 0 < len; str++, len--) {
-        if ('x' == xml_friendly_chars[*str]) {
+        if ('1' != xml_friendly_chars[*str]) {
             return 0;
         }
     }
     return 1;
+}
+
+inline static size_t
+xml_str_len(const u_char *str, size_t len) {
+    size_t	size = 0;
+
+    for (; 0 < len; str++, len--) {
+	size += xml_friendly_chars[*str];
+    }
+    return size - len * (size_t)'0';
+}
+
+inline static void
+dump_hex(u_char c, Out out) {
+    u_char	d = (c >> 4) & 0x0F;
+
+    *out->cur++ = hex_chars[d];
+    d = c & 0x0F;
+    *out->cur++ = hex_chars[d];
 }
 
 inline static Type
@@ -315,6 +338,59 @@ dump_value(Out out, const char *value, size_t size) {
         for (; '\0' != *value; value++) {
             *out->cur++ = *value;
         }
+    }
+    *out->cur = '\0';
+}
+
+inline static void
+dump_str_value(Out out, const char *value, size_t size) {
+    size_t	xsize = xml_str_len((const u_char*)value, size);
+
+    if (out->end - out->cur <= (long)xsize) {
+        grow(out, xsize);
+    }
+    for (; '\0' != *value; value++) {
+	if ('1' == xml_friendly_chars[(u_char)*value]) {
+	    *out->cur++ = *value;
+	} else {
+	    *out->cur++ = '&';
+	    switch (*value) {
+	    case '"':
+		*out->cur++ = 'q';
+		*out->cur++ = 'u';
+		*out->cur++ = 'o';
+		*out->cur++ = 't';
+		break;
+	    case '&':
+		*out->cur++ = 'a';
+		*out->cur++ = 'm';
+		*out->cur++ = 'p';
+		break;
+	    case '\'':
+		*out->cur++ = 'a';
+		*out->cur++ = 'p';
+		*out->cur++ = 'o';
+		*out->cur++ = 's';
+		break;
+	    case '<':
+		*out->cur++ = 'l';
+		*out->cur++ = 't';
+		break;
+	    case '>':
+		*out->cur++ = 'g';
+		*out->cur++ = 't';
+		break;
+	    default:
+		*out->cur++ = '&';
+		*out->cur++ = '#';
+		*out->cur++ = 'x';
+		*out->cur++ = '0';
+		*out->cur++ = '0';
+		dump_hex(*value, out);
+		break;
+	    }
+	    *out->cur++ = ';';
+	}
     }
     *out->cur = '\0';
 }
@@ -537,10 +613,11 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         }
         str = StringValuePtr(obj);
         cnt = (int)RSTRING_LEN(obj);
+#if USE_B64
         if (is_xml_friendly((u_char*)str, cnt)) {
             e.type = StringCode;
             out->w_start(out, &e);
-            dump_value(out, str, cnt);
+            dump_str_value(out, str, cnt);
             e.indent = -1;
             out->w_end(out, &e);
         } else {
@@ -563,6 +640,13 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
                 free(b64);
             }
         }
+#else
+	e.type = StringCode;
+	out->w_start(out, &e);
+	dump_str_value(out, str, cnt);
+	e.indent = -1;
+	out->w_end(out, &e);
+#endif
         break;
     }
     case T_SYMBOL:
@@ -570,10 +654,11 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         const char      *sym = rb_id2name(SYM2ID(obj));
 
         cnt = (int)strlen(sym);
+#if USE_B64
         if (is_xml_friendly((u_char*)sym, cnt)) {
             e.type = SymbolCode;
             out->w_start(out, &e);
-            dump_value(out, sym, cnt);
+            dump_str_value(out, sym, cnt);
             e.indent = -1;
             out->w_end(out, &e);
         } else {
@@ -596,6 +681,13 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
                 free(b64);
             }
         }
+#else
+	e.type = SymbolCode;
+	out->w_start(out, &e);
+	dump_str_value(out, sym, cnt);
+	e.indent = -1;
+	out->w_end(out, &e);
+#endif
         break;
     }
     case T_DATA:
@@ -742,9 +834,10 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
 #endif
         e.type = RegexpCode;
         out->w_start(out, &e);
+#if USE_B64
         if (is_xml_friendly((u_char*)s, cnt)) {
             //dump_value(out, "/", 1);
-            dump_value(out, s, cnt);
+            dump_str_value(out, s, cnt);
         } else {
             char        buf64[4096];
             char        *b64 = buf64;
@@ -761,6 +854,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
                 free(b64);
             }
         }
+#else
+	dump_str_value(out, s, cnt);
+#endif
 #if 0
         dump_value(out, "/", 1);
         if (0 != (ONIG_OPTION_MULTILINE & options)) {
@@ -872,7 +968,7 @@ dump_gen_doc(VALUE obj, unsigned int depth, Out out) {
         dump_value(out, "<?xml", 5);
         if (Qnil != attrs) {
             rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
-        }
+	}
         dump_value(out, "?>", 2);
     }
     if (Yes == out->opts->with_instruct) {
@@ -950,7 +1046,7 @@ dump_gen_nodes(VALUE obj, unsigned int depth, Out out) {
             if (ox_element_clas == clas) {
                 dump_gen_element(*np, d2, out);
             } else if (rb_cString == clas) {
-                dump_value(out, StringValuePtr(*np), RSTRING_LEN(*np));
+                dump_str_value(out, StringValuePtr(*np), RSTRING_LEN(*np));
                 indent_needed = (1 == cnt) ? 0 : 1;
             } else if (ox_comment_clas == clas) {
                 dump_gen_val_node(*np, d2, "<!-- ", 5, " -->", 4, out);

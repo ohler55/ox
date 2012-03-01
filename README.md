@@ -24,11 +24,17 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 [Fast Ruby XML Serialization](http://www.ohler.com/software/thoughts/Blog/Entries/2011/9/20_Ruby_Object_XML_Serialization.html) to see how Ox can be used as a faster replacement for Marshal.
 
+*Fast JSON parser and marshaller on RubyGems*: https://rubygems.org/gems/oj
+
+*Fast JSON parser and marshaller on GitHub*: https://rubygems.org/gems/oj
+
 ## <a name="release">Release Notes</a>
 
-### Release 1.4.6
+### Release 1.5.0
 
- - Adopted the Exception message encoding hack to work for the latests ruby versions.
+ - Changed to use escape sequences in XML instead of using B64 encoding. B64 encoding type is still supported on read.
+
+ - Prefixed extern C functions with ox_ to avoid conflicts.
 
 ## <a name="description">Description</a>
 

@@ -441,6 +441,28 @@ class Func < ::Test::Unit::TestCase
     assert_equal("test", obj)
   end
 
+  def test_generic_string
+    xml = %{<?xml?>
+<Str>A &lt;boo&gt;</Str>
+}
+    doc = Ox.load(xml, :mode => :generic)
+    xml2 = Ox.dump(doc, :with_xml => true)
+    assert_equal(xml, xml2)
+  end
+
+  def test_generic_encoding
+    if RUBY_VERSION.start_with?('1.8')
+      assert(true)
+    else
+      xml = %{<?xml encoding="UTF-8"?>
+<Str>&lt;まきえ&gt;</Str>
+}
+      doc = Ox.load(xml, :mode => :generic)
+      xml2 = Ox.dump(doc, :with_xml => true)
+      assert_equal(xml, xml2)
+    end
+  end
+
   def test_IO
     f = File.open(__FILE__, "r")
     assert_raise(NotImplementedError) {
