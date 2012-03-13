@@ -30,11 +30,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.5.0
+### Release 1.5.1
 
- - Changed to use escape sequences in XML instead of using B64 encoding. B64 encoding type is still supported on read.
-
- - Prefixed extern C functions with ox_ to avoid conflicts.
+ - Fixed XML dump character table. the '?' character was marked incorrectly.
 
 ## <a name="description">Description</a>
 
