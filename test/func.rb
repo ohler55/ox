@@ -107,6 +107,10 @@ class Func < ::Test::Unit::TestCase
     dump_and_load(Time.now, false)
   end
 
+  def test_date
+    dump_and_load(Date.new, false)
+  end
+
   def test_array
     dump_and_load([], false)
     dump_and_load([1, 'a'], false)

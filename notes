@@ -3,14 +3,16 @@
 ^c^d hide subtree
 ^c^s show subtree
 
-- release 1.4.6
- - adopted the Exception message encoding hack to work for the latests ruby version
 
-- encoding
- - tag names and attribute names should all be encoded
-  - what about embedded ", =, space, >
+- todo
+ - change malloc to ALLOC_N and free to xfree
+ - wrap with protect like oj
 
-
+ - handle exception serializaton separate from objects
+  - create ExceptionCode
+  - dump should detect Exception class
+ - handle Date Objects
+  - define and set ox_date_class
 
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml

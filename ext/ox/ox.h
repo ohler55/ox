@@ -121,6 +121,8 @@ typedef enum {
     String64Code   = 'b', // base64 encoded String
     ClassCode      = 'c',
     Symbol64Code   = 'd', // base64 encoded Symbol
+    DateCode       = 'D',
+    ExceptionCode  = 'e',
     FloatCode      = 'f',
     RegexpCode     = 'g',
     HashCode       = 'h',

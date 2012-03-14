@@ -777,6 +777,8 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             dump_gen_element(obj, depth + 1, out);
             out->w_end(out, &e);
         } else { // Object
+	    //printf("*** exception? %s\n", (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? "true" : "false");
+
 // use encoding as the indicator for Ruby 1.8.7 or 1.9.x
 #ifdef HAVE_RUBY_ENCODING_H
             e.type = ObjectCode;
