@@ -266,9 +266,29 @@ class Func < ::Test::Unit::TestCase
       e = StandardError.new("Some Error")
       e.set_backtrace(["./func.rb:119: in test_exception",
                        "./fake.rb:57: in fake_func"])
+      dump_and_load(e, false)
     end
-    dump_and_load(e, false)
   end
+
+  def test_exception_bag
+    if RUBY_VERSION.start_with?('1.8')
+      assert(true)
+    else
+      xml = %{
+<e c="FakeError">
+  <s a="mesg">Some Error</s>
+  <a a="bt">
+    <s>./func.rb:119: in test_exception</s>
+    <s>./fake.rb:57: in fake_func</s>
+  </a>
+</e>
+}
+      x = Ox.load(xml, :mode => :object, :effort => :auto_define)
+      assert_equal('Some Error', x.message())
+      assert(x.is_a?(Exception))
+    end
+  end
+
 
   def test_struct
     s = Struct.new('Box', :x, :y, :w, :h)

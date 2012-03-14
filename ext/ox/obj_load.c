@@ -50,9 +50,9 @@ static VALUE    parse_double_time(const char *text, VALUE clas);
 static VALUE    parse_regexp(const char *text);
 
 static VALUE            get_var_sym_from_attrs(Attr a, void *encoding);
-static VALUE            get_obj_from_attrs(Attr a, PInfo pi);
-static VALUE            get_class_from_attrs(Attr a, PInfo pi);
-static VALUE            classname2class(const char *name, PInfo pi);
+static VALUE            get_obj_from_attrs(Attr a, PInfo pi, VALUE base_class);
+static VALUE            get_class_from_attrs(Attr a, PInfo pi, VALUE base_class);
+static VALUE            classname2class(const char *name, PInfo pi, VALUE base_class);
 static unsigned long    get_id_from_attrs(PInfo pi, Attr a);
 static CircArray        circ_array_new(void);
 static void             circ_array_free(CircArray ca);
@@ -125,7 +125,7 @@ name2var(const char *name, void *encoding) {
 }
 
 inline static VALUE
-resolve_classname(VALUE mod, const char *class_name, Effort effort) {
+resolve_classname(VALUE mod, const char *class_name, Effort effort, VALUE base_class) {
     VALUE       clas;
     ID          ci = rb_intern(class_name);
 
@@ -141,7 +141,7 @@ resolve_classname(VALUE mod, const char *class_name, Effort effort) {
         if (rb_const_defined_at(mod, ci)) {
             clas = rb_const_get_at(mod, ci);
         } else {
-            clas = rb_define_class_under(mod, class_name, ox_bag_clas);
+            clas = rb_define_class_under(mod, class_name, base_class);
         }
         break;
     case StrictEffort:
@@ -154,8 +154,8 @@ resolve_classname(VALUE mod, const char *class_name, Effort effort) {
 }
 
 inline static VALUE
-classname2obj(const char *name, PInfo pi) {
-    VALUE   clas = classname2class(name, pi);
+classname2obj(const char *name, PInfo pi, VALUE base_class) {
+    VALUE   clas = classname2class(name, pi, base_class);
     
     if (Qundef == clas) {
         return Qnil;
@@ -206,7 +206,7 @@ parse_time(const char *text, VALUE clas) {
 }
 
 static VALUE
-classname2class(const char *name, PInfo pi) {
+classname2class(const char *name, PInfo pi, VALUE base_class) {
     VALUE       *slot;
     VALUE       clas;
             
@@ -223,7 +223,7 @@ classname2class(const char *name, PInfo pi) {
 		if (':' != *n) {
                     raise_error("Invalid classname, expected another ':'", pi->str, pi->s);
 		}
-                if (Qundef == (clas = resolve_classname(clas, class_name, pi->effort))) {
+                if (Qundef == (clas = resolve_classname(clas, class_name, pi->effort, base_class))) {
                     return Qundef;
                 }
                 s = class_name;
@@ -232,7 +232,7 @@ classname2class(const char *name, PInfo pi) {
             }
         }
         *s = '\0';
-        if (Qundef != (clas = resolve_classname(clas, class_name, pi->effort))) {
+        if (Qundef != (clas = resolve_classname(clas, class_name, pi->effort, base_class))) {
             *slot = clas;
         }
     }
@@ -250,10 +250,10 @@ get_var_sym_from_attrs(Attr a, void *encoding) {
 }
 
 static VALUE
-get_obj_from_attrs(Attr a, PInfo pi) {
+get_obj_from_attrs(Attr a, PInfo pi, VALUE base_class) {
     for (; 0 != a->name; a++) {
         if ('c' == *a->name && '\0' == *(a->name + 1)) {
-            return classname2obj(a->value, pi);
+            return classname2obj(a->value, pi, base_class);
         }
     }
     return Qundef;
@@ -272,10 +272,10 @@ get_struct_from_attrs(Attr a) {
 #endif
 
 static VALUE
-get_class_from_attrs(Attr a, PInfo pi) {
+get_class_from_attrs(Attr a, PInfo pi, VALUE base_class) {
     for (; 0 != a->name; a++) {
         if ('c' == *a->name && '\0' == *(a->name + 1)) {
-            return classname2class(a->value, pi);
+            return classname2class(a->value, pi, base_class);
         }
     }
     return Qundef;
@@ -645,8 +645,14 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
             h->obj = Qnil;
         }
         break;
+    case ExceptionCode:
+        h->obj = get_obj_from_attrs(attrs, pi, rb_eException);
+        if (0 != pi->circ_array && Qnil != h->obj) {
+            circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+        }
+        break;
     case ObjectCode:
-        h->obj = get_obj_from_attrs(attrs, pi);
+        h->obj = get_obj_from_attrs(attrs, pi, ox_bag_clas);
         if (0 != pi->circ_array && Qnil != h->obj) {
             circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
         }
@@ -662,7 +668,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 #endif
         break;
     case ClassCode:
-        h->obj = get_class_from_attrs(attrs, pi);
+        h->obj = get_class_from_attrs(attrs, pi, ox_bag_clas);
         break;
     case RefCode:
         h->obj = Qundef;
@@ -711,6 +717,7 @@ end_element(PInfo pi, const char *ename) {
             case ArrayCode:
                 rb_ary_push(pi->h->obj, h->obj);
                 break;
+            case ExceptionCode:
             case ObjectCode:
                 if (Qnil != pi->h->obj) {
                     rb_ivar_set(pi->h->obj, h->var, h->obj);
@@ -910,7 +917,7 @@ debug_stack(PInfo pi, const char *comment) {
                     
                     v = rb_funcall2(h->var, rb_intern("to_s"), 0, 0);
                     key = StringValuePtr(v);
-                } else if (ObjectCode == (h - 1)->type || RangeCode == (h - 1)->type || StructCode == (h - 1)->type) {
+                } else if (ObjectCode == (h - 1)->type || ExceptionCode == (h - 1)->type || RangeCode == (h - 1)->type || StructCode == (h - 1)->type) {
                     key = rb_id2name(h->var);
                 } else {
                     printf("%s*** corrupt stack ***\n", indent);

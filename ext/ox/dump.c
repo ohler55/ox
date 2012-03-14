@@ -294,7 +294,7 @@ dump_start(Out out, Element e) {
     if (0 < e->attr.len) {
         fill_attr(out, 'a', e->attr.str, e->attr.len);
     }
-    if ((ObjectCode == e->type || StructCode == e->type || ClassCode == e->type) && 0 < e->clas.len) {
+    if ((ObjectCode == e->type || ExceptionCode == e->type || StructCode == e->type || ClassCode == e->type) && 0 < e->clas.len) {
         fill_attr(out, 'c', e->clas.str, e->clas.len);
     }
     if (0 < e->id) {
@@ -777,11 +777,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             dump_gen_element(obj, depth + 1, out);
             out->w_end(out, &e);
         } else { // Object
-	    //printf("*** exception? %s\n", (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? "true" : "false");
-
 // use encoding as the indicator for Ruby 1.8.7 or 1.9.x
 #ifdef HAVE_RUBY_ENCODING_H
-            e.type = ObjectCode;
+            e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
             cnt = (int)rb_ivar_count(obj);
             e.closed = (0 >= cnt);
             out->w_start(out, &e);
@@ -799,7 +797,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
 #else
             VALUE       vars = rb_obj_instance_variables(obj);
 #endif            
-            e.type = ObjectCode;
+            e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
             cnt = (int)RARRAY_LEN(vars);
             e.closed = (0 >= cnt);
             out->w_start(out, &e);

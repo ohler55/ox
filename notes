@@ -7,10 +7,6 @@
 - todo
  - change malloc to ALLOC_N and free to xfree
  - wrap with protect like oj
-
- - handle exception serializaton separate from objects
-  - create ExceptionCode
-  - dump should detect Exception class
  - handle Date Objects
   - define and set ox_date_class
 
