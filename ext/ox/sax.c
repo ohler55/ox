@@ -270,7 +270,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
 static void
 sax_drive_cleanup(SaxDrive dr) {
     if (dr->base_buf != dr->buf) {
-        free(dr->buf);
+        xfree(dr->buf);
     }
 }
 
@@ -291,12 +291,12 @@ sax_drive_read(SaxDrive dr) {
             size_t      size = dr->buf_end - dr->buf;
         
             if (dr->buf == dr->base_buf) {
-                if (0 == (dr->buf = (char*)malloc(size * 2))) {
+                if (0 == (dr->buf = ALLOC_N(char, size * 2))) {
                     rb_raise(rb_eNoMemError, "Could not allocate memory for large element.\n");
                 }
                 memcpy(dr->buf, old, size);
             } else {
-                if (0 == (dr->buf = (char*)realloc(dr->buf, size * 2))) {
+                if (0 == (dr->buf = REALLOC_N(dr->buf, char, size * 2))) {
                     rb_raise(rb_eNoMemError, "Could not allocate memory for large element.\n");
                 }
             }

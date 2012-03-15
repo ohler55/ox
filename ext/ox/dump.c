@@ -98,6 +98,7 @@ static void     dump_value(Out out, const char *value, size_t size);
 static void     dump_str_value(Out out, const char *value, size_t size);
 static int      dump_var(ID key, VALUE value, Out out);
 static void     dump_num(Out out, VALUE obj);
+static void     dump_date(Out out, VALUE obj);
 static void     dump_time_thin(Out out, VALUE obj);
 static void     dump_time_xsd(Out out, VALUE obj);
 static int      dump_hash(VALUE key, VALUE value, Out out);
@@ -145,8 +146,10 @@ dump_hex(u_char c, Out out) {
     *out->cur++ = hex_chars[d];
 }
 
-inline static Type
+static Type
 obj_class_code(VALUE obj) {
+    VALUE	clas = rb_obj_class(obj);
+
     switch (rb_type(obj)) {
     case T_NIL:            return NilClassCode;
     case T_ARRAY:          return ArrayCode;
@@ -162,9 +165,9 @@ obj_class_code(VALUE obj) {
 
         return (is_xml_friendly((u_char*)sym, (int)strlen(sym))) ? SymbolCode : Symbol64Code;
     }
-    case T_DATA:           return (rb_cTime == rb_obj_class(obj)) ? TimeCode : 0;
-    case T_STRUCT:         return (rb_cRange == rb_obj_class(obj)) ? RangeCode : StructCode;
-    case T_OBJECT:         return (ox_document_clas == rb_obj_class(obj) || ox_element_clas == rb_obj_class(obj)) ? RawCode : ObjectCode;
+    case T_DATA:           return (rb_cTime == clas) ? TimeCode : ((ox_date_class == clas) ? DateCode : 0);
+    case T_STRUCT:         return (rb_cRange == clas) ? RangeCode : StructCode;
+    case T_OBJECT:         return (ox_document_clas == clas || ox_element_clas == clas) ? RawCode : ObjectCode;
     case T_REGEXP:         return RegexpCode;
     case T_BIGNUM:         return BignumCode;
 #ifdef T_COMPLEX
@@ -262,7 +265,7 @@ grow(Out out, size_t len) {
     if (size <= len * 2 + pos) {
         size += len;
     }
-    if (0 == (buf = (char*)realloc(out->buf, size + 10))) { // 1 extra for terminator character plus extra (paranoid)
+    if (0 == (buf = REALLOC_N(out->buf, char, size + 10))) { // 10 extra for terminator character plus extra (paranoid)
         rb_raise(rb_eNoMemError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
     }
     out->buf = buf;
@@ -455,6 +458,30 @@ dump_time_thin(Out out, VALUE obj) {
 }
 
 static void
+dump_date(Out out, VALUE obj) {
+    char        buf[64];
+    char        *b = buf + sizeof(buf) - 1;
+    long        jd = NUM2LONG(rb_funcall2(obj, ox_jd_id, 0, 0));
+    long        size;
+
+    *b-- = '\0';
+    for (; 0 < jd; b--, jd /= 10) {
+        *b = '0' + (jd % 10);
+    }
+    b++;
+    if ('\0' == *b) {
+	b--;
+	*b = '0';
+    }
+    size = sizeof(buf) - (b - buf) - 1;
+    if (out->end - out->cur <= size) {
+        grow(out, size);
+    }
+    memcpy(out->cur, b, size);
+    out->cur += size;
+}
+
+static void
 dump_time_xsd(Out out, VALUE obj) {
     struct tm   *tm;
     time_t      sec = NUM2LONG(rb_funcall2(obj, ox_tv_sec_id, 0, 0));
@@ -621,24 +648,15 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             e.indent = -1;
             out->w_end(out, &e);
         } else {
-            char        buf64[4096];
-            char        *b64 = buf64;
             ulong       size = b64_size(cnt);
+            char        *b64 = ALLOCA_N(char, size + 1);
 
             e.type = String64Code;
-            if (sizeof(buf64) < size) {
-                if (0 == (b64 = (char*)malloc(size + 1))) {
-                    rb_raise(rb_eNoMemError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
-                }
-            }
             to_base64((u_char*)str, cnt, b64);
             out->w_start(out, &e);
             dump_value(out, b64, size);
             e.indent = -1;
             out->w_end(out, &e);
-            if (buf64 != b64) {
-                free(b64);
-            }
         }
 #else
 	e.type = StringCode;
@@ -662,24 +680,15 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             e.indent = -1;
             out->w_end(out, &e);
         } else {
-            char        buf64[4096];
-            char        *b64 = buf64;
             ulong       size = b64_size(cnt);
+            char        *b64 = ALLOCA_N(char, size + 1);
 
             e.type = Symbol64Code;
-            if (sizeof(buf64) < size) {
-                if (0 == (b64 = (char*)malloc(size + 1))) {
-                    rb_raise(rb_eNoMemError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
-                }
-            }
             to_base64((u_char*)sym, cnt, b64);
             out->w_start(out, &e);
             dump_value(out, b64, size);
             e.indent = -1;
             out->w_end(out, &e);
-            if (buf64 != b64) {
-                free(b64);
-            }
         }
 #else
 	e.type = SymbolCode;
@@ -701,14 +710,24 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             out->w_time(out, obj);
             e.indent = -1;
             out->w_end(out, &e);
-        } else {
-            if (StrictEffort == out->opts->effort) {
-                rb_raise(rb_eNotImpError, "Failed to dump T_DATA %s\n", rb_class2name(clas));
-            } else {
-                e.type = NilClassCode;
-                e.closed = 1;
-                out->w_start(out, &e);
-            }
+	} else {
+	    const char	*classname = rb_class2name(clas);
+
+	    if (0 == strcmp("Date", classname)) {
+		e.type = DateCode;
+		out->w_start(out, &e);
+		dump_date(out, obj);
+		e.indent = -1;
+		out->w_end(out, &e);
+	    } else {
+		if (StrictEffort == out->opts->effort) {
+		    rb_raise(rb_eNotImpError, "Failed to dump T_DATA %s\n", classname);
+		} else {
+		    e.type = NilClassCode;
+		    e.closed = 1;
+		    out->w_start(out, &e);
+		}
+	    }
         }
         break;
     }
@@ -839,20 +858,11 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             //dump_value(out, "/", 1);
             dump_str_value(out, s, cnt);
         } else {
-            char        buf64[4096];
-            char        *b64 = buf64;
             ulong       size = b64_size(cnt);
+            char        *b64 = ALLOCA_N(char, size + 1);
 
-            if (sizeof(buf64) < size) {
-                if (0 == (b64 = (char*)malloc(size + 1))) {
-                    rb_raise(rb_eNoMemError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
-                }
-            }
             to_base64((u_char*)s, cnt, b64);
             dump_value(out, b64, size);
-            if (buf64 != b64) {
-                free(b64);
-            }
         }
 #else
 	dump_str_value(out, s, cnt);
@@ -1119,8 +1129,8 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
     VALUE       clas = rb_obj_class(obj);
 
     out->w_time = (Yes == copts->xsd_date) ? dump_time_xsd : dump_time_thin;
-    out->buf = (char*)malloc(65336);
-    out->end = out->buf + 65325; // 1 less than end plus extra for possible errors
+    out->buf = ALLOC_N(char, 65336);
+    out->end = out->buf + 65325; // 10 less than end plus extra for possible errors
     out->cur = out->buf;
     out->circ_cache = 0;
     out->circ_cnt = 0;
@@ -1168,6 +1178,6 @@ ox_write_obj_to_file(VALUE obj, const char *path, Options copts) {
         int err = ferror(f);
         rb_raise(rb_eIOError, "Write failed. [%d:%s]\n", err, strerror(err));
     }
-    free(out.buf);
+    xfree(out.buf);
     fclose(f);
 }

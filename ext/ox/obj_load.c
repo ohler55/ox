@@ -189,6 +189,20 @@ structname2obj(const char *name) {
 }
 #endif
 
+inline static VALUE
+parse_ulong(const char *s, PInfo pi) {
+    unsigned long	n = 0;
+
+    for (; '\0' != *s; s++) {
+	if ('0' <= *s && *s <= '9') {
+	    n = n * 10 + (*s - '0');
+	} else {
+	    raise_error("Invalid number for a julian day", pi->str, pi->s);
+	}
+    }
+    return ULONG2NUM(n);
+}
+
 // 2010-07-09T10:47:45.895826162+09:00
 inline static VALUE
 parse_time(const char *text, VALUE clas) {
@@ -307,7 +321,7 @@ static CircArray
 circ_array_new() {
     CircArray   ca;
     
-    if (0 == (ca = (CircArray)malloc(sizeof(struct _CircArray)))) {
+    if (0 == (ca = ALLOC(struct _CircArray))) {
         rb_raise(rb_eNoMemError, "not enough memory\n");
     }
     ca->objs = ca->obj_array;
@@ -320,9 +334,9 @@ circ_array_new() {
 static void
 circ_array_free(CircArray ca) {
     if (ca->objs != ca->obj_array) {
-        free(ca->objs);
+        xfree(ca->objs);
     }
-    free(ca);
+    xfree(ca);
 }
 
 static void
@@ -334,12 +348,12 @@ circ_array_set(CircArray ca, VALUE obj, unsigned long id) {
             unsigned long       cnt = id + 512;
 
             if (ca->objs == ca->obj_array) {
-                if (0 == (ca->objs = (VALUE*)malloc(sizeof(VALUE) * cnt))) {
+                if (0 == (ca->objs = ALLOC_N(VALUE, cnt))) {
                     rb_raise(rb_eNoMemError, "not enough memory\n");
                 }
                 memcpy(ca->objs, ca->obj_array, sizeof(VALUE) * ca->cnt);
             } else { 
-                if (0 == (ca->objs = (VALUE*)realloc(ca->objs, sizeof(VALUE) * cnt))) {
+                if (0 == (ca->objs = REALLOC_N(ca->objs, VALUE, cnt))) {
                     rb_raise(rb_eNoMemError, "not enough memory\n");
                 }
             }
@@ -461,21 +475,23 @@ add_text(PInfo pi, char *text, int closed) {
         pi->h->obj = sym;
         break;
     }
+    case DateCode:
+    {
+	VALUE	args[1];
+
+	*args = parse_ulong(text, pi);
+        pi->h->obj = rb_funcall2(ox_date_class, ox_jd_id, 1, args);
+        break;
+    }
     case TimeCode:
         pi->h->obj = parse_time(text, ox_time_class);
         break;
     case String64Code:
     {
-        char            buf[1024];
-        char            *str = buf;
         unsigned long   str_size = b64_orig_size(text);
         VALUE           v;
+        char            *str = ALLOCA_N(char, str_size + 1);
         
-        if (sizeof(buf) <= str_size) {
-            if (0 == (str = (char*)malloc(str_size + 1))) {
-                rb_raise(rb_eNoMemError, "not enough memory\n");
-            }
-        }
         from_base64(text, (u_char*)str);
         v = rb_str_new(str, str_size);
 #ifdef HAVE_RUBY_ENCODING_H
@@ -487,53 +503,32 @@ add_text(PInfo pi, char *text, int closed) {
             circ_array_set(pi->circ_array, v, (unsigned long)pi->h->obj);
         }
         pi->h->obj = v;
-        if (buf != str) {
-            free(str);
-        }
         break;
     }
     case Symbol64Code:
     {
         VALUE           sym;
         VALUE           *slot;
-        char            buf[1024];
-        char            *str = buf;
         unsigned long   str_size = b64_orig_size(text);
+        char            *str = ALLOCA_N(char, str_size + 1);
         
-        if (sizeof(buf) <= str_size) {
-            if (0 == (str = (char*)malloc(str_size + 1))) {
-                rb_raise(rb_eNoMemError, "not enough memory\n");
-            }
-        }
         from_base64(text, (u_char*)str);
         if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot))) {
 	    sym = str2sym(str, pi->encoding);
             *slot = sym;
         }
         pi->h->obj = sym;
-        if (buf != str) {
-            free(str);
-        }
         break;
     }
     case RegexpCode:
         if ('/' == *text) {
             pi->h->obj = parse_regexp(text);
         } else {
-            char                buf[1024];
-            char                *str = buf;
             unsigned long       str_size = b64_orig_size(text);
+	    char		*str = ALLOCA_N(char, str_size + 1);
         
-            if (sizeof(buf) <= str_size) {
-                if (0 == (str = (char*)malloc(str_size + 1))) {
-                    rb_raise(rb_eNoMemError, "not enough memory\n");
-                }
-            }
             from_base64(text, (u_char*)str);
             pi->h->obj = parse_regexp(str);
-            if (sizeof(buf) <= str_size) {
-                free(str);
-            }
         }
         break;
     case BignumCode:
@@ -609,6 +604,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     case RegexpCode:
     case BignumCode:
     case ComplexCode:
+    case DateCode:
     case TimeCode:
     case RationalCode: // sub elements read next
         // value will be read in the following add_text

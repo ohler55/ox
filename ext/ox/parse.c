@@ -469,7 +469,7 @@ read_text(PInfo pi) {
 		
 		if (0 == alloc_buf) {
 		    size = sizeof(buf) * 2;
-		    if (0 == (alloc_buf = (char*)malloc(size))) {
+		    if (0 == (alloc_buf = ALLOC_N(char, size))) {
 			raise_error("text too long", pi->str, pi->s);
 		    }
 		    memcpy(alloc_buf, buf, b - buf);
@@ -478,7 +478,7 @@ read_text(PInfo pi) {
 		    unsigned long	pos = b - alloc_buf;
 
 		    size = (end - alloc_buf) * 2;
-		    if (0 == (alloc_buf = (char*)realloc(alloc_buf, size))) {
+		    if (0 == (alloc_buf = REALLOC_N(alloc_buf, char, size))) {
 			raise_error("text too long", pi->str, pi->s);
 		    }
 		    b = alloc_buf + pos;
@@ -492,7 +492,7 @@ read_text(PInfo pi) {
     *b = '\0';
     if (0 != alloc_buf) {
 	pi->pcb->add_text(pi, alloc_buf, ('/' == *(pi->s + 1)));
-	free(alloc_buf);
+	xfree(alloc_buf);
     } else {
 	pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
     }
@@ -534,7 +534,7 @@ read_reduced_text(PInfo pi) {
 		
 		if (0 == alloc_buf) {
 		    size = sizeof(buf) * 2;
-		    if (0 == (alloc_buf = (char*)malloc(size))) {
+		    if (0 == (alloc_buf = ALLOC_N(char, size))) {
 			raise_error("text too long", pi->str, pi->s);
 		    }
 		    memcpy(alloc_buf, buf, b - buf);
@@ -543,7 +543,7 @@ read_reduced_text(PInfo pi) {
 		    unsigned long	pos = b - alloc_buf;
 
 		    size = (end - alloc_buf) * 2;
-		    if (0 == (alloc_buf = (char*)realloc(alloc_buf, size))) {
+		    if (0 == (alloc_buf = REALLOC(alloc_buf, char, size))) {
 			raise_error("text too long", pi->str, pi->s);
 		    }
 		    b = alloc_buf + pos;
@@ -561,7 +561,7 @@ read_reduced_text(PInfo pi) {
     *b = '\0';
     if (0 != alloc_buf) {
 	pi->pcb->add_text(pi, alloc_buf, ('/' == *(pi->s + 1)));
-	free(alloc_buf);
+	xfree(alloc_buf);
     } else {
 	pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
     }

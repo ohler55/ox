@@ -60,6 +60,7 @@ ID	ox_excl_id;
 ID	ox_fileno_id;
 ID	ox_inspect_id;
 ID	ox_instruct_id;
+ID	ox_jd_id;
 ID	ox_keys_id;
 ID	ox_local_id;
 ID	ox_mesg_id;
@@ -91,6 +92,7 @@ VALUE   ox_element_clas;
 VALUE   ox_bag_clas;
 VALUE   ox_struct_class;
 VALUE   ox_time_class;
+VALUE   ox_date_class;
 
 Cache   ox_symbol_cache = 0;
 Cache   ox_class_cache = 0;
@@ -285,15 +287,16 @@ set_def_opts(VALUE self, VALUE opts) {
  */
 static VALUE
 to_obj(VALUE self, VALUE ruby_xml) {
-    VALUE       obj;
     char        *xml;
+    size_t	len;
 
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
-    xml = strdup(StringValuePtr(ruby_xml));
-    obj = ox_parse(xml, ox_obj_callbacks, 0, 0, StrictEffort);
-    free(xml);
-    return obj;
+    len = RSTRING_LEN(ruby_xml) + 1;
+    xml = ALLOCA_N(char, len);
+    strcpy(xml, StringValuePtr(ruby_xml));
+
+    return ox_parse(xml, ox_obj_callbacks, 0, 0, StrictEffort);
 }
 
 /* call-seq: parse(xml) => Ox::Document or Ox::Element
@@ -305,15 +308,16 @@ to_obj(VALUE self, VALUE ruby_xml) {
  */
 static VALUE
 to_gen(VALUE self, VALUE ruby_xml) {
-    VALUE       obj;
     char        *xml;
+    size_t	len;
 
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
-    xml = strdup(StringValuePtr(ruby_xml));
-    obj = ox_parse(xml, ox_gen_callbacks, 0, 0, StrictEffort);
-    free(xml);
-    return obj;
+    len = RSTRING_LEN(ruby_xml) + 1;
+    xml = ALLOCA_N(char, len);
+    strcpy(xml, StringValuePtr(ruby_xml));
+
+    return ox_parse(xml, ox_gen_callbacks, 0, 0, StrictEffort);
 }
 
 static VALUE
@@ -371,8 +375,6 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
         obj = ox_parse(xml, ox_gen_callbacks, 0, options.trace, options.effort);
         break;
     }
-    free(xml);
-
     return obj;
 }
 
@@ -396,10 +398,13 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
 static VALUE
 load_str(int argc, VALUE *argv, VALUE self) {
     char        *xml;
+    size_t	len;
     
     Check_Type(*argv, T_STRING);
     // the xml string gets modified so make a copy of it
-    xml = strdup(StringValuePtr(*argv));
+    len = RSTRING_LEN(*argv) + 1;
+    xml = ALLOCA_N(char, len);
+    strcpy(xml, StringValuePtr(*argv));
 
     return load(xml, argc - 1, argv + 1, self);
 }
@@ -435,7 +440,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
     }
     fseek(f, 0, SEEK_END);
     len = ftell(f);
-    if (0 == (xml = malloc(len + 1))) {
+    if (0 == (xml = ALLOCA_N(char, len + 1))) {
         fclose(f);
         rb_raise(rb_eNoMemError, "Could not allocate memory for %ld byte file.\n", len);
     }
@@ -569,7 +574,7 @@ dump(int argc, VALUE *argv, VALUE self) {
         rb_enc_associate(rstr, rb_enc_find(copts.encoding));
     }
 #endif
-    free(xml);
+    xfree(xml);
 
     return rstr;
 }
@@ -653,6 +658,7 @@ void Init_ox() {
     ox_fileno_id = rb_intern("fileno");
     ox_inspect_id = rb_intern("inspect");
     ox_instruct_id = rb_intern("instruct");
+    ox_jd_id = rb_intern("jd");
     ox_keys_id = rb_intern("keys");
     ox_local_id = rb_intern("local");
     ox_mesg_id = rb_intern("mesg");
@@ -672,6 +678,7 @@ void Init_ox() {
     ox_value_id = rb_intern("@value");
 
     ox_time_class = rb_const_get(rb_cObject, rb_intern("Time"));
+    ox_date_class = rb_const_get(rb_cObject, rb_intern("Date"));
     ox_struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
 
     ox_encoding_sym = ID2SYM(rb_intern("encoding"));		rb_ary_push(keep, ox_encoding_sym);

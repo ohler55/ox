@@ -6,6 +6,7 @@ $: << File.join(File.dirname(__FILE__), "../ext")
 
 require 'test/unit'
 require 'optparse'
+require 'date'
 require 'ox'
 
 $indent = 2
@@ -108,7 +109,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_date
-    dump_and_load(Date.new, false)
+    dump_and_load(Date.new(2011, 1, 5), false)
   end
 
   def test_array

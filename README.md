@@ -30,9 +30,11 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.5.1
+### Release 1.5.2
 
- - Fixed XML dump character table. the '?' character was marked incorrectly.
+ - Added support for Date.
+
+ - Exception encoding and decoding support improved.
 
 ## <a name="description">Description</a>
 

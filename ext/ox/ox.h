@@ -233,6 +233,7 @@ extern ID	ox_excl_id;
 extern ID	ox_fileno_id;
 extern ID	ox_inspect_id;
 extern ID	ox_instruct_id;
+extern ID	ox_jd_id;
 extern ID	ox_keys_id;
 extern ID	ox_local_id;
 extern ID	ox_mesg_id;
@@ -251,6 +252,7 @@ extern ID	ox_tv_sec_id;
 extern ID	ox_tv_usec_id;
 extern ID	ox_value_id;
 
+extern VALUE    ox_date_class;
 extern VALUE    ox_empty_string;
 extern VALUE    ox_encoding_sym;
 extern VALUE    ox_struct_class;
