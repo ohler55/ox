@@ -440,10 +440,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
     }
     fseek(f, 0, SEEK_END);
     len = ftell(f);
-    if (0 == (xml = ALLOCA_N(char, len + 1))) {
-        fclose(f);
-        rb_raise(rb_eNoMemError, "Could not allocate memory for %ld byte file.\n", len);
-    }
+    xml = ALLOCA_N(char, len + 1);
     fseek(f, 0, SEEK_SET);
     if (len != fread(xml, 1, len, f)) {
         fclose(f);

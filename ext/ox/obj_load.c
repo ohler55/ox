@@ -321,9 +321,7 @@ static CircArray
 circ_array_new() {
     CircArray   ca;
     
-    if (0 == (ca = ALLOC(struct _CircArray))) {
-        rb_raise(rb_eNoMemError, "not enough memory\n");
-    }
+    ca = ALLOC(struct _CircArray);
     ca->objs = ca->obj_array;
     ca->size = sizeof(ca->obj_array) / sizeof(VALUE);
     ca->cnt = 0;
@@ -348,15 +346,10 @@ circ_array_set(CircArray ca, VALUE obj, unsigned long id) {
             unsigned long       cnt = id + 512;
 
             if (ca->objs == ca->obj_array) {
-                if (0 == (ca->objs = ALLOC_N(VALUE, cnt))) {
-                    rb_raise(rb_eNoMemError, "not enough memory\n");
-                }
+                ca->objs = ALLOC_N(VALUE, cnt);
                 memcpy(ca->objs, ca->obj_array, sizeof(VALUE) * ca->cnt);
             } else {
-		ca->objs = REALLOC_N(ca->objs, VALUE, cnt);
-                if (0 == ca->objs) {
-                    rb_raise(rb_eNoMemError, "not enough memory\n");
-                }
+		REALLOC_N(ca->objs, VALUE, cnt);
             }
             ca->size = cnt;
         }

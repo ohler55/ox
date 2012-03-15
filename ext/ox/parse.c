@@ -469,19 +469,14 @@ read_text(PInfo pi) {
 		
 		if (0 == alloc_buf) {
 		    size = sizeof(buf) * 2;
-		    if (0 == (alloc_buf = ALLOC_N(char, size))) {
-			raise_error("text too long", pi->str, pi->s);
-		    }
+		    alloc_buf = ALLOC_N(char, size);
 		    memcpy(alloc_buf, buf, b - buf);
 		    b = alloc_buf + (b - buf);
 		} else {
 		    unsigned long	pos = b - alloc_buf;
 
 		    size = (end - alloc_buf) * 2;
-		    alloc_buf = REALLOC_N(alloc_buf, char, size);
-		    if (0 == alloc_buf) {
-			raise_error("text too long", pi->str, pi->s);
-		    }
+		    REALLOC_N(alloc_buf, char, size);
 		    b = alloc_buf + pos;
 		}
 		end = alloc_buf + size - 2;
@@ -535,19 +530,14 @@ read_reduced_text(PInfo pi) {
 		
 		if (0 == alloc_buf) {
 		    size = sizeof(buf) * 2;
-		    if (0 == (alloc_buf = ALLOC_N(char, size))) {
-			raise_error("text too long", pi->str, pi->s);
-		    }
+		    alloc_buf = ALLOC_N(char, size);
 		    memcpy(alloc_buf, buf, b - buf);
 		    b = alloc_buf + (b - buf);
 		} else {
 		    unsigned long	pos = b - alloc_buf;
 
 		    size = (end - alloc_buf) * 2;
-		    alloc_buf = REALLOC(alloc_buf, char, size);
-		    if (0 == alloc_buf) {
-			raise_error("text too long", pi->str, pi->s);
-		    }
+		    REALLOC(alloc_buf, char, size);
 		    b = alloc_buf + pos;
 		}
 		end = alloc_buf + size - 2;

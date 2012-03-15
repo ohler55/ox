@@ -28,9 +28,7 @@ ox_cache8_new(Cache8 *cache) {
     Cache8     *cp;
     int         i;
     
-    if (0 == (*cache = ALLOC(struct _Cache8))) {
-        rb_raise(rb_eNoMemError, "not enough memory\n");
-    }
+    *cache = ALLOC(struct _Cache8);
     for (i = SLOT_CNT, cp = (*cache)->slots; 0 < i; i--, cp++) {
         *cp = 0;
     }

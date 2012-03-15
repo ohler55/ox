@@ -46,9 +46,7 @@ static void     slot_print(Cache cache, unsigned int depth);
 
 void
 ox_cache_new(Cache *cache) {
-    if (0 == (*cache = ALLOC(struct _Cache))) {
-        rb_raise(rb_eNoMemError, "not enough memory\n");
-    }
+    *cache = ALLOC(struct _Cache);
     (*cache)->key = 0;
     (*cache)->value = Qundef;
     bzero((*cache)->slots, sizeof((*cache)->slots));
