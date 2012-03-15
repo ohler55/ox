@@ -478,7 +478,8 @@ read_text(PInfo pi) {
 		    unsigned long	pos = b - alloc_buf;
 
 		    size = (end - alloc_buf) * 2;
-		    if (0 == (alloc_buf = REALLOC_N(alloc_buf, char, size))) {
+		    alloc_buf = REALLOC_N(alloc_buf, char, size);
+		    if (0 == alloc_buf) {
 			raise_error("text too long", pi->str, pi->s);
 		    }
 		    b = alloc_buf + pos;
@@ -543,7 +544,8 @@ read_reduced_text(PInfo pi) {
 		    unsigned long	pos = b - alloc_buf;
 
 		    size = (end - alloc_buf) * 2;
-		    if (0 == (alloc_buf = REALLOC(alloc_buf, char, size))) {
+		    alloc_buf = REALLOC(alloc_buf, char, size);
+		    if (0 == alloc_buf) {
 			raise_error("text too long", pi->str, pi->s);
 		    }
 		    b = alloc_buf + pos;

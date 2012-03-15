@@ -352,8 +352,9 @@ circ_array_set(CircArray ca, VALUE obj, unsigned long id) {
                     rb_raise(rb_eNoMemError, "not enough memory\n");
                 }
                 memcpy(ca->objs, ca->obj_array, sizeof(VALUE) * ca->cnt);
-            } else { 
-                if (0 == (ca->objs = REALLOC_N(ca->objs, VALUE, cnt))) {
+            } else {
+		ca->objs = REALLOC_N(ca->objs, VALUE, cnt);
+                if (0 == ca->objs) {
                     rb_raise(rb_eNoMemError, "not enough memory\n");
                 }
             }

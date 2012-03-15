@@ -296,7 +296,8 @@ sax_drive_read(SaxDrive dr) {
                 }
                 memcpy(dr->buf, old, size);
             } else {
-                if (0 == (dr->buf = REALLOC_N(dr->buf, char, size * 2))) {
+		dr->buf = REALLOC_N(dr->buf, char, size * 2);
+                if (0 == dr->buf) {
                     rb_raise(rb_eNoMemError, "Could not allocate memory for large element.\n");
                 }
             }

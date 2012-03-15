@@ -265,7 +265,8 @@ grow(Out out, size_t len) {
     if (size <= len * 2 + pos) {
         size += len;
     }
-    if (0 == (buf = REALLOC_N(out->buf, char, size + 10))) { // 10 extra for terminator character plus extra (paranoid)
+    buf = REALLOC_N(out->buf, char, size + 10); // 10 extra for terminator character plus extra (paranoid)
+    if (0 == buf) {
         rb_raise(rb_eNoMemError, "Failed to create string. [%d:%s]\n", ENOSPC, strerror(ENOSPC));
     }
     out->buf = buf;
