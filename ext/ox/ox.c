@@ -36,6 +36,9 @@
 #include "ruby.h"
 #include "ox.h"
 
+// maximum to allocate on the stack, arbitrary limit
+#define SMALL_XML	65536
+
 typedef struct _YesNoOpt {
     VALUE       sym;
     char        *attr;
@@ -289,14 +292,22 @@ static VALUE
 to_obj(VALUE self, VALUE ruby_xml) {
     char        *xml;
     size_t	len;
+    VALUE	obj;
 
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
     len = RSTRING_LEN(ruby_xml) + 1;
-    xml = ALLOCA_N(char, len);
+    if (SMALL_XML < len) {
+	xml = ALLOC_N(char, len);
+    } else {
+	xml = ALLOCA_N(char, len);
+    }
     strcpy(xml, StringValuePtr(ruby_xml));
-
-    return ox_parse(xml, ox_obj_callbacks, 0, 0, StrictEffort);
+    obj = ox_parse(xml, ox_obj_callbacks, 0, 0, StrictEffort);
+    if (SMALL_XML < len) {
+	xfree(xml);
+    }
+    return obj;
 }
 
 /* call-seq: parse(xml) => Ox::Document or Ox::Element
@@ -310,14 +321,22 @@ static VALUE
 to_gen(VALUE self, VALUE ruby_xml) {
     char        *xml;
     size_t	len;
+    VALUE	obj;
 
     Check_Type(ruby_xml, T_STRING);
     // the xml string gets modified so make a copy of it
     len = RSTRING_LEN(ruby_xml) + 1;
-    xml = ALLOCA_N(char, len);
+    if (SMALL_XML < len) {
+	xml = ALLOC_N(char, len);
+    } else {
+	xml = ALLOCA_N(char, len);
+    }
     strcpy(xml, StringValuePtr(ruby_xml));
-
-    return ox_parse(xml, ox_gen_callbacks, 0, 0, StrictEffort);
+    obj = ox_parse(xml, ox_gen_callbacks, 0, 0, StrictEffort);
+    if (SMALL_XML < len) {
+	xfree(xml);
+    }
+    return obj;
 }
 
 static VALUE
@@ -399,14 +418,22 @@ static VALUE
 load_str(int argc, VALUE *argv, VALUE self) {
     char        *xml;
     size_t	len;
+    VALUE	obj;
     
     Check_Type(*argv, T_STRING);
     // the xml string gets modified so make a copy of it
     len = RSTRING_LEN(*argv) + 1;
-    xml = ALLOCA_N(char, len);
+    if (SMALL_XML < len) {
+	xml = ALLOC_N(char, len);
+    } else {
+	xml = ALLOCA_N(char, len);
+    }
     strcpy(xml, StringValuePtr(*argv));
-
-    return load(xml, argc - 1, argv + 1, self);
+    obj = load(xml, argc - 1, argv + 1, self);
+    if (SMALL_XML < len) {
+	xfree(xml);
+    }
+    return obj;
 }
 
 /* call-seq: load_file(file_path, xml, options) => Ox::Document or Ox::Element or Object
@@ -428,10 +455,11 @@ load_str(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE
 load_file(int argc, VALUE *argv, VALUE self) {
-    char                *path;
-    char                *xml;
-    FILE                *f;
-    unsigned long       len;
+    char	*path;
+    char	*xml;
+    FILE	*f;
+    size_t	len;
+    VALUE	obj;
     
     Check_Type(*argv, T_STRING);
     path = StringValuePtr(*argv);
@@ -440,7 +468,11 @@ load_file(int argc, VALUE *argv, VALUE self) {
     }
     fseek(f, 0, SEEK_END);
     len = ftell(f);
-    xml = ALLOCA_N(char, len + 1);
+    if (SMALL_XML < len) {
+	xml = ALLOC_N(char, len + 1);
+    } else {
+	xml = ALLOCA_N(char, len + 1);
+    }
     fseek(f, 0, SEEK_SET);
     if (len != fread(xml, 1, len, f)) {
         fclose(f);
@@ -448,8 +480,11 @@ load_file(int argc, VALUE *argv, VALUE self) {
     }
     fclose(f);
     xml[len] = '\0';
-
-    return load(xml, argc - 1, argv + 1, self);
+    obj = load(xml, argc - 1, argv + 1, self);
+    if (SMALL_XML < len) {
+	xfree(xml);
+    }
+    return obj;
 }
 
 /* call-seq: sax_parse(handler, io, options)

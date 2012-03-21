@@ -30,11 +30,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.5.2
+### Release 1.5.3
 
- - Added support for Date.
-
- - Exception encoding and decoding support improved.
+ - Backed off on using the stack for allocation as very large XML files are too large for many stacks.
 
 ## <a name="description">Description</a>
 
