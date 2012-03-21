@@ -272,7 +272,7 @@ set_def_opts(VALUE self, VALUE opts) {
         } else if (Qfalse == v) {
             *o->attr = No;
         } else {
-            rb_raise(rb_eArgError, "%s must be true, false, or nil.\n", StringValuePtr(o->sym));
+	    rb_raise(rb_eArgError, "%s must be true or false.\n", rb_id2name(SYM2ID(o->sym)));
         }
     }
     return Qnil;
@@ -569,7 +569,7 @@ parse_dump_options(VALUE ropts, Options copts) {
                 } else if (rb_cFalseClass == c) {
                     *o->attr = No;
                 } else {
-                    rb_raise(rb_eArgError, "%s must be true or false.\n", StringValuePtr(o->sym));
+                    rb_raise(rb_eArgError, "%s must be true or false.\n", rb_id2name(SYM2ID(o->sym)));
                 }
             }
         }
