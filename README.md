@@ -30,9 +30,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.5.3
+### Release 1.5.4
 
- - Backed off on using the stack for allocation as very large XML files are too large for many stacks.
+ - Worked around bug in rb_protect in ruby 1.9.x and OS X 10.6.8 that caused ignored exceptions to be raised on program exit.
 
 ## <a name="description">Description</a>
 

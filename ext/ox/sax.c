@@ -87,6 +87,7 @@ static char     read_name_token(SaxDrive dr);
 static int      read_quoted_value(SaxDrive dr);
 static int      collapse_special(char *str);
 
+static VALUE	rescue_cb(VALUE rdr, VALUE err);
 static VALUE    io_cb(VALUE rdr);
 static VALUE    partial_io_cb(VALUE rdr);
 static int      read_from_io(SaxDrive dr);
@@ -778,14 +779,15 @@ read_quoted_value(SaxDrive dr) {
     return 0;
 }
 
-static int
-read_from_io_partial(SaxDrive dr) {
-    int ex = 0;
+static VALUE
+rescue_cb(VALUE rdr, VALUE err) {
+    if (rb_obj_class(err) != rb_eEOFError) {
+	SaxDrive	dr = (SaxDrive)rdr;
 
-    rb_protect(partial_io_cb, (VALUE)dr, &ex);
-    // printf("*** io_cb exception = %d\n", ex);
-    // An error code of 6 is always returned not matter what kind of Exception is raised.
-    return ex;
+        sax_drive_cleanup(dr);
+        rb_raise(err, "at line %d, column %d\n", dr->line, dr->col);
+    }
+    return Qfalse;
 }
 
 static VALUE
@@ -804,17 +806,7 @@ partial_io_cb(VALUE rdr) {
     strcpy(dr->cur, str);
     dr->read_end = dr->cur + cnt;
 
-    return Qnil;
-}
-
-static int
-read_from_io(SaxDrive dr) {
-    int ex = 0;
-
-    rb_protect(io_cb, (VALUE)dr, &ex);
-    // printf("*** io_cb exception = %d\n", ex);
-    // An error code of 6 is always returned not matter what kind of Exception is raised.
-    return ex;
+    return Qtrue;
 }
 
 static VALUE
@@ -834,7 +826,17 @@ io_cb(VALUE rdr) {
     strcpy(dr->cur, str);
     dr->read_end = dr->cur + cnt;
 
-    return Qnil;
+    return Qtrue;
+}
+
+static int
+read_from_io_partial(SaxDrive dr) {
+    return (Qfalse == rb_rescue(partial_io_cb, (VALUE)dr, rescue_cb, (VALUE)dr));
+}
+
+static int
+read_from_io(SaxDrive dr) {
+    return (Qfalse == rb_rescue(io_cb, (VALUE)dr, rescue_cb, (VALUE)dr));
 }
 
 static int

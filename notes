@@ -3,12 +3,7 @@
 ^c^d hide subtree
 ^c^s show subtree
 
-
 - todo
- - change malloc to ALLOC_N and free to xfree
- - wrap with protect like oj
- - handle Date Objects
-  - define and set ox_date_class
 
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
