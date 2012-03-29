@@ -34,6 +34,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Worked around bug in rb_protect in ruby 1.9.x and OS X 10.6.8 that caused ignored exceptions to be raised on program exit.
 
+ - Fixed a parse bug that did not accept &nn; sequences.
+
 ## <a name="description">Description</a>
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
