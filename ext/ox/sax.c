@@ -868,7 +868,12 @@ collapse_special(char *str) {
             s++;
             if ('#' == *s) {
                 s++;
-                c = (int)strtol(s, &end, 10);
+		if ('x' == *s || 'X' == *s) {
+		    s++;
+		    c = (int)strtol(s, &end, 16);
+		} else {
+		    c = (int)strtol(s, &end, 10);
+		}
                 if (';' != *end) {
                     return EDOM;
                 }
