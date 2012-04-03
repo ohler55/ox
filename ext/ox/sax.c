@@ -967,11 +967,12 @@ typedef struct _Tp {
 
 static VALUE
 parse_xsd_time(const char *text) {
+    const char	*start = text;
     long        cargs[10];
     long        *cp = cargs;
     long        v;
     int         i;
-    char        c;
+    char        c = '\0';
     struct _Tp  tpa[10] = { { 4, '-', '-' },
                            { 2, '-', '-' },
                            { 2, 'T', 'T' },
@@ -985,20 +986,24 @@ parse_xsd_time(const char *text) {
     Tp          tp = tpa;
     struct tm   tm;
 
+    memset(cargs, 0, sizeof(cargs));
     for (; 0 != tp->cnt; tp++) {
         for (i = tp->cnt, v = 0; 0 < i ; text++, i--) {
             c = *text;
             if (c < '0' || '9' < c) {
-                if (tp->end == c || tp->alt == c) {
+                if ('\0' == c || tp->end == c || tp->alt == c) {
                     break;
                 }
-                return Qnil;
+		rb_raise(rb_eArgError, "Not a valid Time (%s).\n", start);
             }
             v = 10 * v + (long)(c - '0');
         }
+	if ('\0' == c) {
+	    break;
+	}
         c = *text++;
         if (tp->end != c && tp->alt != c) {
-            return Qnil;
+	    rb_raise(rb_eArgError, "Not a valid Time (%s).\n", start);
         }
         *cp++ = v;
     }

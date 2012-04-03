@@ -42,7 +42,8 @@ module Weather
         case @cell
         when 2
           if @as_time
-            @time = Time.parse(text)
+            #@time = Time.parse(text)
+            @time = Time.at(text.to_f)
           else
             @time = text
           end
