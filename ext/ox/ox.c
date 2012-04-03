@@ -477,7 +477,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
     fseek(f, 0, SEEK_SET);
     if (len != fread(xml, 1, len, f)) {
         fclose(f);
-        rb_raise(rb_eLoadError, "Failed to read %ld bytes from %s.\n", len, path);
+        rb_raise(rb_eLoadError, "Failed to read %ld bytes from %s.\n", (long)len, path);
     }
     fclose(f);
     xml[len] = '\0';

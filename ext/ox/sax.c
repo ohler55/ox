@@ -35,6 +35,7 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "ruby.h"
 #include "ox.h"
