@@ -210,6 +210,8 @@ extern VALUE	ox_parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Eff
 extern void	_ox_raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
 
 extern void	ox_sax_parse(VALUE handler, VALUE io, int convert);
+extern void	ox_sax_define(void);
+
 
 extern char*	ox_write_obj_to_str(VALUE obj, Options copts);
 extern void	ox_write_obj_to_file(VALUE obj, const char *path, Options copts);
@@ -219,6 +221,7 @@ extern struct _Options  ox_default_options;
 extern VALUE    Ox;
 
 extern ID	ox_at_id;
+extern ID	ox_at_value_id;
 extern ID	ox_attr_id;
 extern ID	ox_attributes_id;
 extern ID	ox_beg_id;

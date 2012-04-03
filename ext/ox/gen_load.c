@@ -203,7 +203,7 @@ add_doctype(PInfo pi, const char *docType) {
         rb_enc_associate(s, pi->encoding);
     }
 #endif
-    rb_ivar_set(n, ox_value_id, s);
+    rb_ivar_set(n, ox_at_value_id, s);
     if (0 == pi->h) { // top level object
 	create_doc(pi);
     }
@@ -220,7 +220,7 @@ add_comment(PInfo pi, const char *comment) {
         rb_enc_associate(s, pi->encoding);
     }
 #endif
-    rb_ivar_set(n, ox_value_id, s);
+    rb_ivar_set(n, ox_at_value_id, s);
     if (0 == pi->h) { // top level object
 	create_doc(pi);
     }
@@ -237,7 +237,7 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
         rb_enc_associate(s, pi->encoding);
     }
 #endif
-    rb_ivar_set(n, ox_value_id, s);
+    rb_ivar_set(n, ox_at_value_id, s);
     if (0 == pi->h) { // top level object
 	create_doc(pi);
     }
@@ -270,7 +270,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     }
 #endif
     e = rb_obj_alloc(ox_element_clas);
-    rb_ivar_set(e, ox_value_id, s);
+    rb_ivar_set(e, ox_at_value_id, s);
     if (0 != attrs->name) {
         VALUE   ah = rb_hash_new();
         

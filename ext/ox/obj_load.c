@@ -782,7 +782,6 @@ end_element(PInfo pi, const char *ename) {
 
 static VALUE
 parse_double_time(const char *text, VALUE clas) {
-    VALUE       args[2];
     long        v = 0;
     long        v2 = 0;
     const char  *dot = 0;
@@ -806,10 +805,11 @@ parse_double_time(const char *text, VALUE clas) {
     for (; text - dot <= 6; text++) {
         v2 *= 10;
     }
-    args[0] = LONG2NUM(v);
-    args[1] = LONG2NUM(v2);
-
-    return rb_funcall2(clas, ox_at_id, 2, args);
+#if HAS_NANO_TIME
+    return rb_time_nano_new(v, v2);
+#else
+    return rb_time_new(v, v2 / 1000);
+#endif
 }
 
 typedef struct _Tp {
@@ -820,7 +820,6 @@ typedef struct _Tp {
 
 static VALUE
 parse_xsd_time(const char *text, VALUE clas) {
-    VALUE       args[2];
     long        cargs[10];
     long        *cp = cargs;
     long        v;
@@ -862,11 +861,11 @@ parse_xsd_time(const char *text, VALUE clas) {
     tm.tm_hour = (int)cargs[3];
     tm.tm_min = (int)cargs[4];
     tm.tm_sec = (int)cargs[5];
-
-    args[0] = LONG2NUM(mktime(&tm));
-    args[1] = LONG2NUM(cargs[6]);
-
-    return rb_funcall2(clas, ox_at_id, 2, args);
+#if HAS_NANO_TIME
+    return rb_time_nano_new(mktime(&tm), cargs[6]);
+#else
+    return rb_time_new(mktime(&tm), cargs[6] / 1000);
+#endif
 }
 
 // debug functions

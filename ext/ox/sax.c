@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
-#include <string.h>
+#include <strings.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
@@ -50,6 +50,7 @@ typedef struct _SaxDrive {
     int         line;
     int         col;
     VALUE       handler;
+    VALUE	value_obj;
     int         (*read_func)(struct _SaxDrive *dr);
     int         convert_special;
     union {
@@ -62,6 +63,7 @@ typedef struct _SaxDrive {
     int         has_comment;
     int         has_cdata;
     int         has_text;
+    int         has_value;
     int         has_start_element;
     int         has_end_element;
     int         has_error;
@@ -93,6 +95,9 @@ static VALUE    partial_io_cb(VALUE rdr);
 static int      read_from_io(SaxDrive dr);
 static int      read_from_fd(SaxDrive dr);
 static int      read_from_io_partial(SaxDrive dr);
+
+static VALUE	sax_value_class;
+
 
 static inline char
 sax_drive_get(SaxDrive dr) {
@@ -207,6 +212,7 @@ ox_sax_parse(VALUE handler, VALUE io, int convert) {
     printf("    has_comment = %s\n", dr.has_comment ? "true" : "false");
     printf("    has_cdata = %s\n", dr.has_cdata ? "true" : "false");
     printf("    has_text = %s\n", dr.has_text ? "true" : "false");
+    printf("    has_value = %s\n", dr.has_value ? "true" : "false");
     printf("    has_start_element = %s\n", dr.has_start_element ? "true" : "false");
     printf("    has_end_element = %s\n", dr.has_end_element ? "true" : "false");
     printf("    has_error = %s\n", dr.has_error ? "true" : "false");
@@ -249,6 +255,8 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
     dr->line = 1;
     dr->col = 0;
     dr->handler = handler;
+    dr->value_obj = rb_data_object_alloc(sax_value_class, dr, 0, 0);
+    rb_gc_register_address(&dr->value_obj);
     dr->convert_special = convert;
     dr->has_instruct = rb_respond_to(handler, ox_instruct_id);
     dr->has_attr = rb_respond_to(handler, ox_attr_id);
@@ -256,6 +264,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
     dr->has_comment = rb_respond_to(handler, ox_comment_id);
     dr->has_cdata = rb_respond_to(handler, ox_cdata_id);
     dr->has_text = rb_respond_to(handler, ox_text_id);
+    dr->has_value = rb_respond_to(handler, ox_value_id);
     dr->has_start_element = rb_respond_to(handler, ox_start_element_id);
     dr->has_end_element = rb_respond_to(handler, ox_end_element_id);
     dr->has_error = rb_respond_to(handler, ox_error_id);
@@ -270,6 +279,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
 
 static void
 sax_drive_cleanup(SaxDrive dr) {
+    rb_gc_unregister_address(&dr->value_obj);
     if (dr->base_buf != dr->buf) {
         xfree(dr->buf);
     }
@@ -573,7 +583,6 @@ read_element(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
     }
-    // TBD encode is needed
     name = str2sym(dr->str, dr);
     if (dr->has_start_element) {
         VALUE       args[1];
@@ -637,9 +646,14 @@ read_text(SaxDrive dr) {
         }
     }
     *(dr->cur - 1) = '\0';
-    if (dr->has_text) {
+    if (dr->has_value) {
         VALUE   args[1];
-        
+
+	*args = dr->value_obj;
+        rb_funcall2(dr->handler, ox_value_id, 1, args);
+    } else if (dr->has_text) {
+        VALUE   args[1];
+
         if (dr->convert_special) {
             if (0 != collapse_special(dr->str) && 0 != strchr(dr->str, '&')) {
                 sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
@@ -910,4 +924,185 @@ collapse_special(char *str) {
     *b = '\0';
 
     return 0;
+}
+
+static VALUE
+parse_double_time(const char *text) {
+    long        v = 0;
+    long        v2 = 0;
+    const char  *dot = 0;
+    char        c;
+    
+    for (; '.' != *text; text++) {
+        c = *text;
+        if (c < '0' || '9' < c) {
+            return Qnil;
+        }
+        v = 10 * v + (long)(c - '0');
+    }
+    dot = text++;
+    for (; '\0' != *text && text - dot <= 6; text++) {
+        c = *text;
+        if (c < '0' || '9' < c) {
+            return Qnil;
+        }
+        v2 = 10 * v2 + (long)(c - '0');
+    }
+    for (; text - dot <= 6; text++) {
+        v2 *= 10;
+    }
+#if HAS_NANO_TIME
+    return rb_time_nano_new(v, v2);
+#else
+    return rb_time_new(v, v2 / 1000);
+#endif
+}
+
+typedef struct _Tp {
+    int         cnt;
+    char        end;
+    char        alt;
+} *Tp;
+
+static VALUE
+parse_xsd_time(const char *text) {
+    long        cargs[10];
+    long        *cp = cargs;
+    long        v;
+    int         i;
+    char        c;
+    struct _Tp  tpa[10] = { { 4, '-', '-' },
+                           { 2, '-', '-' },
+                           { 2, 'T', 'T' },
+                           { 2, ':', ':' },
+                           { 2, ':', ':' },
+                           { 2, '.', '.' },
+                           { 9, '+', '-' },
+                           { 2, ':', ':' },
+                           { 2, '\0', '\0' },
+                           { 0, '\0', '\0' } };
+    Tp          tp = tpa;
+    struct tm   tm;
+
+    for (; 0 != tp->cnt; tp++) {
+        for (i = tp->cnt, v = 0; 0 < i ; text++, i--) {
+            c = *text;
+            if (c < '0' || '9' < c) {
+                if (tp->end == c || tp->alt == c) {
+                    break;
+                }
+                return Qnil;
+            }
+            v = 10 * v + (long)(c - '0');
+        }
+        c = *text++;
+        if (tp->end != c && tp->alt != c) {
+            return Qnil;
+        }
+        *cp++ = v;
+    }
+    tm.tm_year = (int)cargs[0] - 1900;
+    tm.tm_mon = (int)cargs[1] - 1;
+    tm.tm_mday = (int)cargs[2];
+    tm.tm_hour = (int)cargs[3];
+    tm.tm_min = (int)cargs[4];
+    tm.tm_sec = (int)cargs[5];
+#if HAS_NANO_TIME
+    return rb_time_nano_new(mktime(&tm), cargs[6]);
+#else
+    return rb_time_new(mktime(&tm), cargs[6] / 1000);
+#endif
+}
+
+static VALUE
+sax_value_as_s(VALUE self) {
+    SaxDrive	dr = DATA_PTR(self);
+    VALUE	rs = rb_str_new2(dr->str);
+
+#ifdef HAVE_RUBY_ENCODING_H
+    if (0 != dr->encoding) {
+	rb_enc_associate(rs, dr->encoding);
+    }
+#endif
+    return rs;
+}
+
+static VALUE
+sax_value_as_sym(VALUE self) {
+    SaxDrive	dr = DATA_PTR(self);
+
+    return str2sym(dr->str, dr);
+}
+
+static VALUE
+sax_value_as_f(VALUE self) {
+    return rb_float_new(strtod(((SaxDrive)DATA_PTR(self))->str, 0));
+}
+
+static VALUE
+sax_value_as_i(VALUE self) {
+    SaxDrive	dr = DATA_PTR(self);
+    const char	*s = dr->str;
+    long	n = 0;
+    int		neg = 0;
+
+    if ('-' == *s) {
+	neg = 1;
+	s++;
+    } else if ('+' == *s) {
+	s++;
+    }
+    for (; '\0' != *s; s++) {
+	if ('0' <= *s && *s <= '9') {
+	    n = n * 10 + (*s - '0');
+	} else {
+	    rb_raise(rb_eArgError, "Not a valid Fixnum.\n");
+	}
+    }
+    if (neg) {
+	n = -n;
+    }
+    return LONG2NUM(n);
+}
+
+static VALUE
+sax_value_as_time(VALUE self) {
+    SaxDrive	dr = DATA_PTR(self);
+    const char	*str = dr->str;
+    VALUE       t;
+
+    if (Qnil == (t = parse_double_time(str)) &&
+	Qnil == (t = parse_xsd_time(str))) {
+        VALUE       args[1];
+
+        //printf("**** time parse\n");
+        *args = rb_str_new2(str);
+        t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
+    }
+    return t;
+}
+
+static VALUE
+sax_value_as_bool(VALUE self) {
+    return (0 == strcasecmp("true", ((SaxDrive)DATA_PTR(self))->str)) ? Qtrue : Qfalse;
+}
+
+static VALUE
+sax_value_empty(VALUE self) {
+    return ('\0' == *((SaxDrive)DATA_PTR(self))->str) ? Qtrue : Qfalse;
+}
+
+void
+ox_sax_define() {
+    VALUE	sax_module = rb_const_get_at(Ox, rb_intern("Sax"));
+
+    sax_value_class = rb_define_class_under(sax_module, "Value", rb_cObject);
+
+    rb_define_method(sax_value_class, "as_s", sax_value_as_s, 0);
+    rb_define_method(sax_value_class, "as_sym", sax_value_as_sym, 0);
+    rb_define_method(sax_value_class, "as_i", sax_value_as_i, 0);
+    rb_define_method(sax_value_class, "as_f", sax_value_as_f, 0);
+    rb_define_method(sax_value_class, "as_time", sax_value_as_time, 0);
+    rb_define_method(sax_value_class, "as_bool", sax_value_as_bool, 0);
+    rb_define_method(sax_value_class, "empty?", sax_value_empty, 0);
 }

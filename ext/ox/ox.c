@@ -49,6 +49,7 @@ void Init_ox();
 VALUE    Ox = Qnil;
 
 ID	ox_at_id;
+ID	ox_at_value_id;
 ID	ox_attr_id;
 ID	ox_attributes_id;
 ID	ox_beg_id;
@@ -676,6 +677,7 @@ void Init_ox() {
     rb_require("time");
 
     ox_at_id = rb_intern("at");
+    ox_at_value_id = rb_intern("@value");
     ox_attr_id = rb_intern("attr");
     ox_attributes_id = rb_intern("@attributes");
     ox_beg_id = rb_intern("@beg");
@@ -702,12 +704,12 @@ void Init_ox() {
     ox_read_id = rb_intern("read");
     ox_start_element_id = rb_intern("start_element");
     ox_text_id = rb_intern("text");
+    ox_value_id = rb_intern("value");
     ox_to_c_id = rb_intern("to_c");
     ox_to_s_id = rb_intern("to_s");
     ox_to_sym_id = rb_intern("to_sym");
     ox_tv_sec_id = rb_intern("tv_sec");
     ox_tv_usec_id = rb_intern("tv_usec");
-    ox_value_id = rb_intern("@value");
 
     ox_time_class = rb_const_get(rb_cObject, rb_intern("Time"));
     ox_date_class = rb_const_get(rb_cObject, rb_intern("Date"));
@@ -748,6 +750,8 @@ void Init_ox() {
     ox_cache_new(&ox_symbol_cache);
     ox_cache_new(&ox_class_cache);
     ox_cache_new(&ox_attr_cache);
+
+    ox_sax_define();
 
     rb_define_module_function(Ox, "cache_test", cache_test, 0);
     rb_define_module_function(Ox, "cache8_test", cache8_test, 0);

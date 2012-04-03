@@ -477,6 +477,7 @@ dump_date(Out out, VALUE obj) {
     out->cur += size;
 }
 
+#if 0
 static void
 dump_time_xsd(Out out, VALUE obj) {
     struct tm   *tm;
@@ -498,12 +499,50 @@ dump_time_xsd(Out out, VALUE obj) {
         tzhour = (int)(tm->tm_gmtoff / 3600);
         tzmin = (int)(tm->tm_gmtoff / 60) - (tzhour * 60);
     }
-    sprintf(out->cur, "%04d-%02d-%02dT%02d:%02d:%02d.%06ld%c%02d:%02d",
-            tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-            tm->tm_hour, tm->tm_min, tm->tm_sec, usec,
-            tzsign, tzhour, tzmin);
+    out->cur += sprintf(out->cur, "%04d-%02d-%02dT%02d:%02d:%02d.%06ld%c%02d:%02d",
+			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+			tm->tm_hour, tm->tm_min, tm->tm_sec, usec,
+			tzsign, tzhour, tzmin);
 }
+#else
+static void
+dump_time_xsd(Out out, VALUE obj) {
+    struct tm		*tm;
+#if HAS_RB_TIME_TIMESPEC
+    struct timespec	ts = rb_time_timespec(obj);
+    time_t		sec = ts.tv_sec;
+    long		nsec = ts.tv_nsec;
+#else
+    time_t		sec = NUM2LONG(rb_funcall2(obj, oj_tv_sec_id, 0, 0));
+#if HAS_NANO_TIME
+    long		nsec = NUM2LONG(rb_funcall2(obj, oj_tv_nsec_id, 0, 0));
+#else
+    long		nsec = NUM2LONG(rb_funcall2(obj, oj_tv_usec_id, 0, 0)) * 1000;
+#endif
+#endif
+    int			tzhour, tzmin;
+    char		tzsign = '+';
 
+    if (out->end - out->cur <= 33) {
+        grow(out, 33);
+    }
+    // 2010-07-09T10:47:45.895826+09:00
+    tm = localtime(&sec);
+    if (0 > tm->tm_gmtoff) {
+        tzsign = '-';
+        tzhour = (int)(tm->tm_gmtoff / -3600);
+        tzmin = (int)(tm->tm_gmtoff / -60) - (tzhour * 60);
+    } else {
+        tzhour = (int)(tm->tm_gmtoff / 3600);
+        tzmin = (int)(tm->tm_gmtoff / 60) - (tzhour * 60);
+    }
+    // TBD replace with more efficient printer
+    out->cur += sprintf(out->cur, "%04d-%02d-%02dT%02d:%02d:%02d.%06ld%c%02d:%02d",
+			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
+			tm->tm_hour, tm->tm_min, tm->tm_sec, nsec / 1000,
+			tzsign, tzhour, tzmin);
+}
+#endif
 static void
 dump_first_obj(VALUE obj, Out out) {
     char        buf[128];
@@ -991,7 +1030,7 @@ dump_gen_doc(VALUE obj, unsigned int depth, Out out) {
 
 static void
 dump_gen_element(VALUE obj, unsigned int depth, Out out) {
-    VALUE       rname = rb_attr_get(obj, ox_value_id);
+    VALUE       rname = rb_attr_get(obj, ox_at_value_id);
     VALUE       attrs = rb_attr_get(obj, ox_attributes_id);
     VALUE       nodes = rb_attr_get(obj, ox_nodes_id);
     const char  *name = StringValuePtr(rname);
@@ -1091,7 +1130,7 @@ static void
 dump_gen_val_node(VALUE obj, unsigned int depth,
                   const char *pre, size_t plen,
                   const char *suf, size_t slen, Out out) {
-    VALUE       v = rb_attr_get(obj, ox_value_id);
+    VALUE       v = rb_attr_get(obj, ox_at_value_id);
     const char  *val;
     size_t      vlen;
     size_t      size;
