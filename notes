@@ -5,6 +5,65 @@
 
 - todo
 
+ - update perf tests to use perf
+  - bring over oj perf, it is more current
+  - perf_gen
+  - perf_sax
+
+ - use address instead of @keep for avoiding gc
+  - rb_gc_register_address(VALUE *)
+  - rb_gc_unregister_address(VALUE *)
+
+ - sax
+  - for text() callback, offer a value() callback with value object that can return different types
+   - create Ox::Sax::Value object when parser or handler is created
+    - pass in with value() cb
+    - create data_object with string pointed to by DATA_PTR
+    - keep from gc
+     - rb_global_variable(VALUE *)
+     - rb_gc_register_address(VALUE *)
+     - rb_gc_unregister_address(VALUE *)
+    - as_i
+    - as_f
+    - as_time
+    - as_s
+    - as_sym
+    - as_bool
+    - get_value(type=String)
+    - empty?
+   -
+
+ - create weather example
+  - weather dir (Weather module)
+   - different class for each parser approach
+    - wox.rb
+    - wsax
+    - wno.rb
+    - wnosax
+    - wnoread
+    - wfox - fast ox
+
+
+ - Ox::Doc or Ox::Fast or Ox::Fast::Doc (fast.c)
+  - same as Oj but with attributes
+  - add option for fetch to convert to a specific type
+   - if different from previous call then drop old value and create new one
+  - use xpath for fetch
+  - example
+   - find a spreadsheet and compare
+    - weather?
+    - other state or national data
+   - multiple modes and check timing
+    - ox
+    - fast
+    - sax
+    - nokogiri sax
+    - nokogiri reader
+     - xml::reader - is this the same as fast, sort of?
+    - nokogiri 
+     - Nokogiri::XML::Document.parse or Nokogiri::XML.parse
+
+
 - hints
 xmllint --valid --noout --dtdvalid ../misc/ox.dtd --debug sample.xml
 

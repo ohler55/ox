@@ -24,14 +24,19 @@ module Ox
   #
   # To make the desired methods active while parsing the desired method should
   # be made public in the subclasses. If the methods remain private they will
-  # not be called during parsing.
+  # not be called during parsing. The 'name' argument in the callback methods
+  # will be a Symbol. The 'str' arguments will be a String. The 'value'
+  # arguments will be Ox::Sax::Value objects. Since both the text() and the
+  # value() methods are called for the same element in the XML document the
+  # the text() method is ignored if the value() method is defined or public.
   #
   #    def instruct(target); end
-  #    def attr(name, value); end
-  #    def doctype(value); end
-  #    def comment(value); end
-  #    def cdata(value); end
-  #    def text(value); end
+  #    def attr(name, str); end
+  #    def doctype(str); end
+  #    def comment(str); end
+  #    def cdata(str); end
+  #    def text(str); end
+  #    def value(value); end
   #    def start_element(name); end
   #    def end_element(name); end
   #
@@ -48,19 +53,22 @@ module Ox
     def instruct(target)
     end
 
-    def attr(name, value)
+    def attr(name, str)
     end
 
-    def doctype(value)
+    def doctype(str)
     end
 
-    def comment(value)
+    def comment(str)
     end
 
-    def cdata(value)
+    def cdata(str)
     end
 
-    def text(value)
+    def text(str)
+    end
+
+    def value(value)
     end
 
     def start_element(name)
