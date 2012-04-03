@@ -513,11 +513,11 @@ dump_time_xsd(Out out, VALUE obj) {
     time_t		sec = ts.tv_sec;
     long		nsec = ts.tv_nsec;
 #else
-    time_t		sec = NUM2LONG(rb_funcall2(obj, oj_tv_sec_id, 0, 0));
+    time_t		sec = NUM2LONG(rb_funcall2(obj, ox_tv_sec_id, 0, 0));
 #if HAS_NANO_TIME
-    long		nsec = NUM2LONG(rb_funcall2(obj, oj_tv_nsec_id, 0, 0));
+    long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_nsec_id, 0, 0));
 #else
-    long		nsec = NUM2LONG(rb_funcall2(obj, oj_tv_usec_id, 0, 0)) * 1000;
+    long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0)) * 1000;
 #endif
 #endif
     int			tzhour, tzmin;
