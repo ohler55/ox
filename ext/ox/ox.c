@@ -80,6 +80,7 @@ ID	ox_to_c_id;
 ID	ox_to_s_id;
 ID	ox_to_sym_id;
 ID	ox_tv_sec_id;
+ID	ox_tv_nsec_id;
 ID	ox_tv_usec_id;
 ID	ox_value_id;
 
@@ -709,6 +710,7 @@ void Init_ox() {
     ox_to_s_id = rb_intern("to_s");
     ox_to_sym_id = rb_intern("to_sym");
     ox_tv_sec_id = rb_intern("tv_sec");
+    ox_tv_nsec_id = rb_intern("tv_nsec");
     ox_tv_usec_id = rb_intern("tv_usec");
 
     ox_time_class = rb_const_get(rb_cObject, rb_intern("Time"));
