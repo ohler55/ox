@@ -112,7 +112,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_date
-    dump_and_load(Date.new(2011, 1, 5), false)
+    dump_and_load(Date.new(2011, 1, 5), true)
   end
 
   def test_array
@@ -139,7 +139,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_regex
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
       dump_and_load(/^[0-9]/ix, false)
@@ -153,7 +153,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_complex_number
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
       dump_and_load(Complex(1), false)
@@ -162,7 +162,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_rational
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
       dump_and_load(Rational(1, 3), false)
@@ -272,7 +272,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_exception
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
       e = StandardError.new("Some Error")
@@ -283,7 +283,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_exception_bag
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
       xml = %{
@@ -404,7 +404,7 @@ class Func < ::Test::Unit::TestCase
   end
   
   def test_mutex
-    if defined?(Mutex)
+    if defined?(Mutex) && 'rubinius' != $ruby
       # Mutex can not be serialize but it should not raise an exception.
       xml = Ox.dump(Mutex.new, :indent => 2, :effort => :tolerant)
       assert_equal(%{<z/>
@@ -420,7 +420,7 @@ class Func < ::Test::Unit::TestCase
   end
   
   def test_encoding
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
       s = 'ピーター'
@@ -434,7 +434,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_full_encoding
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
       xml = %{<?xml version="1.0" encoding="UTF-8"?>
