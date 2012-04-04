@@ -759,7 +759,11 @@ end_element(PInfo pi, const char *ename) {
                 if (Qundef == pi->h->obj) {
                     pi->h->obj = h->obj;
                 } else {
+#ifdef RUBINIUS_RUBY
+                    pi->h->obj = rb_Rational(pi->h->obj, h->obj);
+#else
                     pi->h->obj = rb_rational_new(pi->h->obj, h->obj);
+#endif
                 }
 #else
                 raise_error("Rational Objects not implemented in Ruby 1.8.7", pi->str, pi->s);

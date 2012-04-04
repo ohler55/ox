@@ -162,7 +162,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_rational
-    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
+    if RUBY_VERSION.start_with?('1.8')
       assert(true)
     else
       dump_and_load(Rational(1, 3), false)

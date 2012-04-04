@@ -46,7 +46,7 @@ extern "C" {
 #endif
 
 #ifdef RUBINIUS_RUBY
-#undef T_RATIONAL
+//#undef T_RATIONAL
 #undef T_COMPLEX
 enum st_retval {ST_CONTINUE = 0, ST_STOP = 1, ST_DELETE = 2, ST_CHECK};
 #else
