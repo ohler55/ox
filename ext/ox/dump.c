@@ -934,7 +934,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     default:
         if (StrictEffort == out->opts->effort) {
             rb_raise(rb_eNotImpError, "Failed to dump %s Object (%02x)\n",
-                     rb_class2name(rb_obj_class(obj)), rb_type(obj));
+                     rb_obj_classname(obj), rb_type(obj));
         } else {
             e.type = NilClassCode;
             e.closed = 1;
