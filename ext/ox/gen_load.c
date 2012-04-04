@@ -114,7 +114,7 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     doc = rb_obj_alloc(ox_document_clas);
     ah = rb_hash_new();
     for (; 0 != attrs->name; attrs++) {
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
 	if (0 != pi->encoding) {
 	    VALUE	rstr = rb_str_new2(attrs->name);
 
@@ -127,7 +127,7 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 	sym = ID2SYM(rb_intern(attrs->name));
 #endif
         rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
         if (0 == strcmp("encoding", attrs->name)) {
             pi->encoding = rb_enc_find(attrs->value);
         }
@@ -198,7 +198,7 @@ add_doctype(PInfo pi, const char *docType) {
     VALUE       n = rb_obj_alloc(ox_doctype_clas);
     VALUE       s = rb_str_new2(docType);
 
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
     if (0 != pi->encoding) {
         rb_enc_associate(s, pi->encoding);
     }
@@ -215,7 +215,7 @@ add_comment(PInfo pi, const char *comment) {
     VALUE       n = rb_obj_alloc(ox_comment_clas);
     VALUE       s = rb_str_new2(comment);
 
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
     if (0 != pi->encoding) {
         rb_enc_associate(s, pi->encoding);
     }
@@ -232,7 +232,7 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
     VALUE       n = rb_obj_alloc(ox_cdata_clas);
     VALUE       s = rb_str_new2(cdata);
 
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
     if (0 != pi->encoding) {
         rb_enc_associate(s, pi->encoding);
     }
@@ -248,7 +248,7 @@ static void
 add_text(PInfo pi, char *text, int closed) {
     VALUE       s = rb_str_new2(text);
 
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
     if (0 != pi->encoding) {
         rb_enc_associate(s, pi->encoding);
     }
@@ -264,7 +264,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     VALUE       e;
     VALUE       s = rb_str_new2(ename);
 
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
     if (0 != pi->encoding) {
         rb_enc_associate(s, pi->encoding);
     }
@@ -279,7 +279,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
             VALUE   *slot;
 
             if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot))) {
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
 		if (0 != pi->encoding) {
 		    VALUE	rstr = rb_str_new2(attrs->name);
 
@@ -294,7 +294,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
                 *slot = sym;
             }
             s = rb_str_new2(attrs->value);
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
             if (0 != pi->encoding) {
                 rb_enc_associate(s, pi->encoding);
             }

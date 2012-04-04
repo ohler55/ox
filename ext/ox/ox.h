@@ -38,26 +38,27 @@ extern "C" {
 #endif
 #endif
 
+#define RSTRING_NOT_MODIFIED
+
 #include "ruby.h"
-#ifdef HAVE_RUBY_ENCODING_H
-// HAVE_RUBY_ENCODING_H defined for Ruby 1.9
+#if HAS_ENCODING_SUPPORT
 #include "ruby/encoding.h"
 #endif
-#include "cache.h"
 
-#ifdef JRUBY
-#define NO_RSTRUCT 1
-#endif
-
-#if (defined RBX_Qnil && !defined RUBINIUS)
-#define RUBINIUS
-#endif
-
-#ifdef RUBINIUS
+#ifdef RUBINIUS_RUBY
 #undef T_RATIONAL
 #undef T_COMPLEX
-#define NO_RSTRUCT 1
+enum st_retval {ST_CONTINUE = 0, ST_STOP = 1, ST_DELETE = 2, ST_CHECK};
+#else
+#if HAS_TOP_LEVEL_ST_H
+// Only on travis, local is where it is for all others. Seems to vary depending on the travis machine picked up.
+#include "st.h"
+#else
+#include "ruby/st.h"
 #endif
+#endif
+
+#include "cache.h"
 
 #define raise_error(msg, xml, current) _ox_raise_error(msg, xml, current, __FILE__, __LINE__)
 
@@ -223,6 +224,7 @@ extern VALUE    Ox;
 extern ID	ox_at_id;
 extern ID	ox_at_value_id;
 extern ID	ox_attr_id;
+extern ID	ox_attr_value_id;
 extern ID	ox_attributes_id;
 extern ID	ox_beg_id;
 extern ID	ox_cdata_id;

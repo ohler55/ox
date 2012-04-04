@@ -28,10 +28,12 @@ module Ox
   # will be a Symbol. The 'str' arguments will be a String. The 'value'
   # arguments will be Ox::Sax::Value objects. Since both the text() and the
   # value() methods are called for the same element in the XML document the
-  # the text() method is ignored if the value() method is defined or public.
+  # the text() method is ignored if the value() method is defined or
+  # public. The same is true for attr() and attr_value().
   #
   #    def instruct(target); end
   #    def attr(name, str); end
+  #    def attr_value(name, value); end
   #    def doctype(str); end
   #    def comment(str); end
   #    def cdata(str); end
@@ -54,6 +56,9 @@ module Ox
     end
 
     def attr(name, str)
+    end
+
+    def attr_value(name, value)
     end
 
     def doctype(str)

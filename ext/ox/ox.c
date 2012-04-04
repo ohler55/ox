@@ -51,6 +51,7 @@ VALUE    Ox = Qnil;
 ID	ox_at_id;
 ID	ox_at_value_id;
 ID	ox_attr_id;
+ID	ox_attr_value_id;
 ID	ox_attributes_id;
 ID	ox_beg_id;
 ID	ox_cdata_id;
@@ -603,7 +604,7 @@ dump(int argc, VALUE *argv, VALUE self) {
         rb_raise(rb_eNoMemError, "Not enough memory.\n");
     }
     rstr = rb_str_new2(xml);
-#ifdef ENCODING_INLINE_MAX
+#if HAS_ENCODING_SUPPORT
     if ('\0' != *copts.encoding) {
         rb_enc_associate(rstr, rb_enc_find(copts.encoding));
     }
@@ -680,6 +681,7 @@ void Init_ox() {
     ox_at_id = rb_intern("at");
     ox_at_value_id = rb_intern("@value");
     ox_attr_id = rb_intern("attr");
+    ox_attr_value_id = rb_intern("attr_value");
     ox_attributes_id = rb_intern("@attributes");
     ox_beg_id = rb_intern("@beg");
     ox_cdata_id = rb_intern("cdata");

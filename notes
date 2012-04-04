@@ -4,6 +4,20 @@
 ^c^s show subtree
 
 - todo
+ 
+ - handle string io as string
+ - complete weather examples
+  - wox.rb
+  + wsax
+  - wno.rb
+  + wnosax
+  - wnoread
+  - wlx
+  + wlxsax
+  - wfox - fast ox
+ - sax_test
+  - value() callback
+  - attr_value() callback
 
  - update perf tests to use perf
   - bring over oj perf, it is more current
@@ -14,33 +28,16 @@
   - rb_gc_register_address(VALUE *)
   - rb_gc_unregister_address(VALUE *)
 
- - sax
-  - for text() callback, offer a value() callback with value object that can return different types
-   - create Ox::Sax::Value object when parser or handler is created
-    - pass in with value() cb
-    - create data_object with string pointed to by DATA_PTR
-    - keep from gc
-     - rb_global_variable(VALUE *)
-     - rb_gc_register_address(VALUE *)
-     - rb_gc_unregister_address(VALUE *)
-    - as_i
-    - as_f
-    - as_time
-    - as_s
-    - as_sym
-    - as_bool
-    - get_value(type=String)
-    - empty?
-   -
-
  - create weather example
   - weather dir (Weather module)
    - different class for each parser approach
     - wox.rb
-    - wsax
+    + wsax
     - wno.rb
-    - wnosax
+    + wnosax
     - wnoread
+    - wlx
+    + wlxsax
     - wfox - fast ox
 
 

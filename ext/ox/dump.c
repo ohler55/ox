@@ -34,12 +34,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "ruby.h"
-#ifdef HAVE_RUBY_ENCODING_H
-#include "ruby/st.h"
-#else
-#include "st.h"
-#endif
 #include "base64.h"
 #include "cache8.h"
 #include "ox.h"
@@ -298,7 +292,7 @@ dump_start(Out out, Element e) {
     }
     if (0 < e->id) {
         char            buf[32];
-        char            *end = buf + sizeof(buf);
+        char            *end = buf + sizeof(buf) - 1;
         const char      *s = ulong2str(e->id, end);
         
         fill_attr(out, 'i', s, end - s);
@@ -380,7 +374,6 @@ dump_str_value(Out out, const char *value, size_t size) {
 		*out->cur++ = 't';
 		break;
 	    default:
-		*out->cur++ = '&';
 		*out->cur++ = '#';
 		*out->cur++ = 'x';
 		*out->cur++ = '0';
@@ -429,16 +422,26 @@ dump_num(Out out, VALUE obj) {
 
 static void
 dump_time_thin(Out out, VALUE obj) {
-    char        buf[64];
-    char        *b = buf + sizeof(buf) - 1;
-    time_t      sec = NUM2LONG(rb_funcall2(obj, ox_tv_sec_id, 0, 0));
-    long        usec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0));
-    char        *dot = b - 7;
-    long        size;
+    char		buf[64];
+    char		*b = buf + sizeof(buf) - 1;
+#if HAS_RB_TIME_TIMESPEC
+    struct timespec	ts = rb_time_timespec(obj);
+    time_t		sec = ts.tv_sec;
+    long		nsec = ts.tv_nsec;
+#else
+    time_t		sec = NUM2LONG(rb_funcall2(obj, ox_tv_sec_id, 0, 0));
+#if HAS_NANO_TIME
+    long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_nsec_id, 0, 0));
+#else
+    long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0)) * 1000;
+#endif
+#endif
+    char		*dot = b - 10;
+    long		size;
 
     *b-- = '\0';
-    for (; dot < b; b--, usec /= 10) {
-        *b = '0' + (usec % 10);
+    for (; dot < b; b--, nsec /= 10) {
+        *b = '0' + (nsec % 10);
     }
     *b-- = '.';
     for (; 0 < sec; b--, sec /= 10) {
@@ -477,34 +480,6 @@ dump_date(Out out, VALUE obj) {
     out->cur += size;
 }
 
-#if 0
-static void
-dump_time_xsd(Out out, VALUE obj) {
-    struct tm   *tm;
-    time_t      sec = NUM2LONG(rb_funcall2(obj, ox_tv_sec_id, 0, 0));
-    long        usec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0));
-    int         tzhour, tzmin;
-    char        tzsign = '+';
-
-    if (out->end - out->cur <= 33) {
-        grow(out, 33);
-    }
-    // 2010-07-09T10:47:45.895826+09:00
-    tm = localtime(&sec);
-    if (0 > tm->tm_gmtoff) {
-        tzsign = '-';
-        tzhour = (int)(tm->tm_gmtoff / -3600);
-        tzmin = (int)(tm->tm_gmtoff / -60) - (tzhour * 60);
-    } else {
-        tzhour = (int)(tm->tm_gmtoff / 3600);
-        tzmin = (int)(tm->tm_gmtoff / 60) - (tzhour * 60);
-    }
-    out->cur += sprintf(out->cur, "%04d-%02d-%02dT%02d:%02d:%02d.%06ld%c%02d:%02d",
-			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-			tm->tm_hour, tm->tm_min, tm->tm_sec, usec,
-			tzsign, tzhour, tzmin);
-}
-#else
 static void
 dump_time_xsd(Out out, VALUE obj) {
     struct tm		*tm;
@@ -542,7 +517,7 @@ dump_time_xsd(Out out, VALUE obj) {
 			tm->tm_hour, tm->tm_min, tm->tm_sec, nsec / 1000,
 			tzsign, tzhour, tzmin);
 }
-#endif
+
 static void
 dump_first_obj(VALUE obj, Out out) {
     char        buf[128];
@@ -660,7 +635,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         break;
     case T_FLOAT:
         e.type = FloatCode;
-        cnt = sprintf(value_buf, "%0.16g", RFLOAT_VALUE(obj)); // used sprintf due to bug in snprintf
+        cnt = sprintf(value_buf, "%0.16g", rb_num2dbl(obj)); // used sprintf due to bug in snprintf
         out->w_start(out, &e);
         dump_value(out, value_buf, cnt);
         e.indent = -1;
@@ -768,11 +743,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
     }
     case T_STRUCT:
     {
-#ifdef NO_RSTRUCT
-        e.type = NilClassCode;
-        e.closed = 1;
-        out->w_start(out, &e);
-#else
+#if HAS_RSTRUCT
         VALUE   clas;
 
         if (0 != out->circ_cache && check_circular(out, obj, &e)) {
@@ -807,6 +778,10 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             }
             out->w_end(out, &e);
         }
+#else
+        e.type = NilClassCode;
+        e.closed = 1;
+        out->w_start(out, &e);
 #endif
         break;
     }
@@ -832,7 +807,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             out->w_end(out, &e);
         } else { // Object
 // use encoding as the indicator for Ruby 1.8.7 or 1.9.x
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
             e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
             cnt = (int)rb_ivar_count(obj);
             e.closed = (0 >= cnt);
@@ -846,10 +821,10 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
                 out->w_end(out, &e);
             }
 #else
-#if (defined JRUBY || defined RUBINIUS)
-            VALUE       vars = rb_funcall2(obj, rb_intern("instance_variables"), 0, 0);
-#else
+#if HAS_IVAR_HELPERS
             VALUE       vars = rb_obj_instance_variables(obj);
+#else
+            VALUE       vars = rb_funcall2(obj, rb_intern("instance_variables"), 0, 0);
 #endif            
             e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
             cnt = (int)RARRAY_LEN(vars);

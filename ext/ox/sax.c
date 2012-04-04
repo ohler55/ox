@@ -60,6 +60,7 @@ typedef struct _SaxDrive {
     };
     int         has_instruct;
     int         has_attr;
+    int         has_attr_value;
     int         has_doctype;
     int         has_comment;
     int         has_cdata;
@@ -68,7 +69,7 @@ typedef struct _SaxDrive {
     int         has_start_element;
     int         has_end_element;
     int         has_error;
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
     rb_encoding *encoding;
 #endif
 } *SaxDrive;
@@ -94,7 +95,9 @@ static VALUE	rescue_cb(VALUE rdr, VALUE err);
 static VALUE    io_cb(VALUE rdr);
 static VALUE    partial_io_cb(VALUE rdr);
 static int      read_from_io(SaxDrive dr);
+#ifndef JRUBY_RUBY
 static int      read_from_fd(SaxDrive dr);
+#endif
 static int      read_from_io_partial(SaxDrive dr);
 
 static VALUE	sax_value_class;
@@ -182,7 +185,7 @@ str2sym(const char *str, SaxDrive dr) {
     VALUE       sym;
 
     if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot))) {
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
         if (0 != dr->encoding) {
 	    VALUE	rstr = rb_str_new2(str);
 
@@ -209,6 +212,7 @@ ox_sax_parse(VALUE handler, VALUE io, int convert) {
     printf("*** sax_parse with these flags\n");
     printf("    has_instruct = %s\n", dr.has_instruct ? "true" : "false");
     printf("    has_attr = %s\n", dr.has_attr ? "true" : "false");
+    printf("    has_attr_value = %s\n", dr.has_attr_value ? "true" : "false");
     printf("    has_doctype = %s\n", dr.has_doctype ? "true" : "false");
     printf("    has_comment = %s\n", dr.has_comment ? "true" : "false");
     printf("    has_cdata = %s\n", dr.has_cdata ? "true" : "false");
@@ -222,9 +226,29 @@ ox_sax_parse(VALUE handler, VALUE io, int convert) {
     sax_drive_cleanup(&dr);
 }
 
+inline static int
+respond_to(VALUE obj, ID method) {
+#ifdef JRUBY_RUBY
+    // There is a bug in JRuby where rb_respond_to() returns true (1) even if
+    // a method is private.
+    {
+	VALUE	args[1];
+
+	*args = ID2SYM(method);
+	return (Qtrue == rb_funcall2(obj, rb_intern("respond_to?"), 1, args));
+    }
+#else
+    return rb_respond_to(obj, method);
+#endif
+}
+
 static void
 sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
     if (rb_respond_to(io, ox_readpartial_id)) {
+#ifdef JRUBY_RUBY
+	dr->read_func = read_from_io_partial;
+	dr->io = io;
+#else
         VALUE   rfd;
 
         if (rb_respond_to(io, ox_fileno_id) && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
@@ -234,7 +258,12 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
             dr->read_func = read_from_io_partial;
             dr->io = io;
         }
+#endif
     } else if (rb_respond_to(io, ox_read_id)) {
+#ifdef JRUBY_RUBY
+	dr->read_func = read_from_io;
+	dr->io = io;
+#else
         VALUE   rfd;
 
         if (rb_respond_to(io, ox_fileno_id) && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
@@ -244,6 +273,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
             dr->read_func = read_from_io;
             dr->io = io;
         }
+#endif
     } else {
         rb_raise(rb_eArgError, "sax_parser io argument must respond to readpartial() or read().\n");
     }
@@ -259,17 +289,18 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
     dr->value_obj = rb_data_object_alloc(sax_value_class, dr, 0, 0);
     rb_gc_register_address(&dr->value_obj);
     dr->convert_special = convert;
-    dr->has_instruct = rb_respond_to(handler, ox_instruct_id);
-    dr->has_attr = rb_respond_to(handler, ox_attr_id);
-    dr->has_doctype = rb_respond_to(handler, ox_doctype_id);
-    dr->has_comment = rb_respond_to(handler, ox_comment_id);
-    dr->has_cdata = rb_respond_to(handler, ox_cdata_id);
-    dr->has_text = rb_respond_to(handler, ox_text_id);
-    dr->has_value = rb_respond_to(handler, ox_value_id);
-    dr->has_start_element = rb_respond_to(handler, ox_start_element_id);
-    dr->has_end_element = rb_respond_to(handler, ox_end_element_id);
-    dr->has_error = rb_respond_to(handler, ox_error_id);
-#ifdef HAVE_RUBY_ENCODING_H
+    dr->has_instruct = respond_to(handler, ox_instruct_id);
+    dr->has_attr = respond_to(handler, ox_attr_id);
+    dr->has_attr_value = respond_to(handler, ox_attr_value_id);
+    dr->has_doctype = respond_to(handler, ox_doctype_id);
+    dr->has_comment = respond_to(handler, ox_comment_id);
+    dr->has_cdata = respond_to(handler, ox_cdata_id);
+    dr->has_text = respond_to(handler, ox_text_id);
+    dr->has_value = respond_to(handler, ox_value_id);
+    dr->has_start_element = respond_to(handler, ox_start_element_id);
+    dr->has_end_element = respond_to(handler, ox_end_element_id);
+    dr->has_error = respond_to(handler, ox_error_id);
+#if HAS_ENCODING_SUPPORT
     if ('\0' == *ox_default_options.encoding) {
         dr->encoding = 0;
     } else {
@@ -516,7 +547,7 @@ read_cdata(SaxDrive dr) {
         VALUE       args[1];
 
         args[0] = rb_str_new2(dr->str);
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
         }
@@ -560,7 +591,7 @@ read_comment(SaxDrive dr) {
         VALUE       args[1];
 
         args[0] = rb_str_new2(dr->str);
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
         }
@@ -661,7 +692,7 @@ read_text(SaxDrive dr) {
             }
         }
         args[0] = rb_str_new2(dr->str);
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
         }
@@ -692,7 +723,8 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
         if (is_xml && 0 == strcmp("encoding", dr->str)) {
             is_encoding = 1;
         }
-        if (dr->has_attr) {
+	// TBD use symbol cache
+        if (dr->has_attr || dr->has_attr_value) {
             name = str2sym(dr->str, dr);
         }
         if (is_white(c)) {
@@ -705,12 +737,18 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
         if (0 != read_quoted_value(dr)) {
             return -1;
         }
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
         if (is_encoding) {
             dr->encoding = rb_enc_find(dr->str);
         }
 #endif
-        if (dr->has_attr) {
+        if (dr->has_attr_value) {
+            VALUE       args[2];
+
+            args[0] = name;
+            args[1] = dr->value_obj;
+            rb_funcall2(dr->handler, ox_attr_value_id, 2, args);
+	} else if (dr->has_attr) {
             VALUE       args[2];
 
             args[0] = name;
@@ -718,7 +756,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
                 sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
             }
             args[1] = rb_str_new2(dr->str);
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
             if (0 != dr->encoding) {
                 rb_enc_associate(args[1], dr->encoding);
             }
@@ -796,12 +834,21 @@ read_quoted_value(SaxDrive dr) {
 
 static VALUE
 rescue_cb(VALUE rdr, VALUE err) {
+#ifndef JRUBY_RUBY
+    // JRuby seems to play by a different set if rules. It passes in an Fixnum
+    // instead of an error like other Rubies. For now assume all errors are
+    // EOF and deal with the results further down the line.
+#if (defined(RUBINIUS_RUBY) || (1 == RUBY_VERSION_MAJOR && 8 == RUBY_VERSION_MINOR))
+    if (rb_obj_class(err) != rb_eTypeError) {
+#else
     if (rb_obj_class(err) != rb_eEOFError) {
+#endif
 	SaxDrive	dr = (SaxDrive)rdr;
 
         sax_drive_cleanup(dr);
         rb_raise(err, "at line %d, column %d\n", dr->line, dr->col);
     }
+#endif
     return Qfalse;
 }
 
@@ -854,6 +901,7 @@ read_from_io(SaxDrive dr) {
     return (Qfalse == rb_rescue(io_cb, (VALUE)dr, rescue_cb, (VALUE)dr));
 }
 
+#ifndef JRUBY_RUBY
 static int
 read_from_fd(SaxDrive dr) {
     ssize_t     cnt;
@@ -868,7 +916,7 @@ read_from_fd(SaxDrive dr) {
     }
     return 0;
 }
-
+#endif
 
 static int
 collapse_special(char *str) {
@@ -1023,9 +1071,15 @@ parse_xsd_time(const char *text) {
 static VALUE
 sax_value_as_s(VALUE self) {
     SaxDrive	dr = DATA_PTR(self);
-    VALUE	rs = rb_str_new2(dr->str);
+    VALUE	rs;
 
-#ifdef HAVE_RUBY_ENCODING_H
+    if (dr->convert_special) {
+	if (0 != collapse_special(dr->str) && 0 != strchr(dr->str, '&')) {
+	    sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
+	}
+    }
+    rs = rb_str_new2(dr->str);
+#if HAS_ENCODING_SUPPORT
     if (0 != dr->encoding) {
 	rb_enc_associate(rs, dr->encoding);
     }

@@ -71,18 +71,16 @@ class Func < ::Test::Unit::TestCase
     w << %{<top/>}
     w.close
     Ox.sax_parse(handler, input)
-    assert_equal(handler.calls,
-                 [[:start_element, :top],
-                  [:end_element, :top]])
+    assert_equal([[:start_element, :top],
+                  [:end_element, :top]], handler.calls)
   end
 
   def test_sax_io_file
     handler = AllSax.new()
     input = IO.open(IO.sysopen(File.join(File.dirname(__FILE__), 'basic.xml')))
     Ox.sax_parse(handler, input)
-    assert_equal(handler.calls,
-                 [[:start_element, :top],
-                  [:end_element, :top]])
+    assert_equal([[:start_element, :top],
+                  [:end_element, :top]], handler.calls)
   end
 
   def parse_compare(xml, expected, handler_class=AllSax, special=false)
@@ -457,11 +455,11 @@ encoding = "UTF-8" ?>},
                     [[:instruct, "xml"],
                      [:attr, :version, "1.0"],
                      [:attr, :encoding, "UTF-8"],
-                     [:start_element, :いち],
+                     [:start_element, 'いち'.to_sym],
                      [:attr, :name, 'ピーター'],
-                     [:attr, :つま, 'まきえ'],
+                     [:attr, 'つま'.to_sym, 'まきえ'],
                      [:text, 'ピーター'],
-                     [:end_element, :いち]])
+                     [:end_element, 'いち'.to_sym]])
     end
   end
 

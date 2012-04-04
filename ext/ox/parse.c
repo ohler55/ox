@@ -200,6 +200,7 @@ read_instruction(PInfo pi) {
 	    if (MAX_ATTRS <= (a - attrs)) {
 		raise_error("too many attributes", pi->str, pi->s);
 	    }
+	    next_non_white(pi);
 	}
 	if ('?' == *pi->s) {
 	    pi->s++;

@@ -164,7 +164,7 @@ classname2obj(const char *name, PInfo pi, VALUE base_class) {
     }
 }
 
-#ifndef NO_RSTRUCT
+#if HAS_RSTRUCT
 inline static VALUE
 structname2obj(const char *name) {
     VALUE       ost;
@@ -181,7 +181,7 @@ structname2obj(const char *name) {
     }
     ost = rb_const_get(ox_struct_class, rb_intern(s));
 // use encoding as the indicator for Ruby 1.8.7 or 1.9.x
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
     return rb_struct_alloc_noinit(ost);
 #else
     return rb_struct_new(ost);
@@ -273,7 +273,7 @@ get_obj_from_attrs(Attr a, PInfo pi, VALUE base_class) {
     return Qundef;
 }
 
-#ifndef NO_RSTRUCT
+#if HAS_RSTRUCT
 static VALUE
 get_struct_from_attrs(Attr a) {
     for (; 0 != a->name; a++) {
@@ -380,7 +380,7 @@ parse_regexp(const char *text) {
     int         options = 0;
             
     te = text + strlen(text) - 1;
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
     for (; text < te && '/' != *te; te--) {
         switch (*te) {
         case 'i':       options |= ONIG_OPTION_IGNORECASE;      break;
@@ -396,7 +396,7 @@ parse_regexp(const char *text) {
 static void
 instruct(PInfo pi, const char *target, Attr attrs) {
     if (0 == strcmp("xml", target)) {
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
         for (; 0 != attrs->name; attrs++) {
             if (0 == strcmp("encoding", attrs->name)) {
                 pi->encoding = rb_enc_find(attrs->value);
@@ -421,7 +421,7 @@ add_text(PInfo pi, char *text, int closed) {
     case NoCode:
     case StringCode:
         pi->h->obj = rb_str_new2(text);
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
         if (0 != pi->encoding) {
             rb_enc_associate(pi->h->obj, pi->encoding);
         }
@@ -488,7 +488,7 @@ add_text(PInfo pi, char *text, int closed) {
         
         from_base64(text, (u_char*)str);
         v = rb_str_new(str, str_size);
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
         if (0 != pi->encoding) {
             rb_enc_associate(v, pi->encoding);
         }
@@ -648,13 +648,13 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         }
         break;
     case StructCode:
-#ifdef NO_RSTRUCT
-        raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
-#else
+#if HAS_RSTRUCT
         h->obj = get_struct_from_attrs(attrs);
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
         }
+#else
+        raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
 #endif
         break;
     case ClassCode:
@@ -714,10 +714,10 @@ end_element(PInfo pi, const char *ename) {
                 }
                 break;
             case StructCode:
-#ifdef NO_RSTRUCT
-                raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
-#else
+#if HAS_RSTRUCT
                 rb_struct_aset(pi->h->obj, h->var, h->obj);
+#else
+                raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
 #endif
                 break;
             case HashCode:
@@ -725,9 +725,7 @@ end_element(PInfo pi, const char *ename) {
                 pi->h++;
                 break;
             case RangeCode:
-#ifdef NO_RSTRUCT
-                raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
-#else
+#if HAS_RSTRUCT
                 if (ox_beg_id == h->var) {
                     RSTRUCT_PTR(pi->h->obj)[0] = h->obj;
                 } else if (ox_end_id == h->var) {
@@ -737,6 +735,8 @@ end_element(PInfo pi, const char *ename) {
                 } else {
                     raise_error("Invalid range attribute", pi->str, pi->s);
                 }
+#else
+                raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
 #endif
                 break;
             case KeyCode:
@@ -802,7 +802,7 @@ parse_double_time(const char *text, VALUE clas) {
         }
         v2 = 10 * v2 + (long)(c - '0');
     }
-    for (; text - dot <= 6; text++) {
+    for (; text - dot <= 9; text++) {
         v2 *= 10;
     }
 #if HAS_NANO_TIME

@@ -9,6 +9,9 @@ require 'optparse'
 require 'date'
 require 'ox'
 
+$ruby = RUBY_DESCRIPTION.split(' ')[0]
+$ruby = 'ree' if 'ruby' == $ruby && RUBY_DESCRIPTION.include?('Ruby Enterprise Edition')
+
 $indent = 2
 
 opts = OptionParser.new
@@ -207,6 +210,14 @@ class Func < ::Test::Unit::TestCase
     }
   end
 
+  def test_xml_instruction_format
+    xml = %{<?xml version="1.0" ?>
+<s>Test</s>
+}
+    loaded = Ox.load(xml, :mode => :object)
+    assert_equal('Test', loaded);
+  end
+
   def test_xml_instruction
     xml = Ox.dump("test", :mode => :object, :with_xml => false)
     assert_equal("<s>test</s>\n", xml)
@@ -290,10 +301,13 @@ class Func < ::Test::Unit::TestCase
     end
   end
 
-
   def test_struct
-    s = Struct.new('Box', :x, :y, :w, :h)
-    dump_and_load(s.new(2, 4, 10, 20), false)
+    if 'ruby' == $ruby || 'ree' == $ruby
+      s = Struct.new('Box', :x, :y, :w, :h)
+      dump_and_load(s.new(2, 4, 10, 20), false)
+    else
+      assert(true)
+    end
   end
 
   def test_bad_format
@@ -378,14 +392,6 @@ class Func < ::Test::Unit::TestCase
     dump_and_load(Bag.new(:@raw => raw), false)
   end
 
-  def dump_and_load(obj, trace=false, circular=false)
-    xml = Ox.dump(obj, :indent => $indent, :circular => circular)
-    puts xml if trace
-    loaded = Ox.load(xml, :mode => :object, :trace => (trace ? 2 : 0))
-    assert_equal(obj, loaded)
-    loaded
-  end
-
   def test_nameerror
     begin
       "x".foo
@@ -451,8 +457,9 @@ class Func < ::Test::Unit::TestCase
       opts[:with_xml] = true
       Ox.default_options = opts
       begin
-        dump_and_load(Bag.new(:@tsuma => :まきえ), false)
-        dump_and_load(Bag.new(:@つま => :まきえ), false)
+        # only 1.9.x rubies know how to parse a UTF-8 symbol
+        dump_and_load(Bag.new('@tsuma'.to_sym => 'まきえ'.to_sym), false)
+        dump_and_load(Bag.new('@つま'.to_sym => 'まきえ'.to_sym), false)
       ensure
         Ox.default_options = orig
       end
@@ -628,6 +635,15 @@ class Func < ::Test::Unit::TestCase
     nodes = doc.locate('Family/Pete/?[-1]/@age')
     assert_equal(['31'], nodes )
   end
+
+  def dump_and_load(obj, trace=false, circular=false)
+    xml = Ox.dump(obj, :indent => $indent, :circular => circular)
+    puts xml if trace
+    loaded = Ox.load(xml, :mode => :object, :trace => (trace ? 2 : 0))
+    assert_equal(obj, loaded)
+    loaded
+  end
+
 end
 
 class Bag

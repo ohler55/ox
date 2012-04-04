@@ -7,3 +7,5 @@ ox-*.gem
 Makefile
 *.bundle
 .rbenv-version
+*.rbc
+.rbx

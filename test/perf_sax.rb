@@ -81,9 +81,11 @@ end
 
 class OxAllSax < OxSax
   def start_element(name); end
-  def attr(name, value); end
+  def attr(name, str); end
+  def attr_value(name, value); end
   def end_element(name); end
-  def text(value); end
+  def text(str); end
+  def value(value); end
   def instruct(target); end
   def doctype(value); end
   def comment(value); end
