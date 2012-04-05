@@ -112,7 +112,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_date
-    dump_and_load(Date.new(2011, 1, 5), true)
+    dump_and_load(Date.new(2011, 1, 5), false)
   end
 
   def test_array
@@ -420,7 +420,7 @@ class Func < ::Test::Unit::TestCase
   end
   
   def test_encoding
-    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
+    if RUBY_VERSION.start_with?('1.8')# || 'rubinius' == $ruby
       assert(true)
     else
       s = 'ピーター'

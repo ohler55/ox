@@ -6,22 +6,11 @@
 - todo
  
  - handle string io as string
- - complete weather examples
-  - wox.rb
-  + wsax
-  - wno.rb
-  + wnosax
-  - wnoread
-  - wlx
-  + wlxsax
-  - wfox - fast ox
  - sax_test
   - value() callback
   - attr_value() callback
 
  - update perf tests to use perf
-  - bring over oj perf, it is more current
-  - perf_gen
   - perf_sax
 
  - use address instead of @keep for avoiding gc

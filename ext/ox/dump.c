@@ -806,8 +806,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             dump_gen_element(obj, depth + 1, out);
             out->w_end(out, &e);
         } else { // Object
-// use encoding as the indicator for Ruby 1.8.7 or 1.9.x
-#if HAS_ENCODING_SUPPORT
+#if HAS_IVAR_HELPERS
             e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
             cnt = (int)rb_ivar_count(obj);
             e.closed = (0 >= cnt);
@@ -821,11 +820,10 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
                 out->w_end(out, &e);
             }
 #else
-#if HAS_IVAR_HELPERS
-            VALUE       vars = rb_obj_instance_variables(obj);
-#else
+            //VALUE       vars = rb_obj_instance_variables(obj);
+	    //#else
             VALUE       vars = rb_funcall2(obj, rb_intern("instance_variables"), 0, 0);
-#endif            
+	    //#endif            
             e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
             cnt = (int)RARRAY_LEN(vars);
             e.closed = (0 >= cnt);
@@ -904,26 +902,30 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         out->w_end(out, &e);
         break;
     }
-#if (defined T_COMPLEX && defined RCOMPLEX)
+#ifdef T_COMPLEX
     case T_COMPLEX:
         e.type = ComplexCode;
         out->w_start(out, &e);
+#ifdef RCOMPLEX
         dump_obj(0, RCOMPLEX(obj)->real, depth + 1, out);
         dump_obj(0, RCOMPLEX(obj)->imag, depth + 1, out);
+#else
+        dump_obj(0, rb_funcall2(obj, rb_intern("real"), 0, 0), depth + 1, out);
+        dump_obj(0, rb_funcall2(obj, rb_intern("imag"), 0, 0), depth + 1, out);
+#endif
         out->w_end(out, &e);
         break;
 #endif
-	//#if (defined T_RATIONAL && defined RRATIONAL)
 #ifdef T_RATIONAL
     case T_RATIONAL:
         e.type = RationalCode;
         out->w_start(out, &e);
-#ifdef RUBINIUS_RUBY
-        dump_obj(0, rb_funcall2(obj, rb_intern("numerator"), 0, 0), depth + 1, out);
-        dump_obj(0, rb_funcall2(obj, rb_intern("denominator"), 0, 0), depth + 1, out);
-#else
+#ifdef RRATIONAL
         dump_obj(0, RRATIONAL(obj)->num, depth + 1, out);
         dump_obj(0, RRATIONAL(obj)->den, depth + 1, out);
+#else
+        dump_obj(0, rb_funcall2(obj, rb_intern("numerator"), 0, 0), depth + 1, out);
+        dump_obj(0, rb_funcall2(obj, rb_intern("denominator"), 0, 0), depth + 1, out);
 #endif
         out->w_end(out, &e);
         break;

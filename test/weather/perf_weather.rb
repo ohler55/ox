@@ -10,7 +10,7 @@ require 'perf'
 
 $filename = 'weather/HellsGate_2012_weather.xml'
 $as_time = false
-$iter = 1
+$iter = 10
 
 opts = OptionParser.new
 opts.on("-f", "--file [String]", String, "filename")           { |f| $filename = f }
@@ -30,14 +30,32 @@ rescue Exception => e
 end
 
 begin
+  require 'weather/wox'
+  perf.add('Ox', 'parse') { Weather::WOx.parse($filename, $as_time) }
+rescue Exception => e
+end
+
+begin
   require 'weather/wnosax'
   perf.add('Nokogiri::XML::Sax', 'parse') { Weather::WNoSax.parse($filename, $as_time) }
 rescue Exception => e
 end
 
 begin
+  require 'weather/wno'
+  perf.add('Nokogiri::XML::Document', 'parse') { Weather::WNo.parse($filename, $as_time) }
+rescue Exception => e
+end
+
+begin
   require 'weather/wlxsax'
   perf.add('LibXML::XML::SaxParser', 'parse') { Weather::WLxSax.parse($filename, $as_time) }
+rescue Exception => e
+end
+
+begin
+  require 'weather/wlx'
+  perf.add('LibXML::XML::Document', 'parse') { Weather::WLx.parse($filename, $as_time) }
 rescue Exception => e
 end
 
