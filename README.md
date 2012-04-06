@@ -52,6 +52,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Added an example that demonstrates using several parsing techniques with different parsers. The example is in the test/weather directory.
 
+ - The SAX parser was optimized slightly for StringIO input.
+
 ## <a name="description">Description</a>
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized

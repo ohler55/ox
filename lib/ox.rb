@@ -83,8 +83,7 @@
 #   doc2 = Ox.parse(xml)
 #   puts "Same? #{doc == doc2}"
 module Ox
-  private
-  @@keep = []
+
 end
 
 require 'ox/version'

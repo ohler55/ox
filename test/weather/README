@@ -1,0 +1,7 @@
+
+To run the example, cd to the ox/test directory and execute the command
+
+weather/perf_weather.rb
+
+Browse the sample parser files in the ox/test/weather directory to see how
+each parser is used.

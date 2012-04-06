@@ -76,6 +76,7 @@ ID	ox_parse_id;
 ID	ox_read_id;
 ID	ox_readpartial_id;
 ID	ox_start_element_id;
+ID	ox_string_id;
 ID	ox_text_id;
 ID	ox_to_c_id;
 ID	ox_to_s_id;
@@ -99,6 +100,7 @@ VALUE   ox_bag_clas;
 VALUE   ox_struct_class;
 VALUE   ox_time_class;
 VALUE   ox_date_class;
+VALUE	ox_stringio_class;
 
 Cache   ox_symbol_cache = 0;
 Cache   ox_class_cache = 0;
@@ -657,10 +659,7 @@ cache8_test(VALUE self) {
 }
 
 void Init_ox() {
-    VALUE       keep = Qnil;
-
     Ox = rb_define_module("Ox");
-    keep = rb_cv_get(Ox, "@@keep"); // needed to stop GC from deleting and reusing VALUEs
 
     rb_define_module_function(Ox, "default_options", get_def_opts, 0);
     rb_define_module_function(Ox, "default_options=", set_def_opts, 1);
@@ -677,6 +676,8 @@ void Init_ox() {
     rb_define_module_function(Ox, "to_file", to_file, -1);
 
     rb_require("time");
+    rb_require("date");
+    rb_require("stringio");
 
     ox_at_id = rb_intern("at");
     ox_at_value_id = rb_intern("@value");
@@ -706,6 +707,7 @@ void Init_ox() {
     ox_readpartial_id = rb_intern("readpartial");
     ox_read_id = rb_intern("read");
     ox_start_element_id = rb_intern("start_element");
+    ox_string_id = rb_intern("string");
     ox_text_id = rb_intern("text");
     ox_value_id = rb_intern("value");
     ox_to_c_id = rb_intern("to_c");
@@ -718,32 +720,32 @@ void Init_ox() {
     ox_time_class = rb_const_get(rb_cObject, rb_intern("Time"));
     ox_date_class = rb_const_get(rb_cObject, rb_intern("Date"));
     ox_struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
+    ox_stringio_class = rb_const_get(rb_cObject, rb_intern("StringIO"));
 
-    ox_encoding_sym = ID2SYM(rb_intern("encoding"));		rb_ary_push(keep, ox_encoding_sym);
-    indent_sym = ID2SYM(rb_intern("indent"));                   rb_ary_push(keep, indent_sym);
-    xsd_date_sym = ID2SYM(rb_intern("xsd_date"));               rb_ary_push(keep, xsd_date_sym);
-    opt_format_sym = ID2SYM(rb_intern("opt_format"));           rb_ary_push(keep, opt_format_sym);
-    mode_sym = ID2SYM(rb_intern("mode"));                       rb_ary_push(keep, mode_sym);
-    auto_sym = ID2SYM(rb_intern("auto"));                       rb_ary_push(keep, auto_sym);
-    optimized_sym = ID2SYM(rb_intern("optimized"));             rb_ary_push(keep, optimized_sym);
-    object_sym = ID2SYM(rb_intern("object"));                   rb_ary_push(keep, object_sym);
-    circular_sym = ID2SYM(rb_intern("circular"));               rb_ary_push(keep, circular_sym);
-    generic_sym = ID2SYM(rb_intern("generic"));                 rb_ary_push(keep, generic_sym);
-    limited_sym = ID2SYM(rb_intern("limited"));                 rb_ary_push(keep, limited_sym);
-    trace_sym = ID2SYM(rb_intern("trace"));                     rb_ary_push(keep, trace_sym);
-    effort_sym = ID2SYM(rb_intern("effort"));                   rb_ary_push(keep, effort_sym);
-    strict_sym = ID2SYM(rb_intern("strict"));                   rb_ary_push(keep, strict_sym);
-    tolerant_sym = ID2SYM(rb_intern("tolerant"));               rb_ary_push(keep, tolerant_sym);
-    auto_define_sym = ID2SYM(rb_intern("auto_define"));         rb_ary_push(keep, auto_define_sym);
-    with_dtd_sym = ID2SYM(rb_intern("with_dtd"));               rb_ary_push(keep, with_dtd_sym);
-    with_instruct_sym = ID2SYM(rb_intern("with_instructions")); rb_ary_push(keep, with_instruct_sym);
-    with_xml_sym = ID2SYM(rb_intern("with_xml"));               rb_ary_push(keep, with_xml_sym);
-    convert_special_sym = ID2SYM(rb_intern("convert_special")); rb_ary_push(keep, convert_special_sym);
+    ox_encoding_sym = ID2SYM(rb_intern("encoding"));		rb_gc_register_address(&ox_encoding_sym);
+    indent_sym = ID2SYM(rb_intern("indent"));                   rb_gc_register_address(&indent_sym);
+    xsd_date_sym = ID2SYM(rb_intern("xsd_date"));               rb_gc_register_address(&xsd_date_sym);
+    opt_format_sym = ID2SYM(rb_intern("opt_format"));           rb_gc_register_address(&opt_format_sym);
+    mode_sym = ID2SYM(rb_intern("mode"));                       rb_gc_register_address(&mode_sym);
+    auto_sym = ID2SYM(rb_intern("auto"));                       rb_gc_register_address(&auto_sym);
+    optimized_sym = ID2SYM(rb_intern("optimized"));             rb_gc_register_address(&optimized_sym);
+    object_sym = ID2SYM(rb_intern("object"));                   rb_gc_register_address(&object_sym);
+    circular_sym = ID2SYM(rb_intern("circular"));               rb_gc_register_address(&circular_sym);
+    generic_sym = ID2SYM(rb_intern("generic"));                 rb_gc_register_address(&generic_sym);
+    limited_sym = ID2SYM(rb_intern("limited"));                 rb_gc_register_address(&limited_sym);
+    trace_sym = ID2SYM(rb_intern("trace"));                     rb_gc_register_address(&trace_sym);
+    effort_sym = ID2SYM(rb_intern("effort"));                   rb_gc_register_address(&effort_sym);
+    strict_sym = ID2SYM(rb_intern("strict"));                   rb_gc_register_address(&strict_sym);
+    tolerant_sym = ID2SYM(rb_intern("tolerant"));               rb_gc_register_address(&tolerant_sym);
+    auto_define_sym = ID2SYM(rb_intern("auto_define"));         rb_gc_register_address(&auto_define_sym);
+    with_dtd_sym = ID2SYM(rb_intern("with_dtd"));               rb_gc_register_address(&with_dtd_sym);
+    with_instruct_sym = ID2SYM(rb_intern("with_instructions")); rb_gc_register_address(&with_instruct_sym);
+    with_xml_sym = ID2SYM(rb_intern("with_xml"));               rb_gc_register_address(&with_xml_sym);
+    convert_special_sym = ID2SYM(rb_intern("convert_special")); rb_gc_register_address(&convert_special_sym);
 
-    ox_empty_string = rb_str_new2("");				rb_ary_push(keep, ox_empty_string);
-    ox_zero_fixnum = INT2NUM(0);				rb_ary_push(keep, ox_zero_fixnum);
+    ox_empty_string = rb_str_new2("");				rb_gc_register_address(&ox_empty_string);
+    ox_zero_fixnum = INT2NUM(0);				rb_gc_register_address(&ox_zero_fixnum);
 
-    //rb_require("node"); // generic xml node classes
     ox_document_clas = rb_const_get_at(Ox, rb_intern("Document"));
     ox_element_clas = rb_const_get_at(Ox, rb_intern("Element"));
     ox_comment_clas = rb_const_get_at(Ox, rb_intern("Comment"));

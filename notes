@@ -5,30 +5,6 @@
 
 - todo
  
- - handle string io as string
- - sax_test
-  - value() callback
-  - attr_value() callback
-
- - update perf tests to use perf
-  - perf_sax
-
- - use address instead of @keep for avoiding gc
-  - rb_gc_register_address(VALUE *)
-  - rb_gc_unregister_address(VALUE *)
-
- - create weather example
-  - weather dir (Weather module)
-   - different class for each parser approach
-    - wox.rb
-    + wsax
-    - wno.rb
-    + wnosax
-    - wnoread
-    - wlx
-    + wlxsax
-    - wfox - fast ox
-
 
  - Ox::Doc or Ox::Fast or Ox::Fast::Doc (fast.c)
   - same as Oj but with attributes

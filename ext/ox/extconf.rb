@@ -35,3 +35,5 @@ end
 $CPPFLAGS += ' -Wall'
 #puts "*** $CPPFLAGS: #{$CPPFLAGS}"
 create_makefile(extension_name)
+
+%x{make clean}

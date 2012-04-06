@@ -63,6 +63,25 @@ class AllSax < StartSax
   end
 end
 
+class TypeSax < ::Ox::Sax
+  attr_accessor :item
+  # method to call on the Ox::Sax::Value Object
+  attr_accessor :type
+
+  def initialize(type)
+    @item = nil
+    @type = type
+  end
+
+  def attr_value(name, value)
+    @item = value.send(name)
+  end
+
+  def value(value)
+    @item = value.send(@type)
+  end
+end
+
 class Func < ::Test::Unit::TestCase
 
   def test_sax_io_pipe
@@ -461,6 +480,102 @@ encoding = "UTF-8" ?>},
                      [:text, 'ピーター'],
                      [:end_element, 'いち'.to_sym]])
     end
+  end
+
+  def test_sax_value_fixnum
+    handler = TypeSax.new(:as_i)
+    Ox.sax_parse(handler, StringIO.new(%{<top>7</top>}))
+    assert_equal(7, handler.item)
+  end
+
+  def test_sax_value_string
+    handler = TypeSax.new(:as_s)
+    Ox.sax_parse(handler, StringIO.new(%{<top>cheese</top>}))
+    assert_equal('cheese', handler.item)
+  end
+
+  def test_sax_value_float
+    handler = TypeSax.new(:as_f)
+    Ox.sax_parse(handler, StringIO.new(%{<top>7</top>}))
+    assert_equal(7.0, handler.item)
+  end
+
+  def test_sax_value_sym
+    handler = TypeSax.new(:as_sym)
+    Ox.sax_parse(handler, StringIO.new(%{<top>cheese</top>}))
+    assert_equal(:cheese, handler.item)
+  end
+
+  def test_sax_value_bool
+    handler = TypeSax.new(:as_bool)
+    Ox.sax_parse(handler, StringIO.new(%{<top>true</top>}))
+    assert_equal(true, handler.item)
+  end
+
+  def test_sax_value_nil
+    handler = TypeSax.new(:as_i)
+    Ox.sax_parse(handler, StringIO.new(%{<top></top>}))
+    assert_equal(nil, handler.item)
+  end
+
+  def test_sax_value_time
+    t = Time.local(2012, 1, 5, 10, 20, 30)
+    handler = TypeSax.new(:as_time)
+    Ox.sax_parse(handler, StringIO.new(%{<top>#{t}</top>}))
+    assert_equal(t.sec, handler.item.sec)
+    assert_equal(t.usec, handler.item.usec)
+    t = Time.now
+    Ox.sax_parse(handler, StringIO.new(%{<top>%d.%06d</top>} % [t.sec, t.usec]))
+    assert_equal(t.sec, handler.item.sec)
+    assert_equal(t.usec, handler.item.usec)
+  end
+
+  def test_sax_attr_value_fixnum
+    handler = TypeSax.new(nil)
+    Ox.sax_parse(handler, StringIO.new(%{<top as_i="7"/>}))
+    assert_equal(7, handler.item)
+  end
+
+  def test_sax_attr_value_string
+    handler = TypeSax.new(nil)
+    Ox.sax_parse(handler, StringIO.new(%{<top as_s="cheese"/>}))
+    assert_equal('cheese', handler.item)
+  end
+
+  def test_sax_attr_value_float
+    handler = TypeSax.new(nil)
+    Ox.sax_parse(handler, StringIO.new(%{<top as_f="7"/>}))
+    assert_equal(7.0, handler.item)
+  end
+
+  def test_sax_attr_value_sym
+    handler = TypeSax.new(nil)
+    Ox.sax_parse(handler, StringIO.new(%{<top as_sym="cheese"/>}))
+    assert_equal(:cheese, handler.item)
+  end
+
+  def test_sax_attr_value_bool
+    handler = TypeSax.new(nil)
+    Ox.sax_parse(handler, StringIO.new(%{<top as_bool="true"/>}))
+    assert_equal(true, handler.item)
+  end
+
+  def test_sax_attr_value_nil
+    handler = TypeSax.new(nil)
+    Ox.sax_parse(handler, StringIO.new(%{<top as_i=""/>}))
+    assert_equal(nil, handler.item)
+  end
+
+  def test_sax_attr_value_time
+    t = Time.local(2012, 1, 5, 10, 20, 30)
+    handler = TypeSax.new(nil)
+    Ox.sax_parse(handler, StringIO.new(%{<top as_time="#{t}"/>}))
+    assert_equal(t.sec, handler.item.sec)
+    assert_equal(t.usec, handler.item.usec)
+    t = Time.local(2012, 1, 5, 10, 20, 30.123456)
+    Ox.sax_parse(handler, StringIO.new(%{<top as_time="%d.%06d"/>} % [t.sec, t.usec]))
+    assert_equal(t.sec, handler.item.sec)
+    assert_equal(t.usec, handler.item.usec)
   end
 
 end

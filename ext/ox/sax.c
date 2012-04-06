@@ -55,8 +55,9 @@ typedef struct _SaxDrive {
     int         (*read_func)(struct _SaxDrive *dr);
     int         convert_special;
     union {
-        int     fd;
-        VALUE   io;
+        int     	fd;
+        VALUE   	io;
+	const char	*in_str;
     };
     int         has_instruct;
     int         has_attr;
@@ -99,6 +100,7 @@ static int      read_from_io(SaxDrive dr);
 static int      read_from_fd(SaxDrive dr);
 #endif
 static int      read_from_io_partial(SaxDrive dr);
+static int      read_from_str(SaxDrive dr);
 
 static VALUE	sax_value_class;
 
@@ -244,7 +246,12 @@ respond_to(VALUE obj, ID method) {
 
 static void
 sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
-    if (rb_respond_to(io, ox_readpartial_id)) {
+    if (ox_stringio_class == rb_obj_class(io)) {
+	VALUE	s = rb_funcall2(io, ox_string_id, 0, 0);
+
+	dr->read_func = read_from_str;
+	dr->in_str = StringValuePtr(s);
+    } else if (rb_respond_to(io, ox_readpartial_id)) {
 #ifdef JRUBY_RUBY
 	dr->read_func = read_from_io_partial;
 	dr->io = io;
@@ -919,6 +926,25 @@ read_from_fd(SaxDrive dr) {
 #endif
 
 static int
+read_from_str(SaxDrive dr) {
+    size_t      max = dr->buf_end - dr->cur - 1;
+    char	*s;
+    long	cnt;
+
+    if ('\0' == *dr->in_str) {
+	// done
+	return -1;
+    }
+    s = stpncpy(dr->cur, dr->in_str, max);
+    *s = '\0';
+    cnt = s - dr->cur;
+    dr->in_str += cnt;
+    dr->read_end = dr->cur + cnt;
+
+    return 0;
+}
+
+static int
 collapse_special(char *str) {
     char        *s = str;
     char        *b = str;
@@ -997,7 +1023,7 @@ parse_double_time(const char *text) {
         }
         v2 = 10 * v2 + (long)(c - '0');
     }
-    for (; text - dot <= 6; text++) {
+    for (; text - dot <= 9; text++) {
         v2 *= 10;
     }
 #if HAS_NANO_TIME
@@ -1015,7 +1041,6 @@ typedef struct _Tp {
 
 static VALUE
 parse_xsd_time(const char *text) {
-    const char	*start = text;
     long        cargs[10];
     long        *cp = cargs;
     long        v;
@@ -1023,7 +1048,7 @@ parse_xsd_time(const char *text) {
     char        c = '\0';
     struct _Tp  tpa[10] = { { 4, '-', '-' },
                            { 2, '-', '-' },
-                           { 2, 'T', 'T' },
+                           { 2, 'T', ' ' },
                            { 2, ':', ':' },
                            { 2, ':', ':' },
                            { 2, '.', '.' },
@@ -1042,7 +1067,7 @@ parse_xsd_time(const char *text) {
                 if ('\0' == c || tp->end == c || tp->alt == c) {
                     break;
                 }
-		rb_raise(rb_eArgError, "Not a valid Time (%s).\n", start);
+		return Qnil;
             }
             v = 10 * v + (long)(c - '0');
         }
@@ -1051,7 +1076,7 @@ parse_xsd_time(const char *text) {
 	}
         c = *text++;
         if (tp->end != c && tp->alt != c) {
-	    rb_raise(rb_eArgError, "Not a valid Time (%s).\n", start);
+	    return Qnil;
         }
         *cp++ = v;
     }
@@ -1073,6 +1098,9 @@ sax_value_as_s(VALUE self) {
     SaxDrive	dr = DATA_PTR(self);
     VALUE	rs;
 
+    if ('\0' == *dr->str) {
+	return Qnil;
+    }
     if (dr->convert_special) {
 	if (0 != collapse_special(dr->str) && 0 != strchr(dr->str, '&')) {
 	    sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
@@ -1091,12 +1119,20 @@ static VALUE
 sax_value_as_sym(VALUE self) {
     SaxDrive	dr = DATA_PTR(self);
 
+    if ('\0' == *dr->str) {
+	return Qnil;
+    }
     return str2sym(dr->str, dr);
 }
 
 static VALUE
 sax_value_as_f(VALUE self) {
-    return rb_float_new(strtod(((SaxDrive)DATA_PTR(self))->str, 0));
+    SaxDrive	dr = DATA_PTR(self);
+
+    if ('\0' == *dr->str) {
+	return Qnil;
+    }
+    return rb_float_new(strtod(dr->str, 0));
 }
 
 static VALUE
@@ -1106,6 +1142,9 @@ sax_value_as_i(VALUE self) {
     long	n = 0;
     int		neg = 0;
 
+    if ('\0' == *s) {
+	return Qnil;
+    }
     if ('-' == *s) {
 	neg = 1;
 	s++;
@@ -1131,6 +1170,9 @@ sax_value_as_time(VALUE self) {
     const char	*str = dr->str;
     VALUE       t;
 
+    if ('\0' == *str) {
+	return Qnil;
+    }
     if (Qnil == (t = parse_double_time(str)) &&
 	Qnil == (t = parse_xsd_time(str))) {
         VALUE       args[1];

@@ -14,6 +14,7 @@ end
 
 require 'optparse'
 require 'ox'
+require 'perf'
 require 'files'
 begin
   require 'nokogiri'
@@ -30,11 +31,13 @@ $all_cbs = false
 $filename = nil # nil indicates new file names perf.xml will be created and used
 $filesize = 1000 # KBytes
 $iter = 100
+$strio = false
 
 opts = OptionParser.new
 opts.on("-v", "increase verbosity")                            { $verbose += 1 }
 opts.on("-x", "ox only")                                       { $ox_only = true }
 opts.on("-a", "all callbacks")                                 { $all_cbs = true }
+opts.on("-z", "use StringIO instead of file")                  { $strio = true }
 opts.on("-f", "--file [String]", String, "filename")           { |f| $filename = f }
 opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |i| $iter = i }
 opts.on("-s", "--size [Int]", Integer, "file size in KBytes")  { |s| $filesize = s }
@@ -42,9 +45,6 @@ opts.on("-h", "--help", "Show this display")                   { puts opts; Proc
 rest = opts.parse(ARGV)
 
 $xml_str = nil
-$ox_time = 0
-$no_time = 0
-$lx_time = 0
 
 # size is in Kbytes
 def create_file(filename, size)
@@ -134,102 +134,44 @@ unless defined?(::LibXML).nil?
   end
 end
 
-def perf_stringio()
-  start = Time.now
-  handler = $all_cbs ? OxAllSax.new() : OxSax.new()
-  $iter.times do
-    input = StringIO.new($xml_str)
-    Ox.sax_parse(handler, input)
-    input.close
-  end
-  $ox_time = Time.now - start
-  puts "StringIO SAX parsing #{$iter} times with Ox took #{$ox_time} seconds."
-
-  return if $ox_only
-
-  unless defined?(::Nokogiri).nil?
-    handler = Nokogiri::XML::SAX::Parser.new($all_cbs ? NoAllSax.new() : NoSax.new())
-    start = Time.now
-    $iter.times do
-      input = StringIO.new($xml_str)
-      handler.parse(input)
-      input.close
-    end
-    $no_time = Time.now - start
-    puts "StringIO SAX parsing #{$iter} times with Nokogiri took #{$no_time} seconds."
-  end
-
-  unless defined?(::LibXML).nil?
-    start = Time.now
-    $iter.times do
-      input = StringIO.new($xml_str)
-      parser = LibXML::XML::SaxParser.io(input)
-      parser.callbacks = $all_cbs ? LxAllSax.new() : LxSax.new()
-      parser.parse
-      input.close
-    end
-    $lx_time = Time.now - start
-    puts "StringIO SAX parsing #{$iter} times with LibXML took #{$lx_time} seconds."
-  end
-
-  puts "\n"
-  puts ">>> Ox is %0.1f faster than Nokogiri SAX parsing using StringIO." % [$no_time/$ox_time] unless defined?(::Nokogiri).nil?
-  puts ">>> Ox is %0.1f faster than LibXML SAX parsing using StringIO." % [$lx_time/$ox_time] unless defined?(::LibXML).nil?
-  puts "\n"
-end
-
-def perf_fileio()
-  puts "\n"
-  puts "A #{$filesize} KByte XML file was parsed #{$iter} times for this test."
-  puts "\n"
-  start = Time.now
-  handler = $all_cbs ? OxAllSax.new() : OxSax.new()
-  $iter.times do
-    input = IO.open(IO.sysopen($filename))
-    Ox.sax_parse(handler, input)
-    input.close
-  end
-  $ox_time = Time.now - start
-  puts "File IO SAX parsing #{$iter} times with Ox took #{$ox_time} seconds."
-
-  return if $ox_only
-
-  unless defined?(::Nokogiri).nil?
-    handler = Nokogiri::XML::SAX::Parser.new($all_cbs ? NoAllSax.new() : NoSax.new())
-    start = Time.now
-    $iter.times do
-      input = IO.open(IO.sysopen($filename))
-      handler.parse(input)
-      input.close
-    end
-    $no_time = Time.now - start
-    puts "File IO SAX parsing #{$iter} times with Nokogiri took #{$no_time} seconds."
-  end
-
-  unless defined?(::LibXML).nil?
-    start = Time.now
-    $iter.times do
-      input = IO.open(IO.sysopen($filename))
-      parser = LibXML::XML::SaxParser.io(input)
-      parser.callbacks = $all_cbs ? LxAllSax.new() : LxSax.new()
-      parser.parse
-      input.close
-    end
-    $lx_time = Time.now - start
-    puts "File IO SAX parsing #{$iter} times with LibXML took #{$lx_time} seconds."
-  end
-
-  puts "\n"
-  puts ">>> Ox is %0.1f faster than Nokogiri SAX parsing using file IO." % [$no_time/$ox_time] unless defined?(::Nokogiri).nil?
-  puts ">>> Ox is %0.1f faster than LibXML SAX parsing using file IO." % [$lx_time/$ox_time] unless defined?(::LibXML).nil?
-  puts "\n"
-end
-
 if $filename.nil?
   create_file('perf.xml', $filesize)
   $filename = 'perf.xml'
 end
 $xml_str = File.read($filename)
 
-# perf_stringio()
-perf_fileio()
+puts "A #{$filesize} KByte XML file was parsed #{$iter} times for this test."
+
+$handler = nil
+perf = Perf.new
+
+perf.add('Ox::Sax', 'sax_parse') {
+  input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
+  Ox.sax_parse($handler, input)
+  input.close
+}
+perf.before('Ox::Sax') { $handler = $all_cbs ? OxAllSax.new() : OxSax.new() }
+
+unless $ox_only
+  unless defined?(::Nokogiri).nil?
+    perf.add('Nokogiri::XML::Sax', 'parse') {
+      input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
+      $handler.parse(input)
+      input.close
+    }
+    perf.before('Nokogiri::XML::Sax') { $handler = Nokogiri::XML::SAX::Parser.new($all_cbs ? NoAllSax.new() : NoSax.new()) }
+  end
+
+  unless defined?(::LibXML).nil?
+    perf.add('LibXML::XML::Sax', 'parse') {
+      input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
+      parser = LibXML::XML::SaxParser.io(input)
+      parser.callbacks = $handler
+      parser.parse()
+      input.close
+    }
+    perf.before('LibXML::XML::Sax') { $handler = $all_cbs ? LxAllSax.new() : LxSax.new() }
+  end
+end
+
+perf.run($iter)

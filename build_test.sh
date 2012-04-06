@@ -1,5 +1,7 @@
 #!/bin/sh
 
+export RBXOPT=-X19
+
 for ruby in \
  1.8.7-p358\
  1.9.2-p290\

@@ -1,5 +1,14 @@
 #!/usr/bin/env ruby -wW1
 
+# This example uses SAX and DOM approaches to parsing XML files. It is also
+# used to compare the differences in performance and code structure for
+# multiple XML parsers.
+#
+# Weather files taken from the British of Columbia are used as a source for
+# capturing the high temperatures over some period of time. The files are
+# loaded into a spreadsheet and then dumped as XML. The high temperatures for
+# each time is stored in a Hash but no further action is taken on the data.
+
 $: << File.dirname(__FILE__)
 $: << File.join(File.dirname(__FILE__), '..')
 $: << File.join(File.dirname(__FILE__), '../../lib')

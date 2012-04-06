@@ -248,6 +248,7 @@ extern ID	ox_parse_id;
 extern ID	ox_read_id;
 extern ID	ox_readpartial_id;
 extern ID	ox_start_element_id;
+extern ID	ox_string_id;
 extern ID	ox_text_id;
 extern ID	ox_to_c_id;
 extern ID	ox_to_s_id;
@@ -262,6 +263,7 @@ extern VALUE    ox_empty_string;
 extern VALUE    ox_encoding_sym;
 extern VALUE    ox_struct_class;
 extern VALUE    ox_time_class;
+extern VALUE	ox_stringio_class;
 extern VALUE    ox_zero_fixnum;
 
 extern VALUE    ox_document_clas;
