@@ -30,29 +30,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.5.5
+### Release 1.5.6
 
- - Fixed bug in special character encoding to remove the double ampersands.
-
- - Fixed bug that did not dump XSD times correctly.
-
- - Fixed bug in the prolog parsing.
-
- - Improved the speed of time parsing and dumping.
-
- - Increased the time resolution for Rubies that support nanoseconds.
-
- - Cleaned up compile flags.
-
- - All tests pass with all supported Rubies.
-
- - Added value() callback to the SAX parser which allows deferred value parsing and typing to improve performance.
-
- - Added attr_value() callback to the SAX parser which allows deferred value parsing and typing to improve performance with attributes.
-
- - Added an example that demonstrates using several parsing techniques with different parsers. The example is in the test/weather directory.
-
- - The SAX parser was optimized slightly for StringIO input.
+ - Made compatible with 2.0dev
 
 ## <a name="description">Description</a>
 
