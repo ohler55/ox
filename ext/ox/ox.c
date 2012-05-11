@@ -441,7 +441,7 @@ load_str(int argc, VALUE *argv, VALUE self) {
     return obj;
 }
 
-/* call-seq: load_file(file_path, xml, options) => Ox::Document or Ox::Element or Object
+/* call-seq: load_file(file_path, options) => Ox::Document or Ox::Element or Object
  *
  * Parses and XML document from a file into an Ox::Document, or Ox::Element,
  * or Object depending on the options.  Raises an exception if the XML is
