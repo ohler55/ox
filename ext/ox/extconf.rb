@@ -26,6 +26,17 @@ dflags = {
   'HAS_TOP_LEVEL_ST_H' => ('ree' == type || ('ruby' == type &&  '1' == version[0] && '8' == version[1])) ? 1 : 0,
 }
 
+if 'i386-darwin10.0.0' == RUBY_PLATFORM
+  dflags['NEEDS_STPCPY'] = nil
+  
+  dflags['HAS_IVAR_HELPERS'] = 0 if ('ruby' == type && '1.9.1' == RUBY_VERSION)
+elsif 'x86_64-linux' == RUBY_PLATFORM && '1.9.3' == RUBY_VERSION && '2011-10-30' == RUBY_RELEASE_DATE
+  begin
+    dflags['NEEDS_STPCPY'] = nil if `more /etc/issue`.include?('CentOS release 5.4')
+  rescue Exception => e
+  end
+end
+
 dflags.each do |k,v|
   if v.nil?
     $CPPFLAGS += " -D#{k}"

@@ -104,6 +104,19 @@ static int      read_from_str(SaxDrive dr);
 
 static VALUE	sax_value_class;
 
+// This is only for CentOS 5.4 with Ruby 1.9.3-p0 and for OS X 10.6.
+#ifdef NEEDS_STPCPY
+char *stpncpy(char *dest, const char *src, size_t n) {
+    size_t	cnt = strlen(src) + 1;
+    
+    if (n < cnt) {
+	cnt = n;
+    }
+    strncpy(dest, src, cnt);
+
+    return dest + cnt - 1;
+}
+#endif
 
 static inline char
 sax_drive_get(SaxDrive dr) {
