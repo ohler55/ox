@@ -61,50 +61,50 @@ enum st_retval {ST_CONTINUE = 0, ST_STOP = 1, ST_DELETE = 2, ST_CHECK};
 
 #define raise_error(msg, xml, current) _ox_raise_error(msg, xml, current, __FILE__, __LINE__)
 
-#define MAX_TEXT_LEN    4096
-#define MAX_ATTRS       1024
-#define MAX_DEPTH       1024
+#define MAX_TEXT_LEN	4096
+#define MAX_ATTRS	1024
+#define MAX_DEPTH	1024
 
-#define SILENT          0
-#define TRACE           1
-#define DEBUG           2
+#define SILENT		0
+#define TRACE		1
+#define DEBUG		2
 
-#define XSD_DATE        0x0001
-#define WITH_XML        0x0002
-#define WITH_INST       0x0004
-#define WITH_DTD        0x0008
-#define CIRCULAR        0x0010
+#define XSD_DATE	0x0001
+#define WITH_XML	0x0002
+#define WITH_INST	0x0004
+#define WITH_DTD	0x0008
+#define CIRCULAR	0x0010
 
-#define XSD_DATE_SET    0x0100
-#define WITH_XML_SET    0x0200
-#define WITH_INST_SET   0x0400
-#define WITH_DTD_SET    0x0800
-#define CIRCULAR_SET    0x1000
+#define XSD_DATE_SET	0x0100
+#define WITH_XML_SET	0x0200
+#define WITH_INST_SET	0x0400
+#define WITH_DTD_SET	0x0800
+#define CIRCULAR_SET	0x1000
 
 typedef enum {
-    UseObj      = 1,
-    UseAttr     = 2,
-    UseAttrSet  = 3,
-    UseArray    = 4,
-    UseAMember  = 5,
-    UseHash     = 6,
-    UseHashKey  = 7,
-    UseHashVal  = 8,
-    UseRange    = 9,
+    UseObj	= 1,
+    UseAttr	= 2,
+    UseAttrSet	= 3,
+    UseArray	= 4,
+    UseAMember	= 5,
+    UseHash	= 6,
+    UseHashKey	= 7,
+    UseHashVal	= 8,
+    UseRange	= 9,
     UseRangeAttr= 10,
-    UseRaw      = 11,
+    UseRaw	= 11,
 } Use;
 
 typedef enum {
     StrictEffort    = 's',
     TolerantEffort  = 't',
-    AutoEffort      = 'a',
-    NoEffort        = 0,
+    AutoEffort	    = 'a',
+    NoEffort	    = 0,
 } Effort;
 
 typedef enum {
-    Yes    = 'y',
-    No     = 'n',
+    Yes	   = 'y',
+    No	   = 'n',
     NotSet = 0
 } YesNo;
 
@@ -116,97 +116,97 @@ typedef enum {
 } LoadMode;
 
 typedef enum {
-    NoCode         = 0,
-    ArrayCode      = 'a',
+    NoCode	   = 0,
+    ArrayCode	   = 'a',
     String64Code   = 'b', // base64 encoded String
-    ClassCode      = 'c',
+    ClassCode	   = 'c',
     Symbol64Code   = 'd', // base64 encoded Symbol
-    DateCode       = 'D',
+    DateCode	   = 'D',
     ExceptionCode  = 'e',
-    FloatCode      = 'f',
-    RegexpCode     = 'g',
-    HashCode       = 'h',
-    FixnumCode     = 'i',
-    BignumCode     = 'j',
-    KeyCode        = 'k', // indicates the value is a hash key, kind of a hack
+    FloatCode	   = 'f',
+    RegexpCode	   = 'g',
+    HashCode	   = 'h',
+    FixnumCode	   = 'i',
+    BignumCode	   = 'j',
+    KeyCode	   = 'k', // indicates the value is a hash key, kind of a hack
     RationalCode   = 'l',
-    SymbolCode     = 'm',
+    SymbolCode	   = 'm',
     FalseClassCode = 'n',
-    ObjectCode     = 'o',
-    RefCode        = 'p',
-    RangeCode      = 'r',
-    StringCode     = 's',
-    TimeCode       = 't',
-    StructCode     = 'u',
-    ComplexCode    = 'v',
-    RawCode        = 'x',
+    ObjectCode	   = 'o',
+    RefCode	   = 'p',
+    RangeCode	   = 'r',
+    StringCode	   = 's',
+    TimeCode	   = 't',
+    StructCode	   = 'u',
+    ComplexCode	   = 'v',
+    RawCode	   = 'x',
     TrueClassCode  = 'y',
     NilClassCode   = 'z',
 } Type;
 
 typedef struct _Attr {
-    const char  *name;
-    const char  *value;
+    const char	*name;
+    const char	*value;
 } *Attr;
 
 typedef struct _Helper {
-    ID          var;    /* Object var ID */
-    VALUE       obj;    /* object created or Qundef if not appropriate */
-    Type        type;   /* type of object in obj */
+    ID		var;	/* Object var ID */
+    VALUE	obj;	/* object created or Qundef if not appropriate */
+    Type	type;	/* type of object in obj */
 } *Helper;
 
-typedef struct _PInfo   *PInfo;
+typedef struct _PInfo	*PInfo;
 
 typedef struct _ParseCallbacks {
-    void        (*instruct)(PInfo pi, const char *target, Attr attrs);
-    void        (*add_doctype)(PInfo pi, const char *docType);
-    void        (*add_comment)(PInfo pi, const char *comment);
-    void        (*add_cdata)(PInfo pi, const char *cdata, size_t len);
-    void        (*add_text)(PInfo pi, char *text, int closed);
-    void        (*add_element)(PInfo pi, const char *ename, Attr attrs, int hasChildren);
-    void        (*end_element)(PInfo pi, const char *ename);
+    void	(*instruct)(PInfo pi, const char *target, Attr attrs);
+    void	(*add_doctype)(PInfo pi, const char *docType);
+    void	(*add_comment)(PInfo pi, const char *comment);
+    void	(*add_cdata)(PInfo pi, const char *cdata, size_t len);
+    void	(*add_text)(PInfo pi, char *text, int closed);
+    void	(*add_element)(PInfo pi, const char *ename, Attr attrs, int hasChildren);
+    void	(*end_element)(PInfo pi, const char *ename);
 } *ParseCallbacks;
 
 typedef struct _CircArray {
-    VALUE               obj_array[1024];
-    VALUE               *objs;
-    unsigned long       size; // allocated size or initial array size
-    unsigned long       cnt;
+    VALUE		obj_array[1024];
+    VALUE		*objs;
+    unsigned long	size; // allocated size or initial array size
+    unsigned long	cnt;
 } *CircArray;
+
+typedef struct _Options {
+    char	encoding[64];	// encoding, stored in the option to avoid GC invalidation in default values
+    int		indent;		// indention for dump, default 2
+    int		trace;		// trace level
+    char	with_dtd;	// YesNo
+    char	with_xml;	// YesNo
+    char	with_instruct;	// YesNo
+    char	circular;	// YesNo
+    char	xsd_date;	// YesNo
+    char	mode;		// LoadMode
+    char	effort;		// Effort
+    char	sym_keys;	// symbolize keys
+} *Options;
 
 /* parse information structure */
 struct _PInfo {
-    struct _Helper      helpers[MAX_DEPTH];
-    Helper              h;              /* current helper or 0 if not set */
-    char	        *str;		/* buffer being read from */
-    char	        *s;		/* current position in buffer */
-    VALUE               obj;
-    ParseCallbacks      pcb;
-    CircArray           circ_array;
+    struct _Helper	helpers[MAX_DEPTH];
+    Helper		h;		/* current helper or 0 if not set */
+    char		*str;		/* buffer being read from */
+    char		*s;		/* current position in buffer */
+    VALUE		obj;
+    ParseCallbacks	pcb;
+    CircArray		circ_array;
 #ifdef HAVE_RUBY_ENCODING_H
-    rb_encoding         *encoding;
+    rb_encoding		*encoding;
 #else
     void		*encoding;
 #endif
-    unsigned long       id;             /* set for text types when cirs_array is set */
-    int                 trace;
-    Effort              effort;
+    unsigned long	id;		/* set for text types when cirs_array is set */
+    Options		options;
 };
 
-typedef struct _Options {
-    char        encoding[64];   // encoding, stored in the option to avoid GC invalidation in default values
-    int         indent;         // indention for dump, default 2
-    int         trace;          // trace level
-    char        with_dtd;       // YesNo
-    char        with_xml;       // YesNo
-    char        with_instruct;  // YesNo
-    char        circular;       // YesNo
-    char        xsd_date;       // YesNo
-    char        mode;           // LoadMode
-    char        effort;         // Effort
-} *Options;
-
-extern VALUE	ox_parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort);
+extern VALUE	ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options);
 extern void	_ox_raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
 
 extern void	ox_sax_parse(VALUE handler, VALUE io, int convert);
@@ -216,9 +216,9 @@ extern void	ox_sax_define(void);
 extern char*	ox_write_obj_to_str(VALUE obj, Options copts);
 extern void	ox_write_obj_to_file(VALUE obj, const char *path, Options copts);
 
-extern struct _Options  ox_default_options;
+extern struct _Options	ox_default_options;
 
-extern VALUE    Ox;
+extern VALUE	Ox;
 
 extern ID	ox_at_id;
 extern ID	ox_at_value_id;
@@ -258,24 +258,24 @@ extern ID	ox_tv_nsec_id;
 extern ID	ox_tv_usec_id;
 extern ID	ox_value_id;
 
-extern VALUE    ox_date_class;
-extern VALUE    ox_empty_string;
-extern VALUE    ox_encoding_sym;
-extern VALUE    ox_struct_class;
-extern VALUE    ox_time_class;
+extern VALUE	ox_date_class;
+extern VALUE	ox_empty_string;
+extern VALUE	ox_encoding_sym;
+extern VALUE	ox_struct_class;
+extern VALUE	ox_time_class;
 extern VALUE	ox_stringio_class;
-extern VALUE    ox_zero_fixnum;
+extern VALUE	ox_zero_fixnum;
 
-extern VALUE    ox_document_clas;
-extern VALUE    ox_element_clas;
-extern VALUE    ox_bag_clas;
-extern VALUE    ox_comment_clas;
-extern VALUE    ox_doctype_clas;
-extern VALUE    ox_cdata_clas;
+extern VALUE	ox_document_clas;
+extern VALUE	ox_element_clas;
+extern VALUE	ox_bag_clas;
+extern VALUE	ox_comment_clas;
+extern VALUE	ox_doctype_clas;
+extern VALUE	ox_cdata_clas;
 
-extern Cache    ox_symbol_cache;
-extern Cache    ox_class_cache;
-extern Cache    ox_attr_cache;
+extern Cache	ox_symbol_cache;
+extern Cache	ox_class_cache;
+extern Cache	ox_attr_cache;
 
 #if defined(__cplusplus)
 #if 0

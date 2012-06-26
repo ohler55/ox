@@ -5,6 +5,12 @@
 
 - todo
  
+ - sym_keys
+  - pass in Options to ox_parse
+   - keep options with PInfo
+   - look at sym_keys to determine if keys should be symbolized
+   
+
 
  - Ox::Doc or Ox::Fast or Ox::Fast::Doc (fast.c)
   - same as Oj but with attributes

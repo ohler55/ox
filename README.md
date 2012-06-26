@@ -30,9 +30,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.5.7
+### Release 1.5.8
 
- - Made compatible with OS X 10.6.8 native Ruby 1.9.1.
+ - Added an option to not symbolize attribute keys in generic parsing.
 
 ## <a name="description">Description</a>
 

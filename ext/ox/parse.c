@@ -96,14 +96,14 @@ next_white(PInfo pi) {
 }
 
 VALUE
-ox_parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
+ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
     struct _PInfo	pi;
     int			body_read = 0;
 
     if (0 == xml) {
 	raise_error("Invalid arg, xml string can not be null", xml, 0);
     }
-    if (DEBUG <= trace) {
+    if (DEBUG <= options->trace) {
 	printf("Parsing xml:\n%s\n", xml);
     }
     /* initialize parse info */
@@ -114,8 +114,7 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, int trace, Effort effort) {
     pi.obj = Qnil;
     pi.circ_array = 0;
     pi.encoding = 0;
-    pi.trace = trace;
-    pi.effort = effort;
+    pi.options = options;
     while (1) {
 	next_non_white(&pi);	// skip white space
 	if ('\0' == *pi.s) {
@@ -632,7 +631,7 @@ static char*
 read_quoted_value(PInfo pi) {
     char	*value = 0;
     
-    if ('"' == *pi->s || ('\'' == *pi->s && StrictEffort != pi->effort)) {
+    if ('"' == *pi->s || ('\'' == *pi->s && StrictEffort != pi->options->effort)) {
         char	term = *pi->s;
         
         pi->s++;	// skip quote character
@@ -644,7 +643,7 @@ read_quoted_value(PInfo pi) {
         }
         *pi->s = '\0'; // terminate value
         pi->s++;	   // move past quote
-    } else if (StrictEffort == pi->effort) {
+    } else if (StrictEffort == pi->options->effort) {
 	raise_error("invalid format, expected a quote character", pi->str, pi->s);
     } else {
         value = pi->s;

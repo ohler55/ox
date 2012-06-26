@@ -114,23 +114,34 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     doc = rb_obj_alloc(ox_document_clas);
     ah = rb_hash_new();
     for (; 0 != attrs->name; attrs++) {
+	if (Yes == pi->options->sym_keys) {
 #if HAS_ENCODING_SUPPORT
-	if (0 != pi->encoding) {
+	    if (0 != pi->encoding) {
+		VALUE	rstr = rb_str_new2(attrs->name);
+
+		rb_enc_associate(rstr, pi->encoding);
+		sym = rb_funcall(rstr, ox_to_sym_id, 0);
+	    } else {
+		sym = ID2SYM(rb_intern(attrs->name));
+	    }
+#else
+	    sym = ID2SYM(rb_intern(attrs->name));
+#endif
+	    rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
+	} else {
 	    VALUE	rstr = rb_str_new2(attrs->name);
 
-	    rb_enc_associate(rstr, pi->encoding);
-	    sym = rb_funcall(rstr, ox_to_sym_id, 0);
-	} else {
-	    sym = ID2SYM(rb_intern(attrs->name));
-	}
-#else
-	sym = ID2SYM(rb_intern(attrs->name));
-#endif
-        rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
 #if HAS_ENCODING_SUPPORT
-        if (0 == strcmp("encoding", attrs->name)) {
-            pi->encoding = rb_enc_find(attrs->value);
-        }
+	    if (0 != pi->encoding) {
+		rb_enc_associate(rstr, pi->encoding);
+	    }
+#endif
+	    rb_hash_aset(ah, rstr, rb_str_new2(attrs->value));
+	}
+#if HAS_ENCODING_SUPPORT
+	if (0 == strcmp("encoding", attrs->name)) {
+	    pi->encoding = rb_enc_find(attrs->value);
+	}
 #endif
     }
     nodes = rb_ary_new();
@@ -154,7 +165,7 @@ instruct(PInfo pi, const char *target, Attr attrs) {
             // ignore other instructions
         }
     } else {
-        if (TRACE <= pi->trace) {
+        if (TRACE <= pi->options->trace) {
             printf("Processing instruction %s ignored.\n", target);
         }
     }
@@ -187,7 +198,7 @@ nomode_instruct(PInfo pi, const char *target, Attr attrs) {
             }
         }
     } else {
-        if (TRACE <= pi->trace) {
+        if (TRACE <= pi->options->trace) {
             printf("Processing instruction %s ignored.\n", target);
         }
     }
@@ -278,21 +289,30 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
             VALUE   sym;
             VALUE   *slot;
 
-            if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot))) {
+	    if (Yes == pi->options->sym_keys) {
+		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot))) {
+#if HAS_ENCODING_SUPPORT
+		    if (0 != pi->encoding) {
+			VALUE	rstr = rb_str_new2(attrs->name);
+
+			rb_enc_associate(rstr, pi->encoding);
+			sym = rb_funcall(rstr, ox_to_sym_id, 0);
+		    } else {
+			sym = ID2SYM(rb_intern(attrs->name));
+		    }
+#else
+		    sym = ID2SYM(rb_intern(attrs->name));
+#endif
+		    *slot = sym;
+		}
+	    } else {
+		sym = rb_str_new2(attrs->name);
 #if HAS_ENCODING_SUPPORT
 		if (0 != pi->encoding) {
-		    VALUE	rstr = rb_str_new2(attrs->name);
-
-		    rb_enc_associate(rstr, pi->encoding);
-		    sym = rb_funcall(rstr, ox_to_sym_id, 0);
-		} else {
-		    sym = ID2SYM(rb_intern(attrs->name));
+		    rb_enc_associate(sym, pi->encoding);
 		}
-#else
-                sym = ID2SYM(rb_intern(attrs->name));
 #endif
-                *slot = sym;
-            }
+	    }
             s = rb_str_new2(attrs->value);
 #if HAS_ENCODING_SUPPORT
             if (0 != pi->encoding) {

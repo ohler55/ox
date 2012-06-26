@@ -237,7 +237,7 @@ classname2class(const char *name, PInfo pi, VALUE base_class) {
 		if (':' != *n) {
                     raise_error("Invalid classname, expected another ':'", pi->str, pi->s);
 		}
-                if (Qundef == (clas = resolve_classname(clas, class_name, pi->effort, base_class))) {
+                if (Qundef == (clas = resolve_classname(clas, class_name, pi->options->effort, base_class))) {
                     return Qundef;
                 }
                 s = class_name;
@@ -246,7 +246,7 @@ classname2class(const char *name, PInfo pi, VALUE base_class) {
             }
         }
         *s = '\0';
-        if (Qundef != (clas = resolve_classname(clas, class_name, pi->effort, base_class))) {
+        if (Qundef != (clas = resolve_classname(clas, class_name, pi->options->effort, base_class))) {
             *slot = clas;
         }
     }
@@ -411,7 +411,7 @@ add_text(PInfo pi, char *text, int closed) {
     if (!closed) {
         raise_error("Text not closed", pi->str, pi->s);
     }
-    if (DEBUG <= pi->trace) {
+    if (DEBUG <= pi->options->trace) {
         char    indent[128];
 
         fill_indent(pi, indent, sizeof(indent));
@@ -540,7 +540,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     Helper              h;
     unsigned long       id;
 
-    if (TRACE <= pi->trace) {
+    if (TRACE <= pi->options->trace) {
         char    buf[1024];
         char    indent[128];
         char    *s = buf;
@@ -552,7 +552,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         }
         *s++ = '>';
         *s++ = '\0';
-        if (DEBUG <= pi->trace) {
+        if (DEBUG <= pi->options->trace) {
             debug_stack(pi, buf);
         } else {
             fill_indent(pi, indent, sizeof(indent));
@@ -627,7 +627,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         break;
     case RawCode:
         if (hasChildren) {
-            h->obj = ox_parse(pi->s, ox_gen_callbacks, &pi->s, pi->trace, pi->effort);
+            h->obj = ox_parse(pi->s, ox_gen_callbacks, &pi->s, pi->options);
             if (0 != pi->circ_array) {
                 circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
             }
@@ -673,17 +673,17 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         raise_error("Invalid element name", pi->str, pi->s);
         break;
     }
-    if (DEBUG <= pi->trace) {
+    if (DEBUG <= pi->options->trace) {
         debug_stack(pi, "   -----------");
     }
 }
 
 static void
 end_element(PInfo pi, const char *ename) {
-    if (TRACE <= pi->trace) {
+    if (TRACE <= pi->options->trace) {
         char    indent[128];
         
-        if (DEBUG <= pi->trace) {
+        if (DEBUG <= pi->options->trace) {
             char    buf[1024];
 
             snprintf(buf, sizeof(buf) - 1, "</%s>", ename);
@@ -779,7 +779,7 @@ end_element(PInfo pi, const char *ename) {
         circ_array_free(pi->circ_array);
         pi->circ_array = 0;
     }
-    if (DEBUG <= pi->trace) {
+    if (DEBUG <= pi->options->trace) {
         debug_stack(pi, "   ----------");
     }
 }

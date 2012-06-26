@@ -33,6 +33,7 @@ class Func < ::Test::Unit::TestCase
                    :circular=>false,
                    :xsd_date=>false,
                    :mode=>nil,
+                   :symbolize_keys=>true,
                    :effort=>:strict})
   end
 
@@ -47,6 +48,7 @@ class Func < ::Test::Unit::TestCase
       :circular=>false,
       :xsd_date=>false,
       :mode=>nil,
+      :symbolize_keys=>true,
       :effort=>:strict}
     o2 = {
       :encoding=>"UTF-8",
@@ -58,6 +60,7 @@ class Func < ::Test::Unit::TestCase
       :circular=>true,
       :xsd_date=>true,
       :mode=>:object,
+      :symbolize_keys=>true,
       :effort=>:tolerant }
     o3 = { :xsd_date=>false }
     Ox.default_options = o2
@@ -253,6 +256,12 @@ class Func < ::Test::Unit::TestCase
     xml = %{<top name="Pete"/>}
     doc = Ox.parse(xml)
     assert_equal('Pete', doc.attributes[:name])
+  end
+
+  def test_attr_as_string
+    xml = %{<top name="Pete"/>}
+    doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false)
+    assert_equal(['name'], doc.attributes.keys)
   end
 
   def test_single_quote
