@@ -6,13 +6,17 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="source">Source</a>
 
+*Documentation*: https://www.ohler.com/ox
+
+## <a name="source">Source</a>
+
 *GitHub* *repo*: https://github.com/ohler55/ox
 
 *RubyGems* *repo*: https://rubygems.org/gems/ox
 
 ## <a name="follow">Follow @oxgem on Twitter</a>
 
-[Follow @oxgem on Twitter](http://twitter.com/#!/oxgem) for announcements and news about the Ox gem.
+[Follow @peterohler on Twitter](http://twitter.com/#!/peterohler) for announcements and news about the Ox gem.
 
 ## <a name="build_status">Build Status</a>
 
