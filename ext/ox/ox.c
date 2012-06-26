@@ -162,6 +162,7 @@ static void	parse_dump_options(VALUE ropts, Options copts);
  * - xsd_date: [true|false|nil] use XSD date format instead of decimal format
  * - mode: [:object|:generic|:limited|nil] load method to use for XML
  * - effort: [:strict|:tolerant|:auto_define] set the tolerance level for loading
+ * - symbolize_keys: [true|false|nil] symbolize element attribute keys or leave as Strings
  * @return [Hash] all current option settings.
  */
 static VALUE
@@ -209,6 +210,7 @@ get_def_opts(VALUE self) {
  * @param [true|false|nil] :xsd_date use XSD date format instead of decimal format
  * @param [:object|:generic|:limited|nil] :mode load method to use for XML
  * @param [:strict|:tolerant|:auto_define] :effort set the tolerance level for loading
+ * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
  * @return [nil]
  */
 static VALUE
@@ -425,6 +427,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
  *  - *:tolerant* - return nil for missing classes and modules
  *  - *:auto_define* - auto define missing classes and modules
  * @param [Fixnum] :trace trace level as a Fixnum, default: 0 (silent)
+ * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
  */
 static VALUE
 load_str(int argc, VALUE *argv, VALUE self) {
@@ -464,6 +467,7 @@ load_str(int argc, VALUE *argv, VALUE self) {
  *  - *:tolerant* - return nil for missing classes and modules
  *  - *:auto_define* - auto define missing classes and modules
  * @param [Fixnum] :trace trace level as a Fixnum, default: 0 (silent)
+ * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
  */
 static VALUE
 load_file(int argc, VALUE *argv, VALUE self) {

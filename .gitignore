@@ -9,3 +9,5 @@ Makefile
 .rbenv-version
 *.rbc
 .rbx
+.yardoc
+doc
