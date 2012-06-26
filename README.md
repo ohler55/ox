@@ -4,7 +4,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 ## <a name="installation">Installation</a>
     gem install ox
 
-## <a name="source">Source</a>
+## <a name="documentation">Documentation</a>
 
 *Documentation*: https://www.ohler.com/ox
 
