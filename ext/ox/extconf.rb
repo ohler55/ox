@@ -26,7 +26,7 @@ dflags = {
   'HAS_TOP_LEVEL_ST_H' => ('ree' == type || ('ruby' == type &&  '1' == version[0] && '8' == version[1])) ? 1 : 0,
 }
 
-if 'i386-darwin10.0.0' == RUBY_PLATFORM
+if ['i386-darwin10.0.0', 'x86_64-darwin10.8.0'].include? RUBY_PLATFORM
   dflags['NEEDS_STPCPY'] = nil
   
   dflags['HAS_IVAR_HELPERS'] = 0 if ('ruby' == type && '1.9.1' == RUBY_VERSION)
