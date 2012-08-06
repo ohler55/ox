@@ -1103,7 +1103,7 @@ dump_gen_attr(VALUE key, VALUE value, Out out) {
     fill_value(out, ks, klen);
     *out->cur++ = '=';
     *out->cur++ = '"';
-    fill_value(out, StringValuePtr(value), RSTRING_LEN(value));
+    dump_str_value(out, StringValuePtr(value), RSTRING_LEN(value));
     *out->cur++ = '"';
 
     return ST_CONTINUE;
