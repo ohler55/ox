@@ -31,14 +31,13 @@
 #ifndef __BASE64_H__
 #define __BASE64_H__
 
-#include <sys/types.h>
-
+typedef unsigned char	uchar;
 
 #define b64_size(len) ((len + 2) / 3 * 4)
 
 extern unsigned long    b64_orig_size(const char *text);
 
-extern void	        to_base64(const u_char *src, int len, char *b64);
-extern void             from_base64(const char *b64, u_char *str);
+extern void	        to_base64(const uchar *src, int len, char *b64);
+extern void             from_base64(const char *b64, uchar *str);
 
 #endif /* __BASE64_H__ */

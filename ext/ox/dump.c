@@ -97,7 +97,7 @@ static void     dump_time_thin(Out out, VALUE obj);
 static void     dump_time_xsd(Out out, VALUE obj);
 static int      dump_hash(VALUE key, VALUE value, Out out);
 
-static int      is_xml_friendly(const u_char *str, int len);
+static int      is_xml_friendly(const uchar *str, int len);
 
 static const char	hex_chars[17] = "0123456789abcdef";
 
@@ -112,7 +112,7 @@ static char     xml_friendly_chars[256] = "\
 11111111111111111111111111111111";
 
 inline static int
-is_xml_friendly(const u_char *str, int len) {
+is_xml_friendly(const uchar *str, int len) {
     for (; 0 < len; str++, len--) {
         if ('1' != xml_friendly_chars[*str]) {
             return 0;
@@ -122,7 +122,7 @@ is_xml_friendly(const u_char *str, int len) {
 }
 
 inline static size_t
-xml_str_len(const u_char *str, size_t len) {
+xml_str_len(const uchar *str, size_t len) {
     size_t	size = 0;
 
     for (; 0 < len; str++, len--) {
@@ -132,8 +132,8 @@ xml_str_len(const u_char *str, size_t len) {
 }
 
 inline static void
-dump_hex(u_char c, Out out) {
-    u_char	d = (c >> 4) & 0x0F;
+dump_hex(uchar c, Out out) {
+    uchar	d = (c >> 4) & 0x0F;
 
     *out->cur++ = hex_chars[d];
     d = c & 0x0F;
@@ -152,12 +152,12 @@ obj_class_code(VALUE obj) {
     case T_FALSE:          return FalseClassCode;
     case T_FIXNUM:         return FixnumCode;
     case T_FLOAT:          return FloatCode;
-    case T_STRING:         return (is_xml_friendly((u_char*)StringValuePtr(obj), (int)RSTRING_LEN(obj))) ? StringCode : String64Code;
+    case T_STRING:         return (is_xml_friendly((uchar*)StringValuePtr(obj), (int)RSTRING_LEN(obj))) ? StringCode : String64Code;
     case T_SYMBOL:
     {
         const char      *sym = rb_id2name(SYM2ID(obj));
 
-        return (is_xml_friendly((u_char*)sym, (int)strlen(sym))) ? SymbolCode : Symbol64Code;
+        return (is_xml_friendly((uchar*)sym, (int)strlen(sym))) ? SymbolCode : Symbol64Code;
     }
     case T_DATA:           return (rb_cTime == clas) ? TimeCode : ((ox_date_class == clas) ? DateCode : 0);
     case T_STRUCT:         return (rb_cRange == clas) ? RangeCode : StructCode;
@@ -337,13 +337,13 @@ dump_value(Out out, const char *value, size_t size) {
 
 inline static void
 dump_str_value(Out out, const char *value, size_t size) {
-    size_t	xsize = xml_str_len((const u_char*)value, size);
+    size_t	xsize = xml_str_len((const uchar*)value, size);
 
     if (out->end - out->cur <= (long)xsize) {
         grow(out, xsize);
     }
     for (; '\0' != *value; value++) {
-	if ('1' == xml_friendly_chars[(u_char)*value]) {
+	if ('1' == xml_friendly_chars[(uchar)*value]) {
 	    *out->cur++ = *value;
 	} else {
 	    *out->cur++ = '&';
@@ -651,7 +651,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         str = StringValuePtr(obj);
         cnt = (int)RSTRING_LEN(obj);
 #if USE_B64
-        if (is_xml_friendly((u_char*)str, cnt)) {
+        if (is_xml_friendly((uchar*)str, cnt)) {
             e.type = StringCode;
             out->w_start(out, &e);
             dump_str_value(out, str, cnt);
@@ -662,7 +662,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             char        *b64 = ALLOCA_N(char, size + 1);
 
             e.type = String64Code;
-            to_base64((u_char*)str, cnt, b64);
+            to_base64((uchar*)str, cnt, b64);
             out->w_start(out, &e);
             dump_value(out, b64, size);
             e.indent = -1;
@@ -683,7 +683,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
 
         cnt = (int)strlen(sym);
 #if USE_B64
-        if (is_xml_friendly((u_char*)sym, cnt)) {
+        if (is_xml_friendly((uchar*)sym, cnt)) {
             e.type = SymbolCode;
             out->w_start(out, &e);
             dump_str_value(out, sym, cnt);
@@ -694,7 +694,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             char        *b64 = ALLOCA_N(char, size + 1);
 
             e.type = Symbol64Code;
-            to_base64((u_char*)sym, cnt, b64);
+            to_base64((uchar*)sym, cnt, b64);
             out->w_start(out, &e);
             dump_value(out, b64, size);
             e.indent = -1;
@@ -862,14 +862,14 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         e.type = RegexpCode;
         out->w_start(out, &e);
 #if USE_B64
-        if (is_xml_friendly((u_char*)s, cnt)) {
+        if (is_xml_friendly((uchar*)s, cnt)) {
             /*dump_value(out, "/", 1); */
             dump_str_value(out, s, cnt);
         } else {
             ulong       size = b64_size(cnt);
             char        *b64 = ALLOCA_N(char, size + 1);
 
-            to_base64((u_char*)s, cnt, b64);
+            to_base64((uchar*)s, cnt, b64);
             dump_value(out, b64, size);
         }
 #else

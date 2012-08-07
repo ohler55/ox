@@ -486,7 +486,7 @@ add_text(PInfo pi, char *text, int closed) {
         VALUE           v;
         char            *str = ALLOCA_N(char, str_size + 1);
         
-        from_base64(text, (u_char*)str);
+        from_base64(text, (uchar*)str);
         v = rb_str_new(str, str_size);
 #if HAS_ENCODING_SUPPORT
         if (0 != pi->encoding) {
@@ -506,7 +506,7 @@ add_text(PInfo pi, char *text, int closed) {
         unsigned long   str_size = b64_orig_size(text);
         char            *str = ALLOCA_N(char, str_size + 1);
         
-        from_base64(text, (u_char*)str);
+        from_base64(text, (uchar*)str);
         if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot))) {
 	    sym = str2sym(str, pi->encoding);
             *slot = sym;
@@ -521,7 +521,7 @@ add_text(PInfo pi, char *text, int closed) {
             unsigned long       str_size = b64_orig_size(text);
 	    char		*str = ALLOCA_N(char, str_size + 1);
         
-            from_base64(text, (u_char*)str);
+            from_base64(text, (uchar*)str);
             pi->h->obj = parse_regexp(str);
         }
         break;
