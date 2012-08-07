@@ -503,6 +503,7 @@ dump_time_xsd(Out out, VALUE obj) {
     }
     /* 2010-07-09T10:47:45.895826+09:00 */
     tm = localtime(&sec);
+#if HAS_TM_GMTOFF
     if (0 > tm->tm_gmtoff) {
         tzsign = '-';
         tzhour = (int)(tm->tm_gmtoff / -3600);
@@ -511,6 +512,10 @@ dump_time_xsd(Out out, VALUE obj) {
         tzhour = (int)(tm->tm_gmtoff / 3600);
         tzmin = (int)(tm->tm_gmtoff / 60) - (tzhour * 60);
     }
+#else
+    tzhour = 0;
+    tzmin = 0;
+#endif
     /* TBD replace with more efficient printer */
     out->cur += sprintf(out->cur, "%04d-%02d-%02dT%02d:%02d:%02d.%06ld%c%02d:%02d",
 			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
