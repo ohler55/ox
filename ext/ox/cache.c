@@ -45,6 +45,15 @@ struct _Cache {
 
 static void     slot_print(Cache cache, unsigned int depth);
 
+static char* dupstr(const char *s) {
+    size_t	len = strlen(s);
+    char	*d = ALLOC_N(char, len + 1);
+
+    memcpy(d, s, len);
+
+    return d;
+}
+
 void
 ox_cache_new(Cache *cache) {
     *cache = ALLOC(struct _Cache);
@@ -68,7 +77,7 @@ ox_cache_get(Cache cache, const char *key, VALUE **slot) {
         if (0 == *cp) {
             ox_cache_new(cp);
             cache = *cp;
-            cache->key = ('\0' == *(k + 1)) ? 0 : strdup(key);
+            cache->key = ('\0' == *(k + 1)) ? 0 : dupstr(key);
             break;
         } else {
             cache = *cp;
