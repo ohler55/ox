@@ -32,6 +32,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <stdarg.h>
 
 #include "cache.h"
@@ -58,12 +59,12 @@ ox_cache_get(Cache cache, const char *key, VALUE **slot) {
     Cache               *cp;
 
     for (; '\0' != *k; k++) {
-        cp = cache->slots + (unsigned int)(*k >> 4); // upper 4 bits
+        cp = cache->slots + (unsigned int)(*k >> 4); /* upper 4 bits */
         if (0 == *cp) {
             ox_cache_new(cp);
         }
         cache = *cp;
-        cp = cache->slots + (unsigned int)(*k & 0x0F); // lower 4 bits
+        cp = cache->slots + (unsigned int)(*k & 0x0F); /* lower 4 bits */
         if (0 == *cp) {
             ox_cache_new(cp);
             cache = *cp;
@@ -78,8 +79,8 @@ ox_cache_get(Cache cache, const char *key, VALUE **slot) {
                     break;
                 } else {
                     Cache     *cp2 = cp;
-
-                    // if value was set along with the key then there are no slots filled yet
+		    
+                    /* if value was set along with the key then there are no slots filled yet */
                     cp2 = (*cp2)->slots + (*ck >> 4);
                     ox_cache_new(cp2);
                     cp2 = (*cp2)->slots + (*ck & 0x0F);
@@ -103,7 +104,7 @@ ox_cache_get(Cache cache, const char *key, VALUE **slot) {
 
 void
 ox_cache_print(Cache cache) {
-    //printf("-------------------------------------------\n");
+    /*printf("-------------------------------------------\n");*/
     slot_print(cache, 0);
 }
 
@@ -120,7 +121,7 @@ slot_print(Cache c, unsigned int depth) {
     indent[depth] = '\0';
     for (i = 0, cp = c->slots; i < 16; i++, cp++) {
         if (0 == *cp) {
-            //printf("%s%02u:\n", indent, i);
+            /*printf("%s%02u:\n", indent, i);*/
         } else {
             if (0 == (*cp)->key && Qundef == (*cp)->value) {
                 printf("%s%02u:\n", indent, i);
