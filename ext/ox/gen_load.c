@@ -51,7 +51,7 @@ static void     end_element(PInfo pi, const char *ename);
 extern ParseCallbacks   ox_obj_callbacks;
 
 struct _ParseCallbacks   _ox_gen_callbacks = {
-    instruct, // instruct,
+    instruct, /* instruct, */
     add_doctype,
     add_comment,
     add_cdata,
@@ -107,7 +107,7 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     VALUE       nodes;
     VALUE	sym;
 
-    if (0 != pi->h) { // top level object
+    if (0 != pi->h) { /* top level object */
         rb_raise(rb_eSyntaxError, "Prolog must be the first element in an XML document.\n");
     }
     pi->h = pi->helpers;
@@ -162,7 +162,7 @@ instruct(PInfo pi, const char *target, Attr attrs) {
                     rb_raise(rb_eSyntaxError, "Only Ox XML Object version 1.0 supported, not %s.\n", attrs->value);
                 }
             }
-            // ignore other instructions
+            /* ignore other instructions */
         }
     } else {
         if (TRACE <= pi->options->trace) {
@@ -215,7 +215,7 @@ add_doctype(PInfo pi, const char *docType) {
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
-    if (0 == pi->h) { // top level object
+    if (0 == pi->h) { /* top level object */
 	create_doc(pi);
     }
     rb_ary_push(pi->h->obj, n);
@@ -232,7 +232,7 @@ add_comment(PInfo pi, const char *comment) {
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
-    if (0 == pi->h) { // top level object
+    if (0 == pi->h) { /* top level object */
 	create_doc(pi);
     }
     rb_ary_push(pi->h->obj, n);
@@ -249,7 +249,7 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
-    if (0 == pi->h) { // top level object
+    if (0 == pi->h) { /* top level object */
 	create_doc(pi);
     }
     rb_ary_push(pi->h->obj, n);
@@ -264,7 +264,7 @@ add_text(PInfo pi, char *text, int closed) {
         rb_enc_associate(s, pi->encoding);
     }
 #endif
-    if (0 == pi->h) { // top level object
+    if (0 == pi->h) { /* top level object */
 	create_doc(pi);
     }
     rb_ary_push(pi->h->obj, s);
@@ -323,7 +323,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         }
         rb_ivar_set(e, ox_attributes_id, ah);
     }
-    if (0 == pi->h) { // top level object
+    if (0 == pi->h) { /* top level object */
         pi->h = pi->helpers;
         pi->obj = e;
     } else {

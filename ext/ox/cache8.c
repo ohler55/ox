@@ -75,7 +75,7 @@ ox_cache8_get(Cache8 cache, VALUE key, slot_t **slot) {
 
 void
 ox_cache8_print(Cache8 cache) {
-    //printf("-------------------------------------------\n");
+    /*printf("-------------------------------------------\n"); */
     slot_print(cache, 0, 0);
 }
 
@@ -88,7 +88,7 @@ slot_print(Cache8 c, VALUE key, unsigned int depth) {
     for (i = 0, cp = c->slots; i < SLOT_CNT; i++, cp++) {
         if (0 != *cp) {
             k = (key << BITS) | i;
-            //printf("*** key: 0x%016lx  depth: %u  i: %u\n", k, depth, i);
+            /*printf("*** key: 0x%016lx  depth: %u  i: %u\n", k, depth, i); */
             if (DEPTH - 1 == depth) {
                 printf("0x%016lx: %4lu\n", k, (unsigned long)*cp);
             } else {

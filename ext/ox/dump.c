@@ -51,7 +51,7 @@ typedef struct _Element {
     struct _Str         clas;
     struct _Str         attr;
     unsigned long       id;
-    int                 indent; // < 0 indicates no \n
+    int                 indent; /* < 0 indicates no \n */
     int                 closed;
     char                type;
 } *Element;
@@ -66,7 +66,7 @@ typedef struct _Out {
     Cache8              circ_cache;
     unsigned long       circ_cnt;
     int                 indent;
-    int                 depth; // used by dumpHash
+    int                 depth; /* used by dumpHash */
     Options             opts;
     VALUE		obj;
 } *Out;
@@ -258,7 +258,7 @@ grow(Out out, size_t len) {
     if (size <= len * 2 + pos) {
         size += len;
     }
-    REALLOC_N(out->buf, char, size + 10); // 10 extra for terminator character plus extra (paranoid)
+    REALLOC_N(out->buf, char, size + 10); /* 10 extra for terminator character plus extra (paranoid) */
     out->end = out->buf + size;
     out->cur = out->buf + pos;
 }
@@ -267,14 +267,14 @@ static void
 dump_start(Out out, Element e) {
     size_t      size = e->indent + 4;
 
-    if (0 < e->attr.len) { // a="attr"
+    if (0 < e->attr.len) { /* a="attr" */
         size += e->attr.len + 5;
     }
-    if (0 < e->clas.len) { // c="class"
+    if (0 < e->clas.len) { /* c="class" */
         size += e->clas.len + 5;
     }
-    if (0 < e->id) { // i="id"
-        size += 24; // over estimate, 19 digits
+    if (0 < e->id) { /* i="id" */
+        size += 24; /* over estimate, 19 digits */
     }
     if (out->end - out->cur <= (long)size) {
         grow(out, size);
@@ -501,7 +501,7 @@ dump_time_xsd(Out out, VALUE obj) {
     if (out->end - out->cur <= 33) {
         grow(out, 33);
     }
-    // 2010-07-09T10:47:45.895826+09:00
+    /* 2010-07-09T10:47:45.895826+09:00 */
     tm = localtime(&sec);
     if (0 > tm->tm_gmtoff) {
         tzsign = '-';
@@ -511,7 +511,7 @@ dump_time_xsd(Out out, VALUE obj) {
         tzhour = (int)(tm->tm_gmtoff / 3600);
         tzmin = (int)(tm->tm_gmtoff / 60) - (tzhour * 60);
     }
-    // TBD replace with more efficient printer
+    /* TBD replace with more efficient printer */
     out->cur += sprintf(out->cur, "%04d-%02d-%02dT%02d:%02d:%02d.%06ld%c%02d:%02d",
 			tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
 			tm->tm_hour, tm->tm_min, tm->tm_sec, nsec / 1000,
@@ -555,7 +555,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
 
     out->obj = obj;
     if (0 == aid) {
-        //e.attr.str = 0;
+        /*e.attr.str = 0; */
         e.attr.len = 0;
     } else {
         e.attr.str = rb_id2name(aid);
@@ -635,7 +635,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         break;
     case T_FLOAT:
         e.type = FloatCode;
-        cnt = sprintf(value_buf, "%0.16g", rb_num2dbl(obj)); // used sprintf due to bug in snprintf
+        cnt = sprintf(value_buf, "%0.16g", rb_num2dbl(obj)); /* used sprintf due to bug in snprintf */
         out->w_start(out, &e);
         dump_value(out, value_buf, cnt);
         e.indent = -1;
@@ -805,7 +805,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             out->w_start(out, &e);
             dump_gen_element(obj, depth + 1, out);
             out->w_end(out, &e);
-        } else { // Object
+        } else { /* Object */
 #if HAS_IVAR_HELPERS
             e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
             cnt = (int)rb_ivar_count(obj);
@@ -820,10 +820,10 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
                 out->w_end(out, &e);
             }
 #else
-            //VALUE       vars = rb_obj_instance_variables(obj);
-	    //#else
+            /*VALUE       vars = rb_obj_instance_variables(obj); */
+	    /*#else */
             VALUE       vars = rb_funcall2(obj, rb_intern("instance_variables"), 0, 0);
-	    //#endif            
+	    /*#endif             */
             e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
             cnt = (int)RARRAY_LEN(vars);
             e.closed = (0 >= cnt);
@@ -863,7 +863,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         out->w_start(out, &e);
 #if USE_B64
         if (is_xml_friendly((u_char*)s, cnt)) {
-            //dump_value(out, "/", 1);
+            /*dump_value(out, "/", 1); */
             dump_str_value(out, s, cnt);
         } else {
             ulong       size = b64_size(cnt);
@@ -1148,7 +1148,7 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
 
     out->w_time = (Yes == copts->xsd_date) ? dump_time_xsd : dump_time_thin;
     out->buf = ALLOC_N(char, 65336);
-    out->end = out->buf + 65325; // 10 less than end plus extra for possible errors
+    out->end = out->buf + 65325; /* 10 less than end plus extra for possible errors */
     out->cur = out->buf;
     out->circ_cache = 0;
     out->circ_cnt = 0;

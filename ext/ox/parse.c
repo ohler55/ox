@@ -41,7 +41,7 @@ static void	read_doctype(PInfo pi);
 static void	read_comment(PInfo pi);
 static void	read_element(PInfo pi);
 static void	read_text(PInfo pi);
-//static void	  read_reduced_text(PInfo pi);
+/*static void	  read_reduced_text(PInfo pi); */
 static void	read_cdata(PInfo pi);
 static char*	read_name_token(PInfo pi);
 static char*	read_quoted_value(PInfo pi);
@@ -116,7 +116,7 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
     pi.encoding = 0;
     pi.options = options;
     while (1) {
-	next_non_white(&pi);	// skip white space
+	next_non_white(&pi);	/* skip white space */
 	if ('\0' == *pi.s) {
 	    break;
 	}
@@ -124,12 +124,12 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
 	    *endp = pi.s;
 	    break;
 	}
-	if ('<' != *pi.s) {		// all top level entities start with <
+	if ('<' != *pi.s) {		/* all top level entities start with < */
 	    raise_error("invalid format, expected <", pi.str, pi.s);
 	}
-	pi.s++;		// past <
+	pi.s++;		/* past < */
 	switch (*pi.s) {
-	case '?':	// prolog
+	case '?':	/* prolog */
 	    pi.s++;
 	    read_instruction(&pi);
 	    break;
@@ -138,11 +138,11 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
 	    if ('\0' == *pi.s) {
 		raise_error("invalid format, DOCTYPE or comment not terminated", pi.str, pi.s);
 	    } else if ('-' == *pi.s) {
-		pi.s++;	// skip -
+		pi.s++;	/* skip - */
 		if ('-' != *pi.s) {
 		    raise_error("invalid format, bad comment format", pi.str, pi.s);
 		} else {
-		    pi.s++;	// skip second -
+		    pi.s++;	/* skip second - */
 		    read_comment(&pi);
 		}
 	    } else if (0 == strncmp("DOCTYPE", pi.s, 7)) {
@@ -178,7 +178,7 @@ read_instruction(PInfo pi) {
     end = pi->s;
     next_non_white(pi);
     c = *pi->s;
-    *end = '\0'; // terminate name
+    *end = '\0'; /* terminate name */
     if ('?' != c) {
 	while ('?' != *pi->s) {
 	    if ('\0' == *pi->s) {
@@ -191,8 +191,8 @@ read_instruction(PInfo pi) {
 	    if ('=' != *pi->s++) {
 		raise_error("invalid format, no attribute value", pi->str, pi->s);
 	    }
-	    *end = '\0'; // terminate name
-	    // read value
+	    *end = '\0'; /* terminate name */
+	    /* read value */
 	    next_non_white(pi);
 	    a->value = read_quoted_value(pi);
 	    a++;
@@ -276,7 +276,7 @@ read_comment(PInfo pi) {
 	    break;
 	}
     }
-    *end = '\0'; // in case the comment was blank
+    *end = '\0'; /* in case the comment was blank */
     pi->s = end + 3;
     if (0 != pi->pcb->add_comment) {
 	pi->pcb->add_comment(pi, comment);
@@ -308,7 +308,7 @@ read_element(PInfo pi) {
 	/* empty element, no attributes and no children */
 	pi->s++;
 	if ('>' != *pi->s) {
-	    //printf("*** '%s' ***\n", pi->s);
+	    /*printf("*** '%s' ***\n", pi->s); */
 	    raise_error("invalid format, element not closed", pi->str, pi->s);
 	}
 	pi->s++;	/* past > */
@@ -328,7 +328,7 @@ read_element(PInfo pi) {
 	case '\0':
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
 	case '/':
-	    // Element with just attributes.
+	    /* Element with just attributes. */
 	    pi->s++;
 	    if ('>' != *pi->s) {
 		raise_error("invalid format, element not closed", pi->str, pi->s);
@@ -340,7 +340,7 @@ read_element(PInfo pi) {
 
 	    return;
 	case '>':
-	    // has either children or a value
+	    /* has either children or a value */
 	    pi->s++;
 	    hasChildren = 1;
 	    done = 1;
@@ -348,16 +348,16 @@ read_element(PInfo pi) {
 	    pi->pcb->add_element(pi, ename, attrs, hasChildren);
 	    break;
 	default:
-	    // Attribute name so it's an element and the attribute will be
-	    // added to it.
+	    /* Attribute name so it's an element and the attribute will be */
+	    /* added to it. */
 	    ap->name = read_name_token(pi);
 	    end = pi->s;
 	    next_non_white(pi);
 	    if ('=' != *pi->s++) {
 		raise_error("invalid format, no attribute value", pi->str, pi->s);
 	    }
-	    *end = '\0'; // terminate name
-	    // read value
+	    *end = '\0'; /* terminate name */
+	    /* read value */
 	    next_non_white(pi);
 	    ap->value = read_quoted_value(pi);
 	    if (0 != strchr(ap->value, '&')) {
@@ -377,7 +377,7 @@ read_element(PInfo pi) {
 	char	*start;
 	
 	done = 0;
-	// read children
+	/* read children */
 	while (!done) {
 	    start = pi->s;
 	    next_non_white(pi);
@@ -418,21 +418,21 @@ read_element(PInfo pi) {
 		case '\0':
 		    raise_error("invalid format, document not terminated", pi->str, pi->s);
 		default:
-		    // a child element
+		    /* a child element */
 		    read_element(pi);
 		    break;
 		}
-	    } else {	// read as TEXT
+	    } else {	/* read as TEXT */
 		pi->s = start;
-		//pi->s--;
+		/*pi->s--; */
 		read_text(pi);
-		//read_reduced_text(pi);
+		/*read_reduced_text(pi); */
 
-		// to exit read_text with no errors the next character must be <
+		/* to exit read_text with no errors the next character must be < */
 		if ('/' == *(pi->s + 1) &&
 		    0 == strncmp(ename, pi->s + 2, elen) &&
 		    '>' == *(pi->s + elen + 2)) {
-		    // close tag after text so treat as a value
+		    /* close tag after text so treat as a value */
 		    pi->s += elen + 3;
 		    pi->pcb->end_element(pi, ename);
 		    return;
@@ -579,9 +579,9 @@ read_name_token(PInfo pi) {
 	case '\r':
 	    return start;
 	case '\0':
-	    // documents never terminate after a name token
+	    /* documents never terminate after a name token */
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
-	    break; // to avoid warnings
+	    break; /* to avoid warnings */
 	default:
 	    break;
 	}
@@ -634,15 +634,15 @@ read_quoted_value(PInfo pi) {
     if ('"' == *pi->s || ('\'' == *pi->s && StrictEffort != pi->options->effort)) {
         char	term = *pi->s;
         
-        pi->s++;	// skip quote character
+        pi->s++;	/* skip quote character */
         value = pi->s;
         for (; *pi->s != term; pi->s++) {
             if ('\0' == *pi->s) {
                 raise_error("invalid format, document not terminated", pi->str, pi->s);
             }
         }
-        *pi->s = '\0'; // terminate value
-        pi->s++;	   // move past quote
+        *pi->s = '\0'; /* terminate value */
+        pi->s++;	   /* move past quote */
     } else if (StrictEffort == pi->options->effort) {
 	raise_error("invalid format, expected a quote character", pi->str, pi->s);
     } else {
@@ -651,7 +651,7 @@ read_quoted_value(PInfo pi) {
 	if ('\0' == *pi->s) {
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
         }
-        *pi->s++ = '\0'; // terminate value
+        *pi->s++ = '\0'; /* terminate value */
     }
     return value;
 }

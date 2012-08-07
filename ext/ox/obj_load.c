@@ -64,10 +64,10 @@ static void             fill_indent(PInfo pi, char *buf, size_t size);
 
 
 struct _ParseCallbacks   _ox_obj_callbacks = {
-    instruct, // instruct,
-    0, // add_doctype,
-    0, // add_comment,
-    0, // add_cdata,
+    instruct, /* instruct, */
+    0, /* add_doctype, */
+    0, /* add_comment, */
+    0, /* add_cdata, */
     add_text,
     add_element,
     end_element,
@@ -146,7 +146,7 @@ resolve_classname(VALUE mod, const char *class_name, Effort effort, VALUE base_c
         break;
     case StrictEffort:
     default:
-        // raise an error if name is not defined
+        /* raise an error if name is not defined */
         clas = rb_const_get_at(mod, ci);
         break;
     }
@@ -180,7 +180,7 @@ structname2obj(const char *name) {
         }
     }
     ost = rb_const_get(ox_struct_class, rb_intern(s));
-// use encoding as the indicator for Ruby 1.8.7 or 1.9.x
+    /* use encoding as the indicator for Ruby 1.8.7 or 1.9.x */
 #if HAS_ENCODING_SUPPORT
     return rb_struct_alloc_noinit(ost);
 #else
@@ -203,7 +203,7 @@ parse_ulong(const char *s, PInfo pi) {
     return ULONG2NUM(n);
 }
 
-// 2010-07-09T10:47:45.895826162+09:00
+/* 2010-07-09T10:47:45.895826162+09:00 */
 inline static VALUE
 parse_time(const char *text, VALUE clas) {
     VALUE       t;
@@ -212,7 +212,7 @@ parse_time(const char *text, VALUE clas) {
         Qnil == (t = parse_xsd_time(text, clas))) {
         VALUE       args[1];
 
-        //printf("**** time parse\n");
+        /*printf("**** time parse\n"); */
         *args = rb_str_new2(text);
         t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
     }
@@ -559,7 +559,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
             printf("%s%s\n", indent, buf);
         }
     }
-    if (0 == pi->h) { // top level object
+    if (0 == pi->h) { /* top level object */
         pi->h = pi->helpers;
         if (0 != (id = get_id_from_attrs(pi, attrs))) {
             pi->circ_array = circ_array_new();
@@ -584,7 +584,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         h->obj = Qfalse;
         break;
     case StringCode:
-        // h->obj will be replaced by add_text if it is called
+        /* h->obj will be replaced by add_text if it is called */
         h->obj = ox_empty_string;
         if (0 != pi->circ_array) {
             pi->id = get_id_from_attrs(pi, attrs);
@@ -600,8 +600,8 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     case ComplexCode:
     case DateCode:
     case TimeCode:
-    case RationalCode: // sub elements read next
-        // value will be read in the following add_text
+    case RationalCode: /* sub elements read next */
+        /* value will be read in the following add_text */
         h->obj = Qundef;
         break;
     case String64Code:
@@ -697,7 +697,7 @@ end_element(PInfo pi, const char *ename) {
         Helper  h = pi->h;
 
         if (ox_empty_string == h->obj) {
-            // special catch for empty strings
+            /* special catch for empty strings */
             h->obj = rb_str_new2("");
         }
         pi->obj = h->obj;
@@ -872,7 +872,7 @@ parse_xsd_time(const char *text, VALUE clas) {
 #endif
 }
 
-// debug functions
+/* debug functions */
 static void
 fill_indent(PInfo pi, char *buf, size_t size) {
     if (0 != pi->h) {

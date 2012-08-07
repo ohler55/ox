@@ -35,7 +35,7 @@
 
 static char	digits[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-// invalid or terminating characters are set to 'X' or \x58
+/* invalid or terminating characters are set to 'X' or \x58 */
 static u_char   s_digits[256] = "\
 \x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\
 \x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\

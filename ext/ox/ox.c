@@ -36,7 +36,7 @@
 #include "ruby.h"
 #include "ox.h"
 
-// maximum to allocate on the stack, arbitrary limit
+/* maximum to allocate on the stack, arbitrary limit */
 #define SMALL_XML	65536
 
 typedef struct _YesNoOpt {
@@ -129,17 +129,17 @@ static VALUE	with_xml_sym;
 static VALUE	xsd_date_sym;
 
 struct _Options	 ox_default_options = {
-    { '\0' },		// encoding
-    2,			// indent
-    0,			// trace
-    No,			// with_dtd
-    No,			// with_xml
-    No,			// with_instruct
-    No,			// circular
-    No,			// xsd_date
-    NoMode,		// mode
-    StrictEffort,	// effort
-    Yes			// sym_keys
+    { '\0' },		/* encoding */
+    2,			/* indent */
+    0,			/* trace */
+    No,			/* with_dtd */
+    No,			/* with_xml */
+    No,			/* with_instruct */
+    No,			/* circular */
+    No,			/* xsd_date */
+    NoMode,		/* mode */
+    StrictEffort,	/* effort */
+    Yes			/* sym_keys */
 };
 
 extern ParseCallbacks	ox_obj_callbacks;
@@ -306,7 +306,7 @@ to_obj(VALUE self, VALUE ruby_xml) {
     VALUE	obj;
 
     Check_Type(ruby_xml, T_STRING);
-    // the xml string gets modified so make a copy of it
+    /* the xml string gets modified so make a copy of it */
     len = RSTRING_LEN(ruby_xml) + 1;
     if (SMALL_XML < len) {
 	xml = ALLOC_N(char, len);
@@ -335,7 +335,7 @@ to_gen(VALUE self, VALUE ruby_xml) {
     VALUE		obj;
 
     Check_Type(ruby_xml, T_STRING);
-    // the xml string gets modified so make a copy of it
+    /* the xml string gets modified so make a copy of it */
     len = RSTRING_LEN(ruby_xml) + 1;
     if (SMALL_XML < len) {
 	xml = ALLOC_N(char, len);
@@ -436,7 +436,7 @@ load_str(int argc, VALUE *argv, VALUE self) {
     VALUE	obj;
     
     Check_Type(*argv, T_STRING);
-    // the xml string gets modified so make a copy of it
+    /* the xml string gets modified so make a copy of it */
     len = RSTRING_LEN(*argv) + 1;
     if (SMALL_XML < len) {
 	xml = ALLOC_N(char, len);

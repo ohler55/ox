@@ -42,12 +42,11 @@
 
 typedef struct _SaxDrive {
     char        base_buf[0x00010000];
-    //char        base_buf[0x00000010];
     char        *buf;
     char        *buf_end;
     char        *cur;
-    char        *read_end;      // one past last character read
-    char        *str;           // start of current string being read
+    char        *read_end;      /* one past last character read */
+    char        *str;           /* start of current string being read */
     int         line;
     int         col;
     VALUE       handler;
@@ -104,7 +103,7 @@ static int      read_from_str(SaxDrive dr);
 
 static VALUE	sax_value_class;
 
-// This is only for CentOS 5.4 with Ruby 1.9.3-p0 and for OS X 10.6.
+/* This is only for CentOS 5.4 with Ruby 1.9.3-p0 and for OS X 10.6. */
 #ifdef NEEDS_STPCPY
 char *stpncpy(char *dest, const char *src, size_t n) {
     size_t	cnt = strlen(src) + 1;
@@ -244,8 +243,8 @@ ox_sax_parse(VALUE handler, VALUE io, int convert) {
 inline static int
 respond_to(VALUE obj, ID method) {
 #ifdef JRUBY_RUBY
-    // There is a bug in JRuby where rb_respond_to() returns true (1) even if
-    // a method is private.
+    /* There is a bug in JRuby where rb_respond_to() returns true (1) even if
+     * a method is private. */
     {
 	VALUE	args[1];
 
@@ -299,7 +298,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
     }
     dr->buf = dr->base_buf;
     *dr->buf = '\0';
-    dr->buf_end = dr->buf + sizeof(dr->base_buf) - 1; // 1 less to make debugging easier
+    dr->buf_end = dr->buf + sizeof(dr->base_buf) - 1; /* 1 less to make debugging easier */
     dr->cur = dr->buf;
     dr->read_end = dr->buf;
     dr->str = 0;
@@ -348,8 +347,8 @@ sax_drive_read(SaxDrive dr) {
         } else {
             shift = dr->str - dr->buf;
         }
-        //printf("\n*** shift: %lu\n", shift);
-        if (0 == shift) { // no space left so allocate more
+        /*printf("\n*** shift: %lu\n", shift); */
+        if (0 == shift) { /* no space left so allocate more */
             char        *old = dr->buf;
             size_t      size = dr->buf_end - dr->buf;
         
@@ -403,45 +402,45 @@ read_children(SaxDrive dr, int first) {
     char        c;
     
     while (!err) {
-        dr->str = dr->cur; // protect the start
+        dr->str = dr->cur; /* protect the start */
         if ('\0' == (c = next_non_white(dr))) {
             if (!first) {
                 sax_drive_error(dr, "invalid format, element not terminated", 1);
                 err = 1;
             }
-            break; // normal completion if first
+            break; /* normal completion if first */
         }
 	if ('<' != c) {
-            if (first) { // all top level entities start with <
+            if (first) { /* all top level entities start with < */
                 sax_drive_error(dr, "invalid format, expected <", 1);
-                break; // unrecoverable
+                break; /* unrecoverable */
             }
-            if (0 != (err = read_text(dr))) { // finished when < is reached
+            if (0 != (err = read_text(dr))) { /* finished when < is reached */
                 break;
             }
 	}
-        dr->str = dr->cur; // protect the start for elements
+        dr->str = dr->cur; /* protect the start for elements */
         c = sax_drive_get(dr);
 	switch (c) {
-	case '?': // instructions (xml or otherwise)
+	case '?': /* instructions (xml or otherwise) */
             if (!first || element_read || doctype_read) {
                 sax_drive_error(dr, "invalid format, instruction must come before elements", 0);
             }
 	    err = read_instruction(dr);
 	    break;
-	case '!': // comment or doctype
+	case '!': /* comment or doctype */
             dr->str = dr->cur;
             c = sax_drive_get(dr);
 	    if ('\0' == c) {
                 sax_drive_error(dr, "invalid format, DOCTYPE or comment not terminated", 1);
                 err = 1;
 	    } else if ('-' == c) {
-                c = sax_drive_get(dr); // skip first - and get next character
+                c = sax_drive_get(dr); /* skip first - and get next character */
 		if ('-' != c) {
                     sax_drive_error(dr, "invalid format, bad comment format", 1);
                     err = 1;
 		} else {
-                    c = sax_drive_get(dr); // skip second -
+                    c = sax_drive_get(dr); /* skip second - */
 		    err = read_comment(dr);
 		}
             } else {
@@ -464,7 +463,7 @@ read_children(SaxDrive dr, int first) {
                 }
 	    }
 	    break;
-	case '/': // element end
+	case '/': /* element end */
             return ('\0' == read_name_token(dr));
             break;
 	case '\0':
@@ -472,7 +471,7 @@ read_children(SaxDrive dr, int first) {
             err = 1;
             break;
 	default:
-            dr->cur--; // safe since no read occurred after getting last character
+            dr->cur--; /* safe since no read occurred after getting last character */
             if (first && element_read) {
                 sax_drive_error(dr, "invalid format, multiple top level elements", 0);
             }
@@ -518,7 +517,7 @@ static int
 read_doctype(SaxDrive dr) {
     char        c;
 
-    dr->str = dr->cur - 1; // mark the start
+    dr->str = dr->cur - 1; /* mark the start */
     while ('>' != (c = sax_drive_get(dr))) {
         if ('\0' == c) {
             sax_drive_error(dr, "invalid format, doctype terminated unexpectedly", 1);
@@ -544,8 +543,8 @@ read_cdata(SaxDrive dr) {
     char        c;
     int         end = 0;
 
-    dr->cur--; // back up to the start in case the cdata is empty
-    dr->str = dr->cur; // mark the start
+    dr->cur--; /* back up to the start in case the cdata is empty */
+    dr->str = dr->cur; /* mark the start */
     while (1) {
         c = sax_drive_get(dr);
         if (']' == c) {
@@ -586,7 +585,7 @@ read_comment(SaxDrive dr) {
     char        c;
     int         end = 0;
 
-    dr->str = dr->cur - 1; // mark the start
+    dr->str = dr->cur - 1; /* mark the start */
     while (1) {
         c = sax_drive_get(dr);
         if ('-' == c) {
@@ -690,7 +689,7 @@ static int
 read_text(SaxDrive dr) {
     char        c;
 
-    dr->str = dr->cur - 1; // mark the start
+    dr->str = dr->cur - 1; /* mark the start */
     while ('<' != (c = sax_drive_get(dr))) {
         if ('\0' == c) {
             sax_drive_error(dr, "invalid format, text terminated unexpectedly", 1);
@@ -727,7 +726,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
     VALUE       name = Qnil;
     int         is_encoding = 0;
     
-    dr->str = dr->cur; // lock it down
+    dr->str = dr->cur; /* lock it down */
     if (is_white(c)) {
         c = next_non_white(dr);
     }
@@ -743,7 +742,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
         if (is_xml && 0 == strcmp("encoding", dr->str)) {
             is_encoding = 1;
         }
-	// TBD use symbol cache
+	/* TBD use symbol cache */
         if (dr->has_attr || dr->has_attr_value) {
             name = str2sym(dr->str, dr);
         }
@@ -792,7 +791,7 @@ static char
 read_name_token(SaxDrive dr) {
     char        c;
 
-    dr->str = dr->cur; // make sure the start doesn't get compacted out
+    dr->str = dr->cur; /* make sure the start doesn't get compacted out */
     c = sax_drive_get(dr);
     if (is_white(c)) {
         c = next_non_white(dr);
@@ -812,7 +811,7 @@ read_name_token(SaxDrive dr) {
             *(dr->cur - 1) = '\0';
 	    return c;
 	case '\0':
-            // documents never terminate after a name token
+            /* documents never terminate after a name token */
             sax_drive_error(dr, "invalid format, document not terminated", 1);
             return '\0';
 	default:
@@ -848,16 +847,16 @@ read_quoted_value(SaxDrive dr) {
 	    sax_drive_error(dr, "invalid format, attibute value not in quotes", 1);
 	}
     }        
-    *(dr->cur - 1) = '\0'; // terminate value
+    *(dr->cur - 1) = '\0'; /* terminate value */
     return 0;
 }
 
 static VALUE
 rescue_cb(VALUE rdr, VALUE err) {
 #ifndef JRUBY_RUBY
-    // JRuby seems to play by a different set if rules. It passes in an Fixnum
-    // instead of an error like other Rubies. For now assume all errors are
-    // EOF and deal with the results further down the line.
+    /* JRuby seems to play by a different set if rules. It passes in an Fixnum
+     * instead of an error like other Rubies. For now assume all errors are
+     * EOF and deal with the results further down the line. */
 #if (defined(RUBINIUS_RUBY) || (1 == RUBY_VERSION_MAJOR && 8 == RUBY_VERSION_MINOR))
     if (rb_obj_class(err) != rb_eTypeError) {
 #else
@@ -884,7 +883,7 @@ partial_io_cb(VALUE rdr) {
     rstr = rb_funcall2(dr->io, ox_readpartial_id, 1, args);
     str = StringValuePtr(rstr);
     cnt = strlen(str);
-    //printf("*** read %lu bytes, str: '%s'\n", cnt, str);
+    /*printf("*** read %lu bytes, str: '%s'\n", cnt, str); */
     strcpy(dr->cur, str);
     dr->read_end = dr->cur + cnt;
 
@@ -900,11 +899,11 @@ io_cb(VALUE rdr) {
     size_t      cnt;
 
     args[0] = ULONG2NUM(dr->buf_end - dr->cur);
-    //args[0] = SIZET2NUM(dr->buf_end - dr->cur);
+    /*args[0] = SIZET2NUM(dr->buf_end - dr->cur); */
     rstr = rb_funcall2(dr->io, ox_read_id, 1, args);
     str = StringValuePtr(rstr);
     cnt = strlen(str);
-    //printf("*** read %lu bytes, str: '%s'\n", cnt, str);
+    /*printf("*** read %lu bytes, str: '%s'\n", cnt, str); */
     strcpy(dr->cur, str);
     dr->read_end = dr->cur + cnt;
 
@@ -945,7 +944,7 @@ read_from_str(SaxDrive dr) {
     long	cnt;
 
     if ('\0' == *dr->in_str) {
-	// done
+	/* done */
 	return -1;
     }
     s = stpncpy(dr->cur, dr->in_str, max);
@@ -1190,7 +1189,7 @@ sax_value_as_time(VALUE self) {
 	Qnil == (t = parse_xsd_time(str))) {
         VALUE       args[1];
 
-        //printf("**** time parse\n");
+        /*printf("**** time parse\n"); */
         *args = rb_str_new2(str);
         t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
     }

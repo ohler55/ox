@@ -52,9 +52,9 @@ ox_cache_test() {
         v = ox_cache_get(c, *d, &slot);
         if (Qundef == v) {
             if (0 == slot) {
-                //printf("*** failed to get a slot for %s\n", *d);
+                /*printf("*** failed to get a slot for %s\n", *d); */
             } else {
-                //printf("*** added '%s' to cache\n", *d);
+                /*printf("*** added '%s' to cache\n", *d); */
                 v = ID2SYM(rb_intern(*d));
                 *slot = v;
             }
@@ -63,7 +63,7 @@ ox_cache_test() {
 
             printf("*** get on '%s' returned '%s' (%s)\n", *d, StringValuePtr(rs), rb_class2name(rb_obj_class(v)));
         }
-        //ox_cache_print(c);
+        /*ox_cache_print(c); */
     }
     ox_cache_print(c);
 }

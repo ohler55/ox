@@ -50,7 +50,7 @@ extern "C" {
 enum st_retval {ST_CONTINUE = 0, ST_STOP = 1, ST_DELETE = 2, ST_CHECK};
 #else
 #if HAS_TOP_LEVEL_ST_H
-// Only on travis, local is where it is for all others. Seems to vary depending on the travis machine picked up.
+/* Only on travis, local is where it is for all others. Seems to vary depending on the travis machine picked up. */
 #include "st.h"
 #else
 #include "ruby/st.h"
@@ -118,9 +118,9 @@ typedef enum {
 typedef enum {
     NoCode	   = 0,
     ArrayCode	   = 'a',
-    String64Code   = 'b', // base64 encoded String
+    String64Code   = 'b', /* base64 encoded String */
     ClassCode	   = 'c',
-    Symbol64Code   = 'd', // base64 encoded Symbol
+    Symbol64Code   = 'd', /* base64 encoded Symbol */
     DateCode	   = 'D',
     ExceptionCode  = 'e',
     FloatCode	   = 'f',
@@ -128,7 +128,7 @@ typedef enum {
     HashCode	   = 'h',
     FixnumCode	   = 'i',
     BignumCode	   = 'j',
-    KeyCode	   = 'k', // indicates the value is a hash key, kind of a hack
+    KeyCode	   = 'k', /* indicates the value is a hash key, kind of a hack */
     RationalCode   = 'l',
     SymbolCode	   = 'm',
     FalseClassCode = 'n',
@@ -170,22 +170,22 @@ typedef struct _ParseCallbacks {
 typedef struct _CircArray {
     VALUE		obj_array[1024];
     VALUE		*objs;
-    unsigned long	size; // allocated size or initial array size
+    unsigned long	size; /* allocated size or initial array size */
     unsigned long	cnt;
 } *CircArray;
 
 typedef struct _Options {
-    char	encoding[64];	// encoding, stored in the option to avoid GC invalidation in default values
-    int		indent;		// indention for dump, default 2
-    int		trace;		// trace level
-    char	with_dtd;	// YesNo
-    char	with_xml;	// YesNo
-    char	with_instruct;	// YesNo
-    char	circular;	// YesNo
-    char	xsd_date;	// YesNo
-    char	mode;		// LoadMode
-    char	effort;		// Effort
-    char	sym_keys;	// symbolize keys
+    char	encoding[64];	/* encoding, stored in the option to avoid GC invalidation in default values */
+    int		indent;		/* indention for dump, default 2 */
+    int		trace;		/* trace level */
+    char	with_dtd;	/* YesNo */
+    char	with_xml;	/* YesNo */
+    char	with_instruct;	/* YesNo */
+    char	circular;	/* YesNo */
+    char	xsd_date;	/* YesNo */
+    char	mode;		/* LoadMode */
+    char	effort;		/* Effort */
+    char	sym_keys;	/* symbolize keys */
 } *Options;
 
 /* parse information structure */

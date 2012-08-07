@@ -63,7 +63,7 @@ ox_cache8_test() {
         } else {
             printf("*** get on 0x%016lx returned %lu\n", *d, v);
         }
-        //ox_cache8_print(c);
+        /*ox_cache8_print(c); */
     }
     ox_cache8_print(c);
 }
