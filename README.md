@@ -34,9 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.5.8
+### Release 1.5.9
 
- - Added an option to not symbolize attribute keys in generic parsing.
+ - Merged a fix by edanaher that allows special characters in attribute values
 
 ## <a name="description">Description</a>
 
