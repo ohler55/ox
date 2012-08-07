@@ -37,7 +37,7 @@
 #include "cache.h"
 
 struct _Cache {
-    char                *key; // only set if the node has a value, and it is not an exact match
+    char                *key; /* only set if the node has a value, and it is not an exact match */
     VALUE               value;
     struct _Cache       *slots[16];
 };
