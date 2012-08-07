@@ -38,6 +38,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Merged a fix by edanaher that allows special characters in attribute values
 
+ - Changed all comments to old C style to get code to compile with Ruby 2.0.0.
+
+ - Other changes to time handling for 2.0.0.
+
 ## <a name="description">Description</a>
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
