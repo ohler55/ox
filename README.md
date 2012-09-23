@@ -36,7 +36,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ### Release 1.6.0
 
- - Ox::Elements now support and 'easy' API. Elements now return elements by calling a method that matches the name of the child element or attribute. Check out the documentation on the 'easy' API at [https://github.com/ohler55/ox/Ox/Element.html](https://github.com/ohler55/ox/Ox/Element.html]).
+ - Ox::Elements now support and 'easy' API. Elements now return elements by calling a method that matches the name of the child element or attribute. Check out the documentation on the 'easy' API at [http://www.ohler.com/ox/Ox/Element.html](http://www.ohler.com/ox/Ox/Element.html).
 
 ## <a name="description">Description</a>
 
