@@ -34,13 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.5.9
+### Release 1.6.0
 
- - Merged a fix by edanaher that allows special characters in attribute values
-
- - Changed all comments to old C style to get code to compile with Ruby 2.0.0.
-
- - Other changes to time handling for 2.0.0.
+ - Ox::Elements now support and 'easy' API. Elements now return elements by calling a method that matches the name of the child element or attribute. Check out the documentation on the 'easy' API at [https://github.com/ohler55/ox/Ox/Element.html](https://github.com/ohler55/ox/Ox/Element.html]).
 
 ## <a name="description">Description</a>
 

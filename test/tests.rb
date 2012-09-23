@@ -653,6 +653,50 @@ class Func < ::Test::Unit::TestCase
     assert_equal(['31'], nodes )
   end
 
+  def easy_xml()
+    %{<?xml?>
+<Family real="false">
+  <Pete age="58" type="male">
+    <Kid age="33"><!-- comment -->Nicole</Kid>
+    <Kid age="31">Pamela</Kid>
+  </Pete>
+</Family>
+}
+  end
+  
+  def test_easy_attribute
+    doc = Ox.parse(easy_xml)
+    assert_equal('false', doc.Family.real)
+    assert_equal('58', doc.Family.Pete.age)
+  end
+
+  def test_easy_attribute_missing
+    doc = Ox.parse(easy_xml)
+    assert_raise(NoMethodError) {
+      doc.Family.fake
+    }
+  end
+
+  def test_easy_element
+    doc = Ox.parse(easy_xml)
+    assert_equal(::Ox::Element, doc.Family.Pete.class)
+    assert_equal('Pete', doc.Family.Pete.name)
+    assert_equal('Nicole', doc.Family.Pete.Kid.text)
+    assert_equal(nil, doc.Family.Pete.text)
+  end
+
+  def test_easy_element_index
+    doc = Ox.parse(easy_xml)
+    assert_equal('Pamela', doc.Family.Pete.Kid(1).text)
+  end
+
+  def test_easy_element_missing
+    doc = Ox.parse(easy_xml)
+    assert_raise(NoMethodError) {
+      doc.Family.Bob
+    }
+  end
+
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)
     puts xml if trace

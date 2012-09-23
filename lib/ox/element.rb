@@ -3,6 +3,37 @@ module Ox
 
   # An Element represents a element of an XML document. It has a name,
   # attributes, and sub-nodes.
+  #
+  # To access the child elements or attributes there are several options. One
+  # is to walk the nodes and attributes. Another is to use the locate()
+  # method. The easiest for simple regularly formatted XML is to reference the
+  # sub elements or attributes simply by name. Repeating elements with the
+  # same name can be referenced with an element count as well. A few examples
+  # should explain the 'easy' API more clearly.
+  # 
+  # *Example*
+  # 
+  #   doc = Ox.parse(%{
+  #   <?xml?>
+  #   <People>
+  #     <Person age="58">
+  #       <given>Peter</given>
+  #       <surname>Ohler</surname>
+  #     </Person>
+  #     <Person>
+  #       <given>Makie</given>
+  #       <surname>Ohler</surname>
+  #     </Person>
+  #   </People>
+  #   })
+  #   
+  #   doc.People.Person.given.text
+  #   => "Peter"
+  #   doc.People.Person(1).given.text
+  #   => "Makie"
+  #   doc.People.Person.age
+  #   => "58"
+
   class Element < Node
     
     # Creates a new Element with the specified name.
@@ -66,6 +97,13 @@ module Ox
     end
     alias == eql?
     
+    # Returns the first String in the elements nodes array or nil if there is
+    # no String node.
+    def text()
+      @nodes.each { |n| return n if n.is_a?(String) }
+      nil
+    end
+
     # Returns an array of Nodes or Strings that correspond to the locations
     # specified by the path parameter. The path parameter describes the path
     # to the return values which can be either nodes in the XML or
@@ -109,6 +147,25 @@ module Ox
       found
     end
     
+    # Handles the 'easy' API that allows navigating a simple XML by
+    # referencing elements and attributes by name.
+    # @param [Symbol] id element or attribute name
+    # @return [Element|Node|String|nil] the element, attribute value, or Node identifed by the name
+    # @raise [NoMethodError] if no match is found
+    def method_missing(id, *args, &block)
+      ids = id.to_s
+      i = args[0].to_i # will be 0 if no arg or parsing fails
+      @nodes.each do |n|
+        if n.is_a?(Element) && (n.value == id || n.value == ids)
+          return n if 0 == i
+          i -= 1
+        end
+      end
+      return @attributes[id] if @attributes.has_key?(id)
+      return @attributes[ids] if @attributes.has_key?(ids)
+      raise NoMethodError.new("#{name} not found", name)
+    end
+
     # @param [Array] path array of steps in a path
     # @param [Array] found matching nodes
     def alocate(path, found)
