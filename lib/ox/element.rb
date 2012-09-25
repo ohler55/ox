@@ -154,13 +154,11 @@ module Ox
     # @raise [NoMethodError] if no match is found
     def method_missing(id, *args, &block)
       ids = id.to_s
-      i = args[0].to_i # will be 0 if no arg or parsing fails
-      @nodes.each do |n|
-        if n.is_a?(Element) && (n.value == id || n.value == ids)
-          return n if 0 == i
-          i -= 1
-        end
+      elements = @nodes.select do |n|
+         n if n.is_a?(Ox::Element) && (n.value == id || n.value == ids)
       end
+      return elements.first if elements.length == 1
+      return elements unless elements.empty?
       return @attributes[id] if @attributes.has_key?(id)
       return @attributes[ids] if @attributes.has_key?(ids)
       raise NoMethodError.new("#{name} not found", name)
