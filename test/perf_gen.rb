@@ -73,7 +73,7 @@ else
   puts "loading and parsing #{files}\n\n"
   data = files.map do |f|
     xml = File.read(f)
-    obj = Ox.parse(xml);
+    obj = Ox.parse(xml)
     gen = Ox.parse(xml)
     h = { :file => f, :xml => xml, :ox => gen }
     h[:nokogiri] = Nokogiri::XML::Document.parse(xml) unless defined?(::Nokogiri).nil?
