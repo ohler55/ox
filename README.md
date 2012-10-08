@@ -34,9 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.6.0
+### Release 1.6.1
 
- - Ox::Elements now support and 'easy' API. Elements now return elements by calling a method that matches the name of the child element or attribute. Check out the documentation on the 'easy' API at [http://www.ohler.com/ox/Ox/Element.html](http://www.ohler.com/ox/Ox/Element.html).
+ - Added check for Solaris builds to not use the timezone member of time struct (struct tm).
 
 ## <a name="description">Description</a>
 
