@@ -13,8 +13,6 @@
 #define SLOT_CNT	16
 #define DEPTH		16
 
-typedef uint64_t	sid_t;
-
 typedef union {
     struct _Cache8	*child;
     slot_t		value;
@@ -25,7 +23,7 @@ struct _Cache8 {
 };
 
 static void	cache8_delete(Cache8 cache, int depth);
-static void	slot_print(Cache8 cache, VALUE key, unsigned int depth);
+static void	slot_print(Cache8 cache, sid_t key, unsigned int depth);
 
 void
 ox_cache8_new(Cache8 *cache) {
@@ -59,7 +57,7 @@ cache8_delete(Cache8 cache, int depth) {
 }
 
 slot_t
-ox_cache8_get(Cache8 cache, VALUE key, slot_t **slot) {
+ox_cache8_get(Cache8 cache, sid_t key, slot_t **slot) {
     Bucket	*b;
     int		i;
     sid_t	k8 = (sid_t)key;
@@ -85,7 +83,7 @@ ox_cache8_print(Cache8 cache) {
 }
 
 static void
-slot_print(Cache8 c, VALUE key, unsigned int depth) {
+slot_print(Cache8 c, sid_t key, unsigned int depth) {
     Bucket		*b;
     unsigned int	i;
     sid_t		k8 = (sid_t)key;
