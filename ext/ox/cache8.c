@@ -8,29 +8,31 @@
 #include "ruby.h"
 #include "cache8.h"
 
-#define BITS            4
-#define MASK            0x000000000000000F
-#define SLOT_CNT        16
-#define DEPTH           16
+#define BITS		4
+#define MASK		0x000000000000000FULL
+#define SLOT_CNT	16
+#define DEPTH		16
+
+typedef uint64_t	sid_t;
 
 struct _Cache8 {
     union {
-        struct _Cache8  *slots[SLOT_CNT];
-        unsigned long   values[SLOT_CNT];
+	struct _Cache8	*slots[SLOT_CNT];
+	slot_t		values[SLOT_CNT];
     };
 };
 
-static void     cache8_delete(Cache8 cache, int depth);
-static void     slot_print(Cache8 cache, VALUE key, unsigned int depth);
+static void	cache8_delete(Cache8 cache, int depth);
+static void	slot_print(Cache8 cache, VALUE key, unsigned int depth);
 
 void
 ox_cache8_new(Cache8 *cache) {
     Cache8     *cp;
-    int         i;
+    int		i;
     
     *cache = ALLOC(struct _Cache8);
     for (i = SLOT_CNT, cp = (*cache)->slots; 0 < i; i--, cp++) {
-        *cp = 0;
+	*cp = 0;
     }
 }
 
@@ -41,34 +43,35 @@ ox_cache8_delete(Cache8 cache) {
 
 static void
 cache8_delete(Cache8 cache, int depth) {
-    Cache8              *cp;
-    unsigned int        i;
+    Cache8		*cp;
+    unsigned int	i;
 
     for (i = 0, cp = cache->slots; i < SLOT_CNT; i++, cp++) {
-        if (0 != *cp) {
-            if (DEPTH - 1 != depth) {
-                cache8_delete(*cp, depth + 1);
-            }
-        }
+	if (0 != *cp) {
+	    if (DEPTH - 1 != depth) {
+		cache8_delete(*cp, depth + 1);
+	    }
+	}
     }
     xfree(cache);
 }
 
 slot_t
 ox_cache8_get(Cache8 cache, VALUE key, slot_t **slot) {
-    Cache8      *cp;
-    int         i;
-    VALUE       k;
+    Cache8	*cp;
+    int		i;
+    sid_t	k8 = (sid_t)key;
+    sid_t	k;
     
     for (i = 64 - BITS; 0 < i; i -= BITS) {
-        k = (key >> i) & MASK;
-        cp = cache->slots + k;
-        if (0 == *cp) {
-            ox_cache8_new(cp);
-        }
-        cache = *cp;
+	k = (k8 >> i) & MASK;
+	cp = cache->slots + k;
+	if (0 == *cp) {
+	    ox_cache8_new(cp);
+	}
+	cache = *cp;
     }
-    *slot = cache->values + (key & MASK);
+    *slot = cache->values + (k8 & MASK);
 
     return **slot;
 }
@@ -81,19 +84,20 @@ ox_cache8_print(Cache8 cache) {
 
 static void
 slot_print(Cache8 c, VALUE key, unsigned int depth) {
-    Cache8              *cp;
-    unsigned int        i;
-    unsigned long       k;
+    Cache8		*cp;
+    unsigned int	i;
+    sid_t		k8 = (sid_t)key;
+    sid_t		k;
 
     for (i = 0, cp = c->slots; i < SLOT_CNT; i++, cp++) {
-        if (0 != *cp) {
-            k = (key << BITS) | i;
-            /*printf("*** key: 0x%016lx  depth: %u  i: %u\n", k, depth, i); */
-            if (DEPTH - 1 == depth) {
-                printf("0x%016lx: %4lu\n", k, (unsigned long)*cp);
-            } else {
-                slot_print(*cp, k, depth + 1);
-            }
-        }
+	if (0 != *cp) {
+	    k = (k8 << BITS) | i;
+	    /*printf("*** key: 0x%016llx  depth: %u  i: %u\n", k, depth, i); */
+	    if (DEPTH - 1 == depth) {
+		printf("0x%016llx: %4lu\n", k, (unsigned long)*cp);
+	    } else {
+		slot_print(*cp, k, depth + 1);
+	    }
+	}
     }
 }
