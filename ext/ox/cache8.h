@@ -32,9 +32,10 @@
 #define __OX_CACHE8_H__
 
 #include "ruby.h"
+#include "stdint.h"
 
 typedef struct _Cache8  *Cache8;
-typedef unsigned long   slot_t;
+typedef uint64_t	slot_t;
 
 extern void     ox_cache8_new(Cache8 *cache);
 extern void     ox_cache8_delete(Cache8 cache);
