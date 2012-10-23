@@ -20,7 +20,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="build_status">Build Status</a>
 
-[![Build Status](http://travis-ci.org/ohler55/ox.png)](http://travis-ci.org/ohler55/ox)
+[![Build Status](https://secure.travis-ci.org/ohler55/ox.png?branch=master)](http://travis-ci.org/ohler55/ox)
 
 ## <a name="links">Links of Interest</a>
 
