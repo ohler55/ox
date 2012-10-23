@@ -15,11 +15,13 @@
 
 typedef uint64_t	sid_t;
 
+typedef union {
+    struct _Cache8	*child;
+    slot_t		value;
+} Bucket;
+
 struct _Cache8 {
-    union {
-	struct _Cache8	*slots[SLOT_CNT];
-	slot_t		values[SLOT_CNT];
-    };
+    Bucket	buckets[SLOT_CNT];
 };
 
 static void	cache8_delete(Cache8 cache, int depth);
@@ -27,12 +29,12 @@ static void	slot_print(Cache8 cache, VALUE key, unsigned int depth);
 
 void
 ox_cache8_new(Cache8 *cache) {
-    Cache8     *cp;
+    Bucket	*b;
     int		i;
     
     *cache = ALLOC(struct _Cache8);
-    for (i = SLOT_CNT, cp = (*cache)->slots; 0 < i; i--, cp++) {
-	*cp = 0;
+    for (i = SLOT_CNT, b = (*cache)->buckets; 0 < i; i--, b++) {
+	b->value = 0;
     }
 }
 
@@ -43,13 +45,13 @@ ox_cache8_delete(Cache8 cache) {
 
 static void
 cache8_delete(Cache8 cache, int depth) {
-    Cache8		*cp;
+    Bucket		*b;
     unsigned int	i;
 
-    for (i = 0, cp = cache->slots; i < SLOT_CNT; i++, cp++) {
-	if (0 != *cp) {
+    for (i = 0, b = cache->buckets; i < SLOT_CNT; i++, b++) {
+	if (0 != b->child) {
 	    if (DEPTH - 1 != depth) {
-		cache8_delete(*cp, depth + 1);
+		cache8_delete(b->child, depth + 1);
 	    }
 	}
     }
@@ -58,20 +60,20 @@ cache8_delete(Cache8 cache, int depth) {
 
 slot_t
 ox_cache8_get(Cache8 cache, VALUE key, slot_t **slot) {
-    Cache8	*cp;
+    Bucket	*b;
     int		i;
     sid_t	k8 = (sid_t)key;
     sid_t	k;
     
     for (i = 64 - BITS; 0 < i; i -= BITS) {
 	k = (k8 >> i) & MASK;
-	cp = cache->slots + k;
-	if (0 == *cp) {
-	    ox_cache8_new(cp);
+	b = cache->buckets + k;
+	if (0 == b->child) {
+	    ox_cache8_new(&b->child);
 	}
-	cache = *cp;
+	cache = b->child;
     }
-    *slot = cache->values + (k8 & MASK);
+    *slot = &(cache->buckets + (k8 & MASK))->value;
 
     return **slot;
 }
@@ -84,19 +86,19 @@ ox_cache8_print(Cache8 cache) {
 
 static void
 slot_print(Cache8 c, VALUE key, unsigned int depth) {
-    Cache8		*cp;
+    Bucket		*b;
     unsigned int	i;
     sid_t		k8 = (sid_t)key;
     sid_t		k;
 
-    for (i = 0, cp = c->slots; i < SLOT_CNT; i++, cp++) {
-	if (0 != *cp) {
+    for (i = 0, b = c->buckets; i < SLOT_CNT; i++, b++) {
+	if (0 != b->child) {
 	    k = (k8 << BITS) | i;
 	    /*printf("*** key: 0x%016llx  depth: %u  i: %u\n", k, depth, i); */
 	    if (DEPTH - 1 == depth) {
-		printf("0x%016llx: %4lu\n", k, (unsigned long)*cp);
+		printf("0x%016llx: %4llu\n", k, b->value);
 	    } else {
-		slot_print(*cp, k, depth + 1);
+		slot_print(b->child, k, depth + 1);
 	    }
 	}
     }

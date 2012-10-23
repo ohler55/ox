@@ -229,9 +229,9 @@ ulong2str(ulong num, char *end) {
 
 static int
 check_circular(Out out, VALUE obj, Element e) {
-    ulong       *slot;
-    ulong       id;
-    int         result;
+    slot_t	*slot;
+    slot_t	id;
+    int		result;
     
     if (0 == (id = ox_cache8_get(out->circ_cache, obj, &slot))) {
         out->circ_cnt++;

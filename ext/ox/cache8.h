@@ -34,14 +34,14 @@
 #include "ruby.h"
 #include "stdint.h"
 
-typedef struct _Cache8  *Cache8;
+typedef struct _Cache8	*Cache8;
 typedef uint64_t	slot_t;
 
-extern void     ox_cache8_new(Cache8 *cache);
-extern void     ox_cache8_delete(Cache8 cache);
+extern void	ox_cache8_new(Cache8 *cache);
+extern void	ox_cache8_delete(Cache8 cache);
 
-extern slot_t   ox_cache8_get(Cache8 cache, VALUE key, slot_t **slot);
+extern slot_t	ox_cache8_get(Cache8 cache, VALUE key, slot_t **slot);
 
-extern void     ox_cache8_print(Cache8 cache);
+extern void	ox_cache8_print(Cache8 cache);
 
 #endif /* __OX_CACHE8_H__ */
