@@ -33,8 +33,6 @@ class Perf
   end
 
   def summary()
-    fastest = nil
-    slowest = nil
     width = 6
     @items.each do |i|
       next if i.duration.nil?
@@ -55,8 +53,8 @@ class Perf
     end
     puts
     puts "Comparison Matrix\n(performance factor, 2.0 means row is twice as fast as column)"
-    puts ([' ' * width] + iva.map { |i| "%*s" % [width, i.title] }).join('  ')
-    puts (['-' * width] + iva.map { |i| '-' * width }).join('  ')
+    puts(([' ' * width] + iva.map { |i| "%*s" % [width, i.title] }).join('  '))
+    puts((['-' * width] + iva.map { |i| '-' * width }).join('  '))
     iva.each do |i|
       line = ["%*s" % [width, i.title]]
       iva.each do |o|
