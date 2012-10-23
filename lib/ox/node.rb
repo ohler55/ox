@@ -16,7 +16,7 @@ module Ox
     # @param [Object] other Object to compare _self_ to.
     def eql?(other)
       return false if (other.nil? or self.class != other.class)
-      other.value == @value
+      other.value == self.value
     end
     alias == eql?
 
