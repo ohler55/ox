@@ -117,7 +117,8 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_time
-    dump_and_load(Time.now, false)
+    t = Time.local(2012, 1, 5, 23, 58, 7)
+    dump_and_load(t, false)
   end
 
   def test_date
@@ -141,7 +142,7 @@ class Func < ::Test::Unit::TestCase
       dump_and_load((0..3), false)
       dump_and_load((-2..3.7), false)
       dump_and_load(('a'...'f'), false)
-      t = Time.now
+      t = Time.local(2012, 1, 5, 23, 58, 7)
       t2 = t + 20
       dump_and_load((t..t2), false)
     end
@@ -341,26 +342,29 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_array_multi
+    t = Time.local(2012, 1, 5, 23, 58, 7)
     if RUBY_VERSION.start_with?('1.8')
-      dump_and_load([nil, true, false, 3, 'z', 7.9, 'a&b', :xyz, Time.now], false)
+      dump_and_load([nil, true, false, 3, 'z', 7.9, 'a&b', :xyz, t], false)
     else
-      dump_and_load([nil, true, false, 3, 'z', 7.9, 'a&b', :xyz, Time.now, (-1..7)], false)
+      dump_and_load([nil, true, false, 3, 'z', 7.9, 'a&b', :xyz, t, (-1..7)], false)
     end
   end
 
   def test_hash_multi
+    t = Time.local(2012, 1, 5, 23, 58, 7)
     if RUBY_VERSION.start_with?('1.8')
-      dump_and_load({ nil => nil, true => true, false => false, 3 => 3, 'z' => 'z', 7.9 => 7.9, 'a&b' => 'a&b', :xyz => :xyz, Time.now => Time.now }, false)
+      dump_and_load({ nil => nil, true => true, false => false, 3 => 3, 'z' => 'z', 7.9 => 7.9, 'a&b' => 'a&b', :xyz => :xyz, t => t }, false)
     else
-      dump_and_load({ nil => nil, true => true, false => false, 3 => 3, 'z' => 'z', 7.9 => 7.9, 'a&b' => 'a&b', :xyz => :xyz, Time.now => Time.now, (-1..7) => (-1..7) }, false)
+      dump_and_load({ nil => nil, true => true, false => false, 3 => 3, 'z' => 'z', 7.9 => 7.9, 'a&b' => 'a&b', :xyz => :xyz, t => t, (-1..7) => (-1..7) }, false)
     end
   end
 
   def test_object_multi
+    t = Time.local(2012, 1, 5, 23, 58, 7)
     if RUBY_VERSION.start_with?('1.8')
-      dump_and_load(Bag.new(:@a => nil, :@b => true, :@c => false, :@d => 3, :@e => 'z', :@f => 7.9, :@g => 'a&b', :@h => :xyz, :@i => Time.now), false)
+      dump_and_load(Bag.new(:@a => nil, :@b => true, :@c => false, :@d => 3, :@e => 'z', :@f => 7.9, :@g => 'a&b', :@h => :xyz, :@i => t), false)
     else
-      dump_and_load(Bag.new(:@a => nil, :@b => true, :@c => false, :@d => 3, :@e => 'z', :@f => 7.9, :@g => 'a&b', :@h => :xyz, :@i => Time.now, :@j => (-1..7)), false)
+      dump_and_load(Bag.new(:@a => nil, :@b => true, :@c => false, :@d => 3, :@e => 'z', :@f => 7.9, :@g => 'a&b', :@h => :xyz, :@i => t, :@j => (-1..7)), false)
     end
   end
 
@@ -521,7 +525,7 @@ class Func < ::Test::Unit::TestCase
   def test_IO
     f = File.open(__FILE__, "r")
     assert_raise(NotImplementedError) {
-      xml = Ox.dump(f, :effort => :strict)
+      Ox.dump(f, :effort => :strict)
     }
     xml = Ox.dump(f, :effort => :tolerant)
     obj = Ox.load(xml, :mode => :object) # should convert it to an object
