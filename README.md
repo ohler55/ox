@@ -34,9 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.6.2
+### Release 1.6.3
 
- - Added check for Solaris and Linux builds to not use the timezone member of time struct (struct tm).
+ - Fixed compatibility issues with Linux (Ubuntu) mostly related to pointer sizes.
 
 ## <a name="description">Description</a>
 
