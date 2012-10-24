@@ -464,7 +464,8 @@ read_text(PInfo pi) {
 	case '\0':
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
 	default:
-	    if (end <= (b + (('&' == c) ? 7 : 0))) { /* extra 8 for special just in case it is sequence of bytes */
+	     /* extra 8 for special just in case it is sequence of bytes */
+	    if (end <= (b + (('&' == c) ? 7 : 0))) {
 		unsigned long	size;
 		
 		if (0 == alloc_buf) {
