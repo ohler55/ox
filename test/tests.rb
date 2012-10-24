@@ -273,6 +273,18 @@ class Func < ::Test::Unit::TestCase
     assert_equal(xml, dumped_xml)
   end
 
+  def test_escape_hex_value
+    xml = %{\n<top name="&lt;&#x40;test&gt;"/>\n}
+    doc = Ox.parse(xml)
+    assert_equal('<@test>', doc.attributes[:name])
+  end
+
+  def test_escape_utf8_value
+    xml = %{<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<top name="&#xe38394; test"/>\n}
+    doc = Ox.parse(xml).root()
+    assert_equal('ピ test', doc.attributes[:name])
+  end
+
   def test_attr_as_string
     xml = %{<top name="Pete"/>}
     doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false)

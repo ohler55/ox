@@ -45,7 +45,7 @@ static void	read_text(PInfo pi);
 static void	read_cdata(PInfo pi);
 static char*	read_name_token(PInfo pi);
 static char*	read_quoted_value(PInfo pi);
-static int	read_coded_char(PInfo pi);
+static char*	read_coded_chars(PInfo pi, char *text);
 static void	next_non_white(PInfo pi);
 static int	collapse_special(char *str);
 
@@ -461,10 +461,7 @@ read_text(PInfo pi) {
 	case '\0':
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
 	default:
-	    if ('&' == c) {
-		c = read_coded_char(pi);
-	    }
-	    if (end <= b) {
+	    if (end <= (b + (('&' == c) ? 7 : 0))) { // extra 8 for special just in case it is sequence of bytes
 		unsigned long	size;
 		
 		if (0 == alloc_buf) {
@@ -481,7 +478,11 @@ read_text(PInfo pi) {
 		}
 		end = alloc_buf + size - 2;
 	    }
-	    *b++ = c;
+	    if ('&' == c) {
+		b = read_coded_chars(pi, b);
+	    } else {
+		*b++ = c;
+	    }
 	    break;
 	}
     }
@@ -522,10 +523,7 @@ read_reduced_text(PInfo pi) {
 	case '\0':
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
 	default:
-	    if ('&' == c) {
-		c = read_coded_char(pi);
-	    }
-	    if (end <= b + spc) {
+	    if (end <= (b + spc + (('&' == c) ? 7 : 0))) { // extra 8 for special just in case it is sequence of bytes
 		unsigned long	size;
 		
 		if (0 == alloc_buf) {
@@ -546,7 +544,11 @@ read_reduced_text(PInfo pi) {
 		*b++ = ' ';
 	    }
 	    spc = 0;
-	    *b++ = c;
+	    if ('&' == c) {
+		b = read_coded_chars(pi, b);
+	    } else {
+		*b++ = c;
+	    }
 	    break;
 	}
     }
@@ -656,12 +658,11 @@ read_quoted_value(PInfo pi) {
     return value;
 }
 
-static int
-read_coded_char(PInfo pi) {
-    char	*b, buf[8];
+static char*
+read_coded_chars(PInfo pi, char *text) {
+    char	*b, buf[24];
     char	*end = buf + sizeof(buf);
     char	*s;
-    int	c;
 
     for (b = buf, s = pi->s; b < end; b++, s++) {
 	if (';' == *s) {
@@ -672,37 +673,45 @@ read_coded_char(PInfo pi) {
 	*b = *s;
     }
     if (b > end) {
-	return *pi->s;
-    }
-    if ('#' == *buf) {
-	c = (int)strtol(buf + 1, &end, 10);
-	if (0 >= c || '\0' != *end) {
-	    return *pi->s;
+	*text++ = *pi->s;
+    } else if ('#' == *buf) {
+	uint64_t	c;
+	
+	if ('x' == *(buf + 1)) {
+	    c = strtoull(buf + 2, &end, 16);
+	} else {
+	    c = strtoull(buf + 1, &end, 10);
+	}
+	if ('\0' != *end) {
+	    *text++ = *pi->s;
+
+	    return text;
 	}
 	pi->s = s;
-
-	return c;
-    }
-    if (0 == strcasecmp(buf, "nbsp")) {
+	// TBD start with high bytes and start copying on the first non-zero byte
+	*text++ = (char)(unsigned char)(c & 0x00000000000000FFULL);
+    } else if (0 == strcasecmp(buf, "nbsp")) {
 	pi->s = s;
-	return ' ';
+	*text++ = ' ';
     } else if (0 == strcasecmp(buf, "lt")) {
 	pi->s = s;
-	return '<';
+	*text++ = '<';
     } else if (0 == strcasecmp(buf, "gt")) {
 	pi->s = s;
-	return '>';
+	*text++ = '>';
     } else if (0 == strcasecmp(buf, "amp")) {
 	pi->s = s;
-	return '&';
+	*text++ = '&';
     } else if (0 == strcasecmp(buf, "quot")) {
 	pi->s = s;
-	return '"';
+	*text++ = '"';
     } else if (0 == strcasecmp(buf, "apos")) {
 	pi->s = s;
-	return '\'';
+	*text++ = '\'';
+    } else {
+	*text++ = *pi->s;
     }
-    return *pi->s;
+    return text;
 }
 
 static int
