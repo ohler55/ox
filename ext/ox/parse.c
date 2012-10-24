@@ -47,6 +47,7 @@ static char*	read_name_token(PInfo pi);
 static char*	read_quoted_value(PInfo pi);
 static char*	read_hex_uint64(char *b, uint64_t *up);
 static char*	read_10_uint64(char *b, uint64_t *up);
+static char*	uint64_to_chars(char *text, uint64_t u);
 static char*	read_coded_chars(PInfo pi, char *text);
 static void	next_non_white(PInfo pi);
 static int	collapse_special(char *str);
