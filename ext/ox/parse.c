@@ -45,6 +45,8 @@ static void	read_text(PInfo pi);
 static void	read_cdata(PInfo pi);
 static char*	read_name_token(PInfo pi);
 static char*	read_quoted_value(PInfo pi);
+static char*	read_hex_uint64(char *b, uint64_t *up);
+static char*	read_10_uint64(char *b, uint64_t *up);
 static char*	read_coded_chars(PInfo pi, char *text);
 static void	next_non_white(PInfo pi);
 static int	collapse_special(char *str);
@@ -659,53 +661,111 @@ read_quoted_value(PInfo pi) {
 }
 
 static char*
+read_hex_uint64(char *b, uint64_t *up) {
+    uint64_t	u = 0;
+    char	c;
+
+    for (; ';' != *b; b++) {
+	c = *b;
+	if ('0' <= c && c <= '9') {
+	    u = (u << 4) | (uint64_t)(c - '0');
+	} else if ('a' <= c && c <= 'f') {
+	    u = (u << 4) | (uint64_t)(c - 'a' + 10);
+	} else if ('A' <= c && c <= 'F') {
+	    u = (u << 4) | (uint64_t)(c - 'A' + 10);
+	} else {
+	    return 0;
+	}
+    }
+    *up = u;
+
+    return b;
+}
+
+static char*
+read_10_uint64(char *b, uint64_t *up) {
+    uint64_t	u = 0;
+    char	c;
+
+    for (; ';' != *b; b++) {
+	c = *b;
+	if ('0' <= c && c <= '9') {
+	    u = (u * 10) + (uint64_t)(c - '0');
+	} else {
+	    return 0;
+	}
+    }
+    *up = u;
+
+    return b;
+}
+
+static char*
+uint64_to_chars(char *text, uint64_t u) {
+    int			reading = 0;
+    int			i;
+    unsigned char	c;
+
+
+    for (i = 56; 0 <= i; i -= 8) {
+	c = (unsigned char)((u >> i) & 0x00000000000000FFULL);
+	if (reading) {
+	    *text++ = (char)c;
+	} else if ('\0' != c) {
+	    *text++ = (char)c;
+	    reading = 1;
+	}
+    }
+    return text;
+}
+
+static char*
 read_coded_chars(PInfo pi, char *text) {
-    char	*b, buf[24];
-    char	*end = buf + sizeof(buf);
+    char	*b, buf[32];
+    char	*end = buf + sizeof(buf) - 1;
     char	*s;
 
     for (b = buf, s = pi->s; b < end; b++, s++) {
+	*b = *s;
 	if (';' == *s) {
-	    *b = '\0';
+	    *(b + 1) = '\0';
 	    s++;
 	    break;
 	}
-	*b = *s;
     }
     if (b > end) {
 	*text++ = *pi->s;
     } else if ('#' == *buf) {
-	uint64_t	c;
+	uint64_t	u = 0;
 	
-	if ('x' == *(buf + 1)) {
-	    c = strtoull(buf + 2, &end, 16);
+	b = buf + 1;
+	if ('x' == *b || 'X' == *b) {
+	    b = read_hex_uint64(b + 1, &u);
 	} else {
-	    c = strtoull(buf + 1, &end, 10);
+	    b = read_10_uint64(b, &u);
 	}
-	if ('\0' != *end) {
+	if (0 == b) {
 	    *text++ = *pi->s;
-
-	    return text;
+	} else {
+	    pi->s = s;
+	    text = uint64_to_chars(text, u);
 	}
-	pi->s = s;
-	// TBD start with high bytes and start copying on the first non-zero byte
-	*text++ = (char)(unsigned char)(c & 0x00000000000000FFULL);
-    } else if (0 == strcasecmp(buf, "nbsp")) {
+    } else if (0 == strcasecmp(buf, "nbsp;")) {
 	pi->s = s;
 	*text++ = ' ';
-    } else if (0 == strcasecmp(buf, "lt")) {
+    } else if (0 == strcasecmp(buf, "lt;")) {
 	pi->s = s;
 	*text++ = '<';
-    } else if (0 == strcasecmp(buf, "gt")) {
+    } else if (0 == strcasecmp(buf, "gt;")) {
 	pi->s = s;
 	*text++ = '>';
-    } else if (0 == strcasecmp(buf, "amp")) {
+    } else if (0 == strcasecmp(buf, "amp;")) {
 	pi->s = s;
 	*text++ = '&';
-    } else if (0 == strcasecmp(buf, "quot")) {
+    } else if (0 == strcasecmp(buf, "quot;")) {
 	pi->s = s;
 	*text++ = '"';
-    } else if (0 == strcasecmp(buf, "apos")) {
+    } else if (0 == strcasecmp(buf, "apos;")) {
 	pi->s = s;
 	*text++ = '\'';
     } else {
@@ -726,42 +786,47 @@ collapse_special(char *str) {
 	    
 	    s++;
 	    if ('#' == *s) {
+		uint64_t	u = 0;
+
 		s++;
 		if ('x' == *s || 'X' == *s) {
 		    s++;
-		    c = (int)strtol(s, &end, 16);
+		    end = read_hex_uint64(s, &u);
 		} else {
-		    c = (int)strtol(s, &end, 10);
+		    end = read_10_uint64(s, &u);
 		}
-		if (';' != *end) {
+		if (0 == end) {
 		    return EDOM;
 		}
+		b = uint64_to_chars(b, u);
 		s = end + 1;
-	    } else if (0 == strncasecmp(s, "lt;", 3)) {
-		c = '<';
-		s += 3;
-	    } else if (0 == strncasecmp(s, "gt;", 3)) {
-		c = '>';
-		s += 3;
-	    } else if (0 == strncasecmp(s, "amp;", 4)) {
-		c = '&';
-		s += 4;
-	    } else if (0 == strncasecmp(s, "quot;", 5)) {
-		c = '"';
-		s += 5;
-	    } else if (0 == strncasecmp(s, "apos;", 5)) {
-		c = '\'';
-		s += 5;
 	    } else {
-		c = '?';
-		while (';' != *s++) {
-		    if ('\0' == *s) {
-			return EDOM;
+		if (0 == strncasecmp(s, "lt;", 3)) {
+		    c = '<';
+		    s += 3;
+		} else if (0 == strncasecmp(s, "gt;", 3)) {
+		    c = '>';
+		    s += 3;
+		} else if (0 == strncasecmp(s, "amp;", 4)) {
+		    c = '&';
+		    s += 4;
+		} else if (0 == strncasecmp(s, "quot;", 5)) {
+		    c = '"';
+		    s += 5;
+		} else if (0 == strncasecmp(s, "apos;", 5)) {
+		    c = '\'';
+		    s += 5;
+		} else {
+		    c = '?';
+		    while (';' != *s++) {
+			if ('\0' == *s) {
+			    return EDOM;
+			}
 		    }
+		    s++;
 		}
-		s++;
+		*b++ = (char)c;
 	    }
-	    *b++ = (char)c;
 	} else {
 	    *b++ = *s++;
 	}

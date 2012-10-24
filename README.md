@@ -34,9 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.6.3
+### Release 1.6.4
 
- - Fixed compatibility issues with Linux (Ubuntu) mostly related to pointer sizes.
+ - Special character handling has been improved. Both hex and base 10 numeric values are allowed up to a 64 bit number
+   for really long UTF-8 characters.
 
 ## <a name="description">Description</a>
 
