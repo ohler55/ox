@@ -128,6 +128,12 @@ static VALUE	with_instruct_sym;
 static VALUE	with_xml_sym;
 static VALUE	xsd_date_sym;
 
+#if HAS_ENCODING_SUPPORT
+rb_encoding	*ox_utf8_encoding = 0;
+#else
+void		*ox_utf8_encoding = 0;
+#endif
+
 struct _Options	 ox_default_options = {
     { '\0' },		/* encoding */
     2,			/* indent */
@@ -773,6 +779,9 @@ void Init_ox() {
 
     rb_define_module_function(Ox, "cache_test", cache_test, 0);
     rb_define_module_function(Ox, "cache8_test", cache8_test, 0);
+#if HAS_ENCODING_SUPPORT
+    ox_utf8_encoding = rb_enc_find("UTF-8");
+#endif
 }
 
 void

@@ -258,6 +258,12 @@ extern ID	ox_tv_nsec_id;
 extern ID	ox_tv_usec_id;
 extern ID	ox_value_id;
 
+#if HAS_ENCODING_SUPPORT
+extern rb_encoding	*ox_utf8_encoding;
+#else
+extern void		*ox_utf8_encoding;
+#endif
+
 extern VALUE	ox_date_class;
 extern VALUE	ox_empty_string;
 extern VALUE	ox_encoding_sym;

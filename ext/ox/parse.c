@@ -47,10 +47,10 @@ static char*	read_name_token(PInfo pi);
 static char*	read_quoted_value(PInfo pi);
 static char*	read_hex_uint64(char *b, uint64_t *up);
 static char*	read_10_uint64(char *b, uint64_t *up);
-static char*	uint64_to_chars(char *text, uint64_t u);
+static char*	ucs_to_utf8_chars(char *text, uint64_t u);
 static char*	read_coded_chars(PInfo pi, char *text);
 static void	next_non_white(PInfo pi);
-static int	collapse_special(char *str);
+static int	collapse_special(PInfo pi, char *str);
 
 /* This XML parser is a single pass, destructive, callback parser. It is a
  * single pass parse since it only make one pass over the characters in the
@@ -364,7 +364,7 @@ read_element(PInfo pi) {
 	    next_non_white(pi);
 	    ap->value = read_quoted_value(pi);
 	    if (0 != strchr(ap->value, '&')) {
-		if (0 != collapse_special((char*)ap->value)) {
+		if (0 != collapse_special(pi, (char*)ap->value)) {
 		    raise_error("invalid format, special character does not end with a semicolon", pi->str, pi->s);
 		}
 	    }
@@ -464,8 +464,7 @@ read_text(PInfo pi) {
 	case '\0':
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
 	default:
-	     /* extra 8 for special just in case it is sequence of bytes */
-	    if (end <= (b + (('&' == c) ? 7 : 0))) {
+	    if (end <= (b + (('&' == c) ? 7 : 0))) { /* extra 8 for special just in case it is sequence of bytes */
 		unsigned long	size;
 		
 		if (0 == alloc_buf) {
@@ -702,12 +701,57 @@ read_10_uint64(char *b, uint64_t *up) {
     return b;
 }
 
+/*
+u0000..u007F                00000000000000xxxxxxx  0xxxxxxx
+u0080..u07FF                0000000000yyyyyxxxxxx  110yyyyy 10xxxxxx
+u0800..uD7FF, uE000..uFFFF  00000zzzzyyyyyyxxxxxx  1110zzzz 10yyyyyy 10xxxxxx
+u10000..u10FFFF             uuuzzzzzzyyyyyyxxxxxx  11110uuu 10zzzzzz 10yyyyyy 10xxxxxx
+*/
+static char*
+ucs_to_utf8_chars(char *text, uint64_t u) {
+    int			reading = 0;
+    int			i;
+    unsigned char	c;
+
+    if (u <= 0x000000000000007FULL) {
+	// 0xxxxxxx
+	*text++ = (char)u;
+    } else if (u <= 0x00000000000007FFULL) {
+	// 110yyyyy 10xxxxxx
+	*text++ = (char)(0x00000000000000C0ULL | (0x000000000000001FULL & (u >> 6)));
+	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & u));
+    } else if (u <= 0x000000000000D7FFULL || (0x000000000000E000ULL <= u && u <= 0x000000000000FFFFULL)) {
+	// 1110zzzz 10yyyyyy 10xxxxxx
+	*text++ = (char)(0x00000000000000E0ULL | (0x000000000000000FULL & (u >> 12)));
+	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & (u >> 6)));
+	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & u));
+    } else if (0x0000000000010000ULL <= u && u <= 0x000000000010FFFFULL) {
+	// 11110uuu 10zzzzzz 10yyyyyy 10xxxxxx
+	*text++ = (char)(0x00000000000000F0ULL | (0x0000000000000007ULL & (u >> 18)));
+	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & (u >> 12)));
+	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & (u >> 6)));
+	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & u));
+    } else {
+	// assume it is UTF-8 encoded directly and not UCS
+	for (i = 56; 0 <= i; i -= 8) {
+	    c = (unsigned char)((u >> i) & 0x00000000000000FFULL);
+	    if (reading) {
+		*text++ = (char)c;
+	    } else if ('\0' != c) {
+		*text++ = (char)c;
+		reading = 1;
+	    }
+	}
+    }
+    return text;
+}
+
+#if 0
 static char*
 uint64_to_chars(char *text, uint64_t u) {
     int			reading = 0;
     int			i;
     unsigned char	c;
-
 
     for (i = 56; 0 <= i; i -= 8) {
 	c = (unsigned char)((u >> i) & 0x00000000000000FFULL);
@@ -720,6 +764,7 @@ uint64_to_chars(char *text, uint64_t u) {
     }
     return text;
 }
+#endif
 
 static char*
 read_coded_chars(PInfo pi, char *text) {
@@ -750,7 +795,18 @@ read_coded_chars(PInfo pi, char *text) {
 	    *text++ = *pi->s;
 	} else {
 	    pi->s = s;
-	    text = uint64_to_chars(text, u);
+	    if (u <= 0x000000000000007FULL) {
+		*text++ = (char)u;
+	    } else if (ox_utf8_encoding == pi->encoding) {
+		text = ucs_to_utf8_chars(text, u);
+	    } else if (0 == pi->encoding) {
+		pi->encoding = ox_utf8_encoding;
+		text = ucs_to_utf8_chars(text, u);
+	    } else {
+		printf("*** encoding is %p\n", pi->encoding);
+		//raise_error("Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);
+		raise_error("Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);
+	    }
 	}
     } else if (0 == strcasecmp(buf, "nbsp;")) {
 	pi->s = s;
@@ -777,7 +833,7 @@ read_coded_chars(PInfo pi, char *text) {
 }
 
 static int
-collapse_special(char *str) {
+collapse_special(PInfo pi, char *str) {
     char	*s = str;
     char	*b = str;
 
@@ -800,7 +856,18 @@ collapse_special(char *str) {
 		if (0 == end) {
 		    return EDOM;
 		}
-		b = uint64_to_chars(b, u);
+		if (u <= 0x000000000000007FULL) {
+		    *b++ = (char)u;
+		} else if (ox_utf8_encoding == pi->encoding) {
+		    b = ucs_to_utf8_chars(b, u);
+		    /* TBD support UTF-16 */
+		} else if (0 == pi->encoding) {
+		    pi->encoding = ox_utf8_encoding;
+		    b = ucs_to_utf8_chars(b, u);
+		} else {
+		    /* raise_error("Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);*/
+		    raise_error("Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);
+		}
 		s = end + 1;
 	    } else {
 		if (0 == strncasecmp(s, "lt;", 3)) {

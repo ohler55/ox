@@ -280,7 +280,14 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_escape_utf8_value
-    xml = %{<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<top name="&#xe38394;&#14910396;&#xE382BFE383BC;">&#xe38394; test &#64;</top>\n}
+    xml = %{<?xml encoding="UTF-8"?>\n<top name="&#x30d4;&#12540;&#xE382BFE383BC;">&#xe38394; test &#64;</top>\n}
+    doc = Ox.parse(xml).root()
+    assert_equal('ピ test @', doc.nodes[0])
+    assert_equal('ピーター', doc.attributes[:name])
+  end
+
+  def test_escape_utf8_nil_encoding
+    xml = %{<?xml?>\n<top name="&#x30d4;&#12540;&#xE382BFE383BC;">&#x30D4; test &#64;</top>\n}
     doc = Ox.parse(xml).root()
     assert_equal('ピ test @', doc.nodes[0])
     assert_equal('ピーター', doc.attributes[:name])
