@@ -756,11 +756,12 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
         if (0 != read_quoted_value(dr)) {
             return -1;
         }
-#if HAS_ENCODING_SUPPORT
         if (is_encoding) {
+#if HAS_ENCODING_SUPPORT
             dr->encoding = rb_enc_find(dr->str);
-        }
 #endif
+            is_encoding = 0;
+        }
         if (dr->has_attr_value) {
             VALUE       args[2];
 

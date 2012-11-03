@@ -34,9 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.6.5
+### Release 1.6.6
 
- - Special character handling now supports UCS-2 and UCS-4 Unicode characters as well as UTF-8 characters.
+ - A SAX parser encoding bug discovered by bughit was fixed.
 
 ## <a name="description">Description</a>
 
