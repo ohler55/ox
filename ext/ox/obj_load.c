@@ -399,7 +399,7 @@ instruct(PInfo pi, const char *target, Attr attrs) {
 #if HAS_ENCODING_SUPPORT
         for (; 0 != attrs->name; attrs++) {
             if (0 == strcmp("encoding", attrs->name)) {
-                pi->encoding = rb_enc_find(attrs->value);
+                pi->options->rb_enc = rb_enc_find(attrs->value);
             }
         }
 #endif
@@ -422,8 +422,8 @@ add_text(PInfo pi, char *text, int closed) {
     case StringCode:
         pi->h->obj = rb_str_new2(text);
 #if HAS_ENCODING_SUPPORT
-        if (0 != pi->encoding) {
-            rb_enc_associate(pi->h->obj, pi->encoding);
+        if (0 != pi->options->rb_enc) {
+            rb_enc_associate(pi->h->obj, pi->options->rb_enc);
         }
 #endif
         if (0 != pi->circ_array) {
@@ -463,7 +463,7 @@ add_text(PInfo pi, char *text, int closed) {
         VALUE   *slot;
 
         if (Qundef == (sym = ox_cache_get(ox_symbol_cache, text, &slot))) {
-	    sym = str2sym(text, pi->encoding);
+	    sym = str2sym(text, pi->options->rb_enc);
             *slot = sym;
         }
         pi->h->obj = sym;
@@ -489,8 +489,8 @@ add_text(PInfo pi, char *text, int closed) {
         from_base64(text, (uchar*)str);
         v = rb_str_new(str, str_size);
 #if HAS_ENCODING_SUPPORT
-        if (0 != pi->encoding) {
-            rb_enc_associate(v, pi->encoding);
+        if (0 != pi->options->rb_enc) {
+            rb_enc_associate(v, pi->options->rb_enc);
         }
 #endif
         if (0 != pi->circ_array) {
@@ -508,7 +508,7 @@ add_text(PInfo pi, char *text, int closed) {
         
         from_base64(text, (uchar*)str);
         if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot))) {
-	    sym = str2sym(str, pi->encoding);
+	    sym = str2sym(str, pi->options->rb_enc);
             *slot = sym;
         }
         pi->h->obj = sym;
@@ -572,7 +572,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     }
     h = pi->h;
     h->type = *ename;
-    h->var = get_var_sym_from_attrs(attrs, pi->encoding);
+    h->var = get_var_sym_from_attrs(attrs, pi->options->rb_enc);
     switch (h->type) {
     case NilClassCode:
         h->obj = Qnil;

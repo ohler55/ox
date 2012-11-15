@@ -62,6 +62,7 @@ ID	ox_end_element_id;
 ID	ox_end_id;
 ID	ox_error_id;
 ID	ox_excl_id;
+ID	ox_external_encoding_id;
 ID	ox_fileno_id;
 ID	ox_inspect_id;
 ID	ox_instruct_id;
@@ -145,7 +146,8 @@ struct _Options	 ox_default_options = {
     No,			/* xsd_date */
     NoMode,		/* mode */
     StrictEffort,	/* effort */
-    Yes			/* sym_keys */
+    Yes,		/* sym_keys */
+    0			/* rb_enc */
 };
 
 extern ParseCallbacks	ox_obj_callbacks;
@@ -241,6 +243,9 @@ set_def_opts(VALUE self, VALUE opts) {
     } else {
 	Check_Type(v, T_STRING);
 	strncpy(ox_default_options.encoding, StringValuePtr(v), sizeof(ox_default_options.encoding) - 1);
+#ifdef HAVE_RUBY_ENCODING_H
+	ox_default_options.rb_enc = rb_enc_find(ox_default_options.encoding);
+#endif
     }
 
     v = rb_hash_aref(opts, indent_sym);
@@ -357,7 +362,7 @@ to_gen(VALUE self, VALUE ruby_xml) {
 }
 
 static VALUE
-load(char *xml, int argc, VALUE *argv, VALUE self) {
+load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding) {
     VALUE		obj;
     struct _Options	options = ox_default_options;
     
@@ -397,6 +402,17 @@ load(char *xml, int argc, VALUE *argv, VALUE self) {
 	    options.sym_keys = (Qfalse == v) ? No : Yes;
 	}
     }
+#ifdef HAVE_RUBY_ENCODING_H
+    if ('\0' == *options.encoding) {
+	if (Qnil != encoding) {
+	    options.rb_enc = rb_enc_from_index(rb_enc_get_index(encoding));
+	} else {
+	    options.rb_enc = 0;
+	}
+    } else if (0 == options.rb_enc) {
+	options.rb_enc = rb_enc_find(options.encoding);
+    }
+#endif
     switch (options.mode) {
     case ObjMode:
 	obj = ox_parse(xml, ox_obj_callbacks, 0, &options);
@@ -440,6 +456,7 @@ load_str(int argc, VALUE *argv, VALUE self) {
     char	*xml;
     size_t	len;
     VALUE	obj;
+    VALUE	encoding;
     
     Check_Type(*argv, T_STRING);
     /* the xml string gets modified so make a copy of it */
@@ -449,8 +466,13 @@ load_str(int argc, VALUE *argv, VALUE self) {
     } else {
 	xml = ALLOCA_N(char, len);
     }
+#ifdef HAVE_RUBY_ENCODING_H
+    encoding = rb_obj_encoding(*argv);
+#else
+    encoding = Qnil;
+#endif
     strcpy(xml, StringValuePtr(*argv));
-    obj = load(xml, argc - 1, argv + 1, self);
+    obj = load(xml, argc - 1, argv + 1, self, encoding);
     if (SMALL_XML < len) {
 	xfree(xml);
     }
@@ -502,7 +524,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
     }
     fclose(f);
     xml[len] = '\0';
-    obj = load(xml, argc - 1, argv + 1, self);
+    obj = load(xml, argc - 1, argv + 1, self, Qnil);
     if (SMALL_XML < len) {
 	xfree(xml);
     }
@@ -706,6 +728,7 @@ void Init_ox() {
     ox_comment_id = rb_intern("comment");
     ox_den_id = rb_intern("@den");
     ox_doctype_id = rb_intern("doctype");
+    ox_external_encoding_id = rb_intern("external_encoding");
     ox_end_element_id = rb_intern("end_element");
     ox_end_id = rb_intern("@end");
     ox_error_id = rb_intern("error");

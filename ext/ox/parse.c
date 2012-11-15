@@ -116,7 +116,6 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
     pi.pcb = pcb;
     pi.obj = Qnil;
     pi.circ_array = 0;
-    pi.encoding = 0;
     pi.options = options;
     while (1) {
 	next_non_white(&pi);	/* skip white space */
@@ -797,10 +796,10 @@ read_coded_chars(PInfo pi, char *text) {
 	    pi->s = s;
 	    if (u <= 0x000000000000007FULL) {
 		*text++ = (char)u;
-	    } else if (ox_utf8_encoding == pi->encoding) {
+	    } else if (ox_utf8_encoding == pi->options->rb_enc) {
 		text = ucs_to_utf8_chars(text, u);
-	    } else if (0 == pi->encoding) {
-		pi->encoding = ox_utf8_encoding;
+	    } else if (0 == pi->options->rb_enc) {
+		pi->options->rb_enc = ox_utf8_encoding;
 		text = ucs_to_utf8_chars(text, u);
 	    } else {
 		/*raise_error("Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s); */
@@ -857,11 +856,11 @@ collapse_special(PInfo pi, char *str) {
 		}
 		if (u <= 0x000000000000007FULL) {
 		    *b++ = (char)u;
-		} else if (ox_utf8_encoding == pi->encoding) {
+		} else if (ox_utf8_encoding == pi->options->rb_enc) {
 		    b = ucs_to_utf8_chars(b, u);
 		    /* TBD support UTF-16 */
-		} else if (0 == pi->encoding) {
-		    pi->encoding = ox_utf8_encoding;
+		} else if (0 == pi->options->rb_enc) {
+		    pi->options->rb_enc = ox_utf8_encoding;
 		    b = ucs_to_utf8_chars(b, u);
 		} else {
 		    /* raise_error("Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);*/

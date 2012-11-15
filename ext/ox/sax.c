@@ -321,7 +321,13 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
     dr->has_error = respond_to(handler, ox_error_id);
 #if HAS_ENCODING_SUPPORT
     if ('\0' == *ox_default_options.encoding) {
-        dr->encoding = 0;
+	VALUE	encoding;
+
+	if (rb_respond_to(io, ox_external_encoding_id) && Qnil != (encoding = rb_funcall(io, ox_external_encoding_id, 0))) {
+	    dr->encoding = rb_enc_from_index(rb_enc_get_index(encoding));
+	} else {
+	    dr->encoding = 0;
+	}
     } else {
         dr->encoding = rb_enc_find(ox_default_options.encoding);
     }

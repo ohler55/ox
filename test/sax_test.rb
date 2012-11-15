@@ -482,6 +482,27 @@ encoding = "UTF-8" ?>},
     end
   end
 
+  def test_sax_implied_encoding
+    if RUBY_VERSION.start_with?('1.8') || RUBY_DESCRIPTION.start_with?('rubinius 2.0.0dev')
+      assert(true)
+    else
+      xml = %{<?xml version="1.0"?>
+<top>ピーター</top>
+}
+      xml.force_encoding('UTF-8')
+      handler = AllSax.new()
+      input = StringIO.new(xml)
+      Ox.sax_parse(handler, input)
+      assert_equal('UTF-8', handler.calls.assoc(:text)[1].encoding.to_s)
+      # now try a different one
+      xml.force_encoding('US-ASCII')
+      handler = AllSax.new()
+      input = StringIO.new(xml)
+      Ox.sax_parse(handler, input)
+      assert_equal('US-ASCII', handler.calls.assoc(:text)[1].encoding.to_s)
+    end
+  end
+
   def test_sax_value_fixnum
     handler = TypeSax.new(:as_i)
     Ox.sax_parse(handler, StringIO.new(%{<top>7</top>}))

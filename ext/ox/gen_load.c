@@ -116,10 +116,10 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     for (; 0 != attrs->name; attrs++) {
 	if (Yes == pi->options->sym_keys) {
 #if HAS_ENCODING_SUPPORT
-	    if (0 != pi->encoding) {
+	    if (0 != pi->options->rb_enc) {
 		VALUE	rstr = rb_str_new2(attrs->name);
 
-		rb_enc_associate(rstr, pi->encoding);
+		rb_enc_associate(rstr, pi->options->rb_enc);
 		sym = rb_funcall(rstr, ox_to_sym_id, 0);
 	    } else {
 		sym = ID2SYM(rb_intern(attrs->name));
@@ -132,15 +132,15 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 	    VALUE	rstr = rb_str_new2(attrs->name);
 
 #if HAS_ENCODING_SUPPORT
-	    if (0 != pi->encoding) {
-		rb_enc_associate(rstr, pi->encoding);
+	    if (0 != pi->options->rb_enc) {
+		rb_enc_associate(rstr, pi->options->rb_enc);
 	    }
 #endif
 	    rb_hash_aset(ah, rstr, rb_str_new2(attrs->value));
 	}
 #if HAS_ENCODING_SUPPORT
 	if (0 == strcmp("encoding", attrs->name)) {
-	    pi->encoding = rb_enc_find(attrs->value);
+	    pi->options->rb_enc = rb_enc_find(attrs->value);
 	}
 #endif
     }
@@ -210,8 +210,8 @@ add_doctype(PInfo pi, const char *docType) {
     VALUE       s = rb_str_new2(docType);
 
 #if HAS_ENCODING_SUPPORT
-    if (0 != pi->encoding) {
-        rb_enc_associate(s, pi->encoding);
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
@@ -227,8 +227,8 @@ add_comment(PInfo pi, const char *comment) {
     VALUE       s = rb_str_new2(comment);
 
 #if HAS_ENCODING_SUPPORT
-    if (0 != pi->encoding) {
-        rb_enc_associate(s, pi->encoding);
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
@@ -244,8 +244,8 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
     VALUE       s = rb_str_new2(cdata);
 
 #if HAS_ENCODING_SUPPORT
-    if (0 != pi->encoding) {
-        rb_enc_associate(s, pi->encoding);
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
@@ -260,8 +260,8 @@ add_text(PInfo pi, char *text, int closed) {
     VALUE       s = rb_str_new2(text);
 
 #if HAS_ENCODING_SUPPORT
-    if (0 != pi->encoding) {
-        rb_enc_associate(s, pi->encoding);
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
     }
 #endif
     if (0 == pi->h) { /* top level object */
@@ -276,8 +276,8 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     VALUE       s = rb_str_new2(ename);
 
 #if HAS_ENCODING_SUPPORT
-    if (0 != pi->encoding) {
-        rb_enc_associate(s, pi->encoding);
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
     }
 #endif
     e = rb_obj_alloc(ox_element_clas);
@@ -292,10 +292,10 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	    if (Yes == pi->options->sym_keys) {
 		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot))) {
 #if HAS_ENCODING_SUPPORT
-		    if (0 != pi->encoding) {
+		    if (0 != pi->options->rb_enc) {
 			VALUE	rstr = rb_str_new2(attrs->name);
 
-			rb_enc_associate(rstr, pi->encoding);
+			rb_enc_associate(rstr, pi->options->rb_enc);
 			sym = rb_funcall(rstr, ox_to_sym_id, 0);
 		    } else {
 			sym = ID2SYM(rb_intern(attrs->name));
@@ -308,15 +308,15 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	    } else {
 		sym = rb_str_new2(attrs->name);
 #if HAS_ENCODING_SUPPORT
-		if (0 != pi->encoding) {
-		    rb_enc_associate(sym, pi->encoding);
+		if (0 != pi->options->rb_enc) {
+		    rb_enc_associate(sym, pi->options->rb_enc);
 		}
 #endif
 	    }
             s = rb_str_new2(attrs->value);
 #if HAS_ENCODING_SUPPORT
-            if (0 != pi->encoding) {
-                rb_enc_associate(s, pi->encoding);
+            if (0 != pi->options->rb_enc) {
+                rb_enc_associate(s, pi->options->rb_enc);
             }
 #endif
             rb_hash_aset(ah, sym, s);

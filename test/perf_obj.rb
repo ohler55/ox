@@ -42,7 +42,7 @@ opts.on("-r", "read")                                       { do_read = true }
 opts.on("-w", "write")                                      { do_write = true }
 opts.on("-a", "load, dump, read and write")                 { do_load = true; do_dump = true; do_read = true; do_write = true }
 
-opts.on("-i", "--iterations [Int]", Integer, "iterations")  { |i| $iter = i }
+opts.on("-i", "--iterations [Int]", Integer, "iterations")  { |it| $iter = it }
 
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 files = opts.parse(ARGV)

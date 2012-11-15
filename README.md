@@ -34,9 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.6.6
+### Release 1.6.7
 
- - A SAX parser encoding bug discovered by bughit was fixed.
+ - Now uses the encoding of the imput XML as the default encoding for the parsed output if the default options encoding is not set and the encoding is not set in the XML file prolog.
 
 ## <a name="description">Description</a>
 

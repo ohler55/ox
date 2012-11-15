@@ -186,6 +186,11 @@ typedef struct _Options {
     char	mode;		/* LoadMode */
     char	effort;		/* Effort */
     char	sym_keys;	/* symbolize keys */
+#ifdef HAVE_RUBY_ENCODING_H
+    rb_encoding	*rb_enc;
+#else
+    void	*rb_enc;
+#endif
 } *Options;
 
 /* parse information structure */
@@ -197,11 +202,6 @@ struct _PInfo {
     VALUE		obj;
     ParseCallbacks	pcb;
     CircArray		circ_array;
-#ifdef HAVE_RUBY_ENCODING_H
-    rb_encoding		*encoding;
-#else
-    void		*encoding;
-#endif
     unsigned long	id;		/* set for text types when cirs_array is set */
     Options		options;
 };
@@ -234,6 +234,7 @@ extern ID	ox_end_element_id;
 extern ID	ox_end_id;
 extern ID	ox_error_id;
 extern ID	ox_excl_id;
+extern ID	ox_external_encoding_id;
 extern ID	ox_fileno_id;
 extern ID	ox_inspect_id;
 extern ID	ox_instruct_id;
