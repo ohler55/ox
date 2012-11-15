@@ -6,7 +6,7 @@ dir_config(extension_name)
 parts = RUBY_DESCRIPTION.split(' ')
 type = parts[0]
 type = 'ree' if 'ruby' == type && RUBY_DESCRIPTION.include?('Ruby Enterprise Edition')
-platform = parts[5][1...-1]
+platform = RUBY_PLATFORM
 version = RUBY_VERSION.split('.')
 puts ">>>>> Creating Makefile for #{type} version #{RUBY_VERSION} on #{platform} <<<<<"
 
