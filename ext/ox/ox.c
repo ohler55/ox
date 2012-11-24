@@ -157,6 +157,54 @@ extern ParseCallbacks	ox_nomode_callbacks;
 
 static void	parse_dump_options(VALUE ropts, Options copts);
 
+// TBD check for BOM and set encoding if present, error if encoding is not supported, move xml pointer past BOM
+static inline char*
+defuse_bom(char *xml, Options options) {
+    switch ((uint8_t)*xml) {
+    case 0xEF: /* UTF-8 */
+	if (0xBB == (uint8_t)xml[1] && 0xBF == (uint8_t)xml[2]) {
+	    options->rb_enc = ox_utf8_encoding;
+	    xml += 3;
+	} else {
+	    // TBD error
+	}
+	break;
+    case 0xFE: /* UTF-16BE */
+	if (0xFF == (uint8_t)xml[1]) {
+	    // TBD options->rb_enc = ox_utf16be_encoding;
+	    xml += 2;
+	} else {
+	    // TBD error
+	}
+	break;
+    case 0xFF: /* UTF-16LE or UTF-32LE*/
+	if (0xFE == (uint8_t)xml[1]) {
+	    if (0x00 == (uint8_t)xml[2] && 0x00 == (uint8_t)xml[3]) {
+		// TBD options->rb_enc = ox_utf32le_encoding;
+		xml += 4;
+	    } else {
+		// TBD options->rb_enc = ox_utf16le_encoding;
+		xml += 2;
+	    }
+	} else {
+	    // TBD error
+	}
+	break;
+    case 0x00: /* UTF-32BE */
+	if (0x00 == (uint8_t)xml[1] && 0xFE == (uint8_t)xml[2] && 0xFF == (uint8_t)xml[3]) {
+	    // TBD options->rb_enc = ox_utf32be_encoding;
+	    xml += 4;
+	} else {
+	    // TBD error
+	}
+	break;
+    default:
+	// TBD error, not supported
+	break;
+    }
+    return xml;
+}
+
 /* call-seq: ox_default_options() => Hash
  *
  * Returns the default load and dump options as a Hash. The options are
@@ -413,9 +461,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding) {
 	options.rb_enc = rb_enc_find(options.encoding);
     }
 #endif
-    // TBD check for BOM and set encoding if present, error if encoding is not supported, move xml pointer past BOM
-    // char* defuse_bomb(const char xml, options)
-    // start with switch (*xml)
+    xml = defuse_bom(xml, &options);
     switch (options.mode) {
     case ObjMode:
 	obj = ox_parse(xml, ox_obj_callbacks, 0, &options);
