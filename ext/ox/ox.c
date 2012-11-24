@@ -413,6 +413,9 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding) {
 	options.rb_enc = rb_enc_find(options.encoding);
     }
 #endif
+    // TBD check for BOM and set encoding if present, error if encoding is not supported, move xml pointer past BOM
+    // char* defuse_bomb(const char xml, options)
+    // start with switch (*xml)
     switch (options.mode) {
     case ObjMode:
 	obj = ox_parse(xml, ox_obj_callbacks, 0, &options);
