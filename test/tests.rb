@@ -293,6 +293,22 @@ class Func < ::Test::Unit::TestCase
     assert_equal('ピーター', doc.attributes[:name])
   end
 
+  def test_escape_bom_utf8_encoding
+    xml = %{\xEF\xBB\xBF<?xml?>\n<top name="bom"></top>\n}
+    doc = Ox.parse(xml).root()
+    assert_equal('bom', doc.attributes[:name])
+    unless RUBY_VERSION.start_with?('1.8')# || 'rubinius' == $ruby
+      assert_equal('UTF-8', doc.attributes[:name].encoding.to_s)
+    end
+  end
+
+  def test_escape_bom_bad_encoding
+    xml = %{\xEF\xBB<?xml?>\n<top name="bom"></top>\n}
+    assert_raise(ArgumentError) {
+      Ox.parse(xml).root()
+    }
+  end
+
   def test_attr_as_string
     xml = %{<top name="Pete"/>}
     doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false)

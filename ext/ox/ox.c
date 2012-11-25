@@ -165,8 +165,7 @@ extern ParseCallbacks	ox_nomode_callbacks;
 
 static void	parse_dump_options(VALUE ropts, Options copts);
 
-// TBD check for BOM and set encoding if present, error if encoding is not supported, move xml pointer past BOM
-static inline char*
+static char*
 defuse_bom(char *xml, Options options) {
     switch ((uint8_t)*xml) {
     case 0xEF: /* UTF-8 */
@@ -185,7 +184,7 @@ defuse_bom(char *xml, Options options) {
 	    rb_raise(rb_eArgError, "Invalid BOM in XML string.\n");
 	}
 	break;
-    case 0xFF: /* UTF-16LE or UTF-32LE*/
+    case 0xFF: /* UTF-16LE or UTF-32LE */
 	if (0xFE == (uint8_t)xml[1]) {
 	    if (0x00 == (uint8_t)xml[2] && 0x00 == (uint8_t)xml[3]) {
 		options->rb_enc = ox_utf32le_encoding;
@@ -367,9 +366,10 @@ set_def_opts(VALUE self, VALUE opts) {
  */
 static VALUE
 to_obj(VALUE self, VALUE ruby_xml) {
-    char	*xml;
-    size_t	len;
-    VALUE	obj;
+    char		*xml, *x;
+    size_t		len;
+    VALUE		obj;
+    struct _Options	options = ox_default_options;
 
     Check_Type(ruby_xml, T_STRING);
     /* the xml string gets modified so make a copy of it */
@@ -379,8 +379,9 @@ to_obj(VALUE self, VALUE ruby_xml) {
     } else {
 	xml = ALLOCA_N(char, len);
     }
-    strcpy(xml, StringValuePtr(ruby_xml));
-    obj = ox_parse(xml, ox_obj_callbacks, 0, &ox_default_options);
+    memcpy(xml, StringValuePtr(ruby_xml), len);
+    x = defuse_bom(xml, &options);
+    obj = ox_parse(x, ox_obj_callbacks, 0, &options);
     if (SMALL_XML < len) {
 	xfree(xml);
     }
@@ -396,9 +397,10 @@ to_obj(VALUE self, VALUE ruby_xml) {
  */
 static VALUE
 to_gen(VALUE self, VALUE ruby_xml) {
-    char		*xml;
+    char		*xml, *x;
     size_t		len;
     VALUE		obj;
+    struct _Options	options = ox_default_options;
 
     Check_Type(ruby_xml, T_STRING);
     /* the xml string gets modified so make a copy of it */
@@ -408,8 +410,9 @@ to_gen(VALUE self, VALUE ruby_xml) {
     } else {
 	xml = ALLOCA_N(char, len);
     }
-    strcpy(xml, StringValuePtr(ruby_xml));
-    obj = ox_parse(xml, ox_gen_callbacks, 0, &ox_default_options);
+    memcpy(xml, StringValuePtr(ruby_xml), len);
+    x = defuse_bom(xml, &options);
+    obj = ox_parse(x, ox_gen_callbacks, 0, &options);
     if (SMALL_XML < len) {
 	xfree(xml);
     }
@@ -527,7 +530,7 @@ load_str(int argc, VALUE *argv, VALUE self) {
 #else
     encoding = Qnil;
 #endif
-    strcpy(xml, StringValuePtr(*argv));
+    memcpy(xml, StringValuePtr(*argv), len);
     obj = load(xml, argc - 1, argv + 1, self, encoding);
     if (SMALL_XML < len) {
 	xfree(xml);

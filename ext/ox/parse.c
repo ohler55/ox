@@ -745,26 +745,6 @@ ucs_to_utf8_chars(char *text, uint64_t u) {
     return text;
 }
 
-#if 0
-static char*
-uint64_to_chars(char *text, uint64_t u) {
-    int			reading = 0;
-    int			i;
-    unsigned char	c;
-
-    for (i = 56; 0 <= i; i -= 8) {
-	c = (unsigned char)((u >> i) & 0x00000000000000FFULL);
-	if (reading) {
-	    *text++ = (char)c;
-	} else if ('\0' != c) {
-	    *text++ = (char)c;
-	    reading = 1;
-	}
-    }
-    return text;
-}
-#endif
-
 static char*
 read_coded_chars(PInfo pi, char *text) {
     char	*b, buf[32];
