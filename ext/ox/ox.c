@@ -131,8 +131,16 @@ static VALUE	xsd_date_sym;
 
 #if HAS_ENCODING_SUPPORT
 rb_encoding	*ox_utf8_encoding = 0;
+static rb_encoding	*ox_utf16le_encoding = 0;
+static rb_encoding	*ox_utf16be_encoding = 0;
+static rb_encoding	*ox_utf32le_encoding = 0;
+static rb_encoding	*ox_utf32be_encoding = 0;
 #else
 void		*ox_utf8_encoding = 0;
+static void	*ox_utf16le_encoding = 0;
+static void	*ox_utf16be_encoding = 0;
+static void	*ox_utf32le_encoding = 0;
+static void	*ox_utf32be_encoding = 0;
 #endif
 
 struct _Options	 ox_default_options = {
@@ -166,40 +174,39 @@ defuse_bom(char *xml, Options options) {
 	    options->rb_enc = ox_utf8_encoding;
 	    xml += 3;
 	} else {
-	    // TBD error
+	    rb_raise(rb_eArgError, "Invalid BOM in XML string.\n");
 	}
 	break;
     case 0xFE: /* UTF-16BE */
 	if (0xFF == (uint8_t)xml[1]) {
-	    // TBD options->rb_enc = ox_utf16be_encoding;
+	    options->rb_enc = ox_utf16be_encoding;
 	    xml += 2;
 	} else {
-	    // TBD error
+	    rb_raise(rb_eArgError, "Invalid BOM in XML string.\n");
 	}
 	break;
     case 0xFF: /* UTF-16LE or UTF-32LE*/
 	if (0xFE == (uint8_t)xml[1]) {
 	    if (0x00 == (uint8_t)xml[2] && 0x00 == (uint8_t)xml[3]) {
-		// TBD options->rb_enc = ox_utf32le_encoding;
+		options->rb_enc = ox_utf32le_encoding;
 		xml += 4;
 	    } else {
-		// TBD options->rb_enc = ox_utf16le_encoding;
+		options->rb_enc = ox_utf16le_encoding;
 		xml += 2;
 	    }
 	} else {
-	    // TBD error
+	    rb_raise(rb_eArgError, "Invalid BOM in XML string.\n");
 	}
 	break;
     case 0x00: /* UTF-32BE */
 	if (0x00 == (uint8_t)xml[1] && 0xFE == (uint8_t)xml[2] && 0xFF == (uint8_t)xml[3]) {
-	    // TBD options->rb_enc = ox_utf32be_encoding;
+	    options->rb_enc = ox_utf32be_encoding;
 	    xml += 4;
 	} else {
-	    // TBD error
+	    rb_raise(rb_eArgError, "Invalid BOM in XML string.\n");
 	}
 	break;
     default:
-	// TBD error, not supported
 	break;
     }
     return xml;
@@ -853,6 +860,10 @@ void Init_ox() {
     rb_define_module_function(Ox, "cache8_test", cache8_test, 0);
 #if HAS_ENCODING_SUPPORT
     ox_utf8_encoding = rb_enc_find("UTF-8");
+    ox_utf16le_encoding = rb_enc_find("UTF-16LE");
+    ox_utf16be_encoding = rb_enc_find("UTF-16BE");
+    ox_utf32le_encoding = rb_enc_find("UTF-32LE");
+    ox_utf32be_encoding = rb_enc_find("UTF-32BE");
 #endif
 }
 
