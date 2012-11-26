@@ -176,6 +176,7 @@ defuse_bom(char *xml, Options options) {
 	    rb_raise(rb_eArgError, "Invalid BOM in XML string.\n");
 	}
 	break;
+#if 0
     case 0xFE: /* UTF-16BE */
 	if (0xFF == (uint8_t)xml[1]) {
 	    options->rb_enc = ox_utf16be_encoding;
@@ -205,7 +206,9 @@ defuse_bom(char *xml, Options options) {
 	    rb_raise(rb_eArgError, "Invalid BOM in XML string.\n");
 	}
 	break;
+#endif
     default:
+	/* Let it fail if there is a BOM that is not UTF-8. Other BOM options are not ASCII compatible. */
 	break;
     }
     return xml;

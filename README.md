@@ -36,7 +36,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ### Release 1.6.9
 
- - Added support for BOM. They are honored for and handled correctly for UTF-8. Others cause encoding issues with Ruby or raise an error.
+ - Added support for BOM. They are honored for and handled correctly for UTF-8. Others cause encoding issues with Ruby or raise an error as others are not ASCII compatible..
 
 ## <a name="description">Description</a>
 
