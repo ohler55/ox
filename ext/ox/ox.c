@@ -131,16 +131,8 @@ static VALUE	xsd_date_sym;
 
 #if HAS_ENCODING_SUPPORT
 rb_encoding	*ox_utf8_encoding = 0;
-static rb_encoding	*ox_utf16le_encoding = 0;
-static rb_encoding	*ox_utf16be_encoding = 0;
-static rb_encoding	*ox_utf32le_encoding = 0;
-static rb_encoding	*ox_utf32be_encoding = 0;
 #else
 void		*ox_utf8_encoding = 0;
-static void	*ox_utf16le_encoding = 0;
-static void	*ox_utf16be_encoding = 0;
-static void	*ox_utf32le_encoding = 0;
-static void	*ox_utf32be_encoding = 0;
 #endif
 
 struct _Options	 ox_default_options = {
@@ -866,10 +858,6 @@ void Init_ox() {
     rb_define_module_function(Ox, "cache8_test", cache8_test, 0);
 #if HAS_ENCODING_SUPPORT
     ox_utf8_encoding = rb_enc_find("UTF-8");
-    ox_utf16le_encoding = rb_enc_find("UTF-16LE");
-    ox_utf16be_encoding = rb_enc_find("UTF-16BE");
-    ox_utf32le_encoding = rb_enc_find("UTF-32LE");
-    ox_utf32be_encoding = rb_enc_find("UTF-32BE");
 #endif
 }
 

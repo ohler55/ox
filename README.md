@@ -34,9 +34,13 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
+### Release 1.7.0
+
+ - Added support for BOM in the SAX parser.
+
 ### Release 1.6.9
 
- - Added support for BOM. They are honored for and handled correctly for UTF-8. Others cause encoding issues with Ruby or raise an error as others are not ASCII compatible..
+ - Added support for BOM. They are honored for and handled correctly for UTF-8. Others cause encoding issues with Ruby or raise an error as others are not ASCII compatible.
 
 ## <a name="description">Description</a>
 

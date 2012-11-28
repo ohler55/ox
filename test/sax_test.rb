@@ -470,6 +470,22 @@ encoding = "UTF-8" ?>},
     end
   end
 
+  def test_sax_bom
+    if RUBY_VERSION.start_with?('1.8')
+      assert(true)
+    else
+      xml = %{\xEF\xBB\xBF<?xml?>
+<top>ピーター</top>
+}
+      xml.force_encoding('ASCII')
+      parse_compare(xml,
+                    [[:instruct, "xml"],
+                     [:start_element, :top],
+                     [:text, 'ピーター'],
+                     [:end_element, :top]])
+    end
+  end
+
   def test_sax_full_encoding
     if RUBY_VERSION.start_with?('1.8')
       assert(true)

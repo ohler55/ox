@@ -409,7 +409,20 @@ read_children(SaxDrive dr, int first) {
     
     while (!err) {
         dr->str = dr->cur; /* protect the start */
-        if ('\0' == (c = next_non_white(dr))) {
+	c = sax_drive_get(dr);
+	if (first) {
+	    if (0xEF == (uint8_t)c) { /* only UTF8 is supported */
+		if (0xBB == (uint8_t)sax_drive_get(dr) && 0xBF == (uint8_t)sax_drive_get(dr)) {
+#if HAS_ENCODING_SUPPORT
+		    dr->encoding = ox_utf8_encoding;
+#endif
+		    c = sax_drive_get(dr);
+		} else {
+		    sax_drive_error(dr, "invalid format, invalid BOM or a binary file.", 1);
+		}
+	    }
+	}
+        if ('\0' == c || (is_white(c) && '\0' == (c = next_non_white(dr)))) {
             if (!first) {
                 sax_drive_error(dr, "invalid format, element not terminated", 1);
                 err = 1;
