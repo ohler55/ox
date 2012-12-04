@@ -33,7 +33,9 @@
 #include <stdio.h>
 #include <strings.h>
 #include <sys/types.h>
-#include <sys/uio.h>
+#if NEEDS_UIO
+    #include <sys/uio.h>    
+#endif
 #include <unistd.h>
 #include <time.h>
 
