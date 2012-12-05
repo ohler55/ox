@@ -30,6 +30,12 @@ dflags = {
   'HAS_TOP_LEVEL_ST_H' => ('ree' == type || ('ruby' == type &&  '1' == version[0] && '8' == version[1])) ? 1 : 0,
 }
 
+if RUBY_PLATFORM =~ /(win|w)32$/
+  dflags['HAS_TM_GMTOFF'] = 0
+  dflags['NEEDS_UIO'] = 0
+  dflags['NEEDS_STPCPY'] = 1
+end
+
 if ['i386-darwin10.0.0', 'x86_64-darwin10.8.0'].include? RUBY_PLATFORM
   dflags['NEEDS_STPCPY'] = nil
   
