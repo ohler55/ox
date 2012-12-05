@@ -34,9 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.7.0
+### Release 1.7.1
 
- - Added support for BOM in the SAX parser.
+ - Pulled in sharpyfox's changes to make Ox with with Windows.
 
 ### Release 1.6.9
 
