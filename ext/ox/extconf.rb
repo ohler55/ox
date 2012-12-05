@@ -20,7 +20,7 @@ dflags = {
   'HAS_RB_TIME_TIMESPEC' => ('ruby' == type && ('1.9.3' == RUBY_VERSION)) ? 1 : 0,
   #'HAS_RB_TIME_TIMESPEC' => ('ruby' == type && ('1.9.3' == RUBY_VERSION || '2' <= version[0])) ? 1 : 0,
   'HAS_TM_GMTOFF' => ('ruby' == type && (('1' == version[0] && '9' == version[1]) || '2' <= version[0]) && 
-                      !(platform.include?('solaris') || platform.include?('linux'))) ? 1 : 0,
+                      !(platform.include?('solaris') || platform.include?('linux') || RUBY_PLATFORM =~ /(win|w)32$/)) ? 1 : 0,
   'HAS_ENCODING_SUPPORT' => (('ruby' == type || 'rubinius' == type) &&
                              (('1' == version[0] && '9' == version[1]) || '2' <= version[0])) ? 1 : 0,
   'HAS_NANO_TIME' => ('ruby' == type && ('1' == version[0] && '9' == version[1]) || '2' <= version[0]) ? 1 : 0,
@@ -28,17 +28,15 @@ dflags = {
   'HAS_IVAR_HELPERS' => ('ruby' == type && ('1' == version[0] && '9' == version[1]) || '2' <= version[0]) ? 1 : 0,
   'HAS_PROC_WITH_BLOCK' => ('ruby' == type && ('1' == version[0] && '9' == version[1]) || '2' <= version[0]) ? 1 : 0,
   'HAS_TOP_LEVEL_ST_H' => ('ree' == type || ('ruby' == type &&  '1' == version[0] && '8' == version[1])) ? 1 : 0,
+  'NEEDS_UIO' => (RUBY_PLATFORM =~ /(win|w)32$/) ? 0 : 1,
 }
 
 if RUBY_PLATFORM =~ /(win|w)32$/
-  dflags['HAS_TM_GMTOFF'] = 0
-  dflags['NEEDS_UIO'] = 0
-  dflags['NEEDS_STPCPY'] = 1
+  dflags['NEEDS_STPCPY'] = nil
 end
 
 if ['i386-darwin10.0.0', 'x86_64-darwin10.8.0'].include? RUBY_PLATFORM
   dflags['NEEDS_STPCPY'] = nil
-  
   dflags['HAS_IVAR_HELPERS'] = 0 if ('ruby' == type && '1.9.1' == RUBY_VERSION)
 elsif 'x86_64-linux' == RUBY_PLATFORM && '1.9.3' == RUBY_VERSION && '2011-10-30' == RUBY_RELEASE_DATE
   begin
