@@ -545,6 +545,14 @@ class Func < ::Test::Unit::TestCase
     assert_equal(xml, xml2)
   end
 
+  def test_generic_white_string
+    xml = %{<?xml?>
+<Str> </Str>
+}
+    doc = Ox.load(xml, :mode => :generic)
+    assert_equal(' ', doc.root.nodes[0])
+  end
+
   def test_generic_encoding
     if RUBY_VERSION.start_with?('1.8')
       assert(true)

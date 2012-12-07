@@ -161,8 +161,10 @@ module Ox
           i -= 1
         end
       end
-      return @attributes[id] if @attributes.has_key?(id)
-      return @attributes[ids] if @attributes.has_key?(ids)
+      if instance_variable_defined?(:@attributes)
+        return @attributes[id] if @attributes.has_key?(id)
+        return @attributes[ids] if @attributes.has_key?(ids)
+      end
       raise NoMethodError.new("#{name} not found", name)
     end
 
@@ -172,10 +174,12 @@ module Ox
       step = path[0]
       if step.start_with?('@') # attribute
         raise InvalidPath.new(path) unless 1 == path.size
-        step = step[1..-1]
-        sym_step = step.to_sym
-        @attributes.each do |k,v|
-          found << v if ('?' == step or k == step or k == sym_step)
+        if instance_variable_defined?(:@attributes)
+          step = step[1..-1]
+          sym_step = step.to_sym
+          @attributes.each do |k,v|
+            found << v if ('?' == step or k == step or k == sym_step)
+          end
         end
       else # element name
         if (i = step.index('[')).nil? # just name

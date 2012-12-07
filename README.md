@@ -36,11 +36,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ### Release 1.7.1
 
- - Pulled in sharpyfox's changes to make Ox with with Windows.
+ - Pulled in sharpyfox's changes to make Ox with with Windows. (issue #24)
 
-### Release 1.6.9
-
- - Added support for BOM. They are honored for and handled correctly for UTF-8. Others cause encoding issues with Ruby or raise an error as others are not ASCII compatible.
+ - Fixed bug that ignored white space only text elements. (issue #26)
 
 ## <a name="description">Description</a>
 

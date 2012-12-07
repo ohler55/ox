@@ -377,6 +377,7 @@ read_element(PInfo pi) {
     }
     if (hasChildren) {
 	char	*start;
+	int	first = 1;
 	
 	done = 0;
 	/* read children */
@@ -388,6 +389,8 @@ read_element(PInfo pi) {
 		raise_error("invalid format, document not terminated", pi->str, pi->s);
 	    }
 	    if ('<' == c) {
+		char	*slash;
+
 		switch (*pi->s) {
 		case '!':	/* better be a comment or CDATA */
 		    pi->s++;
@@ -402,6 +405,7 @@ read_element(PInfo pi) {
 		    }
 		    break;
 		case '/':
+		    slash = pi->s;
 		    pi->s++;
 		    name = read_name_token(pi);
 		    end = pi->s;
@@ -414,12 +418,18 @@ read_element(PInfo pi) {
 		    if ('>' != c) {
 			raise_error("invalid format, element not closed", pi->str, pi->s);
 		    }
+		    if (first && start != slash - 1) {
+			/* some white space between start and here so add as text */
+			*(slash - 1) = '\0';
+			pi->pcb->add_text(pi, start, 1);
+		    }
 		    pi->s++;
 		    pi->pcb->end_element(pi, ename);
 		    return;
 		case '\0':
 		    raise_error("invalid format, document not terminated", pi->str, pi->s);
 		default:
+		    first = 0;
 		    /* a child element */
 		    read_element(pi);
 		    break;
