@@ -68,7 +68,7 @@ static int	collapse_special(PInfo pi, char *str);
 inline static void
 next_non_white(PInfo pi) {
     for (; 1; pi->s++) {
-	switch(*pi->s) {
+	switch (*pi->s) {
 	case ' ':
 	case '\t':
 	case '\f':
@@ -84,7 +84,7 @@ next_non_white(PInfo pi) {
 inline static void
 next_white(PInfo pi) {
     for (; 1; pi->s++) {
-	switch(*pi->s) {
+	switch (*pi->s) {
 	case ' ':
 	case '\t':
 	case '\f':
@@ -131,7 +131,7 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
 	}
 	pi.s++;		/* past < */
 	switch (*pi.s) {
-	case '?':	/* prolog */
+	case '?':	/* processing instruction */
 	    pi.s++;
 	    read_instruction(&pi);
 	    break;
@@ -165,19 +165,47 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
     return pi.obj;
 }
 
+static char*
+gather_content(const char *src, char *content, size_t len) {
+    for (; 0 < len; src++, content++, len--) {
+	switch (*src) {
+	case '?':
+	    if ('>' == *(src + 1)) {
+		*content = '\0';
+		return (char*)(src + 1);
+	    }
+	    *content = *src;
+	    break;
+	case '\0':
+	    return 0;
+	default:
+	    *content = *src;
+	    break;
+	}
+    }
+    return 0;
+}
+
 /* Entered after the "<?" sequence. Ready to read the rest.
  */
 static void
 read_instruction(PInfo pi) {
+    char		content[1024];
     struct _Attr	attrs[MAX_ATTRS + 1];
     Attr		a = attrs;
     char		*target;
     char		*end;
     char		c;
-	
+    char		*cend;
+    int			attrs_ok = 1;
+
+    *content = '\0';
     memset(attrs, 0, sizeof(attrs));
     target = read_name_token(pi);
     end = pi->s;
+    if (0 == (cend = gather_content(pi->s, content, sizeof(content) - 1))) {
+	raise_error("processing instruction content too large or not terminated", pi->str, pi->s);
+    }
     next_non_white(pi);
     c = *pi->s;
     *end = '\0'; /* terminate name */
@@ -191,7 +219,8 @@ read_instruction(PInfo pi) {
 	    end = pi->s;
 	    next_non_white(pi);
 	    if ('=' != *pi->s++) {
-		raise_error("invalid format, no attribute value", pi->str, pi->s);
+		attrs_ok = 0;
+		break;
 	    }
 	    *end = '\0'; /* terminate name */
 	    /* read value */
@@ -199,7 +228,8 @@ read_instruction(PInfo pi) {
 	    a->value = read_quoted_value(pi);
 	    a++;
 	    if (MAX_ATTRS <= (a - attrs)) {
-		raise_error("too many attributes", pi->str, pi->s);
+		attrs_ok = 0;
+		break;
 	    }
 	    next_non_white(pi);
 	}
@@ -209,11 +239,19 @@ read_instruction(PInfo pi) {
     } else {
 	pi->s++;
     }
-    if ('>' != *pi->s++) {
-	raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
+    if (attrs_ok) {
+	if ('>' != *pi->s++) {
+	    raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
+	}
+    } else {
+	pi->s = cend + 1;
     }
     if (0 != pi->pcb->instruct) {
-	pi->pcb->instruct(pi, target, attrs);
+	if (attrs_ok) {
+	    pi->pcb->instruct(pi, target, attrs, 0);
+	} else {
+	    pi->pcb->instruct(pi, target, attrs, content);
+	}
     }
 }
 
@@ -403,6 +441,10 @@ read_element(PInfo pi) {
 		    } else {
 			raise_error("invalid format, invalid comment or CDATA format", pi->str, pi->s);
 		    }
+		    break;
+		case '?':	/* processing instruction */
+		    pi->s++;
+		    read_instruction(pi);
 		    break;
 		case '/':
 		    slash = pi->s;

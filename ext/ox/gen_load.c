@@ -37,16 +37,17 @@
 #include "ruby.h"
 #include "ox.h"
 
-static void     instruct(PInfo pi, const char *target, Attr attrs);
+static void     instruct(PInfo pi, const char *target, Attr attrs, const char *content);
 static void	create_doc(PInfo pi);
 static void     create_prolog_doc(PInfo pi, const char *target, Attr attrs);
-static void     nomode_instruct(PInfo pi, const char *target, Attr attrs);
+static void     nomode_instruct(PInfo pi, const char *target, Attr attrs, const char *content);
 static void     add_doctype(PInfo pi, const char *docType);
 static void     add_comment(PInfo pi, const char *comment);
 static void     add_cdata(PInfo pi, const char *cdata, size_t len);
 static void     add_text(PInfo pi, char *text, int closed);
 static void     add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren);
 static void     end_element(PInfo pi, const char *ename);
+static void	add_instruct(PInfo pi, const char *name, Attr attrs, const char *content);
 
 extern ParseCallbacks   ox_obj_callbacks;
 
@@ -152,7 +153,7 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 }
 
 static void
-instruct(PInfo pi, const char *target, Attr attrs) {
+instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
     if (0 == strcmp("xml", target)) {
         create_prolog_doc(pi, target, attrs);
     } else if (0 == strcmp("ox", target)) {
@@ -165,14 +166,12 @@ instruct(PInfo pi, const char *target, Attr attrs) {
             /* ignore other instructions */
         }
     } else {
-        if (TRACE <= pi->options->trace) {
-            printf("Processing instruction %s ignored.\n", target);
-        }
+	add_instruct(pi, target, attrs, content);
     }
 }
 
 static void
-nomode_instruct(PInfo pi, const char *target, Attr attrs) {
+nomode_instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
     if (0 == strcmp("xml", target)) {
         create_prolog_doc(pi, target, attrs);
     } else if (0 == strcmp("ox", target)) {
@@ -343,4 +342,72 @@ end_element(PInfo pi, const char *ename) {
     if (0 != pi->h && pi->helpers <= pi->h) {
         pi->h--;
     }
+}
+
+static void
+add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
+    VALUE       inst;
+    VALUE       s = rb_str_new2(name);
+    VALUE       c = Qnil;
+
+    if (0 != content) {
+	c = rb_str_new2(content);
+    }
+#if HAS_ENCODING_SUPPORT
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
+	if (0 != content) {
+	    rb_enc_associate(c, pi->options->rb_enc);
+	}
+    }
+#endif
+    inst = rb_obj_alloc(ox_instruct_clas);
+    rb_ivar_set(inst, ox_at_value_id, s);
+    if (0 != content) {
+	rb_ivar_set(inst, ox_at_content_id, c);
+    } else if (0 != attrs->name) {
+        VALUE   ah = rb_hash_new();
+        
+        for (; 0 != attrs->name; attrs++) {
+            VALUE   sym;
+            VALUE   *slot;
+
+	    if (Yes == pi->options->sym_keys) {
+		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot))) {
+#if HAS_ENCODING_SUPPORT
+		    if (0 != pi->options->rb_enc) {
+			VALUE	rstr = rb_str_new2(attrs->name);
+
+			rb_enc_associate(rstr, pi->options->rb_enc);
+			sym = rb_funcall(rstr, ox_to_sym_id, 0);
+		    } else {
+			sym = ID2SYM(rb_intern(attrs->name));
+		    }
+#else
+		    sym = ID2SYM(rb_intern(attrs->name));
+#endif
+		    *slot = sym;
+		}
+	    } else {
+		sym = rb_str_new2(attrs->name);
+#if HAS_ENCODING_SUPPORT
+		if (0 != pi->options->rb_enc) {
+		    rb_enc_associate(sym, pi->options->rb_enc);
+		}
+#endif
+	    }
+            s = rb_str_new2(attrs->value);
+#if HAS_ENCODING_SUPPORT
+            if (0 != pi->options->rb_enc) {
+                rb_enc_associate(s, pi->options->rb_enc);
+            }
+#endif
+            rb_hash_aset(ah, sym, s);
+        }
+        rb_ivar_set(inst, ox_attributes_id, ah);
+    }
+    if (0 == pi->h) { /* top level object */
+	create_doc(pi);
+    }
+    rb_ary_push(pi->h->obj, inst);
 }

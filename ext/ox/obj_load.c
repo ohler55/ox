@@ -39,7 +39,7 @@
 #include "base64.h"
 #include "ox.h"
 
-static void     instruct(PInfo pi, const char *target, Attr attrs);
+static void     instruct(PInfo pi, const char *target, Attr attrs, const char *content);
 static void     add_text(PInfo pi, char *text, int closed);
 static void     add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren);
 static void     end_element(PInfo pi, const char *ename);
@@ -394,7 +394,7 @@ parse_regexp(const char *text) {
 }
 
 static void
-instruct(PInfo pi, const char *target, Attr attrs) {
+instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
     if (0 == strcmp("xml", target)) {
 #if HAS_ENCODING_SUPPORT
         for (; 0 != attrs->name; attrs++) {

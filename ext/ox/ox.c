@@ -48,6 +48,7 @@ void Init_ox();
 
 VALUE	 Ox = Qnil;
 
+ID	ox_at_content_id;
 ID	ox_at_id;
 ID	ox_at_value_id;
 ID	ox_attr_id;
@@ -60,6 +61,7 @@ ID	ox_den_id;
 ID	ox_doctype_id;
 ID	ox_end_element_id;
 ID	ox_end_id;
+ID	ox_end_instruct_id;
 ID	ox_error_id;
 ID	ox_excl_id;
 ID	ox_external_encoding_id;
@@ -92,16 +94,17 @@ VALUE	ox_encoding_sym;
 VALUE	ox_empty_string;
 VALUE	ox_zero_fixnum;
 
+VALUE	ox_bag_clas;
 VALUE	ox_cdata_clas;
 VALUE	ox_comment_clas;
+VALUE	ox_date_class;
 VALUE	ox_doctype_clas;
 VALUE	ox_document_clas;
 VALUE	ox_element_clas;
-VALUE	ox_bag_clas;
+VALUE	ox_instruct_clas;
+VALUE	ox_stringio_class;
 VALUE	ox_struct_class;
 VALUE	ox_time_class;
-VALUE	ox_date_class;
-VALUE	ox_stringio_class;
 
 Cache	ox_symbol_cache = 0;
 Cache	ox_class_cache = 0;
@@ -780,11 +783,13 @@ void Init_ox() {
     ox_beg_id = rb_intern("@beg");
     ox_cdata_id = rb_intern("cdata");
     ox_comment_id = rb_intern("comment");
+    ox_at_content_id = rb_intern("@content");
     ox_den_id = rb_intern("@den");
     ox_doctype_id = rb_intern("doctype");
     ox_external_encoding_id = rb_intern("external_encoding");
     ox_end_element_id = rb_intern("end_element");
     ox_end_id = rb_intern("@end");
+    ox_end_instruct_id = rb_intern("end_instruct");
     ox_error_id = rb_intern("error");
     ox_excl_id = rb_intern("@excl");
     ox_fileno_id = rb_intern("fileno");
@@ -843,6 +848,7 @@ void Init_ox() {
 
     ox_document_clas = rb_const_get_at(Ox, rb_intern("Document"));
     ox_element_clas = rb_const_get_at(Ox, rb_intern("Element"));
+    ox_instruct_clas = rb_const_get_at(Ox, rb_intern("Instruct"));
     ox_comment_clas = rb_const_get_at(Ox, rb_intern("Comment"));
     ox_doctype_clas = rb_const_get_at(Ox, rb_intern("DocType"));
     ox_cdata_clas = rb_const_get_at(Ox, rb_intern("CData"));

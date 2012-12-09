@@ -88,8 +88,10 @@ end
 
 require 'ox/version'
 require 'ox/invalidpath'
+require 'ox/hasattrs'
 require 'ox/node'
 require 'ox/comment'
+require 'ox/instruct'
 require 'ox/cdata'
 require 'ox/doctype'
 require 'ox/element'

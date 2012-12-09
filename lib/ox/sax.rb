@@ -32,6 +32,7 @@ module Ox
   # public. The same is true for attr() and attr_value().
   #
   #    def instruct(target); end
+  #    def end_instruct(target); end
   #    def attr(name, str); end
   #    def attr_value(name, value); end
   #    def doctype(str); end
@@ -53,6 +54,9 @@ module Ox
     private
 
     def instruct(target)
+    end
+
+    def end_instruct(target)
     end
 
     def attr(name, str)

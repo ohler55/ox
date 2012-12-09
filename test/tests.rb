@@ -248,6 +248,28 @@ class Func < ::Test::Unit::TestCase
     assert_equal("<?ox version=\"1.0\" mode=\"object\" circular=\"no\" xsd_date=\"no\"?>\n<s>test</s>\n", xml)
   end
 
+  def test_embedded_instruction
+    xml = %{<?xml version="1.0"?><?pro cat="quick"?>
+<top>
+  <str>This is a <?attrs dog="big"?> string.</str><?content dog is big?>
+</top>
+}
+    doc = Ox.load(xml, :mode => :generic)
+    inst = doc.top.str.nodes[1]
+    assert_equal(Ox::Instruct, inst.class)
+    assert_equal('attrs', inst.target)
+    assert_equal(nil, inst.content)
+    assert_equal({:dog=>'big'}, inst.attributes)
+
+    inst = doc.top.content
+    assert_equal(Ox::Instruct, inst.class)
+    assert_equal('content', inst.target)
+    assert_equal(' dog is big', inst.content)
+    assert_equal({}, inst.attributes)
+    x = Ox.dump(doc, :with_xml => true)
+    assert_equal(xml, x)
+  end
+
   def test_dtd
     xml = Ox.dump("test", :mode => :object, :with_dtd => true)
     assert_equal("<!DOCTYPE s SYSTEM \"ox.dtd\">\n<s>test</s>\n", xml)

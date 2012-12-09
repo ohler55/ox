@@ -77,6 +77,7 @@ static void     dump_first_obj(VALUE obj, Out out);
 static void     dump_obj(ID aid, VALUE obj, unsigned int depth, Out out);
 static void     dump_gen_doc(VALUE obj, unsigned int depth, Out out);
 static void     dump_gen_element(VALUE obj, unsigned int depth, Out out);
+static void	dump_gen_instruct(VALUE obj, unsigned int depth, Out out);
 static int      dump_gen_attr(VALUE key, VALUE value, Out out);
 static int      dump_gen_nodes(VALUE obj, unsigned int depth, Out out);
 static void     dump_gen_val_node(VALUE obj, unsigned int depth,
@@ -1064,6 +1065,40 @@ dump_gen_element(VALUE obj, unsigned int depth, Out out) {
     *out->cur = '\0';
 }
 
+static void
+dump_gen_instruct(VALUE obj, unsigned int depth, Out out) {
+    VALUE	rname = rb_attr_get(obj, ox_at_value_id);
+    VALUE	attrs = rb_attr_get(obj, ox_attributes_id);
+    VALUE	rcontent = rb_attr_get(obj, ox_at_content_id);
+    const char	*name = StringValuePtr(rname);
+    const char	*content = 0;
+    long	nlen = RSTRING_LEN(rname);
+    long	clen = 0;
+    size_t	size;
+    
+    if (T_STRING == rb_type(rcontent)) {
+	content = StringValuePtr(rcontent);
+	clen = RSTRING_LEN(rcontent);
+	size = 4 + nlen + clen;
+    } else {
+	size = 4 + nlen;
+    }
+    if (out->end - out->cur <= (long)size) {
+        grow(out, size);
+    }
+    *out->cur++ = '<';
+    *out->cur++ = '?';
+    fill_value(out, name, nlen);
+    if (0 != content) {
+	fill_value(out, content, clen);
+    } else if (Qnil != attrs) {
+        rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
+    }
+    *out->cur++ = '?';
+    *out->cur++ = '>';
+    *out->cur = '\0';
+}
+
 static int
 dump_gen_nodes(VALUE obj, unsigned int depth, Out out) {
     long        cnt = RARRAY_LEN(obj);
@@ -1078,6 +1113,8 @@ dump_gen_nodes(VALUE obj, unsigned int depth, Out out) {
             clas = rb_obj_class(*np);
             if (ox_element_clas == clas) {
                 dump_gen_element(*np, d2, out);
+	    } else if (ox_instruct_clas == clas) {
+                dump_gen_instruct(*np, d2, out);
             } else if (rb_cString == clas) {
                 dump_str_value(out, StringValuePtr(*np), RSTRING_LEN(*np));
                 indent_needed = (1 == cnt) ? 0 : 1;

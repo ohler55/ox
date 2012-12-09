@@ -44,6 +44,10 @@ class AllSax < StartSax
     @calls << [:instruct, target]
   end
 
+  def end_instruct(target)
+    @calls << [:end_instruct, target]
+  end
+
   def doctype(value)
     @calls << [:doctype, value]
   end
@@ -120,7 +124,8 @@ class Func < ::Test::Unit::TestCase
   end
   
   def test_sax_instruct_simple
-    parse_compare(%{<?xml?>}, [[:instruct, 'xml']])
+    parse_compare(%{<?xml?>}, [[:instruct, 'xml'],
+                               [:end_instruct, 'xml']])
   end
 
   def test_sax_instruct_blank
@@ -131,7 +136,8 @@ class Func < ::Test::Unit::TestCase
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>},
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
-                   [:attr, :encoding, "UTF-8"]])
+                   [:attr, :encoding, "UTF-8"],
+                   [:end_instruct, 'xml']])
   end
 
   def test_sax_instruct_loose
@@ -140,7 +146,32 @@ version = "1.0"
 encoding = "UTF-8" ?>},
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
-                   [:attr, :encoding, "UTF-8"]])
+                   [:attr, :encoding, "UTF-8"],
+                   [:end_instruct, 'xml']])
+  end
+
+  def test_sax_instruct_pi
+    parse_compare(%{<?pro cat="quick"?>
+<top>
+  <str>This is a <?attrs dog="big"?> string.</str>
+  <?content dog is big?>
+</top>
+},
+                  [[:instruct, 'pro'],
+                   [:attr, :cat, "quick"],
+                   [:end_instruct, 'pro'],
+                   [:start_element, :top],
+                   [:start_element, :str],
+                   [:text, "This is a "],
+                   [:instruct, "attrs"],
+                   [:attr, :dog, "big"],
+                   [:end_instruct, "attrs"],
+                   [:text, "string."],
+                   [:end_element, :str],
+                   [:instruct, "content"],
+                   [:text, "dog is big"],
+                   [:end_instruct, "content"],
+                   [:end_element, :top]])
   end
 
   def test_sax_element_simple
@@ -179,6 +210,7 @@ encoding = "UTF-8" ?>},
 },
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:start_element, :child],
                    [:start_element, :grandchild],
@@ -192,6 +224,7 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<?xml version="1.0"?><top><child><grandchild/></child></top>},
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:start_element, :child],
                    [:start_element, :grandchild],
@@ -210,6 +243,7 @@ encoding = "UTF-8" ?>},
 </top>},
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:start_element, :child],
                    [:start_element, :grandchild],
@@ -232,6 +266,7 @@ encoding = "UTF-8" ?>},
 },
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:start_element, :child],
                    [:start_element, :grandchild],
@@ -290,6 +325,7 @@ encoding = "UTF-8" ?>},
 },
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
                    [:doctype, ' top PUBLIC "top.dtd"'],
                    [:start_element, :top],
                    [:end_element, :top]])
@@ -302,24 +338,11 @@ encoding = "UTF-8" ?>},
 },
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:end_element, :top],
                    [:error, "invalid format, DOCTYPE can not come after an element", 3, 11],
                    [:doctype, ' top PUBLIC "top.dtd"']])
-  end
-  
-  def test_sax_instruct_bad_order
-    parse_compare(%{
-<!DOCTYPE top PUBLIC "top.dtd">
-<?xml version="1.0"?>
-<top/>
-},
-                  [[:doctype, " top PUBLIC \"top.dtd\""],
-                   [:error, "invalid format, instruction must come before elements", 3, 3],
-                   [:instruct, "xml"],
-                   [:attr, :version, "1.0"],
-                   [:start_element, :top],
-                   [:end_element, :top]])
   end
   
   def test_sax_comment
@@ -329,6 +352,7 @@ encoding = "UTF-8" ?>},
 },
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
                    [:comment, 'First comment.'],
                    [:start_element, :top],
                    [:text, 'Before'],
@@ -344,6 +368,7 @@ encoding = "UTF-8" ?>},
 },
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
                    [:error, "invalid format, comment terminated unexpectedly", 3, 1], # continue on
                    [:comment, 'First comment.'],
                    [:start_element, :top],
@@ -358,6 +383,7 @@ encoding = "UTF-8" ?>},
 },
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:cdata, 'This is CDATA.'],
                    [:end_element, :top]])
@@ -371,6 +397,7 @@ encoding = "UTF-8" ?>},
 },
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:error, "invalid format, cdata terminated unexpectedly", 5, 1]])
   end
@@ -384,6 +411,7 @@ encoding = "UTF-8" ?>},
 },
                   [[:instruct, 'xml'],
                    [:attr, :version, '1.0'],
+                   [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:start_element, :child],
                    [:cdata, ''],
@@ -411,11 +439,13 @@ encoding = "UTF-8" ?>},
 },
                   [[:instruct, "xml"],
                    [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
                    [:instruct, "ox"],
                    [:attr, :version, "1.0"],
                    [:attr, :mode, "object"],
                    [:attr, :circular, "no"],
                    [:attr, :xsd_date, "no"],
+                   [:end_instruct, 'ox'],
                    [:doctype, " table PUBLIC \"-//ox//DTD TABLE 1.0//EN\" \"http://www.ohler.com/DTDs/TestTable-1.0.dtd\""],
                    [:start_element, :table],
                    [:start_element, :row],
@@ -464,6 +494,7 @@ encoding = "UTF-8" ?>},
                     [[:instruct, "xml"],
                      [:attr, :version, "1.0"],
                      [:attr, :encoding, "UTF-8"],
+                     [:end_instruct, 'xml'],
                      [:start_element, :top],
                      [:text, 'ピーター'],
                      [:end_element, :top]])
@@ -480,6 +511,7 @@ encoding = "UTF-8" ?>},
       xml.force_encoding('ASCII')
       parse_compare(xml,
                     [[:instruct, "xml"],
+                     [:end_instruct, 'xml'],
                      [:start_element, :top],
                      [:text, 'ピーター'],
                      [:end_element, :top]])
@@ -496,6 +528,7 @@ encoding = "UTF-8" ?>},
                     [[:instruct, "xml"],
                      [:attr, :version, "1.0"],
                      [:attr, :encoding, "UTF-8"],
+                     [:end_instruct, 'xml'],
                      [:start_element, 'いち'.to_sym],
                      [:attr, :name, 'ピーター'],
                      [:attr, 'つま'.to_sym, 'まきえ'],

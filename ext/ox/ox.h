@@ -158,7 +158,7 @@ typedef struct _Helper {
 typedef struct _PInfo	*PInfo;
 
 typedef struct _ParseCallbacks {
-    void	(*instruct)(PInfo pi, const char *target, Attr attrs);
+    void	(*instruct)(PInfo pi, const char *target, Attr attrs, const char *content);
     void	(*add_doctype)(PInfo pi, const char *docType);
     void	(*add_comment)(PInfo pi, const char *comment);
     void	(*add_cdata)(PInfo pi, const char *cdata, size_t len);
@@ -220,6 +220,7 @@ extern struct _Options	ox_default_options;
 
 extern VALUE	Ox;
 
+extern ID	ox_at_content_id;
 extern ID	ox_at_id;
 extern ID	ox_at_value_id;
 extern ID	ox_attr_id;
@@ -232,6 +233,7 @@ extern ID	ox_den_id;
 extern ID	ox_doctype_id;
 extern ID	ox_end_element_id;
 extern ID	ox_end_id;
+extern ID	ox_end_instruct_id;
 extern ID	ox_error_id;
 extern ID	ox_excl_id;
 extern ID	ox_external_encoding_id;
@@ -275,6 +277,7 @@ extern VALUE	ox_zero_fixnum;
 
 extern VALUE	ox_document_clas;
 extern VALUE	ox_element_clas;
+extern VALUE	ox_instruct_clas;
 extern VALUE	ox_bag_clas;
 extern VALUE	ox_comment_clas;
 extern VALUE	ox_doctype_clas;

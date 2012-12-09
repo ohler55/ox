@@ -35,6 +35,7 @@ module Ox
   #   => "58"
 
   class Element < Node
+    include HasAttrs
     
     # Creates a new Element with the specified name.
     # @param [String] name name of the Element
@@ -59,29 +60,6 @@ module Ox
       @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
       @nodes << node
-    end
-
-    # Returns all the attributes of the Element as a Hash.
-    # @return [Hash] all attributes and attribute values.
-    def attributes
-      @attributes = { } if !instance_variable_defined?(:@attributes) or @attributes.nil?
-      @attributes
-    end
-    
-    # Returns the value of an attribute.
-    # @param [Symbol|String] attr attribute name or key to return the value for
-    def [](attr)
-      return nil unless instance_variable_defined?(:@attributes) and @attributes.is_a?(Hash)
-      @attributes[attr] or (attr.is_a?(String) ? @attributes[attr.to_sym] : @attributes[attr.to_s])
-    end
-
-    # Adds or set an attribute of the Element.
-    # @param [Symbol|String] attr attribute name or key
-    # @param [Object] value value for the attribute
-    def []=(attr, value)
-      raise "argument to [] must be a Symbol or a String." unless attr.is_a?(Symbol) or attr.is_a?(String)
-      @attributes = { } if !instance_variable_defined?(:@attributes) or @attributes.nil?
-      @attributes[attr] = value.to_s
     end
 
     # Returns true if this Object and other are of the same type and have the
@@ -156,7 +134,7 @@ module Ox
       ids = id.to_s
       i = args[0].to_i # will be 0 if no arg or parsing fails
       @nodes.each do |n|
-        if n.is_a?(Element) && (n.value == id || n.value == ids)
+        if (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids)
           return n if 0 == i
           i -= 1
         end
@@ -165,7 +143,7 @@ module Ox
         return @attributes[id] if @attributes.has_key?(id)
         return @attributes[ids] if @attributes.has_key?(ids)
       end
-      raise NoMethodError.new("#{name} not found", name)
+      raise NoMethodError.new("#{ids} not found", name)
     end
 
     # @param [Array] path array of steps in a path
