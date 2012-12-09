@@ -504,11 +504,39 @@ read_children(SaxDrive dr, int first) {
     return err;
 }
 
+static void
+read_content(SaxDrive dr, char *content, size_t len) {
+    char	c;
+    char	*end = content + len;
+
+    while ('\0' != (c = sax_drive_get(dr))) {
+	if (end < content) {
+	    sax_drive_error(dr, "processing instruction content too large", 1);
+	}
+	if ('?' == c) {
+	    if ('\0' == (c = sax_drive_get(dr))) {
+		sax_drive_error(dr, "invalid format, document not terminated", 1);
+	    }
+	    if ('>' == c) {
+		*content = '\0';
+		return;
+	    } else {
+		*content++ = c;
+	    }
+	} else {
+	    *content++ = c;
+	}
+    }
+    *content = '\0';
+}
+
 /* Entered after the "<?" sequence. Ready to read the rest.
  */
 static int
 read_instruction(SaxDrive dr) {
+    char	content[1024];
     char        c;
+    char	*cend;
     const char	*err;
     VALUE	target = Qnil;
 
@@ -525,18 +553,19 @@ read_instruction(SaxDrive dr) {
         rb_funcall2(dr->handler, ox_instruct_id, 1, args);
     }
     dr->str = dr->cur; /* make sure the start doesn't get compacted out */
-    // TBD collect content, then reset cur to str
+    read_content(dr, content, sizeof(content) - 1);
+    cend = dr->cur;
+    dr->cur = dr->str;
     if (0 != (err = read_attrs(dr, c, '?', '?', (0 == strcmp("xml", dr->str))))) {
-	
 	if (dr->has_text) {
 	    VALUE   args[1];
 
 	    if (dr->convert_special) {
-		if (0 != collapse_special(dr->str) && 0 != strchr(dr->str, '&')) {
+		if (0 != collapse_special(content)) {
 		    sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
 		}
 	    }
-	    args[0] = rb_str_new2(dr->str);
+	    args[0] = rb_str_new2(content);
 #if HAS_ENCODING_SUPPORT
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
@@ -544,6 +573,7 @@ read_instruction(SaxDrive dr) {
 #endif
 	    rb_funcall2(dr->handler, ox_text_id, 1, args);
 	}
+	dr->cur = cend;
     } else {
 	c = next_non_white(dr);
 	if ('>' != c) {
