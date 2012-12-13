@@ -339,8 +339,12 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 
 static void
 end_element(PInfo pi, const char *ename) {
-    if (0 != pi->h && pi->helpers <= pi->h) {
-        pi->h--;
+    if (0 != pi->h) {
+	if (pi->helpers < pi->h) {
+	    pi->h--;
+	} else {
+	    pi->h = 0;
+	}
     }
 }
 

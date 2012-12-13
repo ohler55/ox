@@ -34,15 +34,13 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
+### Release 1.8.1
+
+ - Fixed bug that caused a crash when an invalid xml with two elements and no <?xml?> was parsed. (issue #28)
+
 ### Release 1.8.0
 
  - Added more complete support for processing instructions in both the generic parser and in the sax parser. This change includes and additional sax handler callback for the end of the instruction processing.
-
-### Release 1.7.1
-
- - Pulled in sharpyfox's changes to make Ox with with Windows. (issue #24)
-
- - Fixed bug that ignored white space only text elements. (issue #26)
 
 ## <a name="description">Description</a>
 
