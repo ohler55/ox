@@ -67,7 +67,7 @@ class AllSax < StartSax
   def end_element(name)
     @calls << [:end_element, name]
   end
-  
+
   def error(message, line, column)
     @calls << [:error, message, line, column]
   end
@@ -122,7 +122,7 @@ class Func < ::Test::Unit::TestCase
     end
     assert_equal(expected, handler.calls)
   end
-  
+
   def test_sax_instruct_simple
     parse_compare(%{<?xml?>}, [[:instruct, 'xml'],
                                [:end_instruct, 'xml']])
@@ -181,7 +181,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_element_attrs
-    parse_compare(%{<top x="57" y='42' z=33 />}, 
+    parse_compare(%{<top x="57" y='42' z=33 />},
                   [[:start_element, :top],
                    [:attr, :x, "57"],
                    [:attr, :y, "42"],
@@ -310,6 +310,14 @@ encoding = "UTF-8" ?>},
                   ], AllSax, true)
   end
 
+  def test_sax_whitespace
+    parse_compare(%{<top> This is some text.</top>},
+                  [[:start_element, :top],
+                   [:text, " This is some text."],
+                   [:end_element, :top]
+                  ])
+  end
+
   def test_sax_text_no_term
     parse_compare(%{<top>This is some text.},
                   [[:start_element, :top],
@@ -344,7 +352,7 @@ encoding = "UTF-8" ?>},
                    [:error, "invalid format, DOCTYPE can not come after an element", 3, 11],
                    [:doctype, ' top PUBLIC "top.dtd"']])
   end
-  
+
   def test_sax_comment
     parse_compare(%{<?xml version="1.0"?>
 <!--First comment.-->
@@ -401,7 +409,7 @@ encoding = "UTF-8" ?>},
                    [:start_element, :top],
                    [:error, "invalid format, cdata terminated unexpectedly", 5, 1]])
   end
-  
+
   def test_sax_cdata_empty
     parse_compare(%{<?xml version="1.0"?>
 <top>
