@@ -38,6 +38,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Fixed bug that caused a crash when an invalid xml with two elements and no <?xml?> was parsed. (issue #28)
 
+ - Modified the SAX parser to not strip white space from the start of string content.
+
 ### Release 1.8.0
 
  - Added more complete support for processing instructions in both the generic parser and in the sax parser. This change includes and additional sax handler callback for the end of the instruction processing.

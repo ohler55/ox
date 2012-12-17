@@ -772,7 +772,8 @@ static int
 read_text(SaxDrive dr) {
     char        c;
 
-    dr->str = dr->cur - 1; /* mark the start */
+    /* start marked in read_children */
+    /*dr->str = dr->cur - 1; / * mark the start */
     while ('<' != (c = sax_drive_get(dr))) {
         if ('\0' == c) {
             sax_drive_error(dr, "invalid format, text terminated unexpectedly", 1);
