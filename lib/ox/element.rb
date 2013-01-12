@@ -1,4 +1,3 @@
-
 module Ox
 
   # An Element represents a element of an XML document. It has a name,
@@ -54,12 +53,14 @@ module Ox
       @nodes
     end
 
-    # Appends a Node to the Element's nodes array.
+    # Appends a Node to the Element's nodes array. Returns the element itself
+    # so multiple appends can be chained together.
     # @param [Node] node Node to append to the nodes array
     def <<(node)
       @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
       @nodes << node
+      self
     end
 
     # Returns true if this Object and other are of the same type and have the
