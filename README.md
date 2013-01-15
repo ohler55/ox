@@ -34,15 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.8.1
+### Release 1.8.2
 
- - Fixed bug that caused a crash when an invalid xml with two elements and no <?xml?> was parsed. (issue #28)
+ - Ox::Element.locate no longer raises and exception if there are no child nodes.
 
- - Modified the SAX parser to not strip white space from the start of string content.
-
-### Release 1.8.0
-
- - Added more complete support for processing instructions in both the generic parser and in the sax parser. This change includes and additional sax handler callback for the end of the instruction processing.
 
 ## <a name="description">Description</a>
 
