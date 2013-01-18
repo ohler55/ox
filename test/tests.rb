@@ -252,6 +252,7 @@ class Func < ::Test::Unit::TestCase
     xml = %{<?xml version="1.0"?><?pro cat="quick"?>
 <top>
   <str>This is a <?attrs dog="big"?> string.</str><?content dog is big?>
+  <mid><?dog big?></mid>
 </top>
 }
     doc = Ox.load(xml, :mode => :generic)

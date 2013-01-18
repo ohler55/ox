@@ -38,6 +38,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Ox::Element.locate no longer raises and exception if there are no child nodes.
 
+ - Dumping an XML document no longer puts a carriage return after processing instructions.
 
 ## <a name="description">Description</a>
 

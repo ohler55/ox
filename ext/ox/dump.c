@@ -1115,6 +1115,7 @@ dump_gen_nodes(VALUE obj, unsigned int depth, Out out) {
                 dump_gen_element(*np, d2, out);
 	    } else if (ox_instruct_clas == clas) {
                 dump_gen_instruct(*np, d2, out);
+                indent_needed = (1 == cnt) ? 0 : 1;
             } else if (rb_cString == clas) {
                 dump_str_value(out, StringValuePtr(*np), RSTRING_LEN(*np));
                 indent_needed = (1 == cnt) ? 0 : 1;

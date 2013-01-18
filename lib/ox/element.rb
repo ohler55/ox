@@ -150,7 +150,6 @@ module Ox
     # @param [Array] path array of steps in a path
     # @param [Array] found matching nodes
     def alocate(path, found)
-      return nil if !instance_variable_defined?(:@nodes) or @nodes.nil?
       step = path[0]
       if step.start_with?('@') # attribute
         raise InvalidPath.new(path) unless 1 == path.size
@@ -180,7 +179,7 @@ module Ox
         if '?' == name or '*' == name
           match = nodes
         else
-          match = @nodes.select { |e| e.is_a?(Element) and name == e.name }
+          match = nodes.select { |e| e.is_a?(Element) and name == e.name }
         end
         unless qual.nil? or match.empty?
           case qual
