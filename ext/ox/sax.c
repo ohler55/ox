@@ -539,10 +539,12 @@ read_instruction(SaxDrive dr) {
     char	*cend;
     const char	*err;
     VALUE	target = Qnil;
+    int		is_xml;
 
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
     }
+    is_xml = (0 == strcmp("xml", dr->str));
     if (dr->has_instruct || dr->has_end_instruct) {
 	target = rb_str_new2(dr->str);
     }
@@ -556,7 +558,7 @@ read_instruction(SaxDrive dr) {
     read_content(dr, content, sizeof(content) - 1);
     cend = dr->cur;
     dr->cur = dr->str;
-    if (0 != (err = read_attrs(dr, c, '?', '?', (0 == strcmp("xml", dr->str))))) {
+    if (0 != (err = read_attrs(dr, c, '?', '?', is_xml))) {
 	if (dr->has_text) {
 	    VALUE   args[1];
 

@@ -566,6 +566,23 @@ encoding = "UTF-8" ?>},
     end
   end
 
+  def test_sax_non_utf8_encoding
+    if RUBY_VERSION.start_with?('1.8') || RUBY_DESCRIPTION.start_with?('rubinius 2.0.0dev')
+      assert(true)
+    else
+      xml = %{<?xml version="1.0" encoding="Windows-1251"?>
+<top>тест</top>
+}
+      handler = AllSax.new()
+      input = StringIO.new(xml)
+      Ox.sax_parse(handler, input)
+
+      content = handler.calls.assoc(:text)[1]
+      assert_equal('Windows-1251', content.encoding.to_s)
+      assert_equal('тест'.force_encoding('Windows-1251'), content)
+    end
+  end
+
   def test_sax_value_fixnum
     handler = TypeSax.new(:as_i)
     Ox.sax_parse(handler, StringIO.new(%{<top>7</top>}))

@@ -34,11 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.8.2
+### Release 1.8.3
 
- - Ox::Element.locate no longer raises and exception if there are no child nodes.
-
- - Dumping an XML document no longer puts a carriage return after processing instructions.
+ - Sax parser now honors encoding specification in the xml prolog correctly.
 
 ## <a name="description">Description</a>
 
