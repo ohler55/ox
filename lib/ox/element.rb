@@ -79,7 +79,7 @@ module Ox
     # Returns the first String in the elements nodes array or nil if there is
     # no String node.
     def text()
-      @nodes.each { |n| return n if n.is_a?(String) }
+      nodes.each { |n| return n if n.is_a?(String) }
       nil
     end
 
@@ -134,7 +134,7 @@ module Ox
     def method_missing(id, *args, &block)
       ids = id.to_s
       i = args[0].to_i # will be 0 if no arg or parsing fails
-      @nodes.each do |n|
+      nodes.each do |n|
         if (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids)
           return n if 0 == i
           i -= 1

@@ -77,6 +77,9 @@ typedef struct _SaxDrive {
 #endif
 } *SaxDrive;
 
+#ifdef NEEDS_STPCPY
+char *stpncpy(char *dest, const char *src, size_t n);
+#endif
 static void		sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert);
 static void		sax_drive_cleanup(SaxDrive dr);
 static int		sax_drive_read(SaxDrive dr);
@@ -106,7 +109,7 @@ static int		read_from_str(SaxDrive dr);
 
 static VALUE		sax_value_class;
 
-/* This is only for CentOS 5.4 with Ruby 1.9.3-p0 and for OS X 10.6. */
+/* This is only for CentOS 5.4 with Ruby 1.9.3-p0 and for OS X 10.6 and Solaris 10. */
 #ifdef NEEDS_STPCPY
 char *stpncpy(char *dest, const char *src, size_t n) {
     size_t	cnt = strlen(src) + 1;
