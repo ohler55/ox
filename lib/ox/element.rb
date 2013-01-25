@@ -79,7 +79,7 @@ module Ox
     # Returns the first String in the elements nodes array or nil if there is
     # no String node.
     def text()
-      @nodes.each { |n| return n if n.is_a?(String) }
+      nodes.each { |n| return n if n.is_a?(String) }
       nil
     end
 
