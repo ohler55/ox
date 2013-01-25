@@ -18,7 +18,7 @@ module Ox
     
     # Returns the first Element in the document.
     def root()
-      unless @nodes.nil?
+      unless !instance_variable_defined?(:@nodes) || @nodes.nil?
         @nodes.each do |n|
           return n if n.is_a?(::Ox::Element)
         end
