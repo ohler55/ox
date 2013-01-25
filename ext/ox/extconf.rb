@@ -31,7 +31,7 @@ dflags = {
   'NEEDS_UIO' => (RUBY_PLATFORM =~ /(win|w)32$/) ? 0 : 1,
 }
 
-if RUBY_PLATFORM =~ /(win|w)32$/
+if RUBY_PLATFORM =~ /(win|w)32$/ || RUBY_PLATFORM =~ /solaris2\.10/
   dflags['NEEDS_STPCPY'] = nil
 end
 
