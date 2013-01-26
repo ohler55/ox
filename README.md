@@ -34,6 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
+### Release 1.8.4
+
+ - Applied patch by mcarpenter to fix solaris issues with build and remaining undefined @nodes.
+
 ### Release 1.8.3
 
  - Sax parser now honors encoding specification in the xml prolog correctly.
