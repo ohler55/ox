@@ -5,7 +5,7 @@ export RBXOPT=-X19
 for ruby in \
  1.8.7-p358\
  1.9.2-p290\
- jruby-1.6.7\
+ jruby-1.6.7.2\
  rbx-1.2.4\
  rbx-2.0.0-dev\
  ree-1.8.7-2012.02\
