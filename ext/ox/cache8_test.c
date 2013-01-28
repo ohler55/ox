@@ -61,7 +61,7 @@ ox_cache8_test() {
                 *slot = cnt++;
             }
         } else {
-            printf("*** get on 0x%016llx returned %llu\n", *d, v);
+            printf("*** get on 0x%016llx returned %llu\n", (unsigned long long)*d, (unsigned long long)v);
         }
         /*ox_cache8_print(c); */
     }
