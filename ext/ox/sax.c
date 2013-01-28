@@ -412,7 +412,6 @@ static int
 read_children(SaxDrive dr, int first) {
     int         err = 0;
     int         element_read = !first;
-    int         doctype_read = !first;
     char        c;
     
     while (!err) {
@@ -477,7 +476,6 @@ read_children(SaxDrive dr, int first) {
                     if (element_read || !first) {
                         sax_drive_error(dr, "invalid format, DOCTYPE can not come after an element", 0);
                     }
-                    doctype_read = 1;
                     err = read_doctype(dr);
                 } else if (0 == strncmp("[CDATA[", dr->str, 7)) {
                     err = read_cdata(dr);
