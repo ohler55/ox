@@ -55,9 +55,9 @@ ox_cache8_test() {
         v = ox_cache8_get(c, *d, &slot);
         if (0 == v) {
             if (0 == slot) {
-                printf("*** failed to get a slot for 0x%016llx\n", *d);
+                printf("*** failed to get a slot for 0x%016llx\n", (unsigned long long)*d);
             } else {
-                printf("*** adding 0x%016llx to cache with value %llu\n", *d, cnt);
+                printf("*** adding 0x%016llx to cache with value %llu\n", (unsigned long long)*d, (unsigned long long)cnt);
                 *slot = cnt++;
             }
         } else {
