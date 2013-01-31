@@ -36,7 +36,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ### Release 1.8.5
 
- - added encoding support for JRuby where possible.
+ - added encoding support for JRuby where possible when in 1.9 mode.
 
 ## <a name="description">Description</a>
 
