@@ -183,6 +183,8 @@ structname2obj(const char *name) {
     /* use encoding as the indicator for Ruby 1.8.7 or 1.9.x */
 #if HAS_ENCODING_SUPPORT
     return rb_struct_alloc_noinit(ost);
+#elif HAS_PRIVATE_ENCODING
+    return rb_struct_alloc_noinit(ost);
 #else
     return rb_struct_new(ost);
 #endif
@@ -389,6 +391,15 @@ parse_regexp(const char *text) {
         default:                                                break;
         }
     }
+#elif HAS_PRIVATE_ENCODING
+    for (; text < te && '/' != *te; te--) {
+        switch (*te) {
+        case 'i':       options |= ONIG_OPTION_IGNORECASE;      break;
+        case 'm':       options |= ONIG_OPTION_MULTILINE;       break;
+        case 'x':       options |= ONIG_OPTION_EXTEND;          break;
+        default:                                                break;
+        }
+    }
 #endif
     return rb_reg_new(text + 1, te - text - 1, options);
 }
@@ -400,6 +411,12 @@ instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
         for (; 0 != attrs->name; attrs++) {
             if (0 == strcmp("encoding", attrs->name)) {
                 pi->options->rb_enc = rb_enc_find(attrs->value);
+            }
+        }
+#elif HAS_PRIVATE_ENCODING
+        for (; 0 != attrs->name; attrs++) {
+            if (0 == strcmp("encoding", attrs->name)) {
+                pi->options->rb_enc = rb_str_new2(attrs->value);
             }
         }
 #endif
@@ -424,6 +441,10 @@ add_text(PInfo pi, char *text, int closed) {
 #if HAS_ENCODING_SUPPORT
         if (0 != pi->options->rb_enc) {
             rb_enc_associate(pi->h->obj, pi->options->rb_enc);
+        }
+#elif HAS_PRIVATE_ENCODING
+        if (Qnil != pi->options->rb_enc) {
+	    rb_funcall(pi->h->obj, ox_force_encoding_id, 1, pi->options->rb_enc);
         }
 #endif
         if (0 != pi->circ_array) {
@@ -463,7 +484,7 @@ add_text(PInfo pi, char *text, int closed) {
         VALUE   *slot;
 
         if (Qundef == (sym = ox_cache_get(ox_symbol_cache, text, &slot))) {
-	    sym = str2sym(text, pi->options->rb_enc);
+	    sym = str2sym(text, (void*)pi->options->rb_enc);
             *slot = sym;
         }
         pi->h->obj = sym;
@@ -492,6 +513,10 @@ add_text(PInfo pi, char *text, int closed) {
         if (0 != pi->options->rb_enc) {
             rb_enc_associate(v, pi->options->rb_enc);
         }
+#elif HAS_PRIVATE_ENCODING
+        if (0 != pi->options->rb_enc) {
+	    rb_funcall(v, ox_force_encoding_id, 1, pi->options->rb_enc);
+        }
 #endif
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, v, (unsigned long)pi->h->obj);
@@ -508,7 +533,7 @@ add_text(PInfo pi, char *text, int closed) {
         
         from_base64(text, (uchar*)str);
         if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot))) {
-	    sym = str2sym(str, pi->options->rb_enc);
+	    sym = str2sym(str, (void*)pi->options->rb_enc);
             *slot = sym;
         }
         pi->h->obj = sym;
@@ -572,7 +597,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     }
     h = pi->h;
     h->type = *ename;
-    h->var = get_var_sym_from_attrs(attrs, pi->options->rb_enc);
+    h->var = get_var_sym_from_attrs(attrs, (void*)pi->options->rb_enc);
     switch (h->type) {
     case NilClassCode:
         h->obj = Qnil;

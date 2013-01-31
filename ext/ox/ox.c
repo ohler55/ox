@@ -66,6 +66,7 @@ ID	ox_error_id;
 ID	ox_excl_id;
 ID	ox_external_encoding_id;
 ID	ox_fileno_id;
+ID	ox_force_encoding_id;
 ID	ox_inspect_id;
 ID	ox_instruct_id;
 ID	ox_jd_id;
@@ -134,6 +135,8 @@ static VALUE	xsd_date_sym;
 
 #if HAS_ENCODING_SUPPORT
 rb_encoding	*ox_utf8_encoding = 0;
+#elif HAS_PRIVATE_ENCODING
+VALUE		ox_utf8_encoding = Qnil;
 #else
 void		*ox_utf8_encoding = 0;
 #endif
@@ -150,7 +153,11 @@ struct _Options	 ox_default_options = {
     NoMode,		/* mode */
     StrictEffort,	/* effort */
     Yes,		/* sym_keys */
+#if HAS_PRIVATE_ENCODING
+    Qnil		/* rb_enc */
+#else
     0			/* rb_enc */
+#endif
 };
 
 extern ParseCallbacks	ox_obj_callbacks;
@@ -297,6 +304,9 @@ set_def_opts(VALUE self, VALUE opts) {
 	strncpy(ox_default_options.encoding, StringValuePtr(v), sizeof(ox_default_options.encoding) - 1);
 #ifdef HAVE_RUBY_ENCODING_H
 	ox_default_options.rb_enc = rb_enc_find(ox_default_options.encoding);
+#elif HAS_PRIVATE_ENCODING
+	ox_default_options.rb_enc = rb_str_new2(ox_default_options.encoding);
+	rb_gc_register_address(&ox_default_options.rb_enc);
 #endif
     }
 
@@ -468,6 +478,17 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding) {
     } else if (0 == options.rb_enc) {
 	options.rb_enc = rb_enc_find(options.encoding);
     }
+#elif HAS_PRIVATE_ENCODING
+    if ('\0' == *options.encoding) {
+	if (Qnil != encoding) {
+	    options.rb_enc = encoding;
+	} else {
+	    options.rb_enc = Qnil;
+	}
+    } else if (0 == options.rb_enc) {
+	options.rb_enc = rb_str_new2(options.encoding);
+	rb_gc_register_address(&options.rb_enc);
+    }
 #endif
     xml = defuse_bom(xml, &options);
     switch (options.mode) {
@@ -525,6 +546,8 @@ load_str(int argc, VALUE *argv, VALUE self) {
     }
 #ifdef HAVE_RUBY_ENCODING_H
     encoding = rb_obj_encoding(*argv);
+#elif HAS_PRIVATE_ENCODING
+    encoding = rb_funcall(*argv, rb_intern("encoding"), 0);
 #else
     encoding = Qnil;
 #endif
@@ -706,6 +729,10 @@ dump(int argc, VALUE *argv, VALUE self) {
     if ('\0' != *copts.encoding) {
 	rb_enc_associate(rstr, rb_enc_find(copts.encoding));
     }
+#elif HAS_PRIVATE_ENCODING
+    if ('\0' != *copts.encoding) {
+	rb_funcall(rstr, ox_force_encoding_id, 1, rb_str_new2(copts.encoding));
+    }
 #endif
     xfree(xml);
 
@@ -793,6 +820,7 @@ void Init_ox() {
     ox_error_id = rb_intern("error");
     ox_excl_id = rb_intern("@excl");
     ox_fileno_id = rb_intern("fileno");
+    ox_force_encoding_id = rb_intern("force_encoding");
     ox_inspect_id = rb_intern("inspect");
     ox_instruct_id = rb_intern("instruct");
     ox_jd_id = rb_intern("jd");
@@ -864,6 +892,8 @@ void Init_ox() {
     rb_define_module_function(Ox, "cache8_test", cache8_test, 0);
 #if HAS_ENCODING_SUPPORT
     ox_utf8_encoding = rb_enc_find("UTF-8");
+#elif HAS_PRIVATE_ENCODING
+    ox_utf8_encoding = rb_str_new2("UTF-8");			rb_gc_register_address(&ox_utf8_encoding);
 #endif
 }
 

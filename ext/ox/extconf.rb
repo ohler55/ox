@@ -23,6 +23,7 @@ dflags = {
                       !(platform.include?('solaris') || platform.include?('linux') || RUBY_PLATFORM =~ /(win|w)32$/)) ? 1 : 0,
   'HAS_ENCODING_SUPPORT' => (('ruby' == type || 'rubinius' == type) &&
                              (('1' == version[0] && '9' == version[1]) || '2' <= version[0])) ? 1 : 0,
+  'HAS_PRIVATE_ENCODING' => ('jruby' == type && '1' == version[0] && '9' == version[1]) ? 1 : 0,
   'HAS_NANO_TIME' => ('ruby' == type && ('1' == version[0] && '9' == version[1]) || '2' <= version[0]) ? 1 : 0,
   'HAS_RSTRUCT' => ('ruby' == type || 'ree' == type) ? 1 : 0,
   'HAS_IVAR_HELPERS' => ('ruby' == type && ('1' == version[0] && '9' == version[1]) || '2' <= version[0]) ? 1 : 0,

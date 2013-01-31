@@ -93,6 +93,17 @@ class TypeSax < ::Ox::Sax
 end
 
 class Func < ::Test::Unit::TestCase
+  def parse_compare(xml, expected, handler_class=AllSax, special=false)
+    handler = handler_class.new()
+    input = StringIO.new(xml)
+    if special
+      Ox.sax_parse(handler, input, :convert_special => true)
+    else
+      Ox.sax_parse(handler, input)
+    end
+    puts "\nexpected: #{expected}\n  actual: #{handler.calls}" if expected != handler.calls
+    assert_equal(expected, handler.calls)
+  end
 
   def test_sax_io_pipe
     handler = AllSax.new()
@@ -110,17 +121,6 @@ class Func < ::Test::Unit::TestCase
     Ox.sax_parse(handler, input)
     assert_equal([[:start_element, :top],
                   [:end_element, :top]], handler.calls)
-  end
-
-  def parse_compare(xml, expected, handler_class=AllSax, special=false)
-    handler = handler_class.new()
-    input = StringIO.new(xml)
-    if special
-      Ox.sax_parse(handler, input, :convert_special => true)
-    else
-      Ox.sax_parse(handler, input)
-    end
-    assert_equal(expected, handler.calls)
   end
 
   def test_sax_instruct_simple

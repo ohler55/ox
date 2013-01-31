@@ -188,6 +188,8 @@ typedef struct _Options {
     char	sym_keys;	/* symbolize keys */
 #ifdef HAVE_RUBY_ENCODING_H
     rb_encoding	*rb_enc;
+#elif HAS_PRIVATE_ENCODING
+    VALUE	rb_enc;
 #else
     void	*rb_enc;
 #endif
@@ -238,6 +240,7 @@ extern ID	ox_error_id;
 extern ID	ox_excl_id;
 extern ID	ox_external_encoding_id;
 extern ID	ox_fileno_id;
+extern ID	ox_force_encoding_id;
 extern ID	ox_inspect_id;
 extern ID	ox_instruct_id;
 extern ID	ox_jd_id;
@@ -263,6 +266,8 @@ extern ID	ox_value_id;
 
 #if HAS_ENCODING_SUPPORT
 extern rb_encoding	*ox_utf8_encoding;
+#elif HAS_PRIVATE_ENCODING
+extern VALUE		ox_utf8_encoding;
 #else
 extern void		*ox_utf8_encoding;
 #endif

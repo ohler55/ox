@@ -125,6 +125,15 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 	    } else {
 		sym = ID2SYM(rb_intern(attrs->name));
 	    }
+#elif HAS_PRIVATE_ENCODING
+	    if (Qnil != pi->options->rb_enc) {
+		VALUE	rstr = rb_str_new2(attrs->name);
+
+		rb_funcall(rstr, ox_force_encoding_id, 1, pi->options->rb_enc);
+		sym = rb_funcall(rstr, ox_to_sym_id, 0);
+	    } else {
+		sym = ID2SYM(rb_intern(attrs->name));
+	    }
 #else
 	    sym = ID2SYM(rb_intern(attrs->name));
 #endif
@@ -136,12 +145,20 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 	    if (0 != pi->options->rb_enc) {
 		rb_enc_associate(rstr, pi->options->rb_enc);
 	    }
+#elif HAS_PRIVATE_ENCODING
+	    if (Qnil != pi->options->rb_enc) {
+		rb_funcall(rstr, ox_force_encoding_id, 1, pi->options->rb_enc);
+	    }
 #endif
 	    rb_hash_aset(ah, rstr, rb_str_new2(attrs->value));
 	}
 #if HAS_ENCODING_SUPPORT
 	if (0 == strcmp("encoding", attrs->name)) {
 	    pi->options->rb_enc = rb_enc_find(attrs->value);
+	}
+#elif HAS_PRIVATE_ENCODING
+	if (0 == strcmp("encoding", attrs->name)) {
+	    pi->options->rb_enc = rb_str_new2(attrs->value);
 	}
 #endif
     }
@@ -212,6 +229,10 @@ add_doctype(PInfo pi, const char *docType) {
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
     }
+#elif HAS_PRIVATE_ENCODING
+    if (Qnil != pi->options->rb_enc) {
+	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
+    }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
     if (0 == pi->h) { /* top level object */
@@ -228,6 +249,10 @@ add_comment(PInfo pi, const char *comment) {
 #if HAS_ENCODING_SUPPORT
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
+    }
+#elif HAS_PRIVATE_ENCODING
+    if (Qnil != pi->options->rb_enc) {
+	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
@@ -246,6 +271,10 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
     }
+#elif HAS_PRIVATE_ENCODING
+    if (Qnil != pi->options->rb_enc) {
+	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
+    }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
     if (0 == pi->h) { /* top level object */
@@ -262,6 +291,10 @@ add_text(PInfo pi, char *text, int closed) {
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
     }
+#elif HAS_PRIVATE_ENCODING
+    if (Qnil != pi->options->rb_enc) {
+	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
+    }
 #endif
     if (0 == pi->h) { /* top level object */
 	create_doc(pi);
@@ -277,6 +310,10 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 #if HAS_ENCODING_SUPPORT
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
+    }
+#elif HAS_PRIVATE_ENCODING
+    if (Qnil != pi->options->rb_enc) {
+	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
     }
 #endif
     e = rb_obj_alloc(ox_element_clas);
@@ -299,6 +336,15 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		    } else {
 			sym = ID2SYM(rb_intern(attrs->name));
 		    }
+#elif HAS_PRIVATE_ENCODING
+		    if (Qnil != pi->options->rb_enc) {
+			VALUE	rstr = rb_str_new2(attrs->name);
+
+			rb_funcall(rstr, ox_force_encoding_id, 1, pi->options->rb_enc);
+			sym = rb_funcall(rstr, ox_to_sym_id, 0);
+		    } else {
+			sym = ID2SYM(rb_intern(attrs->name));
+		    }
 #else
 		    sym = ID2SYM(rb_intern(attrs->name));
 #endif
@@ -310,12 +356,20 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		if (0 != pi->options->rb_enc) {
 		    rb_enc_associate(sym, pi->options->rb_enc);
 		}
+#elif HAS_PRIVATE_ENCODING
+		if (Qnil != pi->options->rb_enc) {
+		    rb_funcall(sym, ox_force_encoding_id, 1, pi->options->rb_enc);
+		}
 #endif
 	    }
             s = rb_str_new2(attrs->value);
 #if HAS_ENCODING_SUPPORT
             if (0 != pi->options->rb_enc) {
                 rb_enc_associate(s, pi->options->rb_enc);
+            }
+#elif HAS_PRIVATE_ENCODING
+            if (Qnil != pi->options->rb_enc) {
+		rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
             }
 #endif
             rb_hash_aset(ah, sym, s);
@@ -364,6 +418,13 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 	    rb_enc_associate(c, pi->options->rb_enc);
 	}
     }
+#elif HAS_PRIVATE_ENCODING
+    if (Qnil != pi->options->rb_enc) {
+	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
+	if (0 != content) {
+	    rb_funcall(c, ox_force_encoding_id, 1, pi->options->rb_enc);
+	}
+    }
 #endif
     inst = rb_obj_alloc(ox_instruct_clas);
     rb_ivar_set(inst, ox_at_value_id, s);
@@ -387,6 +448,15 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 		    } else {
 			sym = ID2SYM(rb_intern(attrs->name));
 		    }
+#elif HAS_PRIVATE_ENCODING
+		    if (Qnil != pi->options->rb_enc) {
+			VALUE	rstr = rb_str_new2(attrs->name);
+
+			rb_funcall(rstr, ox_force_encoding_id, 1, pi->options->rb_enc);
+			sym = rb_funcall(rstr, ox_to_sym_id, 0);
+		    } else {
+			sym = ID2SYM(rb_intern(attrs->name));
+		    }
 #else
 		    sym = ID2SYM(rb_intern(attrs->name));
 #endif
@@ -398,6 +468,10 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 		if (0 != pi->options->rb_enc) {
 		    rb_enc_associate(sym, pi->options->rb_enc);
 		}
+#elif HAS_PRIVATE_ENCODING
+		if (Qnil != pi->options->rb_enc) {
+		    rb_funcall(sym, ox_force_encoding_id, 1, pi->options->rb_enc);
+		}
 #endif
 	    }
             s = rb_str_new2(attrs->value);
@@ -405,6 +479,10 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
             if (0 != pi->options->rb_enc) {
                 rb_enc_associate(s, pi->options->rb_enc);
             }
+#elif HAS_PRIVATE_ENCODING
+	    if (Qnil != pi->options->rb_enc) {
+		rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
+	    }
 #endif
             rb_hash_aset(ah, sym, s);
         }

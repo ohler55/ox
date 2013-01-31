@@ -136,7 +136,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_range
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'jruby' == RUBY_ENGINE
       assert(true)
     else
       dump_and_load((0..3), false)
@@ -163,7 +163,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_complex_number
-    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
+    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby || 'jruby' == RUBY_ENGINE
       assert(true)
     else
       dump_and_load(Complex(1), false)
@@ -172,7 +172,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_rational
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'jruby' == RUBY_ENGINE
       assert(true)
     else
       dump_and_load(Rational(1, 3), false)
@@ -355,7 +355,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_exception
-    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
+    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby || 'jruby' == RUBY_ENGINE
       assert(true)
     else
       e = StandardError.new("Some Error")
@@ -366,7 +366,7 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_exception_bag
-    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
+    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby || 'jruby' == RUBY_ENGINE
       assert(true)
     else
       xml = %{
@@ -402,7 +402,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_array_multi
     t = Time.local(2012, 1, 5, 23, 58, 7)
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'jruby' == RUBY_ENGINE
       dump_and_load([nil, true, false, 3, 'z', 7.9, 'a&b', :xyz, t], false)
     else
       dump_and_load([nil, true, false, 3, 'z', 7.9, 'a&b', :xyz, t, (-1..7)], false)
@@ -411,7 +411,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_hash_multi
     t = Time.local(2012, 1, 5, 23, 58, 7)
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'jruby' == RUBY_ENGINE
       dump_and_load({ nil => nil, true => true, false => false, 3 => 3, 'z' => 'z', 7.9 => 7.9, 'a&b' => 'a&b', :xyz => :xyz, t => t }, false)
     else
       dump_and_load({ nil => nil, true => true, false => false, 3 => 3, 'z' => 'z', 7.9 => 7.9, 'a&b' => 'a&b', :xyz => :xyz, t => t, (-1..7) => (-1..7) }, false)
@@ -420,7 +420,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_object_multi
     t = Time.local(2012, 1, 5, 23, 58, 7)
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'jruby' == RUBY_ENGINE
       dump_and_load(Bag.new(:@a => nil, :@b => true, :@c => false, :@d => 3, :@e => 'z', :@f => 7.9, :@g => 'a&b', :@h => :xyz, :@i => t), false)
     else
       dump_and_load(Bag.new(:@a => nil, :@b => true, :@c => false, :@d => 3, :@e => 'z', :@f => 7.9, :@g => 'a&b', :@h => :xyz, :@i => t, :@j => (-1..7)), false)
@@ -490,7 +490,7 @@ class Func < ::Test::Unit::TestCase
   end
   
   def test_mutex
-    if defined?(Mutex) && 'rubinius' != $ruby
+    if defined?(Mutex) && 'rubinius' != $ruby && 'jruby' != RUBY_ENGINE
       # Mutex can not be serialize but it should not raise an exception.
       xml = Ox.dump(Mutex.new, :indent => 2, :effort => :tolerant)
       assert_equal(%{<z/>
@@ -534,7 +534,8 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_obj_encoding
-    if RUBY_VERSION.start_with?('1.8')
+    if RUBY_VERSION.start_with?('1.8') || 'jruby' == RUBY_ENGINE
+      # jruby supports in a non standard way and does not allow utf-8 encoded object attribute names
       assert(true)
     else
       orig = Ox.default_options

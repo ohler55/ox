@@ -828,9 +828,18 @@ read_coded_chars(PInfo pi, char *text) {
 	    pi->s = s;
 	    if (u <= 0x000000000000007FULL) {
 		*text++ = (char)u;
+#if HAS_PRIVATE_ENCODING
+	    } else if (ox_utf8_encoding == pi->options->rb_enc ||
+		       0 == strcasecmp(rb_str_ptr(rb_String(ox_utf8_encoding)), rb_str_ptr(rb_String(pi->options->rb_enc)))) {
+#else
 	    } else if (ox_utf8_encoding == pi->options->rb_enc) {
+#endif
 		text = ucs_to_utf8_chars(text, u);
+#if HAS_PRIVATE_ENCODING
+	    } else if (Qnil == pi->options->rb_enc) {
+#else
 	    } else if (0 == pi->options->rb_enc) {
+#endif
 		pi->options->rb_enc = ox_utf8_encoding;
 		text = ucs_to_utf8_chars(text, u);
 	    } else {
@@ -888,10 +897,19 @@ collapse_special(PInfo pi, char *str) {
 		}
 		if (u <= 0x000000000000007FULL) {
 		    *b++ = (char)u;
+#if HAS_PRIVATE_ENCODING
+		} else if (ox_utf8_encoding == pi->options->rb_enc ||
+			   0 == strcasecmp(rb_str_ptr(rb_String(ox_utf8_encoding)), rb_str_ptr(rb_String(pi->options->rb_enc)))) {
+#else
 		} else if (ox_utf8_encoding == pi->options->rb_enc) {
+#endif
 		    b = ucs_to_utf8_chars(b, u);
 		    /* TBD support UTF-16 */
+#if HAS_PRIVATE_ENCODING
+		} else if (Qnil == pi->options->rb_enc) {
+#else
 		} else if (0 == pi->options->rb_enc) {
+#endif
 		    pi->options->rb_enc = ox_utf8_encoding;
 		    b = ucs_to_utf8_chars(b, u);
 		} else {

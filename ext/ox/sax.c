@@ -74,6 +74,8 @@ typedef struct _SaxDrive {
     int         has_error;
 #if HAS_ENCODING_SUPPORT
     rb_encoding *encoding;
+#elif HAS_PRIVATE_ENCODING
+    VALUE	encoding;
 #endif
 } *SaxDrive;
 
@@ -214,6 +216,15 @@ str2sym(const char *str, SaxDrive dr) {
         } else {
 	    sym = ID2SYM(rb_intern(str));
 	}
+#elif HAS_PRIVATE_ENCODING
+        if (Qnil != dr->encoding) {
+	    VALUE	rstr = rb_str_new2(str);
+
+	    rb_funcall(rstr, ox_force_encoding_id, 1, dr->encoding);
+	    sym = rb_funcall(rstr, ox_to_sym_id, 0);
+        } else {
+	    sym = ID2SYM(rb_intern(str));
+	}
 #else
         sym = ID2SYM(rb_intern(str));
 #endif
@@ -339,6 +350,18 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
     } else {
         dr->encoding = rb_enc_find(ox_default_options.encoding);
     }
+#elif HAS_PRIVATE_ENCODING
+    if ('\0' == *ox_default_options.encoding) {
+	VALUE	encoding;
+
+	if (rb_respond_to(io, ox_external_encoding_id) && Qnil != (encoding = rb_funcall(io, ox_external_encoding_id, 0))) {
+	    dr->encoding = encoding;
+	} else {
+	    dr->encoding = Qnil;
+	}
+    } else {
+        dr->encoding = rb_str_new2(ox_default_options.encoding);
+    }
 #endif
 }
 
@@ -421,6 +444,8 @@ read_children(SaxDrive dr, int first) {
 	    if (0xEF == (uint8_t)c) { /* only UTF8 is supported */
 		if (0xBB == (uint8_t)sax_drive_get(dr) && 0xBF == (uint8_t)sax_drive_get(dr)) {
 #if HAS_ENCODING_SUPPORT
+		    dr->encoding = ox_utf8_encoding;
+#elif HAS_PRIVATE_ENCODING
 		    dr->encoding = ox_utf8_encoding;
 #endif
 		    c = sax_drive_get(dr);
@@ -573,6 +598,10 @@ read_instruction(SaxDrive dr) {
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
 	    }
+#elif HAS_PRIVATE_ENCODING
+	    if (Qnil != dr->encoding) {
+		rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
+	    }
 #endif
 	    rb_funcall2(dr->handler, ox_text_id, 1, args);
 	}
@@ -654,6 +683,10 @@ read_cdata(SaxDrive dr) {
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
         }
+#elif HAS_PRIVATE_ENCODING
+        if (Qnil != dr->encoding) {
+	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
+        }
 #endif
         rb_funcall2(dr->handler, ox_cdata_id, 1, args);
     }
@@ -698,6 +731,10 @@ read_comment(SaxDrive dr) {
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
         }
+#elif HAS_PRIVATE_ENCODING
+        if (Qnil != dr->encoding) {
+	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
+        }
 #endif
         rb_funcall2(dr->handler, ox_comment_id, 1, args);
     }
@@ -714,11 +751,13 @@ read_element(SaxDrive dr) {
     VALUE       name = Qnil;
     const char	*err;
     char        c;
+    char	*ename = 0;
     int         closed;
 
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
     }
+    ename = dr->str;
     name = str2sym(dr->str, dr);
     if (dr->has_start_element) {
         VALUE       args[1];
@@ -755,7 +794,7 @@ read_element(SaxDrive dr) {
         if (0 != read_children(dr, 0)) {
             return -1;
         }
-        if (0 != strcmp(dr->str, rb_id2name(SYM2ID(name)))) {
+        if (0 != strcmp(dr->str, ename)) {
             sax_drive_error(dr, "invalid format, element start and end names do not match", 1);
             return -1;
         }
@@ -802,6 +841,10 @@ read_text(SaxDrive dr) {
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
         }
+#elif HAS_PRIVATE_ENCODING
+        if (Qnil != dr->encoding) {
+	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
+        }
 #endif
         rb_funcall2(dr->handler, ox_text_id, 1, args);
     }
@@ -846,6 +889,8 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
         if (is_encoding) {
 #if HAS_ENCODING_SUPPORT
             dr->encoding = rb_enc_find(dr->str);
+#elif HAS_PRIVATE_ENCODING
+	    dr->encoding = rb_str_new2(dr->str);
 #endif
             is_encoding = 0;
         }
@@ -867,6 +912,10 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
             if (0 != dr->encoding) {
                 rb_enc_associate(args[1], dr->encoding);
             }
+#elif HAS_PRIVATE_ENCODING
+	    if (Qnil != dr->encoding) {
+		rb_funcall(args[1], ox_force_encoding_id, 1, dr->encoding);
+	    }
 #endif
             rb_funcall2(dr->handler, ox_attr_id, 2, args);
         }
@@ -1213,6 +1262,10 @@ sax_value_as_s(VALUE self) {
 #if HAS_ENCODING_SUPPORT
     if (0 != dr->encoding) {
 	rb_enc_associate(rs, dr->encoding);
+    }
+#elif HAS_PRIVATE_ENCODING
+    if (Qnil != dr->encoding) {
+	rb_funcall(rs, ox_force_encoding_id, 1, dr->encoding);
     }
 #endif
     return rs;
