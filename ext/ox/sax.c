@@ -794,10 +794,7 @@ read_element(SaxDrive dr) {
         if (0 != read_children(dr, 0)) {
             return -1;
         }
-        if (0 != strcmp(dr->str, ename)) {
-            sax_drive_error(dr, "invalid format, element start and end names do not match", 1);
-            return -1;
-        }
+	/* no check of matching start and end as it would require coping the name */
         if (0 != dr->has_end_element) {
             VALUE       args[1];
 

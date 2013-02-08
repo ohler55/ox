@@ -34,9 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.8.5
+### Release 1.8.6
 
- - added encoding support for JRuby where possible when in 1.9 mode.
+ - Removed broken check for matching start and end element names in SAX mode. The names are still included in the
+   handler callbacks so the user can perform the check is desired.
 
 ## <a name="description">Description</a>
 
