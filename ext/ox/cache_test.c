@@ -49,7 +49,7 @@ ox_cache_test() {
 
     ox_cache_new(&c);
     for (d = data; 0 != *d; d++) {
-        v = ox_cache_get(c, *d, &slot);
+        v = ox_cache_get(c, *d, &slot, 0);
         if (Qundef == v) {
             if (0 == slot) {
                 /*printf("*** failed to get a slot for %s\n", *d); */

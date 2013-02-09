@@ -202,11 +202,11 @@ is_white(char c) {
 }
 
 inline static VALUE
-str2sym(const char *str, SaxDrive dr) {
+str2sym(const char *str, SaxDrive dr, char **strp) {
     VALUE       *slot;
     VALUE       sym;
 
-    if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot))) {
+    if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, strp))) {
 #if HAS_ENCODING_SUPPORT
         if (0 != dr->encoding) {
 	    VALUE	rstr = rb_str_new2(str);
@@ -312,7 +312,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert) {
         }
 #endif
     } else {
-        rb_raise(rb_eArgError, "sax_parser io argument must respond to readpartial() or read().\n");
+        rb_raise(ox_arg_error_class, "sax_parser io argument must respond to readpartial() or read().\n");
     }
     dr->buf = dr->base_buf;
     *dr->buf = '\0';
@@ -427,7 +427,7 @@ sax_drive_error(SaxDrive dr, const char *msg, int critical) {
         rb_funcall2(dr->handler, ox_error_id, 3, args);
     } else if (critical) {
         sax_drive_cleanup(dr);
-        rb_raise(rb_eSyntaxError, "%s at line %d, column %d\n", msg, dr->line, dr->col);
+        rb_raise(ox_parse_error_class, "%s at line %d, column %d\n", msg, dr->line, dr->col);
     }
 }
 
@@ -748,17 +748,16 @@ read_comment(SaxDrive dr) {
  */
 static int
 read_element(SaxDrive dr) {
+    char	*ename = 0;
     VALUE       name = Qnil;
     const char	*err;
     char        c;
-    char	*ename = 0;
     int         closed;
 
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
     }
-    ename = dr->str;
-    name = str2sym(dr->str, dr);
+    name = str2sym(dr->str, dr, &ename);
     if (dr->has_start_element) {
         VALUE       args[1];
 
@@ -794,7 +793,11 @@ read_element(SaxDrive dr) {
         if (0 != read_children(dr, 0)) {
             return -1;
         }
-	/* no check of matching start and end as it would require coping the name */
+	if (0 != ename && 0 != strcmp(ename, dr->str)) {
+	    //printf("*** ename: %s  close: %s\n", ename, dr->str);
+            sax_drive_error(dr, "invalid format, element start and end names do not match", 1);
+	    return -1;
+	}
         if (0 != dr->has_end_element) {
             VALUE       args[1];
 
@@ -872,7 +875,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
         }
 	/* TBD use symbol cache */
         if (dr->has_attr || dr->has_attr_value) {
-            name = str2sym(dr->str, dr);
+            name = str2sym(dr->str, dr, 0);
         }
         if (is_white(c)) {
             c = next_non_white(dr);
@@ -1275,7 +1278,7 @@ sax_value_as_sym(VALUE self) {
     if ('\0' == *dr->str) {
 	return Qnil;
     }
-    return str2sym(dr->str, dr);
+    return str2sym(dr->str, dr, 0);
 }
 
 static VALUE
@@ -1308,7 +1311,7 @@ sax_value_as_i(VALUE self) {
 	if ('0' <= *s && *s <= '9') {
 	    n = n * 10 + (*s - '0');
 	} else {
-	    rb_raise(rb_eArgError, "Not a valid Fixnum.\n");
+	    rb_raise(ox_arg_error_class, "Not a valid Fixnum.\n");
 	}
     }
     if (neg) {

@@ -215,7 +215,7 @@ class Func < ::Test::Unit::TestCase
   <i a="@x">3</i>
 </o>
 }
-    assert_raise(SyntaxError) {
+    assert_raise(Ox::ParseError) {
       Ox.load(xml, :mode => :object, :trace => 0)
     }
   end
@@ -327,7 +327,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_escape_bom_bad_encoding
     xml = %{\xEF\xBB<?xml?>\n<top name="bom"></top>\n}
-    assert_raise(ArgumentError) {
+    assert_raise(Ox::ParseError) {
       Ox.parse(xml).root()
     }
   end
@@ -395,7 +395,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_bad_format
     xml = "<?xml version=\"1.0\"?>\n<tag>test</tagz>\n"
-    assert_raise(SyntaxError) {
+    assert_raise(Ox::ParseError) {
       Ox.load(xml, :mode => :generic, :trace => 0)
     }
   end

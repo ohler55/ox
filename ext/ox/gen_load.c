@@ -326,7 +326,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
             VALUE   *slot;
 
 	    if (Yes == pi->options->sym_keys) {
-		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot))) {
+		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
 #if HAS_ENCODING_SUPPORT
 		    if (0 != pi->options->rb_enc) {
 			VALUE	rstr = rb_str_new2(attrs->name);
@@ -438,7 +438,7 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
             VALUE   *slot;
 
 	    if (Yes == pi->options->sym_keys) {
-		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot))) {
+		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
 #if HAS_ENCODING_SUPPORT
 		    if (0 != pi->options->rb_enc) {
 			VALUE	rstr = rb_str_new2(attrs->name);

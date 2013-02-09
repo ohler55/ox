@@ -104,7 +104,7 @@ name2var(const char *name, void *encoding) {
 
     if ('0' <= *name && *name <= '9') {
         var_id = INT2NUM(atoi(name));
-    } else if (Qundef == (var_id = ox_cache_get(ox_attr_cache, name, &slot))) {
+    } else if (Qundef == (var_id = ox_cache_get(ox_attr_cache, name, &slot, 0))) {
 #ifdef HAVE_RUBY_ENCODING_H
 	if (0 != encoding) {
 	    VALUE	rstr = rb_str_new2(name);
@@ -226,7 +226,7 @@ classname2class(const char *name, PInfo pi, VALUE base_class) {
     VALUE       *slot;
     VALUE       clas;
             
-    if (Qundef == (clas = ox_cache_get(ox_class_cache, name, &slot))) {
+    if (Qundef == (clas = ox_cache_get(ox_class_cache, name, &slot, 0))) {
         char            class_name[1024];
         char            *s;
         const char      *n = name;
@@ -483,7 +483,7 @@ add_text(PInfo pi, char *text, int closed) {
         VALUE   sym;
         VALUE   *slot;
 
-        if (Qundef == (sym = ox_cache_get(ox_symbol_cache, text, &slot))) {
+        if (Qundef == (sym = ox_cache_get(ox_symbol_cache, text, &slot, 0))) {
 	    sym = str2sym(text, (void*)pi->options->rb_enc);
             *slot = sym;
         }
@@ -532,7 +532,7 @@ add_text(PInfo pi, char *text, int closed) {
         char            *str = ALLOCA_N(char, str_size + 1);
         
         from_base64(text, (uchar*)str);
-        if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot))) {
+        if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, 0))) {
 	    sym = str2sym(str, (void*)pi->options->rb_enc);
             *slot = sym;
         }

@@ -95,6 +95,7 @@ VALUE	ox_encoding_sym;
 VALUE	ox_empty_string;
 VALUE	ox_zero_fixnum;
 
+VALUE	ox_arg_error_class;
 VALUE	ox_bag_clas;
 VALUE	ox_cdata_clas;
 VALUE	ox_comment_clas;
@@ -103,6 +104,7 @@ VALUE	ox_doctype_clas;
 VALUE	ox_document_clas;
 VALUE	ox_element_clas;
 VALUE	ox_instruct_clas;
+VALUE	ox_parse_error_class;
 VALUE	ox_stringio_class;
 VALUE	ox_struct_class;
 VALUE	ox_time_class;
@@ -175,7 +177,7 @@ defuse_bom(char *xml, Options options) {
 	    options->rb_enc = ox_utf8_encoding;
 	    xml += 3;
 	} else {
-	    rb_raise(rb_eArgError, "Invalid BOM in XML string.\n");
+	    rb_raise(ox_parse_error_class, "Invalid BOM in XML string.\n");
 	}
 	break;
 #if 0
@@ -184,7 +186,7 @@ defuse_bom(char *xml, Options options) {
 	    options->rb_enc = ox_utf16be_encoding;
 	    xml += 2;
 	} else {
-	    rb_raise(rb_eArgError, "Invalid BOM in XML string.\n");
+	    rb_raise(ox_parse_error_class, "Invalid BOM in XML string.\n");
 	}
 	break;
     case 0xFF: /* UTF-16LE or UTF-32LE */
@@ -197,7 +199,7 @@ defuse_bom(char *xml, Options options) {
 		xml += 2;
 	    }
 	} else {
-	    rb_raise(rb_eArgError, "Invalid BOM in XML string.\n");
+	    rb_raise(ox_parse_error_class, "Invalid BOM in XML string.\n");
 	}
 	break;
     case 0x00: /* UTF-32BE */
@@ -205,7 +207,7 @@ defuse_bom(char *xml, Options options) {
 	    options->rb_enc = ox_utf32be_encoding;
 	    xml += 4;
 	} else {
-	    rb_raise(rb_eArgError, "Invalid BOM in XML string.\n");
+	    rb_raise(ox_parse_error_class, "Invalid BOM in XML string.\n");
 	}
 	break;
 #endif
@@ -332,7 +334,7 @@ set_def_opts(VALUE self, VALUE opts) {
     } else if (limited_sym == v) {
 	ox_default_options.mode = LimMode;
     } else {
-	rb_raise(rb_eArgError, ":mode must be :object, :generic, :limited, or nil.\n");
+	rb_raise(ox_parse_error_class, ":mode must be :object, :generic, :limited, or nil.\n");
     }
 
     v = rb_hash_aref(opts, effort_sym);
@@ -345,7 +347,7 @@ set_def_opts(VALUE self, VALUE opts) {
     } else if (auto_define_sym == v) {
 	ox_default_options.effort = AutoEffort;
     } else {
-	rb_raise(rb_eArgError, ":effort must be :strict, :tolerant, :auto_define, or nil.\n");
+	rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, :auto_define, or nil.\n");
     }
     for (o = ynos; 0 != o->attr; o++) {
 	v = rb_hash_lookup(opts, o->sym);
@@ -356,7 +358,7 @@ set_def_opts(VALUE self, VALUE opts) {
 	} else if (Qfalse == v) {
 	    *o->attr = No;
 	} else {
-	    rb_raise(rb_eArgError, "%s must be true or false.\n", rb_id2name(SYM2ID(o->sym)));
+	    rb_raise(ox_parse_error_class, "%s must be true or false.\n", rb_id2name(SYM2ID(o->sym)));
 	}
     }
     return Qnil;
@@ -446,7 +448,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding) {
 	    } else if (limited_sym == v) {
 		options.mode = LimMode;
 	    } else {
-		rb_raise(rb_eArgError, ":mode must be :generic, :object, or :limited.\n");
+		rb_raise(ox_parse_error_class, ":mode must be :generic, :object, or :limited.\n");
 	    }
 	}
 	if (Qnil != (v = rb_hash_lookup(h, effort_sym))) {
@@ -457,7 +459,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding) {
 	    } else if (strict_sym == v) {
 		options.effort = StrictEffort;
 	    } else {
-		rb_raise(rb_eArgError, ":effort must be :strict, :tolerant, or :auto_define.\n");
+		rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
 	    }
 	}
 	if (Qnil != (v = rb_hash_lookup(h, trace_sym))) {
@@ -625,7 +627,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
     int convert = 0;
 
     if (argc < 2) {
-	rb_raise(rb_eArgError, "Wrong number of arguments to sax_parse.\n");
+	rb_raise(ox_parse_error_class, "Wrong number of arguments to sax_parse.\n");
     }
     if (3 <= argc && rb_cHash == rb_obj_class(argv[2])) {
 	VALUE	h = argv[2];
@@ -657,19 +659,19 @@ parse_dump_options(VALUE ropts, Options copts) {
 	
 	if (Qnil != (v = rb_hash_lookup(ropts, indent_sym))) {
 	    if (rb_cFixnum != rb_obj_class(v)) {
-		rb_raise(rb_eArgError, ":indent must be a Fixnum.\n");
+		rb_raise(ox_parse_error_class, ":indent must be a Fixnum.\n");
 	    }
 	    copts->indent = NUM2INT(v);
 	}
 	if (Qnil != (v = rb_hash_lookup(ropts, trace_sym))) {
 	    if (rb_cFixnum != rb_obj_class(v)) {
-		rb_raise(rb_eArgError, ":trace must be a Fixnum.\n");
+		rb_raise(ox_parse_error_class, ":trace must be a Fixnum.\n");
 	    }
 	    copts->trace = NUM2INT(v);
 	}
 	if (Qnil != (v = rb_hash_lookup(ropts, ox_encoding_sym))) {
 	    if (rb_cString != rb_obj_class(v)) {
-		rb_raise(rb_eArgError, ":encoding must be a String.\n");
+		rb_raise(ox_parse_error_class, ":encoding must be a String.\n");
 	    }
 	    strncpy(copts->encoding, StringValuePtr(v), sizeof(copts->encoding) - 1);
 	}
@@ -681,7 +683,7 @@ parse_dump_options(VALUE ropts, Options copts) {
 	    } else if (strict_sym == v) {
 		copts->effort = StrictEffort;
 	    } else {
-		rb_raise(rb_eArgError, ":effort must be :strict, :tolerant, or :auto_define.\n");
+		rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
 	    }
 	}
 	for (o = ynos; 0 != o->attr; o++) {
@@ -693,7 +695,7 @@ parse_dump_options(VALUE ropts, Options copts) {
 		} else if (rb_cFalseClass == c) {
 		    *o->attr = No;
 		} else {
-		    rb_raise(rb_eArgError, "%s must be true or false.\n", rb_id2name(SYM2ID(o->sym)));
+		    rb_raise(ox_parse_error_class, "%s must be true or false.\n", rb_id2name(SYM2ID(o->sym)));
 		}
 	    }
 	}
@@ -846,6 +848,8 @@ void Init_ox() {
 
     ox_time_class = rb_const_get(rb_cObject, rb_intern("Time"));
     ox_date_class = rb_const_get(rb_cObject, rb_intern("Date"));
+    ox_parse_error_class = rb_const_get_at(Ox, rb_intern("ParseError"));
+    ox_arg_error_class = rb_const_get_at(Ox, rb_intern("ArgError"));
     ox_struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
     ox_stringio_class = rb_const_get(rb_cObject, rb_intern("StringIO"));
 
@@ -910,5 +914,5 @@ _ox_raise_error(const char *msg, const char *xml, const char *current, const cha
 	    xline++;
 	}
     }
-    rb_raise(rb_eSyntaxError, "%s at line %d, column %d [%s:%d]\n", msg, xline, col, file, line);
+    rb_raise(ox_parse_error_class, "%s at line %d, column %d [%s:%d]\n", msg, xline, col, file, line);
 }

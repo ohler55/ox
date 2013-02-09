@@ -234,6 +234,24 @@ encoding = "UTF-8" ?>},
                   ])
   end
 
+  def test_sax_element_name_mismatch
+    parse_compare(%{<?xml version="1.0"?>
+<top>
+  <child>
+    <grandchild/>
+  </parent>
+</top>},
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
+                   [:start_element, :top],
+                   [:start_element, :child],
+                   [:start_element, :grandchild],
+                   [:end_element, :grandchild],
+                   [:error, "invalid format, element start and end names do not match", 5, 12]
+                  ])
+  end
+
   def test_sax_nested
     parse_compare(%{<?xml version="1.0"?>
 <top>

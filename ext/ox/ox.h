@@ -272,12 +272,14 @@ extern VALUE		ox_utf8_encoding;
 extern void		*ox_utf8_encoding;
 #endif
 
+extern VALUE	ox_arg_error_class;
 extern VALUE	ox_date_class;
 extern VALUE	ox_empty_string;
 extern VALUE	ox_encoding_sym;
+extern VALUE	ox_parse_error_class;
+extern VALUE	ox_stringio_class;
 extern VALUE	ox_struct_class;
 extern VALUE	ox_time_class;
-extern VALUE	ox_stringio_class;
 extern VALUE	ox_zero_fixnum;
 
 extern VALUE	ox_document_clas;
