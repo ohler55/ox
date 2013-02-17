@@ -92,6 +92,25 @@ class TypeSax < ::Ox::Sax
   end
 end
 
+class ErrorSax < ::Ox::Sax
+  attr_reader :errors
+
+  def initialize
+    @path = []
+    @tags = []
+    @errors = []
+  end
+
+  def start_element(tag)
+    @tags << tag
+    @path & @tags
+  end
+
+  def error(message, line, column)
+    @errors << message
+  end
+end
+
 class Func < ::Test::Unit::TestCase
   def parse_compare(xml, expected, handler_class=AllSax, special=false)
     handler = handler_class.new()
@@ -679,4 +698,15 @@ encoding = "UTF-8" ?>},
     assert_equal(t.usec, handler.item.usec)
   end
 
+  def test_sax_nested_same_prefix
+    handler = ErrorSax.new
+    Ox.sax_parse(handler, StringIO.new(%{<?xml version="1.0"?><abc><abcd/></abc>}))
+    assert_equal([], handler.errors)
+    Ox.sax_parse(handler, StringIO.new(%{<?xml version="1.0"?><abc><ab/></abc>}))
+    assert_equal([], handler.errors)
+    Ox.sax_parse(handler, StringIO.new(%{<?xml version="1.0"?><abcd><abcd/></abcd>}))
+    assert_equal([], handler.errors)
+    Ox.sax_parse(handler, StringIO.new(%{<?xml version="1.0"?><ab><a/></ab>}))
+    assert_equal([], handler.errors)
+  end
 end
