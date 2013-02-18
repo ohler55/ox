@@ -34,6 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
+### Release 1.8.8
+
+ - Fixed bug in check for open and close element names matching.
+
 ### Release 1.8.7
 
  - Added a correct check for element open and close names.
@@ -41,11 +45,6 @@ A fast XML parser and Object marshaller as a Ruby gem.
  - Changed raised Exceptions to customer classes that inherit from StandardError.
 
  - Fixed a few minor bugs.
-
-### Release 1.8.6
-
- - Removed broken check for matching start and end element names in SAX mode. The names are still included in the
-   handler callbacks so the user can perform the check is desired.
 
 ## <a name="description">Description</a>
 

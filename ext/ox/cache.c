@@ -38,18 +38,22 @@
 #include "cache.h"
 
 struct _Cache {
-    char                *key; /* only set if the node has a value, and it is not an exact match */
+    /* The key is a length byte followed by the key as a string. If the key is longer than 254 characters then the
+       length is 255. The key can be for a premature value and in that case the length byte is greater than the length
+       of the key. */
+    char                *key;
     VALUE               value;
     struct _Cache       *slots[16];
 };
 
 static void     slot_print(Cache cache, unsigned int depth);
 
-static char* dupstr(const char *s) {
-    size_t	len = strlen(s) + 1;
+static char* form_key(const char *s) {
+    size_t	len = strlen(s);
     char	*d = ALLOC_N(char, len);
 
-    memcpy(d, s, len);
+    *d = (255 <= len) ? 255 : len;
+    memcpy(d + 1, s, len + 1);
 
     return d;
 }
@@ -74,41 +78,59 @@ ox_cache_get(Cache cache, const char *key, VALUE **slot, char **keyp) {
         }
         cache = *cp;
         cp = cache->slots + (unsigned int)(*k & 0x0F); /* lower 4 bits */
-        if (0 == *cp) {
+        if (0 == *cp) { /* nothing on this tree so set key and value as a premature key/value pair */
             ox_cache_new(cp);
             cache = *cp;
-            cache->key = ('\0' == *(k + 1)) ? 0 : dupstr(key);
+            cache->key = form_key(key);
             break;
-        } else {
-            cache = *cp;
-            if (Qundef != cache->value && 0 != cache->key) {
-                unsigned char   *ck = (unsigned char*)(cache->key + (unsigned int)(k - (unsigned char*)key + 1));
+	} else {
+	    int	depth = (int)(k - (unsigned char*)key + 1);
 
-                if (0 == strcmp((char*)ck, (char*)(k + 1))) {
-                    break;
-                } else {
-                    Cache     *cp2 = cp;
+	    cache = *cp;
+	    
+	    if ('\0' == *(k + 1)) { /* exact match */
+		if (0 == cache->key) { /* nothing in this spot so take it */
+		    cache->key = form_key(key);
+		    break;
+		} else if ((depth == *cache->key || 255 < depth) && 0 == strcmp(key, cache->key + 1)) { /* match */
+		    break;
+		} else { /* have to move the current premature key/value deeper */
+		    unsigned char	*ck = (unsigned char*)(cache->key + depth + 1);
+                    Cache		orig = *cp;
 		    
-                    /* if value was set along with the key then there are no slots filled yet */
-                    cp2 = (*cp2)->slots + (*ck >> 4);
-                    ox_cache_new(cp2);
-                    cp2 = (*cp2)->slots + (*ck & 0x0F);
-                    ox_cache_new(cp2);
-                    if ('\0' == *(ck + 1)) {
-                        xfree(cache->key);
-                    } else {
-                        (*cp2)->key = cache->key;
-                    }
-                    (*cp2)->value = cache->value;
-                    cache->key = 0;
-                    cache->value = Qundef;
-                }
-            }
+                    cp = (*cp)->slots + (*ck >> 4);
+                    ox_cache_new(cp);
+                    cp = (*cp)->slots + (*ck & 0x0F);
+                    ox_cache_new(cp);
+		    (*cp)->key = cache->key;
+		    (*cp)->value = cache->value;
+		    orig->key = 0;
+		    orig->value = Qundef;
+		}
+	    } else { /* not exact match but on the path */
+		if (0 != cache->key) { /* there is a key/value here already */
+		    if (depth == *cache->key || (255 <= depth && 0 == strncmp(cache->key, key, depth) && '\0' == cache->key[depth])) { /* key belongs here */
+			continue;
+		    } else {
+			unsigned char	*ck = (unsigned char*)(cache->key + depth + 1);
+			Cache		orig = *cp;
+		    
+			cp = (*cp)->slots + (*ck >> 4);
+			ox_cache_new(cp);
+			cp = (*cp)->slots + (*ck & 0x0F);
+			ox_cache_new(cp);
+			(*cp)->key = cache->key;
+			(*cp)->value = cache->value;
+			orig->key = 0;
+			orig->value = Qundef;
+		    }
+		}
+	    }
         }
     }
     *slot = &cache->value;
     if (0 != keyp) {
-	*keyp = cache->key;
+	*keyp = cache->key + 1;
     }
     return cache->value;
 }
@@ -137,7 +159,6 @@ slot_print(Cache c, unsigned int depth) {
             if (0 == (*cp)->key && Qundef == (*cp)->value) {
                 printf("%s%02u:\n", indent, i);
             } else {
-                const char      *key = (0 == (*cp)->key) ? "*" : (*cp)->key;
                 const char      *vs;
                 const char      *clas;
 
@@ -150,7 +171,7 @@ slot_print(Cache c, unsigned int depth) {
                     vs = StringValuePtr(rs);
                     clas = rb_class2name(rb_obj_class((*cp)->value));
                 }
-                printf("%s%02u: %s = %s (%s)\n", indent, i, key, vs, clas);
+                printf("%s%02u: %s = %s (%s)\n", indent, i, (*cp)->key, vs, clas);
             }
             slot_print(*cp, depth + 2);
         }

@@ -39,7 +39,7 @@ opts.on("-x", "ox only")                                       { $ox_only = true
 opts.on("-a", "all callbacks")                                 { $all_cbs = true }
 opts.on("-z", "use StringIO instead of file")                  { $strio = true }
 opts.on("-f", "--file [String]", String, "filename")           { |f| $filename = f }
-opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |i| $iter = i }
+opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |it| $iter = it }
 opts.on("-s", "--size [Int]", Integer, "file size in KBytes")  { |s| $filesize = s }
 opts.on("-h", "--help", "Show this display")                   { puts opts; Process.exit!(0) }
 rest = opts.parse(ARGV)
