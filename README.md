@@ -34,17 +34,13 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.8.8
+### Release 1.9.0
 
- - Fixed bug in check for open and close element names matching.
+ - Fixed bug in element start and end name checking.
 
-### Release 1.8.7
+ - TBD Added option to change the verbosity of calling inspect on a node. Check default_options for details.
 
- - Added a correct check for element open and close names.
-
- - Changed raised Exceptions to customer classes that inherit from StandardError.
-
- - Fixed a few minor bugs.
+ - TBD Enhanced Element.locate() and Element.alocate() to filter on nodes Class.
 
 ## <a name="description">Description</a>
 

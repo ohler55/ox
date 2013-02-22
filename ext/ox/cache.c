@@ -104,7 +104,7 @@ ox_cache_get(Cache cache, const char *key, VALUE **slot, char **keyp) {
                     ox_cache_new(cp);
 		    (*cp)->key = cache->key;
 		    (*cp)->value = cache->value;
-		    orig->key = 0;
+		    orig->key = form_key(key);
 		    orig->value = Qundef;
 		}
 	    } else { /* not exact match but on the path */
@@ -130,7 +130,13 @@ ox_cache_get(Cache cache, const char *key, VALUE **slot, char **keyp) {
     }
     *slot = &cache->value;
     if (0 != keyp) {
-	*keyp = cache->key + 1;
+	if (0 == cache->key) {
+	    // TBD bug somewhere
+	    printf("*** Error: failed to set the key for %s\n", key);
+	    *keyp = 0;
+	} else {
+	    *keyp = cache->key + 1;
+	}
     }
     return cache->value;
 }

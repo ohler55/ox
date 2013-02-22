@@ -37,6 +37,7 @@ static const char       *data[] = {
     "onex",
     "oney",
     "one",
+    "tw",
     0
 };
 
