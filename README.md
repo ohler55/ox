@@ -34,6 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
+### Release 1.9.0
+
+ - Added a new feature to Ox::Element.locate() that allows filtering by node Class.
+
 ### Release 1.8.9
 
  - Fixed bug in element start and end name checking.

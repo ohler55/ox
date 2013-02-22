@@ -106,9 +106,9 @@ module Ox
     # should be matched. Note that unlike XPath, the element index starts at 0
     # similar to Ruby be contrary to XPath.
     #
-    # Element names can also be wildcard characters. A * indicates any
-    # decendent should be followed. A ? indicates any single Element can
-    # match the wildcard.
+    # Element names can also be wildcard characters. A * indicates any decendent should be followed. A ? indicates any
+    # single Element can match the wildcard. A ^ character followed by the name of a Class will match any node of the
+    # specified class. Valid class names are Element, Comment, String (or Text), CData, DocType.
     #
     # Examples are:
     # * <code>element.locate("Family/Pete/*")</code> returns all children of the Pete Element.
@@ -116,6 +116,7 @@ module Ox
     # * <code>element.locate("Family/?[<3]")</code> returns the first 3 elements in the Family Element.
     # * <code>element.locate("Family/?/@age")</code> returns the arg attribute for each child in the Family Element.
     # * <code>element.locate("Family/*/@type")</code> returns the type attribute value for decendents of the Family.
+    # * <code>element.locate("Family/^Comment")</code> returns any comments that are a child of Family.
     #
     # @param [String] path path to the Nodes to locate
     def locate(path)
@@ -178,6 +179,22 @@ module Ox
         end
         if '?' == name or '*' == name
           match = nodes
+        elsif '^' == name[0]
+          case name[1..-1]
+           when 'Element'
+            match = nodes.select { |e| e.is_a?(Element) }
+           when 'String', 'Text'
+            match = nodes.select { |e| e.is_a?(String) }
+          when 'Comment'
+            match = nodes.select { |e| e.is_a?(Comment) }
+          when 'CData'
+            match = nodes.select { |e| e.is_a?(CData) }
+          when 'DocType'
+            match = nodes.select { |e| e.is_a?(DocType) }
+          else
+            puts "*** no match on #{name}"
+            match = []
+          end
         else
           match = nodes.select { |e| e.is_a?(Element) and name == e.name }
         end
