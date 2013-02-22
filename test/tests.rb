@@ -608,6 +608,7 @@ class Func < ::Test::Unit::TestCase
     <Kid2 age="31"/><!--Pamela-->
   </Pete>
 </Family>
+<!--One Only-->
 }
   end
   
@@ -626,23 +627,30 @@ class Func < ::Test::Unit::TestCase
   def test_locate_top_wild
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('?')
-    assert_equal([doc.nodes[0]], nodes)
+    assert_equal(doc.nodes[0], nodes[0])
   end
 
   def test_locate_child
     doc = Ox.parse(locate_xml)
 
     nodes = doc.locate('Family/?')
-    assert_equal(['Pete'], nodes.map { |n| n.name })
+    assert_equal(['Pete'], nodes.map { |n| n.value })
 
     nodes = doc.locate('Family/?/^Element')
-    assert_equal(['Kid1', 'Kid2'], nodes.map { |n| n.name })
+    assert_equal(['Kid1', 'Kid2'], nodes.map { |n| n.value })
 
     nodes = doc.locate('Family/Pete/^Element')
-    assert_equal(['Kid1', 'Kid2'], nodes.map { |n| n.name })
+    assert_equal(['Kid1', 'Kid2'], nodes.map { |n| n.value })
 
     nodes = doc.locate('Family/Makie/?')
     assert_equal([], nodes.map { |n| n.name })
+  end
+
+  def test_locate_comment
+    doc = Ox.parse(locate_xml)
+
+    nodes = doc.locate('^Comment')
+    assert_equal(['One Only'], nodes.map { |n| n.value })
   end
 
   def test_locate_child_wild_wild
