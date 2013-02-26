@@ -43,9 +43,14 @@ module Ox
   #    def start_element(name); end
   #    def end_element(name); end
   #
+  # Initializing @line in the initializer will cause that variable to be updated before each callback with the XML line
+  # number. The same is true for the @column but it will be updated with the column in the XML file that is the end of
+  # the element or node just read. Not this is the end not the start of the node, attribute, or text.
   class Sax
     # Create a new instance of the Sax handler class.
     def initialize()
+      #@line = nil
+      #@column = nil
     end
 
     # To make the desired methods active while parsing the desired method

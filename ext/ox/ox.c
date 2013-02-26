@@ -48,8 +48,10 @@ void Init_ox();
 
 VALUE	 Ox = Qnil;
 
+ID	ox_at_column_id;
 ID	ox_at_content_id;
 ID	ox_at_id;
+ID	ox_at_line_id;
 ID	ox_at_value_id;
 ID	ox_attr_id;
 ID	ox_attr_value_id;
@@ -85,8 +87,8 @@ ID	ox_text_id;
 ID	ox_to_c_id;
 ID	ox_to_s_id;
 ID	ox_to_sym_id;
-ID	ox_tv_sec_id;
 ID	ox_tv_nsec_id;
+ID	ox_tv_sec_id;
 ID	ox_tv_usec_id;
 ID	ox_value_id;
 
@@ -804,7 +806,10 @@ void Init_ox() {
     rb_require("date");
     rb_require("stringio");
 
+    ox_at_column_id = rb_intern("@column");
+    ox_at_content_id = rb_intern("@content");
     ox_at_id = rb_intern("at");
+    ox_at_line_id = rb_intern("@line");
     ox_at_value_id = rb_intern("@value");
     ox_attr_id = rb_intern("attr");
     ox_attr_value_id = rb_intern("attr_value");
@@ -812,15 +817,14 @@ void Init_ox() {
     ox_beg_id = rb_intern("@beg");
     ox_cdata_id = rb_intern("cdata");
     ox_comment_id = rb_intern("comment");
-    ox_at_content_id = rb_intern("@content");
     ox_den_id = rb_intern("@den");
     ox_doctype_id = rb_intern("doctype");
-    ox_external_encoding_id = rb_intern("external_encoding");
     ox_end_element_id = rb_intern("end_element");
     ox_end_id = rb_intern("@end");
     ox_end_instruct_id = rb_intern("end_instruct");
     ox_error_id = rb_intern("error");
     ox_excl_id = rb_intern("@excl");
+    ox_external_encoding_id = rb_intern("external_encoding");
     ox_fileno_id = rb_intern("fileno");
     ox_force_encoding_id = rb_intern("force_encoding");
     ox_inspect_id = rb_intern("inspect");
@@ -833,18 +837,18 @@ void Init_ox() {
     ox_nodes_id = rb_intern("@nodes");
     ox_num_id = rb_intern("@num");
     ox_parse_id = rb_intern("parse");
-    ox_readpartial_id = rb_intern("readpartial");
     ox_read_id = rb_intern("read");
+    ox_readpartial_id = rb_intern("readpartial");
     ox_start_element_id = rb_intern("start_element");
     ox_string_id = rb_intern("string");
     ox_text_id = rb_intern("text");
-    ox_value_id = rb_intern("value");
     ox_to_c_id = rb_intern("to_c");
     ox_to_s_id = rb_intern("to_s");
     ox_to_sym_id = rb_intern("to_sym");
-    ox_tv_sec_id = rb_intern("tv_sec");
     ox_tv_nsec_id = rb_intern("tv_nsec");
+    ox_tv_sec_id = rb_intern("tv_sec");
     ox_tv_usec_id = rb_intern("tv_usec");
+    ox_value_id = rb_intern("value");
 
     ox_time_class = rb_const_get(rb_cObject, rb_intern("Time"));
     ox_date_class = rb_const_get(rb_cObject, rb_intern("Date"));

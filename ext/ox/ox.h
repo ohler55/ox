@@ -222,8 +222,10 @@ extern struct _Options	ox_default_options;
 
 extern VALUE	Ox;
 
+extern ID	ox_at_column_id;
 extern ID	ox_at_content_id;
 extern ID	ox_at_id;
+extern ID	ox_at_line_id;
 extern ID	ox_at_value_id;
 extern ID	ox_attr_id;
 extern ID	ox_attr_value_id;

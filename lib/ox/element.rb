@@ -179,7 +179,7 @@ module Ox
         end
         if '?' == name or '*' == name
           match = nodes
-        elsif '^' == name[0]
+        elsif '^' == name[0..0] # 1.8.7 thinks name[0] is a fixnum
           case name[1..-1]
            when 'Element'
             match = nodes.select { |e| e.is_a?(Element) }
@@ -192,7 +192,7 @@ module Ox
           when 'DocType'
             match = nodes.select { |e| e.is_a?(DocType) }
           else
-            puts "*** no match on #{name}"
+            #puts "*** no match on #{name}"
             match = []
           end
         else

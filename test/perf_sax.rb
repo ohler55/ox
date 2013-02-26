@@ -32,11 +32,13 @@ $filename = nil # nil indicates new file names perf.xml will be created and used
 $filesize = 1000 # KBytes
 $iter = 100
 $strio = false
+$pos = false
 
 opts = OptionParser.new
 opts.on("-v", "increase verbosity")                            { $verbose += 1 }
 opts.on("-x", "ox only")                                       { $ox_only = true }
 opts.on("-a", "all callbacks")                                 { $all_cbs = true }
+opts.on("-p", "update position")                               { $pos = true; $all_cbs = true }
 opts.on("-z", "use StringIO instead of file")                  { $strio = true }
 opts.on("-f", "--file [String]", String, "filename")           { |f| $filename = f }
 opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |it| $iter = it }
@@ -90,6 +92,13 @@ class OxAllSax < OxSax
   def doctype(value); end
   def comment(value); end
   def cdata(value); end
+end
+
+class OxPosAllSax < OxAllSax
+  def initialize()
+    @line = nil
+    @column = nil
+  end
 end
 
 unless defined?(::Nokogiri).nil?
@@ -150,7 +159,7 @@ perf.add('Ox::Sax', 'sax_parse') {
   Ox.sax_parse($handler, input)
   input.close
 }
-perf.before('Ox::Sax') { $handler = $all_cbs ? OxAllSax.new() : OxSax.new() }
+perf.before('Ox::Sax') { $handler = $all_cbs ? ($pos ? OxPosAllSax.new() : OxAllSax.new()) : OxSax.new() }
 
 unless $ox_only
   unless defined?(::Nokogiri).nil?

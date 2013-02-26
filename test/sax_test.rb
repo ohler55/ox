@@ -73,6 +73,54 @@ class AllSax < StartSax
   end
 end
 
+class LineColSax < StartSax
+  def initialize()
+    @line = nil   # this initializes the @line variable which will then be set by the parser
+    @column = nil # this initializes the @line variable which will then be set by the parser
+    super
+  end
+
+  def instruct(target)
+    @calls << [:instruct, target, @line, @column]
+  end
+
+  def start_element(name)
+    @calls << [:start_element, name, @line, @column]
+  end
+
+  def end_instruct(target)
+    @calls << [:end_instruct, target, @line, @column]
+  end
+
+  def doctype(value)
+    @calls << [:doctype, value, @line, @column]
+  end
+
+  def comment(value)
+    @calls << [:comment, value, @line, @column]
+  end
+
+  def cdata(value)
+    @calls << [:cdata, value, @line, @column]
+  end
+
+  def text(value)
+    @calls << [:text, value, @line, @column]
+  end
+
+  def end_element(name)
+    @calls << [:end_element, name, @line, @column]
+  end
+
+  def attr(name, value)
+    @calls << [:attr, name, value, @line, @column]
+  end
+
+  def error(message, line, column)
+    @calls << [:error, message, line, column]
+  end
+end
+
 class TypeSax < ::Ox::Sax
   attr_accessor :item
   # method to call on the Ox::Sax::Value Object
@@ -464,51 +512,51 @@ encoding = "UTF-8" ?>},
   </row>
 </table>
 },
-                  [[:instruct, "xml"],
-                   [:attr, :version, "1.0"],
-                   [:end_instruct, 'xml'],
-                   [:instruct, "ox"],
-                   [:attr, :version, "1.0"],
-                   [:attr, :mode, "object"],
-                   [:attr, :circular, "no"],
-                   [:attr, :xsd_date, "no"],
-                   [:end_instruct, 'ox'],
-                   [:doctype, " table PUBLIC \"-//ox//DTD TABLE 1.0//EN\" \"http://www.ohler.com/DTDs/TestTable-1.0.dtd\""],
-                   [:start_element, :table],
-                   [:start_element, :row],
-                   [:attr, :id, "00004"],
-                   [:start_element, :cell],
-                   [:attr, :id, "A"],
-                   [:attr, :type, "Fixnum"],
-                   [:text, "1234"],
-                   [:end_element, :cell],
-                   [:start_element, :cell],
-                   [:attr, :id, "B"],
-                   [:attr, :type, "String"],
-                   [:text, "A string."],
-                   [:end_element, :cell],
-                   [:start_element, :cell],
-                   [:attr, :id, "C"],
-                   [:attr, :type, "String"],
-                   [:text, "This is a longer string that stretches over a larger number of characters."],
-                   [:end_element, :cell],
-                   [:start_element, :cell],
-                   [:attr, :id, "D"],
-                   [:attr, :type, "Float"],
-                   [:text, "-12.345"],
-                   [:end_element, :cell],
-                   [:start_element, :cell],
-                   [:attr, :id, "E"],
-                   [:attr, :type, "Date"],
-                   [:text, "2011-09-18 23:07:26 +0900"],
-                   [:end_element, :cell],
-                   [:start_element, :cell],
-                   [:attr, :id, "F"],
-                   [:attr, :type, "Image"],
-                   [:cdata, "xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00"],
-                   [:end_element, :cell],
-                   [:end_element, :row],
-                   [:end_element, :table]])
+                  [[:instruct, "xml", 1, 6],
+                   [:attr, :version, "1.0", 1, 35],
+                   [:end_instruct, 'xml', 1, 37],
+                   [:instruct, "ox", 2, 6],
+                   [:attr, :version, "1.0", 2, 77],
+                   [:attr, :mode, "object", 2, 92],
+                   [:attr, :circular, "no", 2, 107],
+                   [:attr, :xsd_date, "no", 2, 122],
+                   [:end_instruct, 'ox', 2, 124],
+                   [:doctype, " table PUBLIC \"-//ox//DTD TABLE 1.0//EN\" \"http://www.ohler.com/DTDs/TestTable-1.0.dtd\"", 3, 97],
+                   [:start_element, :table, 4, 9],
+                   [:start_element, :row, 5, 9],
+                   [:attr, :id, "00004", 5, 20],
+                   [:start_element, :cell, 6, 12],
+                   [:attr, :id, "A", 6, 19],
+                   [:attr, :type, "Fixnum", 6, 34],
+                   [:text, "1234", 6, 40],
+                   [:end_element, :cell, 6, 46],
+                   [:start_element, :cell, 7, 12],
+                   [:attr, :id, "B", 7, 19],
+                   [:attr, :type, "String", 7, 34],
+                   [:text, "A string.", 7, 45],
+                   [:end_element, :cell, 7, 51],
+                   [:start_element, :cell, 8, 12],
+                   [:attr, :id, "C", 8, 19],
+                   [:attr, :type, "String", 8, 34],
+                   [:text, "This is a longer string that stretches over a larger number of characters.", 8, 110],
+                   [:end_element, :cell, 8, 116],
+                   [:start_element, :cell, 9, 12],
+                   [:attr, :id, "D", 9, 19],
+                   [:attr, :type, "Float", 9, 33],
+                   [:text, "-12.345", 9, 42],
+                   [:end_element, :cell, 9, 48],
+                   [:start_element, :cell, 10, 12],
+                   [:attr, :id, "E", 10, 19],
+                   [:attr, :type, "Date", 10, 32],
+                   [:text, "2011-09-18 23:07:26 +0900", 10, 59],
+                   [:end_element, :cell, 10, 65],
+                   [:start_element, :cell, 11, 12],
+                   [:attr, :id, "F", 11, 19],
+                   [:attr, :type, "Image", 11, 33],
+                   [:cdata, "xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00", 11, 123],
+                   [:end_element, :cell, 11, 130],
+                   [:end_element, :row, 12, 9],
+                   [:end_element, :table, 13, 9]], LineColSax)
   end
 
   def test_sax_encoding
