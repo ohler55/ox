@@ -1,38 +1,35 @@
 # Ox gem
 A fast XML parser and Object marshaller as a Ruby gem.
 
-## <a name="installation">Installation</a>
+## Installation
+
     gem install ox
 
-## <a name="documentation">Documentation</a>
+## Documentation
 
 *Documentation*: http://www.ohler.com/ox
 
-## <a name="source">Source</a>
+## Source
 
-*GitHub* *repo*: https://github.com/ohler55/ox
+* **GitHub** *repo*: https://github.com/ohler55/ox
+* **RubyGems** *repo*: https://rubygems.org/gems/ox
 
-*RubyGems* *repo*: https://rubygems.org/gems/ox
-
-## <a name="follow">Follow @oxgem on Twitter</a>
+## Follow @oxgem on Twitter
 
 [Follow @peterohler on Twitter](http://twitter.com/#!/peterohler) for announcements and news about the Ox gem.
 
-## <a name="build_status">Build Status</a>
+## Build Status
 
 [![Build Status](https://secure.travis-ci.org/ohler55/ox.png?branch=master)](http://travis-ci.org/ohler55/ox)
 
-## <a name="links">Links of Interest</a>
+## Links of Interest
 
-[Ruby XML Gem Comparison](http://www.ohler.com/dev/xml_with_ruby/xml_with_ruby.html) for a perfomance comparison between Ox, Nokogiri, and LibXML.
+* [Ruby XML Gem Comparison](http://www.ohler.com/dev/xml_with_ruby/xml_with_ruby.html) for a perfomance comparison between Ox, Nokogiri, and LibXML.
+* [Fast Ruby XML Serialization](http://www.ohler.com/dev/ruby_object_xml_serialization/ruby_object_xml_serialization.html) to see how Ox can be used as a faster replacement for Marshal.
+* *Fast JSON parser and marshaller on RubyGems*: https://rubygems.org/gems/oj
+* *Fast JSON parser and marshaller on GitHub*: https://rubygems.org/gems/oj
 
-[Fast Ruby XML Serialization](http://www.ohler.com/dev/ruby_object_xml_serialization/ruby_object_xml_serialization.html) to see how Ox can be used as a faster replacement for Marshal.
-
-*Fast JSON parser and marshaller on RubyGems*: https://rubygems.org/gems/oj
-
-*Fast JSON parser and marshaller on GitHub*: https://rubygems.org/gems/oj
-
-## <a name="release">Release Notes</a>
+## Release Notes
 
 ### Release 1.9.0
 
@@ -45,7 +42,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Fixed bug in element start and end name checking.
 
-## <a name="description">Description</a>
+## Description
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
 XML handling. It was designed to be an alternative to Nokogiri and other Ruby
@@ -89,88 +86,94 @@ Ox is compatible with Ruby 1.8.7, 1.9.2, JRuby, and RBX.
 
 ### Object Dump Sample:
 
-    require 'ox'
-  
-    class Sample
-      attr_accessor :a, :b, :c
-  
-      def initialize(a, b, c)
-        @a = a
-        @b = b
-        @c = c
-      end
-    end
-  
-    # Create Object
-    obj = Sample.new(1, "bee", ['x', :y, 7.0])
-    # Now dump the Object to an XML String.
-    xml = Ox.dump(obj)
-    # Convert the object back into a Sample Object.
-    obj2 = Ox.parse_obj(xml)
+```ruby
+require 'ox'
+
+class Sample
+  attr_accessor :a, :b, :c
+
+  def initialize(a, b, c)
+    @a = a
+    @b = b
+    @c = c
+  end
+end
+
+# Create Object
+obj = Sample.new(1, "bee", ['x', :y, 7.0])
+# Now dump the Object to an XML String.
+xml = Ox.dump(obj)
+# Convert the object back into a Sample Object.
+obj2 = Ox.parse_obj(xml)
+```
 
 ### Generic XML Writing and Parsing:
 
-    require 'ox'
+```ruby
+require 'ox'
 
-    doc = Ox::Document.new(:version => '1.0')
-    
-    top = Ox::Element.new('top')
-    top[:name] = 'sample'
-    doc << top
-    
-    mid = Ox::Element.new('middle')
-    mid[:name] = 'second'
-    top << mid
-    
-    bot = Ox::Element.new('bottom')
-    bot[:name] = 'third'
-    mid << bot
-    
-    xml = Ox.dump(doc)
-    
-    # xml =
-    # <top name="sample">
-    #   <middle name="second">
-    #     <bottom name="third"/>
-    #   </middle>
-    # </top>
-    
-    doc2 = Ox.parse(xml)
-    puts "Same? #{doc == doc2}"
-    # true
+doc = Ox::Document.new(:version => '1.0')
+
+top = Ox::Element.new('top')
+top[:name] = 'sample'
+doc << top
+
+mid = Ox::Element.new('middle')
+mid[:name] = 'second'
+top << mid
+
+bot = Ox::Element.new('bottom')
+bot[:name] = 'third'
+mid << bot
+
+xml = Ox.dump(doc)
+
+# xml =
+# <top name="sample">
+#   <middle name="second">
+#     <bottom name="third"/>
+#   </middle>
+# </top>
+
+doc2 = Ox.parse(xml)
+puts "Same? #{doc == doc2}"
+# true
+```
 
 ### SAX XML Parsing:
 
-    require 'stringio'
-    require 'ox'
-    
-    class Sample < ::Ox::Sax
-      def start_element(name); puts "start: #{name}";        end
-      def end_element(name);   puts "end: #{name}";          end
-      def attr(name, value);   puts "  #{name} => #{value}"; end
-      def text(value);         puts "text #{value}";         end
-    end
-    
-    io = StringIO.new(%{
-    <top name="sample">
-      <middle name="second">
-        <bottom name="third"/>
-      </middle>
-    </top>
-    })
-    
-    handler = Sample.new()
-    Ox.sax_parse(handler, io)
-    # outputs
-    # start: top
-    #   name => sample
-    # start: middle
-    #   name => second
-    # start: bottom
-    #   name => third
-    # end: bottom
-    # end: middle
-    # end: top
+```ruby
+require 'stringio'
+require 'ox'
+
+class Sample < ::Ox::Sax
+  def start_element(name); puts "start: #{name}";        end
+  def end_element(name);   puts "end: #{name}";          end
+  def attr(name, value);   puts "  #{name} => #{value}"; end
+  def text(value);         puts "text #{value}";         end
+end
+
+io = StringIO.new(%{
+<top name="sample">
+  <middle name="second">
+    <bottom name="third"/>
+  </middle>
+</top>
+})
+
+handler = Sample.new()
+Ox.sax_parse(handler, io)
+# outputs
+# start: top
+#   name => sample
+# start: middle
+#   name => second
+# start: bottom
+#   name => third
+# end: bottom
+# end: middle
+# end: top
+```
 
 ### Object XML format
 
@@ -182,27 +185,27 @@ necessary.
 
 The type indicator map is:
 
-- **a** => Array
-- **b** => Base64
-- **c** => Class
-- **f** => Float
-- **g** => Regexp
-- **h** => Hash
-- **i** => Fixnum
-- **j** => Bignum
-- **l** => Rational
-- **m** => Symbol
-- **n** => FalseClass
-- **o** => Object
-- **p** => Ref
-- **r** => Range
-- **s** => String
-- **t** => Time
-- **u** => Struct
-- **v** => Complex
-- **x** => Raw
-- **y** => TrueClass
-- **z** => NilClass
+- **a** => `Array`
+- **b** => `Base64`
+- **c** => `Class`
+- **f** => `Float`
+- **g** => `Regexp`
+- **h** => `Hash`
+- **i** => `Fixnum`
+- **j** => `Bignum`
+- **l** => `Rational`
+- **m** => `Symbol`
+- **n** => `FalseClass`
+- **o** => `Object`
+- **p** => `Ref`
+- **r** => `Range`
+- **s** => `String`
+- **t** => `Time`
+- **u** => `Struct`
+- **v** => `Complex`
+- **x** => `Raw`
+- **y** => `TrueClass`
+- **z** => `NilClass`
 
 If the type is an Object, type 'o' then an attribute named 'c' should be set
 with the full Class name including the Module names. If the XML element
@@ -217,25 +220,31 @@ interpreter.)
 Values are encoded as the text portion of an element or in the sub-elements
 of the principle. For example, a Fixnum is encoded as:
 
-    <i>123</i>
+```xml
+<i>123</i>
+```
 
 An Array has sub-elements and is encoded similar to this example.
 
-    <a>
-      <i>1</i>
-      <s>abc</s>
-    </a>
+```xml
+<a>
+  <i>1</i>
+  <s>abc</s>
+</a>
+```
 
 A Hash is encoded with an even number of elements where the first element is
 the key and the second is the value. This is repeated for each entry in the
 Hash. An example is of { 1 => 'one', 2 => 'two' } encoding is:
 
-    <h>
-      <i>1</i>
-      <s>one</s>
-      <i>2</i>
-      <s>two</s>
-    </h>
+```xml
+<h>
+  <i>1</i>
+  <s>one</s>
+  <i>2</i>
+  <s>two</s>
+</h>
+```
 
 Strings with characters not allowed in XML are base64 encoded amd will be
 converted back into a String when loaded.
