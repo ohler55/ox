@@ -260,7 +260,7 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<top/><top/>},
                   [[:start_element, :top],
                    [:end_element, :top],
-                   [:error, "invalid format, multiple top level elements", 1, 9],
+                   [:error, "invalid format, multiple top level elements", 1, 7],
                    [:start_element, :top],
                    [:end_element, :top]])
 
@@ -287,18 +287,24 @@ encoding = "UTF-8" ?>},
                   ])
   end
 
-  def test_sax_nested1_tight
-    parse_compare(%{<?xml version="1.0"?><top><child><grandchild/></child></top>},
-                  [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
-                   [:end_instruct, 'xml'],
-                   [:start_element, :top],
-                   [:start_element, :child],
-                   [:start_element, :grandchild],
-                   [:end_element, :grandchild],
-                   [:end_element, :child],
-                   [:end_element, :top],
-                  ])
+  def test_sax_line_col
+    parse_compare(%{<?xml version="1.0"?>
+<top attr="one">
+  <child>
+    <grandchild/>
+  </child>
+</top>},
+                  [[:instruct, 'xml', 1, 1],
+                   [:attr, :version, "1.0", 1, 6],
+                   [:end_instruct, 'xml', 1, 20],
+                   [:start_element, :top, 2, 1],
+                   [:attr, :attr, "one", 2, 6],
+                   [:start_element, :child, 3, 3],
+                   [:start_element, :grandchild, 4, 5],
+                   [:end_element, :grandchild, 4, 17],
+                   [:end_element, :child, 5, 3],
+                   [:end_element, :top, 6, 1],
+                  ], LineColSax)
   end
 
   def test_sax_element_name_mismatch
@@ -315,7 +321,7 @@ encoding = "UTF-8" ?>},
                    [:start_element, :child],
                    [:start_element, :grandchild],
                    [:end_element, :grandchild],
-                   [:error, "invalid format, element start and end names do not match", 5, 12]
+                   [:error, "invalid format, element start and end names do not match", 5, 10]
                   ])
   end
 
@@ -388,7 +394,7 @@ encoding = "UTF-8" ?>},
   def test_sax_text_no_term
     parse_compare(%{<top>This is some text.},
                   [[:start_element, :top],
-                   [:error, "invalid format, text terminated unexpectedly", 1, 24],
+                   [:error, "invalid format, text terminated unexpectedly", 1, 23],
                   ])
   end
   # TBD invalid chacters in text
@@ -512,9 +518,9 @@ encoding = "UTF-8" ?>},
   </row>
 </table>
 },
-                  [[:instruct, "xml", 1, 6],
-                   [:attr, :version, "1.0", 1, 35],
-                   [:end_instruct, 'xml', 1, 37],
+                  [[:instruct, "xml", 1, 1],
+                   [:attr, :version, "1.0", 1, 6],
+                   [:end_instruct, 'xml', 1, 20],
                    [:instruct, "ox", 2, 6],
                    [:attr, :version, "1.0", 2, 77],
                    [:attr, :mode, "object", 2, 92],

@@ -143,6 +143,20 @@ sax_drive_get(SaxDrive dr) {
     return *dr->cur++;
 }
 
+static inline void
+backup(SaxDrive dr) {
+    dr->cur--;
+    dr->col--;	// should reverse wrap but not worth it
+}
+
+static inline void
+reset_reader(SaxDrive dr, char *cur, int line, int col) {
+    dr->cur = cur;
+    dr->line = line;
+    dr->col = col;
+}
+
+
 /* Starts by reading a character so it is safe to use with an empty or
  * compacted buffer.
  */
@@ -448,6 +462,8 @@ read_children(SaxDrive dr, int first) {
     int         err = 0;
     int         element_read = !first;
     char        c;
+    int		line;
+    int		col;
     
     while (!err) {
         dr->str = dr->cur; /* protect the start */
@@ -523,14 +539,19 @@ read_children(SaxDrive dr, int first) {
 	    }
 	    break;
 	case '/': /* element end */
-            return ('\0' == read_name_token(dr));
+	    line = dr->line;
+	    col = dr->col;
+            err = ('\0' == read_name_token(dr));
+	    dr->line = line;
+	    dr->col = col - 2; // -2 for </
+	    return err;
             break;
 	case '\0':
             sax_drive_error(dr, "invalid format, document not terminated", 1);
             err = 1;
             break;
 	default:
-            dr->cur--; /* safe since no read occurred after getting last character */
+	    backup(dr); /* safe since no read occurred after getting last character */
             if (first && element_read) {
                 sax_drive_error(dr, "invalid format, multiple top level elements", 0);
             }
@@ -578,6 +599,8 @@ read_instruction(SaxDrive dr) {
     const char	*err;
     VALUE	target = Qnil;
     int		is_xml;
+    int		line = dr->line;
+    int		col = dr->col - 1;
 
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
@@ -590,18 +613,20 @@ read_instruction(SaxDrive dr) {
         VALUE       args[1];
 
 	if (dr->has_line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
 	if (dr->has_column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         args[0] = target;
         rb_funcall2(dr->handler, ox_instruct_id, 1, args);
     }
     dr->str = dr->cur; /* make sure the start doesn't get compacted out */
+    line = dr->line;
+    col = dr->col;
     read_content(dr, content, sizeof(content) - 1);
     cend = dr->cur;
-    dr->cur = dr->str;
+    reset_reader(dr, dr->str, line, col);
     if (0 != (err = read_attrs(dr, c, '?', '?', is_xml))) {
 	if (dr->has_text) {
 	    VALUE   args[1];
@@ -622,15 +647,17 @@ read_instruction(SaxDrive dr) {
 	    }
 #endif
 	    if (dr->has_line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	    }
 	    if (dr->has_column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	    }
 	    rb_funcall2(dr->handler, ox_text_id, 1, args);
 	}
 	dr->cur = cend;
     } else {
+	line = dr->line;
+	col = dr->col;
 	c = next_non_white(dr);
 	if ('>' != c) {
 	    sax_drive_error(dr, "invalid format, instruction not terminated", 1);
@@ -641,10 +668,10 @@ read_instruction(SaxDrive dr) {
         VALUE       args[1];
 
 	if (dr->has_line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
 	if (dr->has_column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         args[0] = target;
         rb_funcall2(dr->handler, ox_end_instruct_id, 1, args);
@@ -692,7 +719,7 @@ read_cdata(SaxDrive dr) {
     char        c;
     int         end = 0;
 
-    dr->cur--; /* back up to the start in case the cdata is empty */
+    backup(dr); /* back up to the start in case the cdata is empty */
     dr->str = dr->cur; /* mark the start */
     while (1) {
         c = sax_drive_get(dr);
@@ -801,6 +828,8 @@ read_element(SaxDrive dr) {
     const char	*err;
     char        c;
     int         closed;
+    int		line = dr->line;
+    int		col = dr->col - 1;
 
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
@@ -810,10 +839,10 @@ read_element(SaxDrive dr) {
         VALUE       args[1];
 
 	if (dr->has_line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
 	if (dr->has_column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         args[0] = name;
         rb_funcall2(dr->handler, ox_start_element_id, 1, args);
@@ -837,14 +866,16 @@ read_element(SaxDrive dr) {
         }
     }
     if (closed) {
+	line = dr->line;
+	col = dr->col - 1;
         if (dr->has_end_element) {
             VALUE       args[1];
 
 	    if (dr->has_line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	    }
 	    if (dr->has_column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	    }
             args[0] = name;
             rb_funcall2(dr->handler, ox_end_element_id, 1, args);
@@ -853,12 +884,16 @@ read_element(SaxDrive dr) {
         if (0 != read_children(dr, 0)) {
             return -1;
         }
+	line = dr->line;
+	col = dr->col;
+	// read_children reads up to the end of the terminating element nameb
+	dr->col += dr->cur - dr->str;
 	if (0 != ename && 0 != strcmp(ename, dr->str)) {
 	    if (dr->has_line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	    }
 	    if (dr->has_column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	    }
 	    //printf("*** ename: %s  close: %s\n", ename, dr->str);
             sax_drive_error(dr, "invalid format, element start and end names do not match", 1);
@@ -868,10 +903,10 @@ read_element(SaxDrive dr) {
             VALUE       args[1];
 
 	    if (dr->has_line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	    }
 	    if (dr->has_column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	    }
             args[0] = name;
             rb_funcall2(dr->handler, ox_end_element_id, 1, args);
@@ -941,13 +976,17 @@ static const char*
 read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
     VALUE       name = Qnil;
     int         is_encoding = 0;
+    int		line;
+    int		col;
     
     dr->str = dr->cur; /* lock it down */
     if (is_white(c)) {
         c = next_non_white(dr);
     }
     while (termc != c && term2 != c) {
-        dr->cur--;
+        backup(dr);
+	line = dr->line;
+	col = dr->col;
         if ('\0' == c) {
 	    return "invalid format, attributes not terminated";
         }
@@ -982,10 +1021,10 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
             VALUE       args[2];
 
 	    if (dr->has_line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	    }
 	    if (dr->has_column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	    }
             args[0] = name;
             args[1] = dr->value_obj;
@@ -1008,10 +1047,10 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
 	    }
 #endif
 	    if (dr->has_line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	    }
 	    if (dr->has_column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	    }
             rb_funcall2(dr->handler, ox_attr_id, 2, args);
         }
