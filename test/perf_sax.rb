@@ -7,8 +7,8 @@ $: << '../ext'
 
 if __FILE__ == $0
   while (i = ARGV.index('-I'))
-    x,path = ARGV.slice!(i, 2)
-    $: << path
+    x = ARGV.slice!(i, 2)
+    $: << x[1]
   end
 end
 
@@ -44,7 +44,7 @@ opts.on("-f", "--file [String]", String, "filename")           { |f| $filename =
 opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |it| $iter = it }
 opts.on("-s", "--size [Int]", Integer, "file size in KBytes")  { |s| $filesize = s }
 opts.on("-h", "--help", "Show this display")                   { puts opts; Process.exit!(0) }
-rest = opts.parse(ARGV)
+opts.parse(ARGV)
 
 $xml_str = nil
 
