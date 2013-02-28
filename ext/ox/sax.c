@@ -543,7 +543,7 @@ read_children(SaxDrive dr, int first) {
 	    col = dr->col;
             err = ('\0' == read_name_token(dr));
 	    dr->line = line;
-	    dr->col = col - 2; // -2 for </
+	    dr->col = col;
 	    return err;
             break;
 	case '\0':
@@ -686,6 +686,8 @@ read_instruction(SaxDrive dr) {
 static int
 read_doctype(SaxDrive dr) {
     char        c;
+    int		line = dr->line;
+    int		col = dr->col - 10;
 
     dr->str = dr->cur - 1; /* mark the start */
     while ('>' != (c = sax_drive_get(dr))) {
@@ -699,10 +701,10 @@ read_doctype(SaxDrive dr) {
         VALUE       args[1];
 
 	if (dr->has_line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
 	if (dr->has_column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         args[0] = rb_str_new2(dr->str);
         rb_funcall2(dr->handler, ox_doctype_id, 1, args);
@@ -718,6 +720,8 @@ static int
 read_cdata(SaxDrive dr) {
     char        c;
     int         end = 0;
+    int		line = dr->line;
+    int		col = dr->col - 10;
 
     backup(dr); /* back up to the start in case the cdata is empty */
     dr->str = dr->cur; /* mark the start */
@@ -752,10 +756,10 @@ read_cdata(SaxDrive dr) {
         }
 #endif
 	if (dr->has_line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
 	if (dr->has_column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         rb_funcall2(dr->handler, ox_cdata_id, 1, args);
     }
@@ -770,6 +774,8 @@ static int
 read_comment(SaxDrive dr) {
     char        c;
     int         end = 0;
+    int		line = dr->line;
+    int		col = dr->col - 5;
 
     dr->str = dr->cur - 1; /* mark the start */
     while (1) {
@@ -806,10 +812,10 @@ read_comment(SaxDrive dr) {
         }
 #endif
 	if (dr->has_line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
 	if (dr->has_column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         rb_funcall2(dr->handler, ox_comment_id, 1, args);
     }
@@ -906,7 +912,7 @@ read_element(SaxDrive dr) {
 		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	    }
 	    if (dr->has_column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
+		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col - 2));
 	    }
             args[0] = name;
             rb_funcall2(dr->handler, ox_end_element_id, 1, args);
@@ -920,6 +926,8 @@ read_element(SaxDrive dr) {
 static int
 read_text(SaxDrive dr) {
     char        c;
+    int		line = dr->line;
+    int		col = dr->col - 1;
 
     /* start marked in read_children */
     /*dr->str = dr->cur - 1; / * mark the start */
@@ -934,10 +942,10 @@ read_text(SaxDrive dr) {
         VALUE   args[1];
 
 	if (dr->has_line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
 	if (dr->has_column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
 	*args = dr->value_obj;
         rb_funcall2(dr->handler, ox_value_id, 1, args);
@@ -960,10 +968,10 @@ read_text(SaxDrive dr) {
         }
 #endif
 	if (dr->has_line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->line));
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
 	if (dr->has_column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->col));
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         rb_funcall2(dr->handler, ox_text_id, 1, args);
     }

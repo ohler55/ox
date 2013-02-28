@@ -44,8 +44,8 @@ module Ox
   #    def end_element(name); end
   #
   # Initializing @line in the initializer will cause that variable to be updated before each callback with the XML line
-  # number. The same is true for the @column but it will be updated with the column in the XML file that is the end of
-  # the element or node just read. Not this is the end not the start of the node, attribute, or text.
+  # number. The same is true for the @column but it will be updated with the column in the XML file that is the start of
+  # the element or node just read.
   class Sax
     # Create a new instance of the Sax handler class.
     def initialize()
