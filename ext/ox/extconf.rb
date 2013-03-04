@@ -42,7 +42,7 @@ if ['i386-darwin10.0.0', 'x86_64-darwin10.8.0'].include? RUBY_PLATFORM
 elsif 'x86_64-linux' == RUBY_PLATFORM && '1.9.3' == RUBY_VERSION && '2011-10-30' == RUBY_RELEASE_DATE
   begin
     dflags['NEEDS_STPCPY'] = nil if `more /etc/issue`.include?('CentOS release 5.4')
-  rescue Exception => e
+  rescue Exception
   end
 end
 
