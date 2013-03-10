@@ -893,7 +893,7 @@ read_element(SaxDrive dr) {
 	line = dr->line;
 	col = dr->col;
 	// read_children reads up to the end of the terminating element name
-	dr->col += dr->cur - dr->str;
+	dr->col += (uint32_t)(dr->cur - dr->str);
 	if (0 != ename && 0 != strcmp(ename, dr->str)) {
 	    if (dr->has_line) {
 		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));

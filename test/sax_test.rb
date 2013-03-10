@@ -769,5 +769,7 @@ encoding = "UTF-8" ?>},
     assert_equal([], handler.errors)
     Ox.sax_parse(handler, StringIO.new(%{<?xml version="1.0"?><ab><a/></ab>}))
     assert_equal([], handler.errors)
+    Ox.sax_parse(handler, StringIO.new(%{<?xml version="1.0"?><abcdefghijklmnop></abcdefghijklmnop>}))
+    assert_equal([], handler.errors)
   end
 end

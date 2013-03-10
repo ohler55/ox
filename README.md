@@ -34,20 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.9.1
+### Release 1.9.2
 
- - Fixed the line numbers to be the start of the elements in the sax parser.
-
-### Release 1.9.0
-
- - Added a new feature to Ox::Element.locate() that allows filtering by node Class.
-
- - Added feature to the Sax parser. If @line is defined in the handler it is set to the line number of the xml file
-   before making callbacks. The same goes for @column but it is updated with the column.
-
-### Release 1.8.9
-
- - Fixed bug in element start and end name checking.
+ - Fixed bug in the sax element name check that cause a memory write error.
 
 ## <a name="description">Description</a>
 

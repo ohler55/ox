@@ -50,7 +50,7 @@ static void     slot_print(Cache cache, unsigned int depth);
 
 static char* form_key(const char *s) {
     size_t	len = strlen(s);
-    char	*d = ALLOC_N(char, len);
+    char	*d = ALLOC_N(char, len + 2);
 
     *d = (255 <= len) ? 255 : len;
     memcpy(d + 1, s, len + 1);

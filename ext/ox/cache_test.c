@@ -31,6 +31,7 @@
 #include "cache.h"
 
 static const char       *data[] = {
+#if 1
     "one",
     "two",
     "one",
@@ -38,6 +39,14 @@ static const char       *data[] = {
     "oney",
     "one",
     "tw",
+    "onexyzabcdefgh",
+#else
+    "abc",
+    "abcd",
+    "ab",
+    "a",
+    "abcdefghijklmnop",
+#endif
     0
 };
 
