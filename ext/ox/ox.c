@@ -435,7 +435,7 @@ static VALUE
 load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding) {
     VALUE		obj;
     struct _Options	options = ox_default_options;
-    
+
     if (1 == argc && rb_cHash == rb_obj_class(*argv)) {
 	VALUE	h = *argv;
 	VALUE	v;

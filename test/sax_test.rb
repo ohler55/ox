@@ -17,7 +17,7 @@ require 'ox'
 
 opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
-files = opts.parse(ARGV)
+opts.parse(ARGV)
 
 class StartSax < ::Ox::Sax
   attr_accessor :calls

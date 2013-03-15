@@ -23,7 +23,7 @@ $indent = 2
 opts = OptionParser.new
 # TBD add indent
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
-files = opts.parse(ARGV)
+opts.parse(ARGV)
 
 class Func < ::Test::Unit::TestCase
 
@@ -350,6 +350,39 @@ class Func < ::Test::Unit::TestCase
     assert_equal('Pete', doc.attributes[:name])
   end
 
+  def test_tolerant
+    xml = %{<!doctype HTML>
+<html lang=en>
+  <head garbage='trash'>
+    <bad attr="something">
+    <bad alone>
+  </head>
+  <body>
+  This is a test of the tolerant effort option.
+  </body>
+</html>
+<ps>after thought</ps>
+}
+    expected = %{
+<!DOCTYPE HTML >
+<html lang="en">
+  <head garbage="trash">
+    <bad attr="something">
+      <bad alone="">
+      </bad>
+    </bad>
+  </head>
+  <body>
+  This is a test of the tolerant effort option.
+  </body>
+</html>
+<ps>after thought</ps>
+}
+    doc = Ox.load(xml, :effort => :tolerant)
+    #puts Ox.dump(doc)
+    assert_equal(expected, Ox.dump(doc, :with_xml => false))
+  end
+
   def test_class
     dump_and_load(Bag, false)
   end
@@ -504,7 +537,7 @@ class Func < ::Test::Unit::TestCase
       assert(true)
     end
   end
-  
+
   def test_encoding
     if RUBY_VERSION.start_with?('1.8')# || 'rubinius' == $ruby
       assert(true)

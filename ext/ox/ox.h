@@ -206,6 +206,7 @@ struct _PInfo {
     CircArray		circ_array;
     unsigned long	id;		/* set for text types when cirs_array is set */
     Options		options;
+    char		last;		/* last character read, rarely set */
 };
 
 extern VALUE	ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options);

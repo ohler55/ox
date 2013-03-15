@@ -39,7 +39,7 @@
 static void	read_instruction(PInfo pi);
 static void	read_doctype(PInfo pi);
 static void	read_comment(PInfo pi);
-static void	read_element(PInfo pi);
+static char*	read_element(PInfo pi);
 static void	read_text(PInfo pi);
 /*static void	  read_reduced_text(PInfo pi); */
 static void	read_cdata(PInfo pi);
@@ -147,7 +147,7 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
 		    pi.s++;	/* skip second - */
 		    read_comment(&pi);
 		}
-	    } else if (0 == strncmp("DOCTYPE", pi.s, 7)) {
+	    } else if ((TolerantEffort == options->effort) ? 0 == strncasecmp("DOCTYPE", pi.s, 7) : 0 == strncmp("DOCTYPE", pi.s, 7)) {
 		pi.s += 7;
 		read_doctype(&pi);
 	    } else {
@@ -210,7 +210,8 @@ read_instruction(PInfo pi) {
     c = *pi->s;
     *end = '\0'; /* terminate name */
     if ('?' != c) {
-	while ('?' != *pi->s) {
+	while ('?' != c) {
+	    pi->last = 0;
 	    if ('\0' == *pi->s) {
 		raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
 	    }
@@ -232,6 +233,11 @@ read_instruction(PInfo pi) {
 		break;
 	    }
 	    next_non_white(pi);
+	    if ('\0' == pi->last) {
+		c = *pi->s;
+	    } else {
+		c = pi->last;
+	    }
 	}
 	if ('?' == *pi->s) {
 	    pi->s++;
@@ -326,7 +332,7 @@ read_comment(PInfo pi) {
 /* Entered after the '<' and the first character after that. Returns status
  * code.
  */
-static void
+static char*
 read_element(PInfo pi) {
     struct _Attr	attrs[MAX_ATTRS];
     Attr		ap = attrs;
@@ -356,7 +362,7 @@ read_element(PInfo pi) {
 	pi->pcb->add_element(pi, ename, attrs, hasChildren);
 	pi->pcb->end_element(pi, ename);
 
-	return;
+	return 0;
     }
     /* read attribute names until the close (/ or >) is reached */
     while (!done) {
@@ -364,6 +370,7 @@ read_element(PInfo pi) {
 	    next_non_white(pi);
 	    c = *pi->s;
 	}
+	pi->last = 0;
 	switch (c) {
 	case '\0':
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
@@ -378,7 +385,7 @@ read_element(PInfo pi) {
 	    pi->pcb->add_element(pi, ename, attrs, hasChildren);
 	    pi->pcb->end_element(pi, ename);
 
-	    return;
+	    return 0;
 	case '>':
 	    /* has either children or a value */
 	    pi->s++;
@@ -394,7 +401,19 @@ read_element(PInfo pi) {
 	    end = pi->s;
 	    next_non_white(pi);
 	    if ('=' != *pi->s++) {
-		raise_error("invalid format, no attribute value", pi->str, pi->s);
+		if (TolerantEffort == pi->options->effort) {
+		    pi->s--;
+		    pi->last = *pi->s;
+		    *end = '\0'; /* terminate name */
+		    ap->value = "";
+		    ap++;
+		    if (MAX_ATTRS <= (ap - attrs)) {
+			raise_error("too many attributes", pi->str, pi->s);
+		    }
+		    break;
+		} else {
+		    raise_error("invalid format, no attribute value", pi->str, pi->s);
+		}
 	    }
 	    *end = '\0'; /* terminate name */
 	    /* read value */
@@ -411,7 +430,12 @@ read_element(PInfo pi) {
 	    }
 	    break;
 	}
-	c = '\0';
+	if ('\0' == pi->last) {
+	    c = '\0';
+	} else {
+	    c = pi->last;
+	    pi->last = '\0';
+	}
     }
     if (hasChildren) {
 	char	*start;
@@ -435,7 +459,9 @@ read_element(PInfo pi) {
 		    if ('-' == *pi->s && '-' == *(pi->s + 1)) {
 			pi->s += 2;
 			read_comment(pi);
-		    } else if (0 == strncmp("[CDATA[", pi->s, 7)) {
+		    } else if ((TolerantEffort == pi->options->effort) ?
+			       0 == strncasecmp("[CDATA[", pi->s, 7) :
+			       0 == strncmp("[CDATA[", pi->s, 7)) {
 			pi->s += 7;
 			read_cdata(pi);
 		    } else {
@@ -455,7 +481,12 @@ read_element(PInfo pi) {
 		    c = *pi->s;
 		    *end = '\0';
 		    if (0 != strcmp(name, ename)) {
-			raise_error("invalid format, elements overlap", pi->str, pi->s);
+			if (TolerantEffort == pi->options->effort) {
+			    pi->pcb->end_element(pi, ename);
+			    return name;
+			} else {
+			    raise_error("invalid format, elements overlap", pi->str, pi->s);
+			}
 		    }
 		    if ('>' != c) {
 			raise_error("invalid format, element not closed", pi->str, pi->s);
@@ -467,13 +498,27 @@ read_element(PInfo pi) {
 		    }
 		    pi->s++;
 		    pi->pcb->end_element(pi, ename);
-		    return;
+		    return 0;
 		case '\0':
-		    raise_error("invalid format, document not terminated", pi->str, pi->s);
+		    if (TolerantEffort == pi->options->effort) {
+			return 0;
+		    } else {
+			raise_error("invalid format, document not terminated", pi->str, pi->s);
+		    }
 		default:
 		    first = 0;
 		    /* a child element */
-		    read_element(pi);
+		    // Child closed with mismatched name.
+		    if (0 != (name = read_element(pi))) {
+			if (0 == strcmp(name, ename)) {
+			    pi->s++;
+			    pi->pcb->end_element(pi, ename);
+			    return 0;
+			} else { // not the correct element yet
+			    pi->pcb->end_element(pi, ename);
+			    return name;
+			}
+		    }
 		    break;
 		}
 	    } else {	/* read as TEXT */
@@ -489,11 +534,12 @@ read_element(PInfo pi) {
 		    /* close tag after text so treat as a value */
 		    pi->s += elen + 3;
 		    pi->pcb->end_element(pi, ename);
-		    return;
+		    return 0;
 		}
 	    }
 	}
     }
+    return 0;
 }
 
 static void
@@ -697,10 +743,31 @@ read_quoted_value(PInfo pi) {
                 raise_error("invalid format, document not terminated", pi->str, pi->s);
             }
         }
-        *pi->s = '\0'; /* terminate value */
-        pi->s++;	   /* move past quote */
+        *pi->s = '\0';	/* terminate value */
+        pi->s++;	/* move past quote */
     } else if (StrictEffort == pi->options->effort) {
 	raise_error("invalid format, expected a quote character", pi->str, pi->s);
+    } else if (TolerantEffort == pi->options->effort) {
+        value = pi->s;
+        for (; 1; pi->s++) {
+	    switch (*pi->s) {
+	    case '\0':
+                raise_error("invalid format, document not terminated", pi->str, pi->s);
+	    case ' ':
+	    case '/':
+	    case '>':
+	    case '?': // for instructions
+	    case '\t':
+	    case '\n':
+	    case '\r':
+		pi->last = *pi->s;
+		*pi->s = '\0';	/* terminate value */
+		pi->s++;
+		return value;
+	    default:
+		break;
+            }
+        }
     } else {
         value = pi->s;
         next_white(pi);

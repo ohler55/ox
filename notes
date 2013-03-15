@@ -5,6 +5,11 @@
 
 - todo
  
+- tolerant
+ - allow lower case doctype and other key words
+ - overlap closes all previous ones
+
+
 - add UTF-16 support
 U+0000..U+D7FF, U+E000..U+EFFF  00000xxxxxxxxxxxxxxxx  xxxxxxxxxxxxxxxx
 U+10000..U+10FFFF               uuuuuxxxxxxyyyyyyyyyy  110110wwwwxxxxxx 110111yyyyyyyyyy (where uuuuu = wwww + 1)

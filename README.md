@@ -34,9 +34,20 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.9.2
+### Release 1.9.3
 
- - Fixed bug in the sax element name check that cause a memory write error.
+ - mcarpenter fixed a compile problem with Cygwin.
+
+ - Now more tolerant when the :effort is set to :tolerant. Ox will let all sorts
+   of errors typical in HTML documents pass. The result may not be perfect but
+   at least parsed results are returned.
+   
+   - Attribute values need not be quoted or they can be quoted with single
+     quotes or there can be no =value are all.
+
+   - Elements not terminated will be terminated by the next element
+     termination. This effect goes up until a match is found on the element
+     name.
 
 ## <a name="description">Description</a>
 
