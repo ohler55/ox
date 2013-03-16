@@ -212,9 +212,8 @@ struct _PInfo {
 extern VALUE	ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options);
 extern void	_ox_raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
 
-extern void	ox_sax_parse(VALUE handler, VALUE io, int convert);
+extern void	ox_sax_parse(VALUE handler, VALUE io, int convert, int tolerant);
 extern void	ox_sax_define(void);
-
 
 extern char*	ox_write_obj_to_str(VALUE obj, Options copts);
 extern void	ox_write_obj_to_file(VALUE obj, const char *path, Options copts);

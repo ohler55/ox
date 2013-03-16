@@ -49,6 +49,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
      termination. This effect goes up until a match is found on the element
      name.
 
+ - SAX parser also given a :tolerant option with the same tolerance as the string parser.
+
 ## <a name="description">Description</a>
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized

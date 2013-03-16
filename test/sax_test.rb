@@ -160,13 +160,13 @@ class ErrorSax < ::Ox::Sax
 end
 
 class Func < ::Test::Unit::TestCase
-  def parse_compare(xml, expected, handler_class=AllSax, special=false)
+  def parse_compare(xml, expected, handler_class=AllSax, special=false, tolerant=false)
     handler = handler_class.new()
     input = StringIO.new(xml)
     if special
-      Ox.sax_parse(handler, input, :convert_special => true)
+      Ox.sax_parse(handler, input, :convert_special => true, :tolerant => tolerant)
     else
-      Ox.sax_parse(handler, input)
+      Ox.sax_parse(handler, input, :tolerant => tolerant)
     end
     puts "\nexpected: #{expected}\n  actual: #{handler.calls}" if expected != handler.calls
     assert_equal(expected, handler.calls)
@@ -772,4 +772,41 @@ encoding = "UTF-8" ?>},
     Ox.sax_parse(handler, StringIO.new(%{<?xml version="1.0"?><abcdefghijklmnop></abcdefghijklmnop>}))
     assert_equal([], handler.errors)
   end
+
+  def test_sax_tolerant
+    xml = %{<!doctype HTML>
+<html lang=en>
+  <head garbage='trash'>
+    <bad attr="something">
+    <bad alone>
+  </head>
+  <body>
+  This is a test of the tolerant effort option.
+  </body>
+</html>
+<ps>after thought</ps>
+}
+      parse_compare(xml,
+                    [[:doctype, " HTML"],
+                     [:start_element, :html],
+                     [:attr, :lang, "en"],
+                     [:start_element, :head],
+                     [:attr, :garbage, "trash"],
+                     [:start_element, :bad],
+                     [:attr, :attr, "something"],
+                     [:start_element, :bad],
+                     [:attr, :alone, ""],
+                     [:end_element, :bad],
+                     [:end_element, :bad],
+                     [:end_element, :head],
+                     [:start_element, :body],
+                     [:text, "\n  This is a test of the tolerant effort option.\n  "],
+                     [:end_element, :body],
+                     [:end_element, :html],
+                     [:start_element, :ps],
+                     [:text, "after thought"],
+                     [:end_element, :ps]],
+                    AllSax, false, true)
+  end
+
 end

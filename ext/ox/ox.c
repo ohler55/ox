@@ -622,11 +622,13 @@ load_file(int argc, VALUE *argv, VALUE self) {
  * @param [Ox::Sax] handler SAX (responds to OX::Sax methods) like handler
  * @param [IO|String] io IO Object to read from
  * @param [Hash] options parse options
- * @param [true|false] :convert_special flag indicating special special characters like &lt; are converted
+ * @param [true|false] :convert_special flag indicating special characters like &lt; are converted
+ * @param [true|false] :tolerant flag indicating the parser should be tolerant of XML errors
  */
 static VALUE
 sax_parse(int argc, VALUE *argv, VALUE self) {
     int convert = 0;
+    int tolerant = 0;
 
     if (argc < 2) {
 	rb_raise(ox_parse_error_class, "Wrong number of arguments to sax_parse.\n");
@@ -638,8 +640,11 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
 	if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
 	    convert = (Qtrue == v);
 	}
+	if (Qnil != (v = rb_hash_lookup(h, tolerant_sym))) {
+	    tolerant = (Qtrue == v);
+	}
     }
-    ox_sax_parse(argv[0], argv[1], convert);
+    ox_sax_parse(argv[0], argv[1], convert, tolerant);
 
     return Qnil;
 }
