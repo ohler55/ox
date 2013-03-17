@@ -781,7 +781,7 @@ encoding = "UTF-8" ?>},
     <bad alone>
   </head>
   <body>
-  This is a test of the tolerant effort option.
+  This is a test of the &tolerant effort option.
   </body>
 </html>
 <ps>after thought</ps>
@@ -800,7 +800,7 @@ encoding = "UTF-8" ?>},
                      [:end_element, :bad],
                      [:end_element, :head],
                      [:start_element, :body],
-                     [:text, "\n  This is a test of the tolerant effort option.\n  "],
+                     [:text, "\n  This is a test of the &tolerant effort option.\n  "],
                      [:end_element, :body],
                      [:end_element, :html],
                      [:start_element, :ps],

@@ -102,7 +102,7 @@ static int		read_text(SaxDrive dr);
 static const char*	read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml);
 static char		read_name_token(SaxDrive dr);
 static int		read_quoted_value(SaxDrive dr, char *last);
-static int		collapse_special(char *str);
+static int		collapse_special(char *str, int tolerant);
 
 static VALUE		rescue_cb(VALUE rdr, VALUE err);
 static VALUE		io_cb(VALUE rdr);
@@ -636,7 +636,7 @@ read_instruction(SaxDrive dr) {
 	    VALUE   args[1];
 
 	    if (dr->convert_special) {
-		if (0 != collapse_special(content)) {
+		if (0 != collapse_special(content, dr->tolerant)) {
 		    sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
 		}
 	    }
@@ -994,7 +994,7 @@ read_text(SaxDrive dr) {
         VALUE   args[1];
 
         if (dr->convert_special) {
-            if (0 != collapse_special(dr->str) && 0 != strchr(dr->str, '&')) {
+            if (0 != collapse_special(dr->str, dr->tolerant) && 0 != strchr(dr->str, '&')) {
                 sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
             }
         }
@@ -1092,7 +1092,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
             VALUE       args[2];
 
             args[0] = name;
-            if (0 != collapse_special(dr->str) && 0 != strchr(dr->str, '&')) {
+            if (0 != collapse_special(dr->str, dr->tolerant) && 0 != strchr(dr->str, '&')) {
                 sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
             }
             args[1] = rb_str_new2(attr_value);
@@ -1315,7 +1315,7 @@ read_from_str(SaxDrive dr) {
 }
 
 static int
-collapse_special(char *str) {
+collapse_special(char *str, int tolerant) {
     char        *s = str;
     char        *b = str;
 
@@ -1323,17 +1323,28 @@ collapse_special(char *str) {
         if ('&' == *s) {
             int         c;
             char        *end;
+	    int		x = 0;
             
             s++;
             if ('#' == *s) {
                 s++;
 		if ('x' == *s || 'X' == *s) {
 		    s++;
+		    x = 1;
 		    c = (int)strtol(s, &end, 16);
 		} else {
 		    c = (int)strtol(s, &end, 10);
 		}
                 if (';' != *end) {
+		    if (tolerant) {
+			*b++ = '&';
+			*b++ = '#';
+			if (x) {
+			    *b++ = *(s - 1);
+			}
+			*b++ = *s++;
+			continue;
+		    }
                     return EDOM;
                 }
                 s = end + 1;
@@ -1352,6 +1363,10 @@ collapse_special(char *str) {
             } else if (0 == strncasecmp(s, "apos;", 5)) {
                 c = '\'';
                 s += 5;
+            } else if (tolerant) {
+		*b++ = '&';
+		*b++ = *s++;
+		continue;
             } else {
                 c = '?';
                 while (';' != *s++) {
@@ -1472,7 +1487,7 @@ sax_value_as_s(VALUE self) {
 	return Qnil;
     }
     if (dr->convert_special) {
-	if (0 != collapse_special(dr->str) && 0 != strchr(dr->str, '&')) {
+	if (0 != collapse_special(dr->str, dr->tolerant) && 0 != strchr(dr->str, '&')) {
 	    sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
 	}
     }
