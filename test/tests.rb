@@ -354,11 +354,11 @@ class Func < ::Test::Unit::TestCase
     xml = %{<!doctype HTML>
 <html lang=en>
   <head garbage='trash'>
-    <bad attr="something">
+    <bad attr="some&#xthing">
     <bad alone>
   </head>
   <body>
-  This is a test of the tolerant effort option.
+  This is a test of the &tolerant&#x effort option.
   </body>
 </html>
 <ps>after thought</ps>
@@ -367,19 +367,19 @@ class Func < ::Test::Unit::TestCase
 <!DOCTYPE HTML >
 <html lang="en">
   <head garbage="trash">
-    <bad attr="something">
+    <bad attr="some&amp;#xthing">
       <bad alone="">
       </bad>
     </bad>
   </head>
   <body>
-  This is a test of the tolerant effort option.
+  This is a test of the &amp;tolerant&amp;#x effort option.
   </body>
 </html>
 <ps>after thought</ps>
 }
     doc = Ox.load(xml, :effort => :tolerant)
-    #puts Ox.dump(doc)
+    puts Ox.dump(doc)
     assert_equal(expected, Ox.dump(doc, :with_xml => false))
   end
 

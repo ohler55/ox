@@ -777,11 +777,11 @@ encoding = "UTF-8" ?>},
     xml = %{<!doctype HTML>
 <html lang=en>
   <head garbage='trash'>
-    <bad attr="something">
+    <bad attr="some&#xthing">
     <bad alone>
   </head>
   <body>
-  This is a test of the &tolerant effort option.
+  This is a test of the &tolerant&# effort option.
   </body>
 </html>
 <ps>after thought</ps>
@@ -793,14 +793,14 @@ encoding = "UTF-8" ?>},
                      [:start_element, :head],
                      [:attr, :garbage, "trash"],
                      [:start_element, :bad],
-                     [:attr, :attr, "something"],
+                     [:attr, :attr, "some&#xthing"],
                      [:start_element, :bad],
                      [:attr, :alone, ""],
                      [:end_element, :bad],
                      [:end_element, :bad],
                      [:end_element, :head],
                      [:start_element, :body],
-                     [:text, "\n  This is a test of the &tolerant effort option.\n  "],
+                     [:text, "\n  This is a test of the &tolerant&# effort option.\n  "],
                      [:end_element, :body],
                      [:end_element, :html],
                      [:start_element, :ps],

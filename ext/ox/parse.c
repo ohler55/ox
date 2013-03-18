@@ -879,7 +879,7 @@ read_coded_chars(PInfo pi, char *text) {
 	}
     }
     if (b > end) {
-	*text++ = *pi->s;
+	*text++ = '&';
     } else if ('#' == *buf) {
 	uint64_t	u = 0;
 	
@@ -890,9 +890,8 @@ read_coded_chars(PInfo pi, char *text) {
 	    b = read_10_uint64(b, &u);
 	}
 	if (0 == b) {
-	    *text++ = *pi->s;
+	    *text++ = '&';
 	} else {
-	    pi->s = s;
 	    if (u <= 0x000000000000007FULL) {
 		*text++ = (char)u;
 #if HAS_PRIVATE_ENCODING
@@ -909,10 +908,14 @@ read_coded_chars(PInfo pi, char *text) {
 #endif
 		pi->options->rb_enc = ox_utf8_encoding;
 		text = ucs_to_utf8_chars(text, u);
+	    } else if (TolerantEffort == pi->options->effort) {
+		*text++ = '&';
+		return text;
 	    } else {
 		/*raise_error("Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s); */
 		raise_error("Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);
 	    }
+	    pi->s = s;
 	}
     } else if (0 == strcasecmp(buf, "nbsp;")) {
 	pi->s = s;
@@ -933,7 +936,7 @@ read_coded_chars(PInfo pi, char *text) {
 	pi->s = s;
 	*text++ = '\'';
     } else {
-	*text++ = *pi->s;
+	*text++ = '&';
     }
     return text;
 }
@@ -951,15 +954,26 @@ collapse_special(PInfo pi, char *str) {
 	    s++;
 	    if ('#' == *s) {
 		uint64_t	u = 0;
+		char		x;
 
 		s++;
 		if ('x' == *s || 'X' == *s) {
+		    x = *s;
 		    s++;
 		    end = read_hex_uint64(s, &u);
 		} else {
+		    x = '\0';
 		    end = read_10_uint64(s, &u);
 		}
 		if (0 == end) {
+		    if (TolerantEffort == pi->options->effort) {
+			*b++ = '&';
+			*b++ = '#';
+			if ('\0' != x) {
+			    *b++ = x;
+			}
+			continue;
+		    }
 		    return EDOM;
 		}
 		if (u <= 0x000000000000007FULL) {
@@ -1000,6 +1014,9 @@ collapse_special(PInfo pi, char *str) {
 		} else if (0 == strncasecmp(s, "apos;", 5)) {
 		    c = '\'';
 		    s += 5;
+		} else if (TolerantEffort == pi->options->effort) {
+		    *b++ = '&';
+		    continue;
 		} else {
 		    c = '?';
 		    while (';' != *s++) {

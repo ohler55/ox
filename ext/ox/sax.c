@@ -1342,7 +1342,6 @@ collapse_special(char *str, int tolerant) {
 			if (x) {
 			    *b++ = *(s - 1);
 			}
-			*b++ = *s++;
 			continue;
 		    }
                     return EDOM;
@@ -1365,7 +1364,6 @@ collapse_special(char *str, int tolerant) {
                 s += 5;
             } else if (tolerant) {
 		*b++ = '&';
-		*b++ = *s++;
 		continue;
             } else {
                 c = '?';
