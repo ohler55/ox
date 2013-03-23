@@ -381,6 +381,22 @@ encoding = "UTF-8" ?>},
                   ])
   end
 
+  def test_sax_open_close_element
+    parse_compare(%{<top><mid></mid></top>},
+                  [[:start_element, :top],
+                   [:start_element, :mid],
+                   [:end_element, :mid],
+                   [:end_element, :top]
+                  ])
+  end
+
+  def test_sax_empty_element
+    parse_compare(%{<top></top>},
+                  [[:start_element, :top],
+                   [:end_element, :top]
+                  ])
+  end
+
   def test_sax_special
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [[:start_element, :top],

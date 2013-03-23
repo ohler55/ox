@@ -5,9 +5,15 @@
 
 - todo
  
-- tolerant
- - allow lower case doctype and other key words
- - overlap closes all previous ones
+- sax parser rewrite
+ - keep stack of element names as an array
+  - allows back searches for closed elements
+ - don't make recursive
+  - should simplify parse error recovery
+ - add rules for different element name recovery strategies
+  - no children - doctype, if html, hr, br)
+  - no same 1st gen children - if html, table, td, tr
+  - javascript optimization
 
 
 - add UTF-16 support
