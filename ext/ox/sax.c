@@ -548,7 +548,11 @@ read_children(SaxDrive dr, int first) {
             err = ('\0' == read_name_token(dr));
 	    dr->line = line;
 	    dr->col = col;
-	    return err;
+	    if (first && dr->tolerant) {
+		sax_drive_error(dr, "invalid format, unmatched element end", 0);
+	    } else {
+		return err;
+	    }
             break;
 	case '\0':
             sax_drive_error(dr, "invalid format, document not terminated", 1);
@@ -560,6 +564,10 @@ read_children(SaxDrive dr, int first) {
                 sax_drive_error(dr, "invalid format, multiple top level elements", 0);
             }
 	    err = read_element(dr);
+	    if (NAME_MISMATCH == err && dr->tolerant && first) {
+		// must have been a end element with no matching start
+		err = 0;
+	    }		
             element_read = 1;
 	    break;
 	}
@@ -926,6 +934,7 @@ read_element(SaxDrive dr) {
 	    if (dr->has_column) {
 		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	    }
+	    sax_drive_error(dr, "invalid format, element start and end names do not match", 1);
 	    //printf("*** ename: %s  close: %s\n", ename, dr->str);
 	    if (dr->tolerant) {
 		if (0 != dr->has_end_element) {
@@ -942,7 +951,6 @@ read_element(SaxDrive dr) {
 		}
 		return NAME_MISMATCH; // dr->str is still the name
 	    } else {
-		sax_drive_error(dr, "invalid format, element start and end names do not match", 1);
 		return -1;
 	    }
 	}

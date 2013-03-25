@@ -34,6 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
+### Release 1.9.4
+
+ - SAX tolerant mode handle multiple elements in a document better.
+
 ### Release 1.9.3
 
  - mcarpenter fixed a compile problem with Cygwin.

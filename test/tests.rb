@@ -379,7 +379,7 @@ class Func < ::Test::Unit::TestCase
 <ps>after thought</ps>
 }
     doc = Ox.load(xml, :effort => :tolerant)
-    puts Ox.dump(doc)
+    #puts Ox.dump(doc)
     assert_equal(expected, Ox.dump(doc, :with_xml => false))
   end
 
