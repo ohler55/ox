@@ -14,7 +14,10 @@
   - no children - doctype, if html, hr, br)
   - no same 1st gen children - if html, table, td, tr
   - javascript optimization
-
+  - set flags or expected sets on start element match
+ - element end and start callbacks include a 'implied' arg for auto generated start or ends
+ - generate an error if something is wrong
+ 
 
 - add UTF-16 support
 U+0000..U+D7FF, U+E000..U+EFFF  00000xxxxxxxxxxxxxxxx  xxxxxxxxxxxxxxxx
