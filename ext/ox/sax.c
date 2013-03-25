@@ -44,6 +44,12 @@
 
 #define NAME_MISMATCH	1
 
+typedef struct _Nv {
+    const char	*name;
+    VALUE	val;
+} *Nv;
+
+
 typedef struct _SaxDrive {
     char        base_buf[0x00010000];
     char        *buf;
@@ -51,6 +57,10 @@ typedef struct _SaxDrive {
     char        *cur;
     char        *read_end;      /* one past last character read */
     char        *str;           /* start of current string being read */
+    struct _Nv	base_stack[100];
+    Nv		stack;		/* current stack */
+    Nv		stack_end;	/* stack end */
+    Nv		sp;		/* pointer to current stack position */
     int         line;
     int         col;
     VALUE       handler;
@@ -92,8 +102,9 @@ static void		sax_drive_cleanup(SaxDrive dr);
 static int		sax_drive_read(SaxDrive dr);
 static void		sax_drive_error(SaxDrive dr, const char *msg, int critical);
 
+static void		parse(SaxDrive dr);
 static int		read_children(SaxDrive dr, int first);
-static int		read_instruction(SaxDrive dr);
+static char		read_instruction(SaxDrive dr);
 static int		read_doctype(SaxDrive dr);
 static int		read_cdata(SaxDrive dr);
 static int		read_comment(SaxDrive dr);
@@ -252,6 +263,21 @@ str2sym(const char *str, SaxDrive dr, char **strp) {
     return sym;
 }
 
+inline static int
+respond_to(VALUE obj, ID method) {
+#ifdef JRUBY_RUBY
+    /* There is a bug in JRuby where rb_respond_to() returns true (1) even if
+     * a method is private. */
+    {
+	VALUE	args[1];
+
+	*args = ID2SYM(method);
+	return (Qtrue == rb_funcall2(obj, rb_intern("respond_to?"), 1, args));
+    }
+#else
+    return rb_respond_to(obj, method);
+#endif
+}
 
 void
 ox_sax_parse(VALUE handler, VALUE io, int convert, int tolerant) {
@@ -275,24 +301,8 @@ ox_sax_parse(VALUE handler, VALUE io, int convert, int tolerant) {
     printf("    has_line = %s\n", dr.has_line ? "true" : "false");
     printf("    has_column = %s\n", dr.has_column ? "true" : "false");
 #endif
-    read_children(&dr, 1);
+    parse(&dr);
     sax_drive_cleanup(&dr);
-}
-
-inline static int
-respond_to(VALUE obj, ID method) {
-#ifdef JRUBY_RUBY
-    /* There is a bug in JRuby where rb_respond_to() returns true (1) even if
-     * a method is private. */
-    {
-	VALUE	args[1];
-
-	*args = ID2SYM(method);
-	return (Qtrue == rb_funcall2(obj, rb_intern("respond_to?"), 1, args));
-    }
-#else
-    return rb_respond_to(obj, method);
-#endif
 }
 
 static void
@@ -341,6 +351,9 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert, int tolerant) 
     dr->cur = dr->buf;
     dr->read_end = dr->buf;
     dr->str = 0;
+    dr->stack = dr->base_stack;
+    dr->stack_end = dr->base_stack + sizeof(dr->base_stack);
+    dr->sp = dr->stack;
     dr->line = 1;
     dr->col = 0;
     dr->handler = handler;
@@ -394,6 +407,9 @@ sax_drive_cleanup(SaxDrive dr) {
     rb_gc_unregister_address(&dr->value_obj);
     if (dr->base_buf != dr->buf) {
         xfree(dr->buf);
+    }
+    if (dr->base_stack != dr->stack) {
+        xfree(dr->stack);
     }
 }
 
@@ -461,6 +477,65 @@ sax_drive_error(SaxDrive dr, const char *msg, int critical) {
     }
 }
 
+static char
+skipBOM(SaxDrive dr) {
+    char        c = sax_drive_get(dr);
+
+    if (0xEF == (uint8_t)c) { /* only UTF8 is supported */
+	if (0xBB == (uint8_t)sax_drive_get(dr) && 0xBF == (uint8_t)sax_drive_get(dr)) {
+#if HAS_ENCODING_SUPPORT
+	    dr->encoding = ox_utf8_encoding;
+#elif HAS_PRIVATE_ENCODING
+	    dr->encoding = ox_utf8_encoding;
+#endif
+	    c = sax_drive_get(dr);
+	} else {
+	    sax_drive_error(dr, "invalid format, invalid BOM or a binary file.", 1);
+	}
+    }
+    return c;
+}
+
+static void
+parse(SaxDrive dr) {
+    char        c = skipBOM(dr);
+
+    // TBD
+    while ('\0' != c) {
+        dr->str = dr->cur; /* protect the start */
+        if (is_white(c) && '\0' == (c = next_non_white(dr))) {
+            break;
+        }
+	if ('<' == c) {
+	    switch (c) {
+	    case '?': /* instructions (xml or otherwise) */
+		c = read_instruction(dr);
+		break;
+	    case '!': /* comment or doctype */
+		dr->str = dr->cur;
+		// TBD
+		break;
+	    case '/': /* element end */
+
+		// TBD
+		break;
+	    case '\0':
+		goto DONE;
+		
+	    default:
+		break;
+	    }
+	} else {
+	    // TBD read text (from dr->str)
+	}
+	c = sax_drive_get(dr);
+    }
+ DONE:
+    // TBD if stack is not empty then close open elements and generate errors
+    printf("*** done parsing\n");
+}
+
+
 static int
 read_children(SaxDrive dr, int first) {
     int         err = 0;
@@ -506,7 +581,7 @@ read_children(SaxDrive dr, int first) {
         c = sax_drive_get(dr);
 	switch (c) {
 	case '?': /* instructions (xml or otherwise) */
-	    err = read_instruction(dr);
+	    /*err = */read_instruction(dr);
 	    break;
 	case '!': /* comment or doctype */
             dr->str = dr->cur;
@@ -603,7 +678,7 @@ read_content(SaxDrive dr, char *content, size_t len) {
 
 /* Entered after the "<?" sequence. Ready to read the rest.
  */
-static int
+static char
 read_instruction(SaxDrive dr) {
     char	content[1024];
     char        c;
@@ -615,7 +690,7 @@ read_instruction(SaxDrive dr) {
     int		col = dr->col - 1;
 
     if ('\0' == (c = read_name_token(dr))) {
-        return -1;
+        return c;
     }
     is_xml = (0 == strcmp("xml", dr->str));
     if (dr->has_instruct || dr->has_end_instruct) {
@@ -673,7 +748,6 @@ read_instruction(SaxDrive dr) {
 	c = next_non_white(dr);
 	if ('>' != c) {
 	    sax_drive_error(dr, "invalid format, instruction not terminated", 1);
-	    return -1;
 	}
     }
     if (dr->has_end_instruct) {
@@ -690,7 +764,7 @@ read_instruction(SaxDrive dr) {
     }
     dr->str = 0;
 
-    return 0;
+    return sax_drive_get(dr);
 }
 
 /* Entered after the "<!DOCTYPE" sequence. Ready to read the rest.
