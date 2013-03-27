@@ -17,6 +17,10 @@
   - set flags or expected sets on start element match
  - element end and start callbacks include a 'implied' arg for auto generated start or ends
  - generate an error if something is wrong
+
+ - does raise in callback propogate up?
+  - use callback raise to exit or have tolerant flag indicate raise on error
+  - error messag eshoudl start with classname of error type for easy filtering
  
 
 - add UTF-16 support

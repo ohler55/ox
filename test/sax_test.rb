@@ -181,7 +181,7 @@ class Func < ::Test::Unit::TestCase
     assert_equal([[:start_element, :top],
                   [:end_element, :top]], handler.calls)
   end
-
+=begin
   def test_sax_io_file
     handler = AllSax.new()
     input = IO.open(IO.sysopen(File.join(File.dirname(__FILE__), 'basic.xml')))
@@ -205,6 +205,13 @@ class Func < ::Test::Unit::TestCase
                    [:attr, :version, "1.0"],
                    [:attr, :encoding, "UTF-8"],
                    [:end_instruct, 'xml']])
+  end
+
+  def test_sax_instruct_noattrs
+    parse_compare(%{<?bad something?>},
+                  [[:instruct, 'bad'],
+                   [:text, "something"],
+                   [:end_instruct, 'bad']])
   end
 
   def test_sax_instruct_loose
@@ -240,13 +247,13 @@ encoding = "UTF-8" ?>},
                    [:end_instruct, "content"],
                    [:end_element, :top]])
   end
-
+=end
   def test_sax_element_simple
     parse_compare(%{<top/>},
                   [[:start_element, :top],
                    [:end_element, :top]])
   end
-
+=begin
   def test_sax_element_attrs
     parse_compare(%{<top x="57" y='42' z=33 />},
                   [[:start_element, :top],
@@ -447,6 +454,16 @@ encoding = "UTF-8" ?>},
                    [:end_element, :top],
                    [:error, "invalid format, DOCTYPE can not come after an element", 3, 11],
                    [:doctype, ' top PUBLIC "top.dtd"']])
+  end
+
+  def test_sax_comment_simple
+    parse_compare(%{<?xml version="1.0"?>
+<!--First comment.-->
+},
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
+                   [:comment, 'First comment.']])
   end
 
   def test_sax_comment
@@ -825,5 +842,5 @@ encoding = "UTF-8" ?>},
                      [:end_element, :ps]],
                     AllSax, false, true)
   end
-
+=end
 end

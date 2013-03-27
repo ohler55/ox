@@ -44,18 +44,23 @@
 
 #define NAME_MISMATCH	1
 
+#define START_STATE	1
+#define BODY_STATE	2
+#define AFTER_STATE	3
+
 typedef struct _Nv {
     const char	*name;
     VALUE	val;
 } *Nv;
 
-
+// TBD add pro and use instead of str to avoid sliding buffer
 typedef struct _SaxDrive {
     char        base_buf[0x00010000];
     char        *buf;
     char        *buf_end;
     char        *cur;
     char        *read_end;      /* one past last character read */
+    char        *pro;           /* protection start, buffer can not slide past this point */
     char        *str;           /* start of current string being read */
     struct _Nv	base_stack[100];
     Nv		stack;		/* current stack */
@@ -68,6 +73,7 @@ typedef struct _SaxDrive {
     int         (*read_func)(struct _SaxDrive *dr);
     int         convert_special;
     int		tolerant;
+    int		err;
     union {
         int     	fd;
         VALUE   	io;
@@ -103,16 +109,18 @@ static int		sax_drive_read(SaxDrive dr);
 static void		sax_drive_error(SaxDrive dr, const char *msg, int critical);
 
 static void		parse(SaxDrive dr);
+// All read functions should return the next character after the 'thing' that was read.
 static int		read_children(SaxDrive dr, int first);
 static char		read_instruction(SaxDrive dr);
-static int		read_doctype(SaxDrive dr);
-static int		read_cdata(SaxDrive dr);
-static int		read_comment(SaxDrive dr);
+static char		read_doctype(SaxDrive dr);
+static char		read_cdata(SaxDrive dr);
+static char		read_comment(SaxDrive dr);
+static char		read_element_start(SaxDrive dr);
 static int		read_element(SaxDrive dr);
 static int		read_text(SaxDrive dr);
-static const char*	read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml);
+static char		read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req);
 static char		read_name_token(SaxDrive dr);
-static int		read_quoted_value(SaxDrive dr, char *last);
+static char		read_quoted_value(SaxDrive dr);
 static int		collapse_special(char *str, int tolerant);
 
 static VALUE		rescue_cb(VALUE rdr, VALUE err);
@@ -229,6 +237,12 @@ is_white(char c) {
         break;
     }
     return 0;
+}
+
+inline void
+protect(SaxDrive dr) {
+    dr->pro = dr->cur;
+    dr->str = dr->cur; // can't have str before pro
 }
 
 inline static VALUE
@@ -350,6 +364,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert, int tolerant) 
     dr->buf_end = dr->buf + sizeof(dr->base_buf) - 1; /* 1 less to make debugging easier */
     dr->cur = dr->buf;
     dr->read_end = dr->buf;
+    dr->pro = 0;
     dr->str = 0;
     dr->stack = dr->base_stack;
     dr->stack_end = dr->base_stack + sizeof(dr->base_stack);
@@ -361,6 +376,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert, int tolerant) 
     rb_gc_register_address(&dr->value_obj);
     dr->convert_special = convert;
     dr->tolerant = tolerant;
+    dr->err = 0;
     dr->has_instruct = respond_to(handler, ox_instruct_id);
     dr->has_end_instruct = respond_to(handler, ox_end_instruct_id);
     dr->has_attr = respond_to(handler, ox_attr_id);
@@ -419,10 +435,10 @@ sax_drive_read(SaxDrive dr) {
     size_t      shift = 0;
     
     if (dr->buf < dr->cur) {
-        if (0 == dr->str) {
+        if (0 == dr->pro) {
             shift = dr->cur - dr->buf;
         } else {
-            shift = dr->str - dr->buf;
+            shift = dr->pro - dr->buf;
         }
         /*printf("\n*** shift: %lu\n", shift); */
         if (0 == shift) { /* no space left so allocate more */
@@ -438,15 +454,15 @@ sax_drive_read(SaxDrive dr) {
             dr->buf_end = dr->buf + size * 2;
             dr->cur = dr->buf + (dr->cur - old);
             dr->read_end = dr->buf + (dr->read_end - old);
-            if (0 != dr->str) {
-                dr->str = dr->buf + (dr->str - old);
+            if (0 != dr->pro) {
+                dr->pro = dr->buf + (dr->pro - old);
             }
         } else {
             memmove(dr->buf, dr->buf + shift, dr->read_end - (dr->buf + shift));
             dr->cur -= shift;
             dr->read_end -= shift;
-            if (0 != dr->str) {
-                dr->str -= shift;
+            if (0 != dr->pro) {
+                dr->pro -= shift;
             }
         }
     }
@@ -499,21 +515,68 @@ skipBOM(SaxDrive dr) {
 static void
 parse(SaxDrive dr) {
     char        c = skipBOM(dr);
+    int		state = START_STATE;
+    char	*prev = 0;// TBD
 
     // TBD
     while ('\0' != c) {
-        dr->str = dr->cur; /* protect the start */
+	printf("*** c: '%c' (%02x)  %p\n", c, c, dr->cur);
+	if (prev == dr->cur) {
+	    printf("*** looping\n");
+	    return;
+	}
+	prev = dr->cur;
+	protect(dr);
         if (is_white(c) && '\0' == (c = next_non_white(dr))) {
             break;
         }
 	if ('<' == c) {
+	    c = sax_drive_get(dr);
 	    switch (c) {
 	    case '?': /* instructions (xml or otherwise) */
 		c = read_instruction(dr);
 		break;
 	    case '!': /* comment or doctype */
-		dr->str = dr->cur;
-		// TBD
+		protect(dr);
+		c = sax_drive_get(dr);
+		if ('\0' == c) {
+		    sax_drive_error(dr, "invalid format, DOCTYPE or comment not terminated", 0);
+		    goto DONE;
+		} else if ('-' == c) {
+		    c = sax_drive_get(dr); /* skip first - and get next character */
+		    if ('-' != c) {
+			sax_drive_error(dr, "invalid format, bad comment format, expected <!--", 0);
+		    } else {
+			c = sax_drive_get(dr); /* skip second - */
+		    }
+		    c = read_comment(dr);
+		} else {
+		    int     i;
+
+		    for (i = 7; 0 < i; i--) {
+			sax_drive_get(dr);
+		    }
+		    if (0 == strncmp("DOCTYPE", dr->str, 7)) {
+			if (START_STATE != state) {
+			    sax_drive_error(dr, "invalid format, DOCTYPE can not come after an element", 0);
+			}
+			c = read_doctype(dr);
+		    } else if (0 == strncasecmp("DOCTYPE", dr->str, 7)) {
+			sax_drive_error(dr, "invalid format, expected DOCTYPE all in caps", 0);
+			if (START_STATE != state) {
+			    sax_drive_error(dr, "invalid format, DOCTYPE can not come after an element", 0);
+			}
+			c = read_doctype(dr);
+		    } else if (0 == strncmp("[CDATA[", dr->str, 7)) {
+			c = read_cdata(dr);
+		    } else if (0 == strncasecmp("[CDATA[", dr->str, 7)) {
+			sax_drive_error(dr, "invalid format, expected CDATA all in caps", 0);
+			c = read_cdata(dr);
+		    } else {
+			sax_drive_error(dr, "invalid format, DOCTYPE, CDATA, or comment expected", 0);
+			// TBD read to >
+		    }
+		}
 		break;
 	    case '/': /* element end */
 
@@ -521,14 +584,18 @@ parse(SaxDrive dr) {
 		break;
 	    case '\0':
 		goto DONE;
-		
 	    default:
+		backup(dr);
+		if (AFTER_STATE == state) {
+		    sax_drive_error(dr, "invalid format, multiple top level elements", 0);
+		}
+		state = BODY_STATE;
+		c = read_element_start(dr);
 		break;
 	    }
 	} else {
 	    // TBD read text (from dr->str)
 	}
-	c = sax_drive_get(dr);
     }
  DONE:
     // TBD if stack is not empty then close open elements and generate errors
@@ -545,7 +612,7 @@ read_children(SaxDrive dr, int first) {
     int		col;
     
     while (!err) {
-        dr->str = dr->cur; /* protect the start */
+	protect(dr);
 	c = sax_drive_get(dr);
 	if (first) {
 	    if (0xEF == (uint8_t)c) { /* only UTF8 is supported */
@@ -577,14 +644,14 @@ read_children(SaxDrive dr, int first) {
                 break;
             }
 	}
-        dr->str = dr->cur; /* protect the start for elements */
+	protect(dr);
         c = sax_drive_get(dr);
 	switch (c) {
 	case '?': /* instructions (xml or otherwise) */
 	    /*err = */read_instruction(dr);
 	    break;
 	case '!': /* comment or doctype */
-            dr->str = dr->cur;
+	    protect(dr);
             c = sax_drive_get(dr);
 	    if ('\0' == c) {
                 sax_drive_error(dr, "invalid format, DOCTYPE or comment not terminated", 1);
@@ -657,11 +724,12 @@ read_content(SaxDrive dr, char *content, size_t len) {
 
     while ('\0' != (c = sax_drive_get(dr))) {
 	if (end < content) {
-	    sax_drive_error(dr, "processing instruction content too large", 1);
+	    sax_drive_error(dr, "processing instruction content too large", 0);
+	    return;
 	}
 	if ('?' == c) {
 	    if ('\0' == (c = sax_drive_get(dr))) {
-		sax_drive_error(dr, "invalid format, document not terminated", 1);
+		sax_drive_error(dr, "invalid format, document not terminated", 0);
 	    }
 	    if ('>' == c) {
 		*content = '\0';
@@ -683,12 +751,12 @@ read_instruction(SaxDrive dr) {
     char	content[1024];
     char        c;
     char	*cend;
-    const char	*err;
     VALUE	target = Qnil;
     int		is_xml;
     int		line = dr->line;
     int		col = dr->col - 1;
 
+    protect(dr);
     if ('\0' == (c = read_name_token(dr))) {
         return c;
     }
@@ -708,13 +776,15 @@ read_instruction(SaxDrive dr) {
         args[0] = target;
         rb_funcall2(dr->handler, ox_instruct_id, 1, args);
     }
-    dr->str = dr->cur; /* make sure the start doesn't get compacted out */
+    protect(dr);
     line = dr->line;
     col = dr->col;
     read_content(dr, content, sizeof(content) - 1);
     cend = dr->cur;
     reset_reader(dr, dr->str, line, col);
-    if (0 != (err = read_attrs(dr, c, '?', '?', is_xml))) {
+    dr->err = 0;
+    c = read_attrs(dr, c, '?', '?', is_xml, 1);
+    if (dr->err) {
 	if (dr->has_text) {
 	    VALUE   args[1];
 
@@ -745,7 +815,9 @@ read_instruction(SaxDrive dr) {
     } else {
 	line = dr->line;
 	col = dr->col;
-	c = next_non_white(dr);
+	if (is_white(c)) {
+	    c = next_non_white(dr);
+	}
 	if ('>' != c) {
 	    sax_drive_error(dr, "invalid format, instruction not terminated", 1);
 	}
@@ -769,17 +841,18 @@ read_instruction(SaxDrive dr) {
 
 /* Entered after the "<!DOCTYPE" sequence. Ready to read the rest.
  */
-static int
+static char
 read_doctype(SaxDrive dr) {
     char        c;
     int		line = dr->line;
     int		col = dr->col - 10;
 
-    dr->str = dr->cur - 1; /* mark the start */
+    backup(dr); /* back up to the start in case the cdata is empty */
+    protect(dr);
     while ('>' != (c = sax_drive_get(dr))) {
         if ('\0' == c) {
-            sax_drive_error(dr, "invalid format, doctype terminated unexpectedly", 1);
-            return -1;
+            sax_drive_error(dr, "invalid format, doctype terminated unexpectedly", 0);
+            return c;
         }
     }
     *(dr->cur - 1) = '\0';
@@ -797,20 +870,21 @@ read_doctype(SaxDrive dr) {
     }
     dr->str = 0;
 
-    return 0;
+    return sax_drive_get(dr);
 }
 
 /* Entered after the "<![CDATA[" sequence. Ready to read the rest.
  */
-static int
+static char
 read_cdata(SaxDrive dr) {
     char        c;
     int         end = 0;
     int		line = dr->line;
     int		col = dr->col - 10;
 
+    printf("*** cdata: '%s'\n", dr->cur);
     backup(dr); /* back up to the start in case the cdata is empty */
-    dr->str = dr->cur; /* mark the start */
+    protect(dr);
     while (1) {
         c = sax_drive_get(dr);
         if (']' == c) {
@@ -822,8 +896,8 @@ read_cdata(SaxDrive dr) {
             }
             end = 0;
         } else if ('\0' == c) {
-            sax_drive_error(dr, "invalid format, cdata terminated unexpectedly", 1);
-            return -1;
+            sax_drive_error(dr, "invalid format, cdata terminated unexpectedly", 0);
+	    return '\0';
         } else {
             end = 0;
         }
@@ -851,38 +925,36 @@ read_cdata(SaxDrive dr) {
     }
     dr->str = 0;
 
-    return 0;
+    return sax_drive_get(dr);
 }
 
 /* Entered after the "<!--" sequence. Ready to read the rest.
  */
-static int
+static char
 read_comment(SaxDrive dr) {
     char        c;
     int         end = 0;
     int		line = dr->line;
     int		col = dr->col - 5;
 
-    dr->str = dr->cur - 1; /* mark the start */
+    backup(dr); /* back up to the start in case the cdata is empty */
+    protect(dr);
     while (1) {
         c = sax_drive_get(dr);
         if ('-' == c) {
-            if (end) {
-                *(dr->cur - 2) = '\0';
+            end++;
+        } else if ('>' == c) {
+            if (2 <= end) {
+                *(dr->cur - 3) = '\0';
                 break;
-            } else {
-                end = 1;
             }
+            end = 0;
         } else if ('\0' == c) {
-            sax_drive_error(dr, "invalid format, comment terminated unexpectedly", 1);
-            return -1;
+            sax_drive_error(dr, "invalid format, comment terminated unexpectedly", 0);
+            return '\0';
         } else {
             end = 0;
         }
-    }
-    c = sax_drive_get(dr);
-    if ('>' != c) {
-        sax_drive_error(dr, "invalid format, comment terminated unexpectedly", 1);
     }
     if (dr->has_comment) {
         VALUE       args[1];
@@ -907,7 +979,7 @@ read_comment(SaxDrive dr) {
     }
     dr->str = 0;
 
-    return 0;
+    return sax_drive_get(dr);
 }
 
 /* Entered after the '<' and the first character after that. Returns status
@@ -917,7 +989,7 @@ static int
 read_element(SaxDrive dr) {
     char	*ename = 0;
     VALUE       name = Qnil;
-    const char	*err;
+    //const char	*err;
     char        c;
     int         closed;
     int		line = dr->line;
@@ -945,11 +1017,13 @@ read_element(SaxDrive dr) {
     } else if ('>' == c) {
         closed = 0;
     } else {
+	/*
         if (0 != (err = read_attrs(dr, c, '/', '>', 0))) {
 	    sax_drive_error(dr, err, 1);
             return -1;
         }
         closed = ('/' == *(dr->cur - 1));
+	*/
     }
     if (closed) {
         c = next_non_white(dr);
@@ -1046,6 +1120,71 @@ read_element(SaxDrive dr) {
     return 0;
 }
 
+/* Entered after the '<' and the first character after that. Returns status
+ * code.
+ */
+static char
+read_element_start(SaxDrive dr) {
+    char	*ename = 0;
+    VALUE       name = Qnil;
+    char        c;
+    int         closed;
+    int		line = dr->line;
+    int		col = dr->col - 1;
+
+    if ('\0' == (c = read_name_token(dr))) {
+        return '\0';
+    }
+    name = str2sym(dr->str, dr, &ename);
+    if (dr->has_start_element) {
+        VALUE       args[1];
+
+	if (dr->has_line) {
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
+	}
+	if (dr->has_column) {
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
+	}
+        args[0] = name;
+        rb_funcall2(dr->handler, ox_start_element_id, 1, args);
+    }
+    if ('/' == c) {
+        closed = 1;
+    } else if ('>' == c) {
+        closed = 0;
+    } else {
+	protect(dr);
+        c = read_attrs(dr, c, '/', '>', 0, 0);
+        closed = ('/' == *(dr->cur - 1));
+    }
+    if (closed) {
+        c = next_non_white(dr);
+	line = dr->line;
+	col = dr->col - 1;
+        if (dr->has_end_element) {
+            VALUE       args[1];
+
+	    if (dr->has_line) {
+		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
+	    }
+	    if (dr->has_column) {
+		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
+	    }
+            args[0] = name;
+            rb_funcall2(dr->handler, ox_end_element_id, 1, args);
+        }
+    } else {
+	// TBD add to stack
+    }
+    if ('>' != c) {
+	sax_drive_error(dr, "invalid format, element not closed", 0);
+	return c;
+    }
+    dr->str = 0;
+
+    return sax_drive_get(dr);
+}
+
 static int
 read_text(SaxDrive dr) {
     char        c;
@@ -1103,16 +1242,16 @@ read_text(SaxDrive dr) {
     return 0;
 }
 
-static const char*
-read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
+static char
+read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) {
     VALUE       name = Qnil;
     int         is_encoding = 0;
     int		line;
     int		col;
-    char	last;
     char	*attr_value;
     
-    dr->str = dr->cur; /* lock it down */
+    // already protected by caller
+    dr->str = dr->cur;
     if (is_white(c)) {
         c = next_non_white(dr);
     }
@@ -1121,33 +1260,32 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
 	line = dr->line;
 	col = dr->col;
         if ('\0' == c) {
-	    return "invalid format, attributes not terminated";
+	    sax_drive_error(dr, "invalid format, attributes not terminated", 0);
+	    return '\0';
         }
         if ('\0' == (c = read_name_token(dr))) {
-            return "error reading token";
+	    sax_drive_error(dr, "error reading token", 0);
+	    return '\0';
         }
         if (is_xml && 0 == strcasecmp("encoding", dr->str)) {
             is_encoding = 1;
         }
-	/* TBD use symbol cache */
         if (dr->has_attr || dr->has_attr_value) {
             name = str2sym(dr->str, dr, 0);
         }
         if (is_white(c)) {
             c = next_non_white(dr);
         }
-	last = '\0';
         if ('=' != c) {
-	    if (dr->tolerant) {
-		attr_value = (char*)"";
-		last = c;
+	    if (eq_req) {
+		dr->err = 1;
+		return c;
 	    } else {
-		return "invalid format, no attribute value";
+		sax_drive_error(dr, "invalid format, no attribute value", 0);
+		attr_value = (char*)"";
 	    }
         } else {
-	    if (0 != read_quoted_value(dr, &last)) {
-		return "error reading quoted value";
-	    }
+	    c = read_quoted_value(dr);
 	    attr_value = dr->str;
 	    if (is_encoding) {
 #if HAS_ENCODING_SUPPORT
@@ -1195,22 +1333,30 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml) {
 	    }
             rb_funcall2(dr->handler, ox_attr_id, 2, args);
         }
-	if ('\0' != last) {
-	    c = last;
-	} else {
+	if (is_white(c)) {
 	    c = next_non_white(dr);
 	}
     }
     dr->str = 0;
-
-    return 0;
+    c = *dr->cur;
+    if (termc == c || term2 == c) {
+	sax_drive_get(dr); // the term character, now dr->cur is one past
+	c = sax_drive_get(dr);
+	if (is_white(c)) {
+	    c = next_non_white(dr);
+	}
+    }
+    return c;
 }
 
+/* Returns the next character to be procesed and leaves dr->cur set to the
+ * current character. dr->str will point to the token which will be '\0'
+ * terminated. */
 static char
 read_name_token(SaxDrive dr) {
     char        c;
 
-    dr->str = dr->cur; /* make sure the start doesn't get compacted out */
+    dr->str = dr->cur;
     c = sax_drive_get(dr);
     if (is_white(c)) {
         c = next_non_white(dr);
@@ -1241,11 +1387,10 @@ read_name_token(SaxDrive dr) {
     return '\0';
 }
 
-static int
-read_quoted_value(SaxDrive dr, char *last) {
-    char        c;
+static char
+read_quoted_value(SaxDrive dr) {
+    char	c;
 
-    dr->str = dr->cur;
     c = sax_drive_get(dr);
     if (is_white(c)) {
         c = next_non_white(dr);
@@ -1256,16 +1401,15 @@ read_quoted_value(SaxDrive dr, char *last) {
         dr->str = dr->cur;
         while (term != (c = sax_drive_get(dr))) {
             if ('\0' == c) {
-                sax_drive_error(dr, "invalid format, quoted value not terminated", 1);
-                return -1;
+                sax_drive_error(dr, "invalid format, quoted value not terminated", 0);
+                return '\0';
             }
         }
-    } else if (dr->tolerant) {
+    } else {
 	dr->str = dr->cur - 1;
+	sax_drive_error(dr, "invalid format, attibute value not in quotes", 0);
 	while ('\0' != (c = sax_drive_get(dr))) {
 	    switch (c) {
-	    case '\0':
-                sax_drive_error(dr, "invalid format, non quoted value not terminated", 1);
 	    case ' ':
 	    case '/':
 	    case '>':
@@ -1273,22 +1417,16 @@ read_quoted_value(SaxDrive dr, char *last) {
 	    case '\t':
 	    case '\n':
 	    case '\r':
-		*last = c;
 		*(dr->cur - 1) = '\0'; /* terminate value */
-		return 0;
+		return c;
 	    default:
 		break;
             }
         }
-    } else {
-        dr->str = dr->cur - 1;
-        if ('\0' == (c = next_white(dr))) {
-	    sax_drive_error(dr, "invalid format, attibute value not in quotes", 1);
-	}
     }        
     *(dr->cur - 1) = '\0'; /* terminate value */
 
-    return 0;
+    return *dr->cur;
 }
 
 static VALUE
