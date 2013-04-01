@@ -194,11 +194,11 @@ class Func < ::Test::Unit::TestCase
     parse_compare(%{<?xml?>}, [[:instruct, 'xml'],
                                [:end_instruct, 'xml']])
   end
-
+=end
   def test_sax_instruct_blank
     parse_compare(%{<?xml?>}, [], StartSax)
   end
-
+=begin
   def test_sax_instruct_attrs
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>},
                   [[:instruct, 'xml'],
@@ -206,6 +206,7 @@ class Func < ::Test::Unit::TestCase
                    [:attr, :encoding, "UTF-8"],
                    [:end_instruct, 'xml']])
   end
+
 
   def test_sax_instruct_noattrs
     parse_compare(%{<?bad something?>},
@@ -247,19 +248,25 @@ encoding = "UTF-8" ?>},
                    [:end_instruct, "content"],
                    [:end_element, :top]])
   end
-=end
+
   def test_sax_element_simple
     parse_compare(%{<top/>},
                   [[:start_element, :top],
                    [:end_element, :top]])
   end
-=begin
+
   def test_sax_element_attrs
-    parse_compare(%{<top x="57" y='42' z=33 />},
+    parse_compare(%{<top x="57" y='42' z=33/>},
                   [[:start_element, :top],
                    [:attr, :x, "57"],
                    [:attr, :y, "42"],
+                   [:error, "invalid format, attibute value not in quotes", 1, 22],
                    [:attr, :z, "33"],
+                   [:end_element, :top]])
+  end
+  def test_sax_element_start_end
+    parse_compare(%{<top></top>},
+                  [[:start_element, :top],
                    [:end_element, :top]])
   end
 
@@ -272,6 +279,22 @@ encoding = "UTF-8" ?>},
                    [:end_element, :top]])
 
 
+  end
+
+  def test_sax_nested_elements
+    parse_compare(%{<top>
+  <child>
+    <grandchild/>
+  </child>
+</top>
+},
+                  [[:start_element, :top],
+                   [:start_element, :child],
+                   [:start_element, :grandchild],
+                   [:end_element, :grandchild],
+                   [:end_element, :child],
+                   [:end_element, :top],
+                  ])
   end
 
   def test_sax_nested1

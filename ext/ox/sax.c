@@ -65,9 +65,10 @@ typedef struct _SaxDrive {
     struct _Nv	base_stack[100];
     Nv		stack;		/* current stack */
     Nv		stack_end;	/* stack end */
-    Nv		sp;		/* pointer to current stack position */
+    Nv		sp;		/* pointer to one past last element name on stack */
     int         line;
     int         col;
+    // TBD pro_line, pro_col, deal with read_end
     VALUE       handler;
     VALUE	value_obj;
     int         (*read_func)(struct _SaxDrive *dr);
@@ -109,13 +110,14 @@ static int		sax_drive_read(SaxDrive dr);
 static void		sax_drive_error(SaxDrive dr, const char *msg, int critical);
 
 static void		parse(SaxDrive dr);
-// All read functions should return the next character after the 'thing' that was read.
+// All read functions should return the next character after the 'thing' that was read and leave dr->cur one after that.
 static int		read_children(SaxDrive dr, int first);
 static char		read_instruction(SaxDrive dr);
 static char		read_doctype(SaxDrive dr);
 static char		read_cdata(SaxDrive dr);
 static char		read_comment(SaxDrive dr);
 static char		read_element_start(SaxDrive dr);
+static char		read_element_end(SaxDrive dr);
 static int		read_element(SaxDrive dr);
 static int		read_text(SaxDrive dr);
 static char		read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req);
@@ -151,9 +153,10 @@ char *stpncpy(char *dest, const char *src, size_t n) {
 
 static inline char
 sax_drive_get(SaxDrive dr) {
+    printf("*** drive get from '%s'  from start: %ld  buf: %p  from read_end: %ld\n", dr->cur, dr->cur - dr->buf, dr->buf, dr->read_end - dr->cur);
     if (dr->read_end <= dr->cur) {
         if (0 != sax_drive_read(dr)) {
-            return 0;
+            return '\0';
         }
     }
     if ('\n' == *dr->cur) {
@@ -173,6 +176,7 @@ backup(SaxDrive dr) {
 
 static inline void
 reset_reader(SaxDrive dr, char *cur, int line, int col) {
+    // TBD must be smarter in case at end of read, maybe protect should save all info necessary, keep track of final read as well
     dr->cur = cur;
     dr->line = line;
     dr->col = col;
@@ -186,7 +190,9 @@ inline static char
 next_non_white(SaxDrive dr) {
     char        c;
 
+    printf("*** non white '%s' %ld  %p  %ld\n", dr->cur, dr->cur - dr->buf, dr->buf, dr->read_end - dr->cur);
     while ('\0' != (c = sax_drive_get(dr))) {
+	printf("*** non white '%c' (%02x) '%s'\n", c, c, dr->cur);
 	switch(c) {
 	case ' ':
 	case '\t':
@@ -198,6 +204,7 @@ next_non_white(SaxDrive dr) {
 	    return c;
 	}
     }
+    printf("*** leaving non white '%s' %ld  %p  %ld\n", dr->cur, dr->cur - dr->buf, dr->buf, dr->read_end - dr->cur);
     return '\0';
 }
 
@@ -245,8 +252,33 @@ protect(SaxDrive dr) {
     dr->str = dr->cur; // can't have str before pro
 }
 
+inline static void
+stack_push(SaxDrive dr, const char *name, VALUE val) {
+    // TBD allocate more if at end
+    dr->sp->name = name;
+    dr->sp->val = val;
+    dr->sp++;
+}
+
+inline static Nv
+stack_peek(SaxDrive dr) {
+    if (dr->stack < dr->sp) {
+	return dr->sp - 1;
+    }
+    return 0;
+}
+
+inline static Nv
+stack_pop(SaxDrive dr) {
+    if (dr->stack < dr->sp) {
+	dr->sp--;
+	return dr->sp;
+    }
+    return 0;
+}
+
 inline static VALUE
-str2sym(const char *str, SaxDrive dr, char **strp) {
+str2sym(SaxDrive dr, const char *str, char **strp) {
     VALUE       *slot;
     VALUE       sym;
 
@@ -579,8 +611,10 @@ parse(SaxDrive dr) {
 		}
 		break;
 	    case '/': /* element end */
-
-		// TBD
+		c = read_element_end(dr);
+		if (0 == stack_peek(dr)) {
+		    state = AFTER_STATE;
+		}
 		break;
 	    case '\0':
 		goto DONE;
@@ -591,6 +625,10 @@ parse(SaxDrive dr) {
 		}
 		state = BODY_STATE;
 		c = read_element_start(dr);
+		if (0 == stack_peek(dr)) {
+		    state = AFTER_STATE;
+		}
+		printf("*** read start returned %c (%02x)\n", c, c);
 		break;
 	    }
 	} else {
@@ -784,6 +822,7 @@ read_instruction(SaxDrive dr) {
     reset_reader(dr, dr->str, line, col);
     dr->err = 0;
     c = read_attrs(dr, c, '?', '?', is_xml, 1);
+    printf("*** after read attrs '%c' (%02x) '%s'\n", c, c, dr->cur);
     if (dr->err) {
 	if (dr->has_text) {
 	    VALUE   args[1];
@@ -815,9 +854,9 @@ read_instruction(SaxDrive dr) {
     } else {
 	line = dr->line;
 	col = dr->col;
-	if (is_white(c)) {
-	    c = next_non_white(dr);
-	}
+	printf("*** before leaving '%c' (%02x) '%s'\n", c, c, dr->cur);
+	c = next_non_white(dr);
+	printf("*** before leaving '%c' (%02x) '%s'\n", c, c, dr->cur);
 	if ('>' != c) {
 	    sax_drive_error(dr, "invalid format, instruction not terminated", 1);
 	}
@@ -999,7 +1038,7 @@ read_element(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return -1;
     }
-    name = str2sym(dr->str, dr, &ename);
+    name = str2sym(dr, dr->str, &ename);
     if (dr->has_start_element) {
         VALUE       args[1];
 
@@ -1135,7 +1174,7 @@ read_element_start(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
     }
-    name = str2sym(dr->str, dr, &ename);
+    name = str2sym(dr, dr->str, &ename);
     if (dr->has_start_element) {
         VALUE       args[1];
 
@@ -1155,10 +1194,13 @@ read_element_start(SaxDrive dr) {
     } else {
 	protect(dr);
         c = read_attrs(dr, c, '/', '>', 0, 0);
-        closed = ('/' == *(dr->cur - 1));
+	if (is_white(c)) {
+	    c = next_non_white(dr);
+	}
+	closed = ('/' == c);
     }
     if (closed) {
-        c = next_non_white(dr);
+	c = next_non_white(dr);
 	line = dr->line;
 	col = dr->col - 1;
         if (dr->has_end_element) {
@@ -1174,15 +1216,56 @@ read_element_start(SaxDrive dr) {
             rb_funcall2(dr->handler, ox_end_element_id, 1, args);
         }
     } else {
-	// TBD add to stack
+	stack_push(dr, ename, name);
     }
     if ('>' != c) {
+	printf("*** not closed: %c  '%s'\n", c, dr->cur);
 	sax_drive_error(dr, "invalid format, element not closed", 0);
 	return c;
     }
     dr->str = 0;
 
     return sax_drive_get(dr);
+}
+
+static char
+read_element_end(SaxDrive dr) {
+    char	*ename = 0;
+    VALUE       name = Qnil;
+    char        c;
+    int		line = dr->line;
+    int		col = dr->col - 1;
+    Nv		nv;
+
+    if ('\0' == (c = read_name_token(dr))) {
+        return '\0';
+    }
+    // c should be > and current is one past so read another char
+    c = sax_drive_get(dr);
+    printf("*** checking stack for %s\n", ename);
+    nv = stack_peek(dr);
+    if (0 != nv && 0 == strcmp(dr->str, nv->name)) {
+	ename = dr->str;
+	printf("*** names match\n");
+	name = nv->val;
+	stack_pop(dr);
+    } else {
+	// TBD mismatch, what do we do now
+	name = str2sym(dr, dr->str, &ename);
+    }
+    if (dr->has_end_element) {
+	VALUE       args[1];
+
+	if (dr->has_line) {
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
+	}
+	if (dr->has_column) {
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
+	}
+	args[0] = name;
+	rb_funcall2(dr->handler, ox_end_element_id, 1, args);
+    }
+    return c;
 }
 
 static int
@@ -1271,7 +1354,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
             is_encoding = 1;
         }
         if (dr->has_attr || dr->has_attr_value) {
-            name = str2sym(dr->str, dr, 0);
+            name = str2sym(dr, dr->str, 0);
         }
         if (is_white(c)) {
             c = next_non_white(dr);
@@ -1338,20 +1421,13 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
 	}
     }
     dr->str = 0;
-    c = *dr->cur;
-    if (termc == c || term2 == c) {
-	sax_drive_get(dr); // the term character, now dr->cur is one past
-	c = sax_drive_get(dr);
-	if (is_white(c)) {
-	    c = next_non_white(dr);
-	}
-    }
+
     return c;
 }
 
-/* Returns the next character to be procesed and leaves dr->cur set to the
- * current character. dr->str will point to the token which will be '\0'
- * terminated. */
+/* The character after the character after the word is returned. dr->cur is one past that. dr->str will point to the
+ * token which will be '\0' terminated.
+ */
 static char
 read_name_token(SaxDrive dr) {
     char        c;
@@ -1387,6 +1463,9 @@ read_name_token(SaxDrive dr) {
     return '\0';
 }
 
+/* The character after the quote or if there is no quote, the character after the word is returned. dr->cur is one past
+ * that. dr->str will point to the token which will be '\0' terminated.
+ */
 static char
 read_quoted_value(SaxDrive dr) {
     char	c;
@@ -1405,28 +1484,31 @@ read_quoted_value(SaxDrive dr) {
                 return '\0';
             }
         }
-    } else {
-	dr->str = dr->cur - 1;
-	sax_drive_error(dr, "invalid format, attibute value not in quotes", 0);
-	while ('\0' != (c = sax_drive_get(dr))) {
-	    switch (c) {
-	    case ' ':
-	    case '/':
-	    case '>':
-	    case '?': // for instructions
-	    case '\t':
-	    case '\n':
-	    case '\r':
-		*(dr->cur - 1) = '\0'; /* terminate value */
-		return c;
-	    default:
-		break;
-            }
-        }
-    }        
-    *(dr->cur - 1) = '\0'; /* terminate value */
-
-    return *dr->cur;
+	// dr->cur is one past quote char
+	*(dr->cur - 1) = '\0'; /* terminate value */
+	c = sax_drive_get(dr);
+	return c;
+    }
+    // not quoted, look for something that terminates the string
+    dr->str = dr->cur - 1;
+    sax_drive_error(dr, "invalid format, attibute value not in quotes", 0);
+    while ('\0' != (c = sax_drive_get(dr))) {
+	switch (c) {
+	case ' ':
+	case '/':
+	case '>':
+	case '?': // for instructions
+	case '\t':
+	case '\n':
+	case '\r':
+	    *(dr->cur - 1) = '\0'; /* terminate value */
+	    // dr->cur is in the correct position, one after the word terminator
+	    return c;
+	default:
+	    break;
+	}
+    }
+    return '\0'; // should never get here
 }
 
 static VALUE
@@ -1729,7 +1811,7 @@ sax_value_as_sym(VALUE self) {
     if ('\0' == *dr->str) {
 	return Qnil;
     }
-    return str2sym(dr->str, dr, 0);
+    return str2sym(dr, dr->str, 0);
 }
 
 static VALUE
