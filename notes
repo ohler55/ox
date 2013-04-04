@@ -6,6 +6,13 @@
 - todo
  
 - sax parser rewrite
+ - add key words for errors to differenciate
+ - add options
+  - symbolize or not
+  - tolerant - not needed
+  - special decode 
+  - modes (xml, html, custom?)
+
  - keep stack of element names as an array
   - allows back searches for closed elements
  - don't make recursive

@@ -181,7 +181,7 @@ class Func < ::Test::Unit::TestCase
     assert_equal([[:start_element, :top],
                   [:end_element, :top]], handler.calls)
   end
-=begin
+
   def test_sax_io_file
     handler = AllSax.new()
     input = IO.open(IO.sysopen(File.join(File.dirname(__FILE__), 'basic.xml')))
@@ -194,11 +194,11 @@ class Func < ::Test::Unit::TestCase
     parse_compare(%{<?xml?>}, [[:instruct, 'xml'],
                                [:end_instruct, 'xml']])
   end
-=end
+
   def test_sax_instruct_blank
     parse_compare(%{<?xml?>}, [], StartSax)
   end
-=begin
+
   def test_sax_instruct_attrs
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>},
                   [[:instruct, 'xml'],
@@ -206,7 +206,6 @@ class Func < ::Test::Unit::TestCase
                    [:attr, :encoding, "UTF-8"],
                    [:end_instruct, 'xml']])
   end
-
 
   def test_sax_instruct_noattrs
     parse_compare(%{<?bad something?>},
@@ -249,6 +248,16 @@ encoding = "UTF-8" ?>},
                    [:end_element, :top]])
   end
 
+  def test_sax_instruct_no_term
+    parse_compare(%{<?xml?
+<top/>},
+                  [[:instruct, "xml"],
+                   [:error, "Not Terminated: instruction not terminated", 1, 6],
+                   [:end_instruct, "xml"],
+                   [:start_element, :top],
+                   [:end_element, :top]])
+  end
+
   def test_sax_element_simple
     parse_compare(%{<top/>},
                   [[:start_element, :top],
@@ -260,7 +269,7 @@ encoding = "UTF-8" ?>},
                   [[:start_element, :top],
                    [:attr, :x, "57"],
                    [:attr, :y, "42"],
-                   [:error, "invalid format, attibute value not in quotes", 1, 22],
+                   [:error, "Unexpected Character: attibute value not in quotes", 1, 22],
                    [:attr, :z, "33"],
                    [:end_element, :top]])
   end
@@ -274,11 +283,9 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<top/><top/>},
                   [[:start_element, :top],
                    [:end_element, :top],
-                   [:error, "invalid format, multiple top level elements", 1, 7],
+                   [:error, "Out of Order: multiple top level elements", 1, 7],
                    [:start_element, :top],
                    [:end_element, :top]])
-
-
   end
 
   def test_sax_nested_elements
@@ -333,7 +340,7 @@ encoding = "UTF-8" ?>},
                    [:doctype, " top PUBLIC \"top.dtd\"", 2, 1],
                    [:start_element, :top, 3, 1],
                    [:attr, :attr, "one", 3, 6],
-                   [:comment, " family ", 4, 3],
+                   [:comment, " family ", 4, 4],
                    [:start_element, :child, 5, 3],
                    [:start_element, :grandchild, 6, 5],
                    [:end_element, :grandchild, 6, 17],
@@ -353,12 +360,17 @@ encoding = "UTF-8" ?>},
 </top>},
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
-                   [:end_instruct, 'xml'],
+                   [:end_instruct, "xml"],
                    [:start_element, :top],
                    [:start_element, :child],
                    [:start_element, :grandchild],
                    [:end_element, :grandchild],
-                   [:error, "invalid format, element start and end names do not match", 5, 12]
+                   [:error, "Start End Mismatch: element 'parent' closed but not opened", 5, 3],
+                   [:start_element, :parent],
+                   [:end_element, :parent],
+                   [:error, "Start End Mismatch: element 'top' close does not match 'child' open", 6, 1],
+                   [:end_element, :child],
+                   [:end_element, :top],
                   ])
   end
 
@@ -399,7 +411,8 @@ encoding = "UTF-8" ?>},
                   [[:start_element, :top],
                    [:start_element, :child],
                    [:end_element, :child],
-                   [:error, "invalid format, element not terminated", 4, 1]
+                   [:error, "Start End Mismatch: element 'top' not closed", 4, 1],
+                   [:end_element, :top],
                   ])
   end
 
@@ -447,8 +460,9 @@ encoding = "UTF-8" ?>},
   def test_sax_text_no_term
     parse_compare(%{<top>This is some text.},
                   [[:start_element, :top],
-                   [:error, "invalid format, text terminated unexpectedly", 1, 23],
-                  ])
+                   [:error, "Not Terminated: text not terminated", 1, 23],
+                   [:error, "Start End Mismatch: element 'top' not closed", 1, 23],
+                   [:end_element, :top]])
   end
   # TBD invalid chacters in text
 
@@ -475,8 +489,29 @@ encoding = "UTF-8" ?>},
                    [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:end_element, :top],
-                   [:error, "invalid format, DOCTYPE can not come after an element", 3, 11],
+                   [:error, "Out of Order: DOCTYPE can not come after an element", 3, 11],
                    [:doctype, ' top PUBLIC "top.dtd"']])
+  end
+
+  def test_sax_doctype_space
+    parse_compare(%{
+<! DOCTYPE top PUBLIC "top.dtd">
+<top/>
+},
+                  [[:error, "Unexpected Character: <!DOCTYPE can not included spaces", 2, 4],
+                   [:doctype, ' top PUBLIC "top.dtd"'],
+                   [:start_element, :top],
+                   [:end_element, :top]])
+  end
+
+  def test_sax_bad_bang
+    parse_compare(%{<top>
+  <! Bang Bang>
+</top>
+},
+                  [[:start_element, :top],
+                   [:error, "Unexpected Character: DOCTYPE, CDATA, or comment expected", 2, 6],
+                   [:end_element, :top]])
   end
 
   def test_sax_comment_simple
@@ -513,8 +548,8 @@ encoding = "UTF-8" ?>},
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
                    [:end_instruct, 'xml'],
-                   [:error, "invalid format, comment terminated unexpectedly", 3, 1], # continue on
-                   [:comment, 'First comment.'],
+                   [:error, "Not Terminated: comment not terminated", 3, 1],
+                   [:comment, 'First comment.--'],
                    [:start_element, :top],
                    [:end_element, :top]])
   end
@@ -543,7 +578,9 @@ encoding = "UTF-8" ?>},
                    [:attr, :version, "1.0"],
                    [:end_instruct, 'xml'],
                    [:start_element, :top],
-                   [:error, "invalid format, cdata terminated unexpectedly", 5, 1]])
+                   [:error, "Not Terminated: CDATA not terminated", 4, 1],
+                   [:cdata, "This is CDATA.]]"],
+                   [:end_element, :top]])
   end
 
   def test_sax_cdata_empty
@@ -828,7 +865,7 @@ encoding = "UTF-8" ?>},
     Ox.sax_parse(handler, StringIO.new(%{<?xml version="1.0"?><abcdefghijklmnop></abcdefghijklmnop>}))
     assert_equal([], handler.errors)
   end
-
+=begin
   def test_sax_tolerant
     xml = %{<!doctype HTML>
 <html lang=en>

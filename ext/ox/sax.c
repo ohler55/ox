@@ -41,6 +41,9 @@
 
 #include "ruby.h"
 #include "ox.h"
+#include "sax.h"
+#include "sax_stack.h"
+#include "sax_buf.h"
 
 #define NAME_MISMATCH	1
 
@@ -48,94 +51,30 @@
 #define BODY_STATE	2
 #define AFTER_STATE	3
 
-typedef struct _Nv {
-    const char	*name;
-    VALUE	val;
-} *Nv;
+// error prefixes
+#define BAD_BOM		"Bad BOM: "
+#define NO_TERM		"Not Terminated: "
+#define INVALID_FORMAT	"Invalid Format: "
+#define CASE_ERROR	"Case Error: "
+#define OUT_OF_ORDER	"Out of Order: "
+#define WRONG_CHAR	"Unexpected Character: "
+#define EL_MISMATCH	"Start End Mismatch: "
 
-// TBD add pro and use instead of str to avoid sliding buffer
-typedef struct _SaxDrive {
-    char        base_buf[0x00010000];
-    char        *buf;
-    char        *buf_end;
-    char        *cur;
-    char        *read_end;      /* one past last character read */
-    char        *pro;           /* protection start, buffer can not slide past this point */
-    char        *str;           /* start of current string being read */
-    struct _Nv	base_stack[100];
-    Nv		stack;		/* current stack */
-    Nv		stack_end;	/* stack end */
-    Nv		sp;		/* pointer to one past last element name on stack */
-    int         line;
-    int         col;
-    // TBD pro_line, pro_col, deal with read_end
-    VALUE       handler;
-    VALUE	value_obj;
-    int         (*read_func)(struct _SaxDrive *dr);
-    int         convert_special;
-    int		tolerant;
-    int		err;
-    union {
-        int     	fd;
-        VALUE   	io;
-	const char	*in_str;
-    };
-    int         has_instruct;
-    int         has_end_instruct;
-    int         has_attr;
-    int         has_attr_value;
-    int         has_doctype;
-    int         has_comment;
-    int         has_cdata;
-    int         has_text;
-    int         has_value;
-    int         has_start_element;
-    int         has_end_element;
-    int         has_error;
-    int		has_line;
-    int		has_column;
-#if HAS_ENCODING_SUPPORT
-    rb_encoding *encoding;
-#elif HAS_PRIVATE_ENCODING
-    VALUE	encoding;
-#endif
-} *SaxDrive;
-
-#ifdef NEEDS_STPCPY
-char *stpncpy(char *dest, const char *src, size_t n);
-#endif
 static void		sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert, int tolerant);
-static void		sax_drive_cleanup(SaxDrive dr);
-static int		sax_drive_read(SaxDrive dr);
-static void		sax_drive_error(SaxDrive dr, const char *msg, int critical);
-
 static void		parse(SaxDrive dr);
 // All read functions should return the next character after the 'thing' that was read and leave dr->cur one after that.
-static int		read_children(SaxDrive dr, int first);
 static char		read_instruction(SaxDrive dr);
 static char		read_doctype(SaxDrive dr);
 static char		read_cdata(SaxDrive dr);
 static char		read_comment(SaxDrive dr);
 static char		read_element_start(SaxDrive dr);
 static char		read_element_end(SaxDrive dr);
-static int		read_element(SaxDrive dr);
-static int		read_text(SaxDrive dr);
+static char		read_text(SaxDrive dr);
 static char		read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req);
 static char		read_name_token(SaxDrive dr);
 static char		read_quoted_value(SaxDrive dr);
-static int		collapse_special(char *str, int tolerant);
 
-static VALUE		rescue_cb(VALUE rdr, VALUE err);
-static VALUE		io_cb(VALUE rdr);
-static VALUE		partial_io_cb(VALUE rdr);
-static int		read_from_io(SaxDrive dr);
-#ifndef JRUBY_RUBY
-static int		read_from_fd(SaxDrive dr);
-#endif
-static int		read_from_io_partial(SaxDrive dr);
-static int		read_from_str(SaxDrive dr);
-
-static VALUE		sax_value_class;
+VALUE	ox_sax_value_class = Qnil;
 
 /* This is only for CentOS 5.4 with Ruby 1.9.3-p0 and for OS X 10.6 and Solaris 10. */
 #ifdef NEEDS_STPCPY
@@ -151,180 +90,6 @@ char *stpncpy(char *dest, const char *src, size_t n) {
 }
 #endif
 
-static inline char
-sax_drive_get(SaxDrive dr) {
-    printf("*** drive get from '%s'  from start: %ld  buf: %p  from read_end: %ld\n", dr->cur, dr->cur - dr->buf, dr->buf, dr->read_end - dr->cur);
-    if (dr->read_end <= dr->cur) {
-        if (0 != sax_drive_read(dr)) {
-            return '\0';
-        }
-    }
-    if ('\n' == *dr->cur) {
-        dr->line++;
-        dr->col = 0;
-    }
-    dr->col++;
-    
-    return *dr->cur++;
-}
-
-static inline void
-backup(SaxDrive dr) {
-    dr->cur--;
-    dr->col--;	// should reverse wrap but not worth it
-}
-
-static inline void
-reset_reader(SaxDrive dr, char *cur, int line, int col) {
-    // TBD must be smarter in case at end of read, maybe protect should save all info necessary, keep track of final read as well
-    dr->cur = cur;
-    dr->line = line;
-    dr->col = col;
-}
-
-
-/* Starts by reading a character so it is safe to use with an empty or
- * compacted buffer.
- */
-inline static char
-next_non_white(SaxDrive dr) {
-    char        c;
-
-    printf("*** non white '%s' %ld  %p  %ld\n", dr->cur, dr->cur - dr->buf, dr->buf, dr->read_end - dr->cur);
-    while ('\0' != (c = sax_drive_get(dr))) {
-	printf("*** non white '%c' (%02x) '%s'\n", c, c, dr->cur);
-	switch(c) {
-	case ' ':
-	case '\t':
-	case '\f':
-	case '\n':
-	case '\r':
-	    break;
-	default:
-	    return c;
-	}
-    }
-    printf("*** leaving non white '%s' %ld  %p  %ld\n", dr->cur, dr->cur - dr->buf, dr->buf, dr->read_end - dr->cur);
-    return '\0';
-}
-
-/* Starts by reading a character so it is safe to use with an empty or
- * compacted buffer.
- */
-inline static char
-next_white(SaxDrive dr) {
-    char        c;
-
-    while ('\0' != (c = sax_drive_get(dr))) {
-	switch(c) {
-	case ' ':
-	case '\t':
-	case '\f':
-	case '\n':
-	case '\r':
-	case '\0':
-	    return c;
-	default:
-	    break;
-	}
-    }
-    return '\0';
-}
-
-inline static int
-is_white(char c) {
-    switch(c) {
-    case ' ':
-    case '\t':
-    case '\f':
-    case '\n':
-    case '\r':
-        return 1;
-    default:
-        break;
-    }
-    return 0;
-}
-
-inline void
-protect(SaxDrive dr) {
-    dr->pro = dr->cur;
-    dr->str = dr->cur; // can't have str before pro
-}
-
-inline static void
-stack_push(SaxDrive dr, const char *name, VALUE val) {
-    // TBD allocate more if at end
-    dr->sp->name = name;
-    dr->sp->val = val;
-    dr->sp++;
-}
-
-inline static Nv
-stack_peek(SaxDrive dr) {
-    if (dr->stack < dr->sp) {
-	return dr->sp - 1;
-    }
-    return 0;
-}
-
-inline static Nv
-stack_pop(SaxDrive dr) {
-    if (dr->stack < dr->sp) {
-	dr->sp--;
-	return dr->sp;
-    }
-    return 0;
-}
-
-inline static VALUE
-str2sym(SaxDrive dr, const char *str, char **strp) {
-    VALUE       *slot;
-    VALUE       sym;
-
-    if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, strp))) {
-#if HAS_ENCODING_SUPPORT
-        if (0 != dr->encoding) {
-	    VALUE	rstr = rb_str_new2(str);
-
-            rb_enc_associate(rstr, dr->encoding);
-	    sym = rb_funcall(rstr, ox_to_sym_id, 0);
-        } else {
-	    sym = ID2SYM(rb_intern(str));
-	}
-#elif HAS_PRIVATE_ENCODING
-        if (Qnil != dr->encoding) {
-	    VALUE	rstr = rb_str_new2(str);
-
-	    rb_funcall(rstr, ox_force_encoding_id, 1, dr->encoding);
-	    sym = rb_funcall(rstr, ox_to_sym_id, 0);
-        } else {
-	    sym = ID2SYM(rb_intern(str));
-	}
-#else
-        sym = ID2SYM(rb_intern(str));
-#endif
-        *slot = sym;
-    }
-    return sym;
-}
-
-inline static int
-respond_to(VALUE obj, ID method) {
-#ifdef JRUBY_RUBY
-    /* There is a bug in JRuby where rb_respond_to() returns true (1) even if
-     * a method is private. */
-    {
-	VALUE	args[1];
-
-	*args = ID2SYM(method);
-	return (Qtrue == rb_funcall2(obj, rb_intern("respond_to?"), 1, args));
-    }
-#else
-    return rb_respond_to(obj, method);
-#endif
-}
-
 void
 ox_sax_parse(VALUE handler, VALUE io, int convert, int tolerant) {
     struct _SaxDrive    dr;
@@ -332,97 +97,37 @@ ox_sax_parse(VALUE handler, VALUE io, int convert, int tolerant) {
     sax_drive_init(&dr, handler, io, convert, tolerant);
 #if 0
     printf("*** sax_parse with these flags\n");
-    printf("    has_instruct = %s\n", dr.has_instruct ? "true" : "false");
-    printf("    has_end_instruct = %s\n", dr.has_end_instruct ? "true" : "false");
-    printf("    has_attr = %s\n", dr.has_attr ? "true" : "false");
-    printf("    has_attr_value = %s\n", dr.has_attr_value ? "true" : "false");
-    printf("    has_doctype = %s\n", dr.has_doctype ? "true" : "false");
-    printf("    has_comment = %s\n", dr.has_comment ? "true" : "false");
-    printf("    has_cdata = %s\n", dr.has_cdata ? "true" : "false");
-    printf("    has_text = %s\n", dr.has_text ? "true" : "false");
-    printf("    has_value = %s\n", dr.has_value ? "true" : "false");
-    printf("    has_start_element = %s\n", dr.has_start_element ? "true" : "false");
-    printf("    has_end_element = %s\n", dr.has_end_element ? "true" : "false");
-    printf("    has_error = %s\n", dr.has_error ? "true" : "false");
-    printf("    has_line = %s\n", dr.has_line ? "true" : "false");
-    printf("    has_column = %s\n", dr.has_column ? "true" : "false");
+    printf("    has_instruct = %s\n", dr.has.instruct ? "true" : "false");
+    printf("    has_end_instruct = %s\n", dr.has.end_instruct ? "true" : "false");
+    printf("    has_attr = %s\n", dr.has.attr ? "true" : "false");
+    printf("    has_attr_value = %s\n", dr.has.attr_value ? "true" : "false");
+    printf("    has_doctype = %s\n", dr.has.doctype ? "true" : "false");
+    printf("    has_comment = %s\n", dr.has.comment ? "true" : "false");
+    printf("    has_cdata = %s\n", dr.has.cdata ? "true" : "false");
+    printf("    has_text = %s\n", dr.has.text ? "true" : "false");
+    printf("    has_value = %s\n", dr.has.value ? "true" : "false");
+    printf("    has_start_element = %s\n", dr.has.start_element ? "true" : "false");
+    printf("    has_end_element = %s\n", dr.has.end_element ? "true" : "false");
+    printf("    has_error = %s\n", dr.has.error ? "true" : "false");
+    printf("    has_line = %s\n", dr.has.line ? "true" : "false");
+    printf("    has_column = %s\n", dr.has.column ? "true" : "false");
 #endif
     parse(&dr);
-    sax_drive_cleanup(&dr);
+    ox_sax_drive_cleanup(&dr);
 }
 
 static void
 sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert, int tolerant) {
-    if (ox_stringio_class == rb_obj_class(io)) {
-	VALUE	s = rb_funcall2(io, ox_string_id, 0, 0);
-
-	dr->read_func = read_from_str;
-	dr->in_str = StringValuePtr(s);
-    } else if (rb_respond_to(io, ox_readpartial_id)) {
-#ifdef JRUBY_RUBY
-	dr->read_func = read_from_io_partial;
-	dr->io = io;
-#else
-        VALUE   rfd;
-
-        if (rb_respond_to(io, ox_fileno_id) && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
-            dr->read_func = read_from_fd;
-            dr->fd = FIX2INT(rfd);
-        } else {
-            dr->read_func = read_from_io_partial;
-            dr->io = io;
-        }
-#endif
-    } else if (rb_respond_to(io, ox_read_id)) {
-#ifdef JRUBY_RUBY
-	dr->read_func = read_from_io;
-	dr->io = io;
-#else
-        VALUE   rfd;
-
-        if (rb_respond_to(io, ox_fileno_id) && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
-            dr->read_func = read_from_fd;
-            dr->fd = FIX2INT(rfd);
-        } else {
-            dr->read_func = read_from_io;
-            dr->io = io;
-        }
-#endif
-    } else {
-        rb_raise(ox_arg_error_class, "sax_parser io argument must respond to readpartial() or read().\n");
-    }
-    dr->buf = dr->base_buf;
-    *dr->buf = '\0';
-    dr->buf_end = dr->buf + sizeof(dr->base_buf) - 1; /* 1 less to make debugging easier */
-    dr->cur = dr->buf;
-    dr->read_end = dr->buf;
-    dr->pro = 0;
-    dr->str = 0;
-    dr->stack = dr->base_stack;
-    dr->stack_end = dr->base_stack + sizeof(dr->base_stack);
-    dr->sp = dr->stack;
-    dr->line = 1;
-    dr->col = 0;
+    ox_sax_buf_init(&dr->buf, io);
+    dr->buf.dr = dr;
+    stack_init(&dr->stack);
     dr->handler = handler;
-    dr->value_obj = rb_data_object_alloc(sax_value_class, dr, 0, 0);
+    dr->value_obj = rb_data_object_alloc(ox_sax_value_class, dr, 0, 0);
     rb_gc_register_address(&dr->value_obj);
     dr->convert_special = convert;
     dr->tolerant = tolerant;
     dr->err = 0;
-    dr->has_instruct = respond_to(handler, ox_instruct_id);
-    dr->has_end_instruct = respond_to(handler, ox_end_instruct_id);
-    dr->has_attr = respond_to(handler, ox_attr_id);
-    dr->has_attr_value = respond_to(handler, ox_attr_value_id);
-    dr->has_doctype = respond_to(handler, ox_doctype_id);
-    dr->has_comment = respond_to(handler, ox_comment_id);
-    dr->has_cdata = respond_to(handler, ox_cdata_id);
-    dr->has_text = respond_to(handler, ox_text_id);
-    dr->has_value = respond_to(handler, ox_value_id);
-    dr->has_start_element = respond_to(handler, ox_start_element_id);
-    dr->has_end_element = respond_to(handler, ox_end_element_id);
-    dr->has_error = respond_to(handler, ox_error_id);
-    dr->has_line = (Qtrue == rb_ivar_defined(handler, ox_at_line_id));
-    dr->has_column = (Qtrue == rb_ivar_defined(handler, ox_at_column_id));
+    has_init(&dr->has, handler);
 #if HAS_ENCODING_SUPPORT
     if ('\0' == *ox_default_options.encoding) {
 	VALUE	encoding;
@@ -450,95 +155,51 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert, int tolerant) 
 #endif
 }
 
-static void
-sax_drive_cleanup(SaxDrive dr) {
+void
+ox_sax_drive_cleanup(SaxDrive dr) {
     rb_gc_unregister_address(&dr->value_obj);
-    if (dr->base_buf != dr->buf) {
-        xfree(dr->buf);
-    }
-    if (dr->base_stack != dr->stack) {
-        xfree(dr->stack);
-    }
-}
-
-static int
-sax_drive_read(SaxDrive dr) {
-    int         err;
-    size_t      shift = 0;
-    
-    if (dr->buf < dr->cur) {
-        if (0 == dr->pro) {
-            shift = dr->cur - dr->buf;
-        } else {
-            shift = dr->pro - dr->buf;
-        }
-        /*printf("\n*** shift: %lu\n", shift); */
-        if (0 == shift) { /* no space left so allocate more */
-            char        *old = dr->buf;
-            size_t      size = dr->buf_end - dr->buf;
-        
-            if (dr->buf == dr->base_buf) {
-                dr->buf = ALLOC_N(char, size * 2);
-                memcpy(dr->buf, old, size);
-            } else {
-		REALLOC_N(dr->buf, char, size * 2);
-            }
-            dr->buf_end = dr->buf + size * 2;
-            dr->cur = dr->buf + (dr->cur - old);
-            dr->read_end = dr->buf + (dr->read_end - old);
-            if (0 != dr->pro) {
-                dr->pro = dr->buf + (dr->pro - old);
-            }
-        } else {
-            memmove(dr->buf, dr->buf + shift, dr->read_end - (dr->buf + shift));
-            dr->cur -= shift;
-            dr->read_end -= shift;
-            if (0 != dr->pro) {
-                dr->pro -= shift;
-            }
-        }
-    }
-    err = dr->read_func(dr);
-    *dr->read_end = '\0';
-
-    return err;
+    buf_cleanup(&dr->buf);
+    stack_cleanup(&dr->stack);
 }
 
 static void
-sax_drive_error(SaxDrive dr, const char *msg, int critical) {
-    if (dr->has_error) {
+ox_sax_drive_error_at(SaxDrive dr, const char *msg, int line, int col) {
+    if (dr->has.error) {
         VALUE   args[3];
 
         args[0] = rb_str_new2(msg);
-        args[1] = INT2FIX(dr->line);
-        args[2] = INT2FIX(dr->col);
-	if (dr->has_line) {
+        args[1] = INT2FIX(line);
+        args[2] = INT2FIX(col);
+	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, args[1]);
 	}
-	if (dr->has_column) {
+	if (dr->has.column) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, args[2]);
 	}
         rb_funcall2(dr->handler, ox_error_id, 3, args);
-    } else if (critical) {
-        sax_drive_cleanup(dr);
-        rb_raise(ox_parse_error_class, "%s at line %d, column %d\n", msg, dr->line, dr->col);
     }
+}
+
+void
+ox_sax_drive_error(SaxDrive dr, const char *msg) {
+    ox_sax_drive_error_at(dr, msg, dr->buf.line, dr->buf.col);
 }
 
 static char
 skipBOM(SaxDrive dr) {
-    char        c = sax_drive_get(dr);
+    char        c = buf_get(&dr->buf);
 
     if (0xEF == (uint8_t)c) { /* only UTF8 is supported */
-	if (0xBB == (uint8_t)sax_drive_get(dr) && 0xBF == (uint8_t)sax_drive_get(dr)) {
+	if (0xBB == (uint8_t)buf_get(&dr->buf) && 0xBF == (uint8_t)buf_get(&dr->buf)) {
 #if HAS_ENCODING_SUPPORT
 	    dr->encoding = ox_utf8_encoding;
 #elif HAS_PRIVATE_ENCODING
 	    dr->encoding = ox_utf8_encoding;
 #endif
-	    c = sax_drive_get(dr);
+	    c = buf_get(&dr->buf);
 	} else {
-	    sax_drive_error(dr, "invalid format, invalid BOM or a binary file.", 1);
+	    ox_sax_drive_error(dr, BAD_BOM "invalid BOM or a binary file.");
+	    c = '\0';
 	}
     }
     return c;
@@ -548,211 +209,124 @@ static void
 parse(SaxDrive dr) {
     char        c = skipBOM(dr);
     int		state = START_STATE;
-    char	*prev = 0;// TBD
 
-    // TBD
     while ('\0' != c) {
-	printf("*** c: '%c' (%02x)  %p\n", c, c, dr->cur);
-	if (prev == dr->cur) {
-	    printf("*** looping\n");
-	    return;
-	}
-	prev = dr->cur;
-	protect(dr);
-        if (is_white(c) && '\0' == (c = next_non_white(dr))) {
+	buf_protect(&dr->buf);
+        if (is_white(c) && '\0' == (c = buf_next_non_white(&dr->buf))) {
             break;
         }
 	if ('<' == c) {
-	    c = sax_drive_get(dr);
+	    c = buf_get(&dr->buf);
 	    switch (c) {
 	    case '?': /* instructions (xml or otherwise) */
 		c = read_instruction(dr);
 		break;
 	    case '!': /* comment or doctype */
-		protect(dr);
-		c = sax_drive_get(dr);
+		buf_protect(&dr->buf);
+		c = buf_get(&dr->buf);
 		if ('\0' == c) {
-		    sax_drive_error(dr, "invalid format, DOCTYPE or comment not terminated", 0);
+		    ox_sax_drive_error(dr, NO_TERM "DOCTYPE or comment not terminated");
 		    goto DONE;
 		} else if ('-' == c) {
-		    c = sax_drive_get(dr); /* skip first - and get next character */
+		    c = buf_get(&dr->buf); /* skip first - and get next character */
 		    if ('-' != c) {
-			sax_drive_error(dr, "invalid format, bad comment format, expected <!--", 0);
+			ox_sax_drive_error(dr, INVALID_FORMAT "bad comment format, expected <!--");
 		    } else {
-			c = sax_drive_get(dr); /* skip second - */
+			c = buf_get(&dr->buf); /* skip second - */
 		    }
 		    c = read_comment(dr);
 		} else {
-		    int     i;
+		    int	i;
+		    int	spaced = 0;
+		    int	line = dr->buf.line;
+		    int	col = dr->buf.col;
 
-		    for (i = 7; 0 < i; i--) {
-			sax_drive_get(dr);
+		    if (is_white(c)) {
+			spaced = 1;
+			c = buf_next_non_white(&dr->buf);
 		    }
-		    if (0 == strncmp("DOCTYPE", dr->str, 7)) {
+		    dr->buf.str = dr->buf.tail - 1;
+		    for (i = 7; 0 < i; i--) {
+			c = buf_get(&dr->buf);
+		    }
+		    if (0 == strncmp("DOCTYPE", dr->buf.str, 7)) {
+			if (spaced) {
+			    ox_sax_drive_error_at(dr, WRONG_CHAR "<!DOCTYPE can not included spaces", line, col);
+			}
 			if (START_STATE != state) {
-			    sax_drive_error(dr, "invalid format, DOCTYPE can not come after an element", 0);
+			    ox_sax_drive_error(dr, OUT_OF_ORDER "DOCTYPE can not come after an element");
 			}
 			c = read_doctype(dr);
-		    } else if (0 == strncasecmp("DOCTYPE", dr->str, 7)) {
-			sax_drive_error(dr, "invalid format, expected DOCTYPE all in caps", 0);
+		    } else if (0 == strncasecmp("DOCTYPE", dr->buf.str, 7)) {
+			ox_sax_drive_error(dr, CASE_ERROR "expected DOCTYPE all in caps");
 			if (START_STATE != state) {
-			    sax_drive_error(dr, "invalid format, DOCTYPE can not come after an element", 0);
+			    ox_sax_drive_error(dr, OUT_OF_ORDER "DOCTYPE can not come after an element");
 			}
 			c = read_doctype(dr);
-		    } else if (0 == strncmp("[CDATA[", dr->str, 7)) {
+		    } else if (0 == strncmp("[CDATA[", dr->buf.str, 7)) {
+			if (spaced) {
+			    ox_sax_drive_error_at(dr, WRONG_CHAR "<![CDATA[ can not included spaces", line, col);
+			}
 			c = read_cdata(dr);
-		    } else if (0 == strncasecmp("[CDATA[", dr->str, 7)) {
-			sax_drive_error(dr, "invalid format, expected CDATA all in caps", 0);
+		    } else if (0 == strncasecmp("[CDATA[", dr->buf.str, 7)) {
+			ox_sax_drive_error(dr, CASE_ERROR "expected CDATA all in caps");
 			c = read_cdata(dr);
 		    } else {
-			sax_drive_error(dr, "invalid format, DOCTYPE, CDATA, or comment expected", 0);
-			// TBD read to >
+			ox_sax_drive_error_at(dr, WRONG_CHAR "DOCTYPE, CDATA, or comment expected", line, col);
+			c = read_name_token(dr);
+			if ('>' == c) {
+			    c = buf_get(&dr->buf);
+			}
 		    }
 		}
 		break;
 	    case '/': /* element end */
 		c = read_element_end(dr);
-		if (0 == stack_peek(dr)) {
+		if (0 == stack_peek(&dr->stack)) {
 		    state = AFTER_STATE;
 		}
 		break;
 	    case '\0':
 		goto DONE;
 	    default:
-		backup(dr);
+		buf_backup(&dr->buf);
 		if (AFTER_STATE == state) {
-		    sax_drive_error(dr, "invalid format, multiple top level elements", 0);
+		    ox_sax_drive_error(dr, OUT_OF_ORDER "multiple top level elements");
 		}
 		state = BODY_STATE;
 		c = read_element_start(dr);
-		if (0 == stack_peek(dr)) {
+		if (0 == stack_peek(&dr->stack)) {
 		    state = AFTER_STATE;
 		}
-		printf("*** read start returned %c (%02x)\n", c, c);
 		break;
 	    }
 	} else {
-	    // TBD read text (from dr->str)
+	    buf_reset(&dr->buf);
+	    c = read_text(dr);
 	}
     }
  DONE:
-    // TBD if stack is not empty then close open elements and generate errors
-    printf("*** done parsing\n");
-}
+    if (dr->stack.head < dr->stack.tail) {
+	char	msg[256];
+	Nv	sp;
 
-
-static int
-read_children(SaxDrive dr, int first) {
-    int         err = 0;
-    int         element_read = !first;
-    char        c;
-    int		line;
-    int		col;
-    
-    while (!err) {
-	protect(dr);
-	c = sax_drive_get(dr);
-	if (first) {
-	    if (0xEF == (uint8_t)c) { /* only UTF8 is supported */
-		if (0xBB == (uint8_t)sax_drive_get(dr) && 0xBF == (uint8_t)sax_drive_get(dr)) {
-#if HAS_ENCODING_SUPPORT
-		    dr->encoding = ox_utf8_encoding;
-#elif HAS_PRIVATE_ENCODING
-		    dr->encoding = ox_utf8_encoding;
-#endif
-		    c = sax_drive_get(dr);
-		} else {
-		    sax_drive_error(dr, "invalid format, invalid BOM or a binary file.", 1);
-		}
-	    }
+	if (dr->has.line) {
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->buf.line));
 	}
-        if ('\0' == c || (is_white(c) && '\0' == (c = next_non_white(dr)))) {
-            if (!first) {
-                sax_drive_error(dr, "invalid format, element not terminated", 1);
-                err = -1;
-            }
-            break; /* normal completion if first */
+	if (dr->has.column) {
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->buf.col));
+	}
+	for (sp = dr->stack.tail - 1; dr->stack.head <= sp; sp--) {
+	    snprintf(msg, sizeof(msg) - 1, "%selement '%s' not closed", EL_MISMATCH, sp->name);
+	    ox_sax_drive_error_at(dr, msg, dr->buf.line, dr->buf.col);
+	    if (dr->has.end_element) {
+		VALUE       args[1];
+
+		args[0] = sp->val;
+		rb_funcall2(dr->handler, ox_end_element_id, 1, args);
+	    }
         }
-	if ('<' != c) {
-            if (first) { /* all top level entities start with < */
-                sax_drive_error(dr, "invalid format, expected <", 1);
-                break; /* unrecoverable */
-            }
-            if (0 != (err = read_text(dr))) { /* finished when < is reached */
-                break;
-            }
-	}
-	protect(dr);
-        c = sax_drive_get(dr);
-	switch (c) {
-	case '?': /* instructions (xml or otherwise) */
-	    /*err = */read_instruction(dr);
-	    break;
-	case '!': /* comment or doctype */
-	    protect(dr);
-            c = sax_drive_get(dr);
-	    if ('\0' == c) {
-                sax_drive_error(dr, "invalid format, DOCTYPE or comment not terminated", 1);
-                err = 1;
-	    } else if ('-' == c) {
-                c = sax_drive_get(dr); /* skip first - and get next character */
-		if ('-' != c) {
-                    sax_drive_error(dr, "invalid format, bad comment format", 1);
-                    err = 1;
-		} else {
-                    c = sax_drive_get(dr); /* skip second - */
-		    err = read_comment(dr);
-		}
-            } else {
-                int     i;
-
-                for (i = 7; 0 < i; i--) {
-                    sax_drive_get(dr);
-                }
-                if ((dr->tolerant) ? 0 == strncasecmp("DOCTYPE", dr->str, 7) : 0 == strncmp("DOCTYPE", dr->str, 7)) {
-                    if (element_read || !first) {
-                        sax_drive_error(dr, "invalid format, DOCTYPE can not come after an element", 0);
-                    }
-                    err = read_doctype(dr);
-                } else if ((dr->tolerant) ? 0 == strncasecmp("[CDATA[", dr->str, 7) : 0 == strncmp("[CDATA[", dr->str, 7)) {
-                    err = read_cdata(dr);
-                } else {
-                    sax_drive_error(dr, "invalid format, DOCTYPE or comment expected", 1);
-                    err = 1;
-                }
-	    }
-	    break;
-	case '/': /* element end */
-	    line = dr->line;
-	    col = dr->col;
-            err = ('\0' == read_name_token(dr));
-	    dr->line = line;
-	    dr->col = col;
-	    if (first && dr->tolerant) {
-		sax_drive_error(dr, "invalid format, unmatched element end", 0);
-	    } else {
-		return err;
-	    }
-            break;
-	case '\0':
-            sax_drive_error(dr, "invalid format, document not terminated", 1);
-            err = 1;
-            break;
-	default:
-	    backup(dr); /* safe since no read occurred after getting last character */
-            if (first && element_read && !dr->tolerant) {
-                sax_drive_error(dr, "invalid format, multiple top level elements", 0);
-            }
-	    err = read_element(dr);
-	    if (NAME_MISMATCH == err && dr->tolerant && first) {
-		// must have been a end element with no matching start
-		err = 0;
-	    }		
-            element_read = 1;
-	    break;
-	}
     }
-    return err;
 }
 
 static void
@@ -760,14 +334,14 @@ read_content(SaxDrive dr, char *content, size_t len) {
     char	c;
     char	*end = content + len;
 
-    while ('\0' != (c = sax_drive_get(dr))) {
+    while ('\0' != (c = buf_get(&dr->buf))) {
 	if (end < content) {
-	    sax_drive_error(dr, "processing instruction content too large", 0);
+	    ox_sax_drive_error(dr, "processing instruction content too large");
 	    return;
 	}
 	if ('?' == c) {
-	    if ('\0' == (c = sax_drive_get(dr))) {
-		sax_drive_error(dr, "invalid format, document not terminated", 0);
+	    if ('\0' == (c = buf_get(&dr->buf))) {
+		ox_sax_drive_error(dr, NO_TERM "document not terminated");
 	    }
 	    if ('>' == c) {
 		*content = '\0';
@@ -791,45 +365,44 @@ read_instruction(SaxDrive dr) {
     char	*cend;
     VALUE	target = Qnil;
     int		is_xml;
-    int		line = dr->line;
-    int		col = dr->col - 1;
+    int		line = dr->buf.line;
+    int		col = dr->buf.col - 1;
 
-    protect(dr);
+    buf_protect(&dr->buf);
     if ('\0' == (c = read_name_token(dr))) {
         return c;
     }
-    is_xml = (0 == strcmp("xml", dr->str));
-    if (dr->has_instruct || dr->has_end_instruct) {
-	target = rb_str_new2(dr->str);
+    is_xml = (0 == strcmp("xml", dr->buf.str));
+    if (dr->has.instruct || dr->has.end_instruct) {
+	target = rb_str_new2(dr->buf.str);
     }
-    if (dr->has_instruct) {
+    if (dr->has.instruct) {
         VALUE       args[1];
 
-	if (dr->has_line) {
+	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
-	if (dr->has_column) {
+	if (dr->has.column) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         args[0] = target;
         rb_funcall2(dr->handler, ox_instruct_id, 1, args);
     }
-    protect(dr);
-    line = dr->line;
-    col = dr->col;
+    buf_protect(&dr->buf);
+    line = dr->buf.line;
+    col = dr->buf.col;
     read_content(dr, content, sizeof(content) - 1);
-    cend = dr->cur;
-    reset_reader(dr, dr->str, line, col);
+    cend = dr->buf.tail;
+    buf_reset(&dr->buf);
     dr->err = 0;
     c = read_attrs(dr, c, '?', '?', is_xml, 1);
-    printf("*** after read attrs '%c' (%02x) '%s'\n", c, c, dr->cur);
     if (dr->err) {
-	if (dr->has_text) {
+	if (dr->has.text) {
 	    VALUE   args[1];
 
 	    if (dr->convert_special) {
-		if (0 != collapse_special(content, dr->tolerant)) {
-		    sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
+		if (0 != ox_sax_collapse_special(content, dr->tolerant)) {
+		    ox_sax_drive_error(dr, NO_TERM "special character does not end with a semicolon");
 		}
 	    }
 	    args[0] = rb_str_new2(content);
@@ -842,40 +415,44 @@ read_instruction(SaxDrive dr) {
 		rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
 	    }
 #endif
-	    if (dr->has_line) {
+	    if (dr->has.line) {
 		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	    }
-	    if (dr->has_column) {
+	    if (dr->has.column) {
 		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	    }
 	    rb_funcall2(dr->handler, ox_text_id, 1, args);
 	}
-	dr->cur = cend;
+	dr->buf.tail = cend;
+	c = buf_get(&dr->buf);
     } else {
-	line = dr->line;
-	col = dr->col;
-	printf("*** before leaving '%c' (%02x) '%s'\n", c, c, dr->cur);
-	c = next_non_white(dr);
-	printf("*** before leaving '%c' (%02x) '%s'\n", c, c, dr->cur);
-	if ('>' != c) {
-	    sax_drive_error(dr, "invalid format, instruction not terminated", 1);
+	line = dr->buf.line;
+	col = dr->buf.col;
+	c = buf_next_non_white(&dr->buf);
+	if ('>' == c) {
+	    c = buf_get(&dr->buf);
+	} else {
+	    ox_sax_drive_error_at(dr, NO_TERM "instruction not terminated", line, col);
+	    if ('>' == c) {
+		c = buf_get(&dr->buf);
+	    }
 	}
     }
-    if (dr->has_end_instruct) {
+    if (dr->has.end_instruct) {
         VALUE       args[1];
 
-	if (dr->has_line) {
+	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
-	if (dr->has_column) {
+	if (dr->has.column) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         args[0] = target;
         rb_funcall2(dr->handler, ox_end_instruct_id, 1, args);
     }
-    dr->str = 0;
+    dr->buf.str = 0;
 
-    return sax_drive_get(dr);
+    return c;
 }
 
 /* Entered after the "<!DOCTYPE" sequence. Ready to read the rest.
@@ -883,68 +460,92 @@ read_instruction(SaxDrive dr) {
 static char
 read_doctype(SaxDrive dr) {
     char        c;
-    int		line = dr->line;
-    int		col = dr->col - 10;
+    int		line = dr->buf.line;
+    int		col = dr->buf.col - 10;
 
-    backup(dr); /* back up to the start in case the cdata is empty */
-    protect(dr);
-    while ('>' != (c = sax_drive_get(dr))) {
+    buf_backup(&dr->buf); /* back up to the start in case the cdata is empty */
+    buf_protect(&dr->buf);
+    while ('>' != (c = buf_get(&dr->buf))) {
         if ('\0' == c) {
-            sax_drive_error(dr, "invalid format, doctype terminated unexpectedly", 0);
+            ox_sax_drive_error(dr, NO_TERM "doctype not terminated");
             return c;
         }
     }
-    *(dr->cur - 1) = '\0';
-    if (dr->has_doctype) {
+    *(dr->buf.tail - 1) = '\0';
+    if (dr->has.doctype) {
         VALUE       args[1];
 
-	if (dr->has_line) {
+	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
-	if (dr->has_column) {
+	if (dr->has.column) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
-        args[0] = rb_str_new2(dr->str);
+        args[0] = rb_str_new2(dr->buf.str);
         rb_funcall2(dr->handler, ox_doctype_id, 1, args);
     }
-    dr->str = 0;
+    dr->buf.str = 0;
 
-    return sax_drive_get(dr);
+    return buf_get(&dr->buf);
 }
 
 /* Entered after the "<![CDATA[" sequence. Ready to read the rest.
  */
 static char
 read_cdata(SaxDrive dr) {
-    char        c;
-    int         end = 0;
-    int		line = dr->line;
-    int		col = dr->col - 10;
+    char        	c;
+    int         	end = 0;
+    int			line = dr->buf.line;
+    int			col = dr->buf.col - 10;
+    struct _CheckPt	cp = CHECK_PT_INIT;
 
-    printf("*** cdata: '%s'\n", dr->cur);
-    backup(dr); /* back up to the start in case the cdata is empty */
-    protect(dr);
+    buf_backup(&dr->buf); /* back up to the start in case the cdata is empty */
+    buf_protect(&dr->buf);
     while (1) {
-        c = sax_drive_get(dr);
-        if (']' == c) {
+        c = buf_get(&dr->buf);
+	switch (c) {
+	case ']':
             end++;
-        } else if ('>' == c) {
+	    break;
+	case '>':
             if (2 <= end) {
-                *(dr->cur - 3) = '\0';
-                break;
+                *(dr->buf.tail - 3) = '\0';
+		c = buf_get(&dr->buf);
+                goto CB;
             }
+	    if (!buf_checkset(&cp)) {
+		buf_checkpoint(&dr->buf, &cp);
+	    }
             end = 0;
-        } else if ('\0' == c) {
-            sax_drive_error(dr, "invalid format, cdata terminated unexpectedly", 0);
-	    return '\0';
-        } else {
-            end = 0;
-        }
+	    break;
+	case '<':
+	    if (!buf_checkset(&cp)) {
+		buf_checkpoint(&dr->buf, &cp);
+	    }
+	    end = 0;
+	    break;
+	case '\0':
+	    if (buf_checkset(&cp)) {
+		c = buf_checkback(&dr->buf, &cp);
+		ox_sax_drive_error(dr, NO_TERM "CDATA not terminated");
+		*(dr->buf.tail - 1) = '\0';
+		goto CB;
+	    }
+            ox_sax_drive_error(dr, NO_TERM "CDATA not terminated");
+            return '\0';
+	default:
+	    if (1 < end && !buf_checkset(&cp)) {
+		buf_checkpoint(&dr->buf, &cp);
+	    }
+	    end = 0;
+	    break;
+	}
     }
-    if (dr->has_cdata) {
+ CB:
+    if (dr->has.cdata) {
         VALUE       args[1];
 
-        args[0] = rb_str_new2(dr->str);
+        args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
@@ -954,51 +555,76 @@ read_cdata(SaxDrive dr) {
 	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
         }
 #endif
-	if (dr->has_line) {
+	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
-	if (dr->has_column) {
+	if (dr->has.column) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         rb_funcall2(dr->handler, ox_cdata_id, 1, args);
     }
-    dr->str = 0;
+    dr->buf.str = 0;
 
-    return sax_drive_get(dr);
+    return c;
 }
 
 /* Entered after the "<!--" sequence. Ready to read the rest.
  */
 static char
 read_comment(SaxDrive dr) {
-    char        c;
-    int         end = 0;
-    int		line = dr->line;
-    int		col = dr->col - 5;
+    char        	c;
+    int         	end = 0;
+    int			line = dr->buf.line;
+    int			col = dr->buf.col - 4;
+    struct _CheckPt	cp = CHECK_PT_INIT;
 
-    backup(dr); /* back up to the start in case the cdata is empty */
-    protect(dr);
+    buf_backup(&dr->buf); /* back up to the start in case the cdata is empty */
+    buf_protect(&dr->buf);
     while (1) {
-        c = sax_drive_get(dr);
-        if ('-' == c) {
+        c = buf_get(&dr->buf);
+	switch (c) {
+	case '-':
             end++;
-        } else if ('>' == c) {
+	    break;
+	case '>':
             if (2 <= end) {
-                *(dr->cur - 3) = '\0';
-                break;
+                *(dr->buf.tail - 3) = '\0';
+		c = buf_get(&dr->buf);
+                goto CB;
             }
+	    if (!buf_checkset(&cp)) {
+		buf_checkpoint(&dr->buf, &cp);
+	    }
             end = 0;
-        } else if ('\0' == c) {
-            sax_drive_error(dr, "invalid format, comment terminated unexpectedly", 0);
+	    break;
+	case '<':
+	    if (!buf_checkset(&cp)) {
+		buf_checkpoint(&dr->buf, &cp);
+	    }
+	    end = 0;
+	    break;
+	case '\0':
+	    if (buf_checkset(&cp)) {
+		c = buf_checkback(&dr->buf, &cp);
+		ox_sax_drive_error(dr, NO_TERM "comment not terminated");
+		*(dr->buf.tail - 1) = '\0';
+		goto CB;
+	    }
+            ox_sax_drive_error(dr, NO_TERM "comment not terminated");
             return '\0';
-        } else {
-            end = 0;
-        }
+	default:
+	    if (1 < end && !buf_checkset(&cp)) {
+		buf_checkpoint(&dr->buf, &cp);
+	    }
+	    end = 0;
+	    break;
+	}
     }
-    if (dr->has_comment) {
+ CB:
+    if (dr->has.comment) {
         VALUE       args[1];
 
-        args[0] = rb_str_new2(dr->str);
+        args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
@@ -1008,155 +634,17 @@ read_comment(SaxDrive dr) {
 	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
         }
 #endif
-	if (dr->has_line) {
+	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
-	if (dr->has_column) {
+	if (dr->has.column) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         rb_funcall2(dr->handler, ox_comment_id, 1, args);
     }
-    dr->str = 0;
+    dr->buf.str = 0;
 
-    return sax_drive_get(dr);
-}
-
-/* Entered after the '<' and the first character after that. Returns status
- * code.
- */
-static int
-read_element(SaxDrive dr) {
-    char	*ename = 0;
-    VALUE       name = Qnil;
-    //const char	*err;
-    char        c;
-    int         closed;
-    int		line = dr->line;
-    int		col = dr->col - 1;
-    int		e;
-
-    if ('\0' == (c = read_name_token(dr))) {
-        return -1;
-    }
-    name = str2sym(dr, dr->str, &ename);
-    if (dr->has_start_element) {
-        VALUE       args[1];
-
-	if (dr->has_line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
-	}
-	if (dr->has_column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
-	}
-        args[0] = name;
-        rb_funcall2(dr->handler, ox_start_element_id, 1, args);
-    }
-    if ('/' == c) {
-        closed = 1;
-    } else if ('>' == c) {
-        closed = 0;
-    } else {
-	/*
-        if (0 != (err = read_attrs(dr, c, '/', '>', 0))) {
-	    sax_drive_error(dr, err, 1);
-            return -1;
-        }
-        closed = ('/' == *(dr->cur - 1));
-	*/
-    }
-    if (closed) {
-        c = next_non_white(dr);
-        if ('>' != c) {
-            sax_drive_error(dr, "invalid format, element not closed", 1);
-            return -1;
-        }
-    }
-    if (closed) {
-	line = dr->line;
-	col = dr->col - 1;
-        if (dr->has_end_element) {
-            VALUE       args[1];
-
-	    if (dr->has_line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
-	    }
-	    if (dr->has_column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
-	    }
-            args[0] = name;
-            rb_funcall2(dr->handler, ox_end_element_id, 1, args);
-        }
-    } else {
-        if (0 != (e = read_children(dr, 0))) {
-	    if (NAME_MISMATCH == e) {
-		if (0 != dr->has_end_element) {
-		    VALUE       args[1];
-
-		    if (dr->has_line) {
-			rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
-		    }
-		    if (dr->has_column) {
-			rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col - 2));
-		    }
-		    args[0] = name;
-		    rb_funcall2(dr->handler, ox_end_element_id, 1, args);
-		}
-		if (0 == strcmp(dr->str, ename)) {
-		    return 0;
-		} else {
-		    return NAME_MISMATCH;
-		}
-	    } else {
-		return -1;
-	    }
-        }
-	line = dr->line;
-	col = dr->col;
-	// read_children reads up to the end of the terminating element name
-	dr->col += (uint32_t)(dr->cur - dr->str);
-	if (0 != ename && 0 != strcmp(ename, dr->str)) {
-	    if (dr->has_line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
-	    }
-	    if (dr->has_column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
-	    }
-	    sax_drive_error(dr, "invalid format, element start and end names do not match", 1);
-	    //printf("*** ename: %s  close: %s\n", ename, dr->str);
-	    if (dr->tolerant) {
-		if (0 != dr->has_end_element) {
-		    VALUE       args[1];
-
-		    if (dr->has_line) {
-			rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
-		    }
-		    if (dr->has_column) {
-			rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col - 2));
-		    }
-		    args[0] = name;
-		    rb_funcall2(dr->handler, ox_end_element_id, 1, args);
-		}
-		return NAME_MISMATCH; // dr->str is still the name
-	    } else {
-		return -1;
-	    }
-	}
-        if (0 != dr->has_end_element) {
-            VALUE       args[1];
-
-	    if (dr->has_line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
-	    }
-	    if (dr->has_column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col - 2));
-	    }
-            args[0] = name;
-            rb_funcall2(dr->handler, ox_end_element_id, 1, args);
-        }
-    }
-    dr->str = 0;
-
-    return 0;
+    return c;
 }
 
 /* Entered after the '<' and the first character after that. Returns status
@@ -1168,20 +656,20 @@ read_element_start(SaxDrive dr) {
     VALUE       name = Qnil;
     char        c;
     int         closed;
-    int		line = dr->line;
-    int		col = dr->col - 1;
+    int		line = dr->buf.line;
+    int		col = dr->buf.col - 1;
 
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
     }
-    name = str2sym(dr, dr->str, &ename);
-    if (dr->has_start_element) {
+    name = str2sym(dr, dr->buf.str, &ename);
+    if (dr->has.start_element) {
         VALUE       args[1];
 
-	if (dr->has_line) {
+	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
-	if (dr->has_column) {
+	if (dr->has.column) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         args[0] = name;
@@ -1192,74 +680,122 @@ read_element_start(SaxDrive dr) {
     } else if ('>' == c) {
         closed = 0;
     } else {
-	protect(dr);
+	buf_protect(&dr->buf);
         c = read_attrs(dr, c, '/', '>', 0, 0);
 	if (is_white(c)) {
-	    c = next_non_white(dr);
+	    c = buf_next_non_white(&dr->buf);
 	}
 	closed = ('/' == c);
     }
     if (closed) {
-	c = next_non_white(dr);
-	line = dr->line;
-	col = dr->col - 1;
-        if (dr->has_end_element) {
+	c = buf_next_non_white(&dr->buf);
+	line = dr->buf.line;
+	col = dr->buf.col - 1;
+        if (dr->has.end_element) {
             VALUE       args[1];
 
-	    if (dr->has_line) {
+	    if (dr->has.line) {
 		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	    }
-	    if (dr->has_column) {
+	    if (dr->has.column) {
 		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	    }
             args[0] = name;
             rb_funcall2(dr->handler, ox_end_element_id, 1, args);
         }
     } else {
-	stack_push(dr, ename, name);
+	stack_push(&dr->stack, ename, name);
     }
     if ('>' != c) {
-	printf("*** not closed: %c  '%s'\n", c, dr->cur);
-	sax_drive_error(dr, "invalid format, element not closed", 0);
+	ox_sax_drive_error(dr, WRONG_CHAR "element not closed");
 	return c;
     }
-    dr->str = 0;
+    dr->buf.str = 0;
 
-    return sax_drive_get(dr);
+    return buf_get(&dr->buf);
+}
+
+static Nv
+stack_rev_find(NStack stack, const char *name) {
+    Nv	nv;
+
+    for (nv = stack->tail - 1; stack->head <= nv; nv--) {
+	if (0 == strcmp(name, nv->name)) {
+	    return nv;
+	}
+    }
+    return 0;
 }
 
 static char
 read_element_end(SaxDrive dr) {
-    char	*ename = 0;
     VALUE       name = Qnil;
     char        c;
-    int		line = dr->line;
-    int		col = dr->col - 1;
+    int		line = dr->buf.line;
+    int		col = dr->buf.col - 2;
     Nv		nv;
 
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
     }
     // c should be > and current is one past so read another char
-    c = sax_drive_get(dr);
-    printf("*** checking stack for %s\n", ename);
-    nv = stack_peek(dr);
-    if (0 != nv && 0 == strcmp(dr->str, nv->name)) {
-	ename = dr->str;
-	printf("*** names match\n");
+    c = buf_get(&dr->buf);
+    nv = stack_peek(&dr->stack);
+    if (0 != nv && 0 == strcmp(dr->buf.str, nv->name)) {
 	name = nv->val;
-	stack_pop(dr);
+	stack_pop(&dr->stack);
     } else {
-	// TBD mismatch, what do we do now
-	name = str2sym(dr, dr->str, &ename);
+	// Mismatched start and end
+	char	msg[256];
+	Nv	match = stack_rev_find(&dr->stack, dr->buf.str);
+
+	if (0 == match) {
+	    // Not found so open and close element.
+	    char	*ename = 0;
+
+	    snprintf(msg, sizeof(msg) - 1, "%selement '%s' closed but not opened", EL_MISMATCH, dr->buf.str);
+	    ox_sax_drive_error_at(dr, msg, line, col);
+	    name = str2sym(dr, dr->buf.str, &ename);
+	    if (dr->has.start_element) {
+		VALUE       args[1];
+
+		if (dr->has.line) {
+		    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
+		}
+		if (dr->has.column) {
+		    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
+		}
+		args[0] = name;
+		rb_funcall2(dr->handler, ox_start_element_id, 1, args);
+	    }
+	} else {
+	    // Found a match so close all up to the found element in stack.
+	    snprintf(msg, sizeof(msg) - 1, "%selement '%s' close does not match '%s' open", EL_MISMATCH, dr->buf.str, nv->name);
+	    ox_sax_drive_error_at(dr, msg, line, col);
+	    if (dr->has.line) {
+		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
+	    }
+	    if (dr->has.column) {
+		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
+	    }
+	    for (nv = stack_pop(&dr->stack); match < nv; nv = stack_pop(&dr->stack)) {
+		if (dr->has.end_element) {
+		    VALUE       args[1];
+
+		    args[0] = nv->val;
+		    rb_funcall2(dr->handler, ox_end_element_id, 1, args);
+		}
+	    }
+	    name = nv->val;
+	}
     }
-    if (dr->has_end_element) {
+    if (dr->has.end_element) {
 	VALUE       args[1];
 
-	if (dr->has_line) {
+	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
-	if (dr->has_column) {
+	if (dr->has.column) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
 	args[0] = name;
@@ -1268,41 +804,41 @@ read_element_end(SaxDrive dr) {
     return c;
 }
 
-static int
+static char
 read_text(SaxDrive dr) {
     char        c;
-    int		line = dr->line;
-    int		col = dr->col - 1;
+    int		line = dr->buf.line;
+    int		col = dr->buf.col - 1;
 
-    /* start marked in read_children */
-    /*dr->str = dr->cur - 1; / * mark the start */
-    while ('<' != (c = sax_drive_get(dr))) {
+    buf_backup(&dr->buf);
+    buf_protect(&dr->buf);
+    while ('<' != (c = buf_get(&dr->buf))) {
         if ('\0' == c) {
-            sax_drive_error(dr, "invalid format, text terminated unexpectedly", 1);
-            return -1;
+            ox_sax_drive_error(dr, NO_TERM "text not terminated");
+            return '\0';
         }
     }
-    *(dr->cur - 1) = '\0';
-    if (dr->has_value) {
+    *(dr->buf.tail - 1) = '\0';
+    if (dr->has.value) {
         VALUE   args[1];
 
-	if (dr->has_line) {
+	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
-	if (dr->has_column) {
+	if (dr->has.column) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
 	*args = dr->value_obj;
         rb_funcall2(dr->handler, ox_value_id, 1, args);
-    } else if (dr->has_text) {
+    } else if (dr->has.text) {
         VALUE   args[1];
 
         if (dr->convert_special) {
-            if (0 != collapse_special(dr->str, dr->tolerant) && 0 != strchr(dr->str, '&')) {
-                sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
+            if (0 != ox_sax_collapse_special(dr->buf.str, dr->tolerant) && 0 != strchr(dr->buf.str, '&')) {
+                ox_sax_drive_error(dr, NO_TERM "special character does not end with a semicolon");
             }
         }
-        args[0] = rb_str_new2(dr->str);
+        args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
@@ -1312,17 +848,17 @@ read_text(SaxDrive dr) {
 	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
         }
 #endif
-	if (dr->has_line) {
+	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	}
-	if (dr->has_column) {
+	if (dr->has.column) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	}
         rb_funcall2(dr->handler, ox_text_id, 1, args);
     }
-    dr->str = 0;
+    dr->buf.str = 0;
 
-    return 0;
+    return c;
 }
 
 static char
@@ -1334,69 +870,69 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
     char	*attr_value;
     
     // already protected by caller
-    dr->str = dr->cur;
+    dr->buf.str = dr->buf.tail;
     if (is_white(c)) {
-        c = next_non_white(dr);
+        c = buf_next_non_white(&dr->buf);
     }
     while (termc != c && term2 != c) {
-	backup(dr);
-	line = dr->line;
-	col = dr->col;
+	buf_backup(&dr->buf);
         if ('\0' == c) {
-	    sax_drive_error(dr, "invalid format, attributes not terminated", 0);
+	    ox_sax_drive_error(dr, NO_TERM "attributes not terminated");
 	    return '\0';
         }
+	line = dr->buf.line;
+	col = dr->buf.col;
         if ('\0' == (c = read_name_token(dr))) {
-	    sax_drive_error(dr, "error reading token", 0);
+	    ox_sax_drive_error(dr, NO_TERM "error reading token");
 	    return '\0';
         }
-        if (is_xml && 0 == strcasecmp("encoding", dr->str)) {
+        if (is_xml && 0 == strcasecmp("encoding", dr->buf.str)) {
             is_encoding = 1;
         }
-        if (dr->has_attr || dr->has_attr_value) {
-            name = str2sym(dr, dr->str, 0);
+        if (dr->has.attr || dr->has.attr_value) {
+            name = str2sym(dr, dr->buf.str, 0);
         }
         if (is_white(c)) {
-            c = next_non_white(dr);
+            c = buf_next_non_white(&dr->buf);
         }
         if ('=' != c) {
 	    if (eq_req) {
 		dr->err = 1;
 		return c;
 	    } else {
-		sax_drive_error(dr, "invalid format, no attribute value", 0);
+		ox_sax_drive_error(dr, WRONG_CHAR "no attribute value");
 		attr_value = (char*)"";
 	    }
         } else {
 	    c = read_quoted_value(dr);
-	    attr_value = dr->str;
+	    attr_value = dr->buf.str;
 	    if (is_encoding) {
 #if HAS_ENCODING_SUPPORT
-		dr->encoding = rb_enc_find(dr->str);
+		dr->encoding = rb_enc_find(dr->buf.str);
 #elif HAS_PRIVATE_ENCODING
-		dr->encoding = rb_str_new2(dr->str);
+		dr->encoding = rb_str_new2(dr->buf.str);
 #endif
 		is_encoding = 0;
 	    }
 	}
-        if (dr->has_attr_value) {
+        if (dr->has.attr_value) {
             VALUE       args[2];
 
-	    if (dr->has_line) {
+	    if (dr->has.line) {
 		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	    }
-	    if (dr->has_column) {
+	    if (dr->has.column) {
 		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	    }
             args[0] = name;
             args[1] = dr->value_obj;
             rb_funcall2(dr->handler, ox_attr_value_id, 2, args);
-	} else if (dr->has_attr) {
+	} else if (dr->has.attr) {
             VALUE       args[2];
 
             args[0] = name;
-            if (0 != collapse_special(dr->str, dr->tolerant) && 0 != strchr(dr->str, '&')) {
-                sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
+            if (0 != ox_sax_collapse_special(dr->buf.str, dr->tolerant) && 0 != strchr(dr->buf.str, '&')) {
+                ox_sax_drive_error(dr, WRONG_CHAR "special character does not end with a semicolon");
             }
             args[1] = rb_str_new2(attr_value);
 #if HAS_ENCODING_SUPPORT
@@ -1408,35 +944,35 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
 		rb_funcall(args[1], ox_force_encoding_id, 1, dr->encoding);
 	    }
 #endif
-	    if (dr->has_line) {
+	    if (dr->has.line) {
 		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
 	    }
-	    if (dr->has_column) {
+	    if (dr->has.column) {
 		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
 	    }
             rb_funcall2(dr->handler, ox_attr_id, 2, args);
         }
 	if (is_white(c)) {
-	    c = next_non_white(dr);
+	    c = buf_next_non_white(&dr->buf);
 	}
     }
-    dr->str = 0;
+    dr->buf.str = 0;
 
     return c;
 }
 
-/* The character after the character after the word is returned. dr->cur is one past that. dr->str will point to the
+/* The character after the character after the word is returned. dr->buf.tail is one past that. dr->buf.str will point to the
  * token which will be '\0' terminated.
  */
 static char
 read_name_token(SaxDrive dr) {
     char        c;
 
-    dr->str = dr->cur;
-    c = sax_drive_get(dr);
+    dr->buf.str = dr->buf.tail;
+    c = buf_get(&dr->buf);
     if (is_white(c)) {
-        c = next_non_white(dr);
-        dr->str = dr->cur - 1;
+        c = buf_next_non_white(&dr->buf);
+        dr->buf.str = dr->buf.tail - 1;
     }
     while (1) {
 	switch (c) {
@@ -1447,52 +983,53 @@ read_name_token(SaxDrive dr) {
 	case '=':
 	case '/':
 	case '>':
+	case '<':
 	case '\n':
 	case '\r':
-            *(dr->cur - 1) = '\0';
+            *(dr->buf.tail - 1) = '\0';
 	    return c;
 	case '\0':
             /* documents never terminate after a name token */
-            sax_drive_error(dr, "invalid format, document not terminated", 1);
+            ox_sax_drive_error(dr, NO_TERM "document not terminated");
             return '\0';
 	default:
 	    break;
 	}
-        c = sax_drive_get(dr);
+        c = buf_get(&dr->buf);
     }
     return '\0';
 }
 
-/* The character after the quote or if there is no quote, the character after the word is returned. dr->cur is one past
- * that. dr->str will point to the token which will be '\0' terminated.
+/* The character after the quote or if there is no quote, the character after the word is returned. dr->buf.tail is one past
+ * that. dr->buf.str will point to the token which will be '\0' terminated.
  */
 static char
 read_quoted_value(SaxDrive dr) {
     char	c;
 
-    c = sax_drive_get(dr);
+    c = buf_get(&dr->buf);
     if (is_white(c)) {
-        c = next_non_white(dr);
+        c = buf_next_non_white(&dr->buf);
     }
     if ('"' == c || '\'' == c) {
 	char	term = c;
 
-        dr->str = dr->cur;
-        while (term != (c = sax_drive_get(dr))) {
+        dr->buf.str = dr->buf.tail;
+        while (term != (c = buf_get(&dr->buf))) {
             if ('\0' == c) {
-                sax_drive_error(dr, "invalid format, quoted value not terminated", 0);
+                ox_sax_drive_error(dr, NO_TERM "quoted value not terminated");
                 return '\0';
             }
         }
-	// dr->cur is one past quote char
-	*(dr->cur - 1) = '\0'; /* terminate value */
-	c = sax_drive_get(dr);
+	// dr->buf.tail is one past quote char
+	*(dr->buf.tail - 1) = '\0'; /* terminate value */
+	c = buf_get(&dr->buf);
 	return c;
     }
     // not quoted, look for something that terminates the string
-    dr->str = dr->cur - 1;
-    sax_drive_error(dr, "invalid format, attibute value not in quotes", 0);
-    while ('\0' != (c = sax_drive_get(dr))) {
+    dr->buf.str = dr->buf.tail - 1;
+    ox_sax_drive_error(dr, WRONG_CHAR "attibute value not in quotes");
+    while ('\0' != (c = buf_get(&dr->buf))) {
 	switch (c) {
 	case ' ':
 	case '/':
@@ -1501,8 +1038,8 @@ read_quoted_value(SaxDrive dr) {
 	case '\t':
 	case '\n':
 	case '\r':
-	    *(dr->cur - 1) = '\0'; /* terminate value */
-	    // dr->cur is in the correct position, one after the word terminator
+	    *(dr->buf.tail - 1) = '\0'; /* terminate value */
+	    // dr->buf.tail is in the correct position, one after the word terminator
 	    return c;
 	default:
 	    break;
@@ -1511,113 +1048,8 @@ read_quoted_value(SaxDrive dr) {
     return '\0'; // should never get here
 }
 
-static VALUE
-rescue_cb(VALUE rdr, VALUE err) {
-#ifndef JRUBY_RUBY
-    /* JRuby seems to play by a different set if rules. It passes in an Fixnum
-     * instead of an error like other Rubies. For now assume all errors are
-     * EOF and deal with the results further down the line. */
-#if (defined(RUBINIUS_RUBY) || (1 == RUBY_VERSION_MAJOR && 8 == RUBY_VERSION_MINOR))
-    if (rb_obj_class(err) != rb_eTypeError) {
-#else
-    if (rb_obj_class(err) != rb_eEOFError) {
-#endif
-	SaxDrive	dr = (SaxDrive)rdr;
-
-        sax_drive_cleanup(dr);
-        rb_raise(err, "at line %d, column %d\n", dr->line, dr->col);
-    }
-#endif
-    return Qfalse;
-}
-
-static VALUE
-partial_io_cb(VALUE rdr) {
-    SaxDrive    dr = (SaxDrive)rdr;
-    VALUE       args[1];
-    VALUE       rstr;
-    char        *str;
-    size_t      cnt;
-
-    args[0] = ULONG2NUM(dr->buf_end - dr->cur);
-    rstr = rb_funcall2(dr->io, ox_readpartial_id, 1, args);
-    str = StringValuePtr(rstr);
-    cnt = strlen(str);
-    /*printf("*** read %lu bytes, str: '%s'\n", cnt, str); */
-    strcpy(dr->cur, str);
-    dr->read_end = dr->cur + cnt;
-
-    return Qtrue;
-}
-
-static VALUE
-io_cb(VALUE rdr) {
-    SaxDrive    dr = (SaxDrive)rdr;
-    VALUE       args[1];
-    VALUE       rstr;
-    char        *str;
-    size_t      cnt;
-
-    args[0] = ULONG2NUM(dr->buf_end - dr->cur);
-    /*args[0] = SIZET2NUM(dr->buf_end - dr->cur); */
-    rstr = rb_funcall2(dr->io, ox_read_id, 1, args);
-    str = StringValuePtr(rstr);
-    cnt = strlen(str);
-    /*printf("*** read %lu bytes, str: '%s'\n", cnt, str); */
-    strcpy(dr->cur, str);
-    dr->read_end = dr->cur + cnt;
-
-    return Qtrue;
-}
-
-static int
-read_from_io_partial(SaxDrive dr) {
-    return (Qfalse == rb_rescue(partial_io_cb, (VALUE)dr, rescue_cb, (VALUE)dr));
-}
-
-static int
-read_from_io(SaxDrive dr) {
-    return (Qfalse == rb_rescue(io_cb, (VALUE)dr, rescue_cb, (VALUE)dr));
-}
-
-#ifndef JRUBY_RUBY
-static int
-read_from_fd(SaxDrive dr) {
-    ssize_t     cnt;
-    size_t      max = dr->buf_end - dr->cur;
-
-    cnt = read(dr->fd, dr->cur, max);
-    if (cnt < 0) {
-        sax_drive_error(dr, "failed to read from file", 1);
-        return -1;
-    } else if (0 != cnt) {
-        dr->read_end = dr->cur + cnt;
-    }
-    return 0;
-}
-#endif
-
-static int
-read_from_str(SaxDrive dr) {
-    size_t      max = dr->buf_end - dr->cur - 1;
-    char	*s;
-    long	cnt;
-
-    if ('\0' == *dr->in_str) {
-	/* done */
-	return -1;
-    }
-    s = stpncpy(dr->cur, dr->in_str, max);
-    *s = '\0';
-    cnt = s - dr->cur;
-    dr->in_str += cnt;
-    dr->read_end = dr->cur + cnt;
-
-    return 0;
-}
-
-static int
-collapse_special(char *str, int tolerant) {
+int
+ox_sax_collapse_special(char *str, int tolerant) {
     char        *s = str;
     char        *b = str;
 
@@ -1686,214 +1118,3 @@ collapse_special(char *str, int tolerant) {
     return 0;
 }
 
-static VALUE
-parse_double_time(const char *text) {
-    long        v = 0;
-    long        v2 = 0;
-    const char  *dot = 0;
-    char        c;
-    
-    for (; '.' != *text; text++) {
-        c = *text;
-        if (c < '0' || '9' < c) {
-            return Qnil;
-        }
-        v = 10 * v + (long)(c - '0');
-    }
-    dot = text++;
-    for (; '\0' != *text && text - dot <= 6; text++) {
-        c = *text;
-        if (c < '0' || '9' < c) {
-            return Qnil;
-        }
-        v2 = 10 * v2 + (long)(c - '0');
-    }
-    for (; text - dot <= 9; text++) {
-        v2 *= 10;
-    }
-#if HAS_NANO_TIME
-    return rb_time_nano_new(v, v2);
-#else
-    return rb_time_new(v, v2 / 1000);
-#endif
-}
-
-typedef struct _Tp {
-    int         cnt;
-    char        end;
-    char        alt;
-} *Tp;
-
-static VALUE
-parse_xsd_time(const char *text) {
-    long        cargs[10];
-    long        *cp = cargs;
-    long        v;
-    int         i;
-    char        c = '\0';
-    struct _Tp  tpa[10] = { { 4, '-', '-' },
-                           { 2, '-', '-' },
-                           { 2, 'T', ' ' },
-                           { 2, ':', ':' },
-                           { 2, ':', ':' },
-                           { 2, '.', '.' },
-                           { 9, '+', '-' },
-                           { 2, ':', ':' },
-                           { 2, '\0', '\0' },
-                           { 0, '\0', '\0' } };
-    Tp          tp = tpa;
-    struct tm   tm;
-
-    memset(cargs, 0, sizeof(cargs));
-    for (; 0 != tp->cnt; tp++) {
-        for (i = tp->cnt, v = 0; 0 < i ; text++, i--) {
-            c = *text;
-            if (c < '0' || '9' < c) {
-                if ('\0' == c || tp->end == c || tp->alt == c) {
-                    break;
-                }
-		return Qnil;
-            }
-            v = 10 * v + (long)(c - '0');
-        }
-	if ('\0' == c) {
-	    break;
-	}
-        c = *text++;
-        if (tp->end != c && tp->alt != c) {
-	    return Qnil;
-        }
-        *cp++ = v;
-    }
-    tm.tm_year = (int)cargs[0] - 1900;
-    tm.tm_mon = (int)cargs[1] - 1;
-    tm.tm_mday = (int)cargs[2];
-    tm.tm_hour = (int)cargs[3];
-    tm.tm_min = (int)cargs[4];
-    tm.tm_sec = (int)cargs[5];
-#if HAS_NANO_TIME
-    return rb_time_nano_new(mktime(&tm), cargs[6]);
-#else
-    return rb_time_new(mktime(&tm), cargs[6] / 1000);
-#endif
-}
-
-static VALUE
-sax_value_as_s(VALUE self) {
-    SaxDrive	dr = DATA_PTR(self);
-    VALUE	rs;
-
-    if ('\0' == *dr->str) {
-	return Qnil;
-    }
-    if (dr->convert_special) {
-	if (0 != collapse_special(dr->str, dr->tolerant) && 0 != strchr(dr->str, '&')) {
-	    sax_drive_error(dr, "invalid format, special character does not end with a semicolon", 0);
-	}
-    }
-    rs = rb_str_new2(dr->str);
-#if HAS_ENCODING_SUPPORT
-    if (0 != dr->encoding) {
-	rb_enc_associate(rs, dr->encoding);
-    }
-#elif HAS_PRIVATE_ENCODING
-    if (Qnil != dr->encoding) {
-	rb_funcall(rs, ox_force_encoding_id, 1, dr->encoding);
-    }
-#endif
-    return rs;
-}
-
-static VALUE
-sax_value_as_sym(VALUE self) {
-    SaxDrive	dr = DATA_PTR(self);
-
-    if ('\0' == *dr->str) {
-	return Qnil;
-    }
-    return str2sym(dr, dr->str, 0);
-}
-
-static VALUE
-sax_value_as_f(VALUE self) {
-    SaxDrive	dr = DATA_PTR(self);
-
-    if ('\0' == *dr->str) {
-	return Qnil;
-    }
-    return rb_float_new(strtod(dr->str, 0));
-}
-
-static VALUE
-sax_value_as_i(VALUE self) {
-    SaxDrive	dr = DATA_PTR(self);
-    const char	*s = dr->str;
-    long	n = 0;
-    int		neg = 0;
-
-    if ('\0' == *s) {
-	return Qnil;
-    }
-    if ('-' == *s) {
-	neg = 1;
-	s++;
-    } else if ('+' == *s) {
-	s++;
-    }
-    for (; '\0' != *s; s++) {
-	if ('0' <= *s && *s <= '9') {
-	    n = n * 10 + (*s - '0');
-	} else {
-	    rb_raise(ox_arg_error_class, "Not a valid Fixnum.\n");
-	}
-    }
-    if (neg) {
-	n = -n;
-    }
-    return LONG2NUM(n);
-}
-
-static VALUE
-sax_value_as_time(VALUE self) {
-    SaxDrive	dr = DATA_PTR(self);
-    const char	*str = dr->str;
-    VALUE       t;
-
-    if ('\0' == *str) {
-	return Qnil;
-    }
-    if (Qnil == (t = parse_double_time(str)) &&
-	Qnil == (t = parse_xsd_time(str))) {
-        VALUE       args[1];
-
-        /*printf("**** time parse\n"); */
-        *args = rb_str_new2(str);
-        t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
-    }
-    return t;
-}
-
-static VALUE
-sax_value_as_bool(VALUE self) {
-    return (0 == strcasecmp("true", ((SaxDrive)DATA_PTR(self))->str)) ? Qtrue : Qfalse;
-}
-
-static VALUE
-sax_value_empty(VALUE self) {
-    return ('\0' == *((SaxDrive)DATA_PTR(self))->str) ? Qtrue : Qfalse;
-}
-
-void
-ox_sax_define() {
-    VALUE	sax_module = rb_const_get_at(Ox, rb_intern("Sax"));
-
-    sax_value_class = rb_define_class_under(sax_module, "Value", rb_cObject);
-
-    rb_define_method(sax_value_class, "as_s", sax_value_as_s, 0);
-    rb_define_method(sax_value_class, "as_sym", sax_value_as_sym, 0);
-    rb_define_method(sax_value_class, "as_i", sax_value_as_i, 0);
-    rb_define_method(sax_value_class, "as_f", sax_value_as_f, 0);
-    rb_define_method(sax_value_class, "as_time", sax_value_as_time, 0);
-    rb_define_method(sax_value_class, "as_bool", sax_value_as_bool, 0);
-    rb_define_method(sax_value_class, "empty?", sax_value_empty, 0);
-}
