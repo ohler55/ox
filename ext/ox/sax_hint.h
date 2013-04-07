@@ -1,4 +1,4 @@
-/* sax_stack.h
+/* hint.h
  * Copyright (c) 2011, Peter Ohler
  * All rights reserved.
  * 
@@ -28,67 +28,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OX_SAX_STACK_H__
-#define __OX_SAX_STACK_H__
+#ifndef __OX_HINT_H__
+#define __OX_HINT_H__
 
-#include "sax_hint.h"
-
-typedef struct _Nv {
+typedef struct _Hint {
     const char	*name;
-    VALUE	val;
-    Hint	hint;
-} *Nv;
+    char	empty;	// must be closed or close auto it, not error
+    char	nest;	// nesting allowed
+    const char	**parents;
+} *Hint;
 
-typedef struct _NStack {
-    struct _Nv	base[100];
-    Nv		head;	/* current stack */
-    Nv		end;	/* stack end */
-    Nv		tail;	/* pointer to one past last element name on stack */
-} *NStack;
+typedef struct _Hints {
+    const char	*name;
+    Hint	hints; // array of hints
+    int		size;
+} *Hints;
 
-inline static void
-stack_init(NStack stack) {
-    stack->head = stack->base;
-    stack->end = stack->base + sizeof(stack->base);
-    stack->tail = stack->head;
-}
+extern Hints	ox_hints_html(void);
+extern Hint	ox_hint_find(Hints hints, const char *name);
 
-inline static int
-stack_empty(NStack stack) {
-    return (stack->head == stack->base);
-}
-
-inline static void
-stack_cleanup(NStack stack) {
-    if (stack->base != stack->head) {
-        xfree(stack->head);
-    }
-}
-
-inline static void
-stack_push(NStack stack, const char *name, VALUE val, Hint hint) {
-    // TBD allocate more if at end
-    stack->tail->name = name;
-    stack->tail->val = val;
-    stack->tail->hint = hint;
-    stack->tail++;
-}
-
-inline static Nv
-stack_peek(NStack stack) {
-    if (stack->head < stack->tail) {
-	return stack->tail - 1;
-    }
-    return 0;
-}
-
-inline static Nv
-stack_pop(NStack stack) {
-    if (stack->head < stack->tail) {
-	stack->tail--;
-	return stack->tail;
-    }
-    return 0;
-}
-
-#endif /* __OX_SAX_STACK_H__ */
+#endif /* __OX_HINT_H__ */

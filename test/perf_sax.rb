@@ -33,11 +33,13 @@ $filesize = 1000 # KBytes
 $iter = 100
 $strio = false
 $pos = false
+$smart = false
 
 opts = OptionParser.new
 opts.on("-v", "increase verbosity")                            { $verbose += 1 }
 opts.on("-x", "ox only")                                       { $ox_only = true }
 opts.on("-a", "all callbacks")                                 { $all_cbs = true }
+opts.on("-b", "html smart")                                    { $smart = true }
 opts.on("-p", "update position")                               { $pos = true; $all_cbs = true }
 opts.on("-z", "use StringIO instead of file")                  { $strio = true }
 opts.on("-f", "--file [String]", String, "filename")           { |f| $filename = f }
@@ -156,7 +158,7 @@ perf = Perf.new
 
 perf.add('Ox::Sax', 'sax_parse') {
   input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
-  Ox.sax_parse($handler, input)
+  Ox.sax_parse($handler, input, :smart => $smart)
   input.close
 }
 perf.before('Ox::Sax') { $handler = $all_cbs ? ($pos ? OxPosAllSax.new() : OxAllSax.new()) : OxSax.new() }

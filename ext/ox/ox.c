@@ -128,7 +128,7 @@ static VALUE	object_sym;
 static VALUE	opt_format_sym;
 static VALUE	optimized_sym;
 static VALUE	strict_sym;
-static VALUE	strict_sym;
+static VALUE	smart_sym;
 static VALUE	symbolize_keys_sym;
 static VALUE	tolerant_sym;
 static VALUE	trace_sym;
@@ -628,7 +628,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
 static VALUE
 sax_parse(int argc, VALUE *argv, VALUE self) {
     int convert = 0;
-    int tolerant = 0;
+    int smart = 0;
 
     if (argc < 2) {
 	rb_raise(ox_parse_error_class, "Wrong number of arguments to sax_parse.\n");
@@ -640,11 +640,11 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
 	if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
 	    convert = (Qtrue == v);
 	}
-	if (Qnil != (v = rb_hash_lookup(h, tolerant_sym))) {
-	    tolerant = (Qtrue == v);
+	if (Qnil != (v = rb_hash_lookup(h, smart_sym))) {
+	    smart = (Qtrue == v);
 	}
     }
-    ox_sax_parse(argv[0], argv[1], convert, tolerant);
+    ox_sax_parse(argv[0], argv[1], convert, smart);
 
     return Qnil;
 }
@@ -875,6 +875,7 @@ void Init_ox() {
     opt_format_sym = ID2SYM(rb_intern("opt_format"));		rb_gc_register_address(&opt_format_sym);
     optimized_sym = ID2SYM(rb_intern("optimized"));		rb_gc_register_address(&optimized_sym);
     ox_encoding_sym = ID2SYM(rb_intern("encoding"));		rb_gc_register_address(&ox_encoding_sym);
+    smart_sym = ID2SYM(rb_intern("smart"));			rb_gc_register_address(&smart_sym);
     strict_sym = ID2SYM(rb_intern("strict"));			rb_gc_register_address(&strict_sym);
     symbolize_keys_sym = ID2SYM(rb_intern("symbolize_keys"));	rb_gc_register_address(&symbolize_keys_sym);
     tolerant_sym = ID2SYM(rb_intern("tolerant"));		rb_gc_register_address(&tolerant_sym);

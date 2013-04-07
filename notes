@@ -6,12 +6,28 @@
 - todo
  
 - sax parser rewrite
- - add key words for errors to differenciate
  - add options
   - symbolize or not
   - tolerant - not needed
   - special decode 
+  - use hints (smart)
   - modes (xml, html, custom?)
+   - maybe just hints
+    - char *name
+    - int no_children
+    - int no_repeat
+    - char **allowed_children (0 teminated)
+
+- html detection
+ - doctype <!doctype HTML><html lang="en">
+ - html element
+
+- hints
+ - sorted array
+  - binary or ratio search
+  - not found then invalid tag
+ - no_op if closed flag
+ - must be in ...
 
  - keep stack of element names as an array
   - allows back searches for closed elements
@@ -25,9 +41,6 @@
  - element end and start callbacks include a 'implied' arg for auto generated start or ends
  - generate an error if something is wrong
 
- - does raise in callback propogate up?
-  - use callback raise to exit or have tolerant flag indicate raise on error
-  - error messag eshoudl start with classname of error type for easy filtering
  
 
 - add UTF-16 support

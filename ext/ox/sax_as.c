@@ -144,9 +144,7 @@ sax_value_as_s(VALUE self) {
 	return Qnil;
     }
     if (dr->convert_special) {
-	if (0 != ox_sax_collapse_special(dr->buf.str, dr->tolerant) && 0 != strchr(dr->buf.str, '&')) {
-	    ox_sax_drive_error(dr, "invalid format, special character does not end with a semicolon");
-	}
+	ox_sax_collapse_special(dr, dr->buf.str);
     }
     rs = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT

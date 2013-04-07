@@ -34,6 +34,7 @@
 #include "sax_buf.h"
 #include "sax_has.h"
 #include "sax_stack.h"
+#include "sax_hint.h"
 
 typedef struct _SaxDrive {
     struct _Buf		buf;
@@ -41,9 +42,10 @@ typedef struct _SaxDrive {
     VALUE		handler;
     VALUE		value_obj;
     int			convert_special;
-    int			tolerant;
+    int			smart;
     int			err;
     struct _Has		has;
+    Hints		hints;
 #if HAS_ENCODING_SUPPORT
     rb_encoding *encoding;
 #elif HAS_PRIVATE_ENCODING
@@ -53,7 +55,7 @@ typedef struct _SaxDrive {
 
 extern void	ox_sax_drive_cleanup(SaxDrive dr);
 extern void	ox_sax_drive_error(SaxDrive dr, const char *msg);
-extern int	ox_sax_collapse_special(char *str, int tolerant);
+extern int	ox_sax_collapse_special(SaxDrive dr, char *str);
 
 extern VALUE	ox_sax_value_class;
 
