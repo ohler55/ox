@@ -5,43 +5,20 @@
 
 - todo
  
-- sax parser rewrite
- - add options
-  - symbolize or not
-  - tolerant - not needed
-  - special decode 
-  - use hints (smart)
-  - modes (xml, html, custom?)
-   - maybe just hints
-    - char *name
-    - int no_children
-    - int no_repeat
-    - char **allowed_children (0 teminated)
+ - readme
+  - partial rewrite of sax
+   - faster
+   - handles html
 
-- html detection
- - doctype <!doctype HTML><html lang="en">
- - html element
+ - sax_stack realloc
+ - pick best buf size
+ - symbolize option
+  - make options a single argument
+ - tolerant - not needed
+ - special decode 
+ - use hints (smart)
 
-- hints
- - sorted array
-  - binary or ratio search
-  - not found then invalid tag
- - no_op if closed flag
- - must be in ...
 
- - keep stack of element names as an array
-  - allows back searches for closed elements
- - don't make recursive
-  - should simplify parse error recovery
- - add rules for different element name recovery strategies
-  - no children - doctype, if html, hr, br)
-  - no same 1st gen children - if html, table, td, tr
-  - javascript optimization
-  - set flags or expected sets on start element match
- - element end and start callbacks include a 'implied' arg for auto generated start or ends
- - generate an error if something is wrong
-
- 
 
 - add UTF-16 support
 U+0000..U+D7FF, U+E000..U+EFFF  00000xxxxxxxxxxxxxxxx  xxxxxxxxxxxxxxxx

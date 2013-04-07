@@ -131,7 +131,6 @@ ox_cache_get(Cache cache, const char *key, VALUE **slot, char **keyp) {
     *slot = &cache->value;
     if (0 != keyp) {
 	if (0 == cache->key) {
-	    // TBD bug somewhere
 	    printf("*** Error: failed to set the key for %s\n", key);
 	    *keyp = 0;
 	} else {

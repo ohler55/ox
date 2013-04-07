@@ -75,6 +75,8 @@ static char		read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml,
 static char		read_name_token(SaxDrive dr);
 static char		read_quoted_value(SaxDrive dr);
 
+static void		end_element_cb(SaxDrive dr, VALUE name, int line, int col);
+
 static void		hint_clear_empty(SaxDrive dr);
 static Nv		hint_try_close(SaxDrive dr, const char *name);
 
@@ -686,11 +688,39 @@ read_element_start(SaxDrive dr) {
 	    sprintf(msg, "%s%s is not a valid element type for a %s document type.", INV_ELEMENT, dr->buf.str, dr->hints->name);
 	    ox_sax_drive_error(dr, msg);
 	} else {
+	    Nv	top_nv = stack_peek(&dr->stack);
+
 	    if (h->empty) {
 		stackless = 1;
 	    }
-	    
-	    // TBD
+	    if (0 != top_nv) {
+		char	msg[256];
+
+		if (!h->nest && 0 == strcasecmp(top_nv->name, h->name)) {
+		    snprintf(msg, sizeof(msg) - 1, "%s%s can not be nested in a %s document, closing previous.",
+			     INV_ELEMENT, dr->buf.str, dr->hints->name);
+		    ox_sax_drive_error(dr, msg);
+		    stack_pop(&dr->stack);
+		    end_element_cb(dr, top_nv->val, line, col);
+		    top_nv = stack_peek(&dr->stack);
+		}
+		if (0 != h->parents) {
+		    const char	**p;
+		    int		ok = 0;
+
+		    for (p = h->parents; 0 != *p; p++) {
+			if (0 == strcasecmp(*p, top_nv->name)) {
+			    ok = 1;
+			    break;
+			}
+		    }
+		    if (!ok) {
+			snprintf(msg, sizeof(msg) - 1, "%s%s can not be a child of a %s in a %s document.",
+				 INV_ELEMENT, h->name, top_nv->name, dr->hints->name);
+			ox_sax_drive_error(dr, msg);
+		    }
+		}
+	    }
 	}
     }
     name = str2sym(dr, dr->buf.str, &ename);
@@ -722,18 +752,7 @@ read_element_start(SaxDrive dr) {
 	c = buf_next_non_white(&dr->buf);
 	line = dr->buf.line;
 	col = dr->buf.col - 1;
-        if (dr->has.end_element) {
-            VALUE       args[1];
-
-	    if (dr->has.line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
-	    }
-	    if (dr->has.column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
-	    }
-            args[0] = name;
-            rb_funcall2(dr->handler, ox_end_element_id, 1, args);
-        }
+	end_element_cb(dr, name, line, col);
     } else if (!stackless) {
 	stack_push(&dr->stack, ename, name, h);
     }
@@ -822,28 +841,15 @@ read_element_end(SaxDrive dr) {
 		}
 		for (nv = stack_pop(&dr->stack); match < nv; nv = stack_pop(&dr->stack)) {
 		    if (dr->has.end_element) {
-			VALUE       args[1];
-
-			args[0] = nv->val;
-			rb_funcall2(dr->handler, ox_end_element_id, 1, args);
+			rb_funcall(dr->handler, ox_end_element_id, 1, nv->val);
 		    }
 		}
 		name = nv->val;
 	    }
 	}
     }
-    if (dr->has.end_element) {
-	VALUE       args[1];
+    end_element_cb(dr, name, line, col);
 
-	if (dr->has.line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
-	}
-	if (dr->has.column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
-	}
-	args[0] = name;
-	rb_funcall2(dr->handler, ox_end_element_id, 1, args);
-    }
     return c;
 }
 
@@ -1156,18 +1162,7 @@ hint_clear_empty(SaxDrive dr) {
 	    break;
 	}
 	if (nv->hint->empty) {
-	    if (dr->has.end_element) {
-		VALUE       args[1];
-
-		if (dr->has.line) {
-		    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->buf.line));
-		}
-		if (dr->has.column) {
-		    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->buf.col));
-		}
-		args[0] = nv->val;
-		rb_funcall2(dr->handler, ox_end_element_id, 1, args);
-	    }
+	    end_element_cb(dr, nv->val, dr->buf.line, dr->buf.col);
 	    stack_pop(&dr->stack);
 	} else {
 	    break;
@@ -1192,23 +1187,24 @@ hint_try_close(SaxDrive dr, const char *name) {
 	    break;
 	}
 	if (nv->hint->empty) {
-	    if (dr->has.end_element) {
-		VALUE       args[1];
-
-		if (dr->has.line) {
-		    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(dr->buf.line));
-		}
-		if (dr->has.column) {
-		    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(dr->buf.col));
-		}
-		args[0] = nv->val;
-		rb_funcall2(dr->handler, ox_end_element_id, 1, args);
-	    }
+	    end_element_cb(dr, nv->val, dr->buf.line, dr->buf.col);
 	    dr->stack.tail = nv;
 	} else {
-	    // TBD other rules
 	    break;
 	}
     }
     return 0;
+}
+
+static void
+end_element_cb(SaxDrive dr, VALUE name, int line, int col) {
+    if (dr->has.end_element) {
+	if (dr->has.line) {
+	    rb_ivar_set(dr->handler, ox_at_line_id, INT2FIX(line));
+	}
+	if (dr->has.column) {
+	    rb_ivar_set(dr->handler, ox_at_column_id, INT2FIX(col));
+	}
+	rb_funcall(dr->handler, ox_end_element_id, 1, name);
+    }
 }
