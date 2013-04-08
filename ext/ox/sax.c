@@ -752,7 +752,9 @@ read_element_start(SaxDrive dr) {
 	line = dr->buf.line;
 	col = dr->buf.col - 1;
 	end_element_cb(dr, name, line, col);
-    } else if (!stackless) {
+    } else if (stackless) {
+	end_element_cb(dr, name, line, col);
+    } else {
 	stack_push(&dr->stack, ename, name, h);
     }
     if ('>' != c) {
@@ -806,6 +808,9 @@ read_element_end(SaxDrive dr) {
 	    if (0 != h && h->empty) {
 		// Just close normally
 		name = str2sym(dr, dr->buf.str, &ename);
+		snprintf(msg, sizeof(msg) - 1, "%selement '%s' should not have a separate close element", EL_MISMATCH, dr->buf.str);
+		ox_sax_drive_error_at(dr, msg, line, col);
+		return c;
 	    } else {
 		snprintf(msg, sizeof(msg) - 1, "%selement '%s' closed but not opened", EL_MISMATCH, dr->buf.str);
 		ox_sax_drive_error_at(dr, msg, line, col);

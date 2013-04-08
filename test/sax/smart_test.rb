@@ -154,7 +154,6 @@ class SaxSmartTagOpenTest < SaxSmartTest
         [:start_element, :html],
         [:text, "A terminated "],
         [:start_element, :br],
-        [:error, "Start End Mismatch: element 'br' not closed", 1, 23],
         [:end_element, :br],
         [:text, " text"],
         [:end_element, :html]
@@ -169,7 +168,6 @@ class SaxSmartTagOpenTest < SaxSmartTest
         [:start_element, :html],
         [:text, "A terminated "],
         [:start_element, :hr],
-        [:error, "Start End Mismatch: element 'hr' not closed", 1, 23],
         [:end_element, :hr],
         [:text, " text"],
         [:end_element, :html]
@@ -238,6 +236,7 @@ class SaxSmartHtmlTest < SaxSmartTest
                          [:end_element, :p],
                          [:start_element, :img],
                          [:attr, :src, "x.jpg"],
+                         [:end_element, :img],
                          [:end_element, :body],
                          [:end_element, :html],
                         ])
