@@ -764,4 +764,29 @@ encoding = "UTF-8" ?>},
                    [:end_element, :p]],
                   AllSax, :convert_special => false, :smart => true)
   end
+
+  def test_sax_not_symbolized
+    xml = %{<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+  </head>
+  <body>
+  This is a some text.
+  </body>
+</html>
+}
+    parse_compare(xml,
+                  [
+                   [:doctype, " HTML"],
+                   [:start_element, "html"],
+                   [:attr, "lang", "en"],
+                   [:start_element, "head"],
+                   [:end_element, "head"],
+                   [:start_element, "body"],
+                   [:text, "\n  This is a some text.\n  "],
+                   [:end_element, "body"],
+                   [:end_element, "html"]
+                  ],
+                  AllSax, :symbolize => false, :smart => true)
+  end
 end

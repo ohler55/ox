@@ -70,29 +70,45 @@ str2sym(SaxDrive dr, const char *str, char **strp) {
     VALUE       *slot;
     VALUE       sym;
 
-    if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, strp))) {
+    if (dr->options.symbolize) {
+	if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, strp))) {
 #if HAS_ENCODING_SUPPORT
-        if (0 != dr->encoding) {
-	    VALUE	rstr = rb_str_new2(str);
+	    if (0 != dr->encoding) {
+		VALUE	rstr = rb_str_new2(str);
 
-            rb_enc_associate(rstr, dr->encoding);
-	    sym = rb_funcall(rstr, ox_to_sym_id, 0);
-        } else {
+		rb_enc_associate(rstr, dr->encoding);
+		sym = rb_funcall(rstr, ox_to_sym_id, 0);
+	    } else {
+		sym = ID2SYM(rb_intern(str));
+	    }
+#elif HAS_PRIVATE_ENCODING
+	    if (Qnil != dr->encoding) {
+		VALUE	rstr = rb_str_new2(str);
+
+		rb_funcall(rstr, ox_force_encoding_id, 1, dr->encoding);
+		sym = rb_funcall(rstr, ox_to_sym_id, 0);
+	    } else {
+		sym = ID2SYM(rb_intern(str));
+	    }
+#else
 	    sym = ID2SYM(rb_intern(str));
+#endif
+	    *slot = sym;
+	}
+    } else {
+	sym = rb_str_new2(str);
+#if HAS_ENCODING_SUPPORT
+	if (0 != dr->encoding) {
+	    rb_enc_associate(sym, dr->encoding);
 	}
 #elif HAS_PRIVATE_ENCODING
-        if (Qnil != dr->encoding) {
-	    VALUE	rstr = rb_str_new2(str);
-
-	    rb_funcall(rstr, ox_force_encoding_id, 1, dr->encoding);
-	    sym = rb_funcall(rstr, ox_to_sym_id, 0);
-        } else {
-	    sym = ID2SYM(rb_intern(str));
+	if (Qnil != dr->encoding) {
+	    rb_funcall(sym, ox_force_encoding_id, 1, dr->encoding);
 	}
-#else
-        sym = ID2SYM(rb_intern(str));
 #endif
-        *slot = sym;
+	if (0 != strp) {
+	    *strp = StringValuePtr(sym);
+	}
     }
     return sym;
 }

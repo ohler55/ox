@@ -1144,6 +1144,7 @@ ox_sax_collapse_special(SaxDrive dr, char *str) {
             } else {
 		ox_sax_drive_error(dr, NO_TERM "special character does not end with a semicolon");
 		*b++ = '&';
+		c = '&';
             }
             *b++ = (char)c;
         } else {
