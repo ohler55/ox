@@ -10,13 +10,7 @@
    - faster
    - handles html
 
- - sax_stack realloc
- - pick best buf size
  - symbolize option
-  - make options a single argument
- - tolerant - not needed
- - special decode 
- - use hints (smart)
 
 
 

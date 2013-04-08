@@ -61,7 +61,7 @@
 #define EL_MISMATCH	"Start End Mismatch: "
 #define INV_ELEMENT	"Invalid Element: "
 
-static void		sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert, int smart);
+static void		sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options);
 static void		parse(SaxDrive dr);
 // All read functions should return the next character after the 'thing' that was read and leave dr->cur one after that.
 static char		read_instruction(SaxDrive dr);
@@ -97,10 +97,10 @@ char *stpncpy(char *dest, const char *src, size_t n) {
 #endif
 
 void
-ox_sax_parse(VALUE handler, VALUE io, int convert, int smart) {
+ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
     struct _SaxDrive    dr;
     
-    sax_drive_init(&dr, handler, io, convert, smart);
+    sax_drive_init(&dr, handler, io, options);
 #if 0
     printf("*** sax_parse with these flags\n");
     printf("    has_instruct = %s\n", dr.has.instruct ? "true" : "false");
@@ -123,15 +123,14 @@ ox_sax_parse(VALUE handler, VALUE io, int convert, int smart) {
 }
 
 static void
-sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, int convert, int smart) {
+sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
     ox_sax_buf_init(&dr->buf, io);
     dr->buf.dr = dr;
     stack_init(&dr->stack);
     dr->handler = handler;
     dr->value_obj = rb_data_object_alloc(ox_sax_value_class, dr, 0, 0);
     rb_gc_register_address(&dr->value_obj);
-    dr->convert_special = convert;
-    dr->smart = smart;
+    dr->options = *options;
     dr->hints = 0;
     dr->err = 0;
     has_init(&dr->has, handler);
@@ -407,7 +406,7 @@ read_instruction(SaxDrive dr) {
 	if (dr->has.text) {
 	    VALUE   args[1];
 
-	    if (dr->convert_special) {
+	    if (dr->options.convert_special) {
 		ox_sax_collapse_special(dr, content);
 	    }
 	    args[0] = rb_str_new2(content);
@@ -477,7 +476,7 @@ read_doctype(SaxDrive dr) {
             return c;
         }
     }
-    if (dr->smart && 0 == dr->hints) {
+    if (dr->options.smart && 0 == dr->hints) {
 	for (s = dr->buf.str; is_white(*s); s++) { }
 	if (0 == strncasecmp("HTML", s, 4)) {
 	    dr->hints = ox_hints_html();
@@ -676,7 +675,7 @@ read_element_start(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
     }
-    if (dr->smart && 0 == dr->hints && stack_empty(&dr->stack) && 0 == strcasecmp("html", dr->buf.str)) {
+    if (dr->options.smart && 0 == dr->hints && stack_empty(&dr->stack) && 0 == strcasecmp("html", dr->buf.str)) {
 	dr->hints = ox_hints_html();
     }
     if (0 != dr->hints) {
@@ -882,7 +881,7 @@ read_text(SaxDrive dr) {
     } else if (dr->has.text) {
         VALUE   args[1];
 
-        if (dr->convert_special) {
+        if (dr->options.convert_special) {
             ox_sax_collapse_special(dr, dr->buf.str);
         }
         args[0] = rb_str_new2(dr->buf.str);

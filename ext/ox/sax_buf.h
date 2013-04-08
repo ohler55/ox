@@ -32,7 +32,7 @@
 #define __OX_SAX_BUF_H__
 
 typedef struct _Buf {
-    char	base[0x00001000]; // TBD figure out what is the best size and how much to allocate
+    char	base[0x00001000];
     char	*head;
     char	*end;
     char	*tail;

@@ -143,7 +143,7 @@ sax_value_as_s(VALUE self) {
     if ('\0' == *dr->buf.str) {
 	return Qnil;
     }
-    if (dr->convert_special) {
+    if (dr->options.convert_special) {
 	ox_sax_collapse_special(dr, dr->buf.str);
     }
     rs = rb_str_new2(dr->buf.str);

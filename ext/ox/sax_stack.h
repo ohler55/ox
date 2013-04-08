@@ -33,6 +33,8 @@
 
 #include "sax_hint.h"
 
+#define STACK_INC	100
+
 typedef struct _Nv {
     const char	*name;
     VALUE	val;
@@ -40,7 +42,7 @@ typedef struct _Nv {
 } *Nv;
 
 typedef struct _NStack {
-    struct _Nv	base[100];
+    struct _Nv	base[STACK_INC];
     Nv		head;	/* current stack */
     Nv		end;	/* stack end */
     Nv		tail;	/* pointer to one past last element name on stack */
@@ -49,7 +51,7 @@ typedef struct _NStack {
 inline static void
 stack_init(NStack stack) {
     stack->head = stack->base;
-    stack->end = stack->base + sizeof(stack->base);
+    stack->end = stack->base + sizeof(stack->base) / sizeof(struct _Nv);
     stack->tail = stack->head;
 }
 
@@ -67,7 +69,19 @@ stack_cleanup(NStack stack) {
 
 inline static void
 stack_push(NStack stack, const char *name, VALUE val, Hint hint) {
-    // TBD allocate more if at end
+    if (stack->end <= stack->tail) {
+	size_t	len = stack->end - stack->head;
+	size_t	toff = stack->tail - stack->head;
+
+	if (stack->base == stack->head) {
+	    stack->head = ALLOC_N(struct _Nv, len + STACK_INC);
+	    memcpy(stack->head, stack->base, sizeof(struct _Nv) * len);
+	} else {
+	    stack->head = REALLOC_N(stack->head, struct _Nv, len + STACK_INC);
+	}
+	stack->tail = stack->head + toff;
+	stack->end = stack->head + len + STACK_INC;
+    }
     stack->tail->name = name;
     stack->tail->val = val;
     stack->tail->hint = hint;

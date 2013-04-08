@@ -36,13 +36,18 @@
 #include "sax_stack.h"
 #include "sax_hint.h"
 
+typedef struct _SaxOptions {
+    int			symbolize;
+    int			convert_special;
+    int			smart;
+} *SaxOptions;
+
 typedef struct _SaxDrive {
     struct _Buf		buf;
     struct _NStack	stack;	/* element name stack */
     VALUE		handler;
     VALUE		value_obj;
-    int			convert_special;
-    int			smart;
+    struct _SaxOptions	options;
     int			err;
     struct _Has		has;
     Hints		hints;
@@ -53,6 +58,7 @@ typedef struct _SaxDrive {
 #endif
 } *SaxDrive;
 
+extern void	ox_sax_parse(VALUE handler, VALUE io, SaxOptions options);
 extern void	ox_sax_drive_cleanup(SaxDrive dr);
 extern void	ox_sax_drive_error(SaxDrive dr, const char *msg);
 extern int	ox_sax_collapse_special(SaxDrive dr, char *str);

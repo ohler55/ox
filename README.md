@@ -34,31 +34,20 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 1.9.4
+### Release 2.0.0
 
- - SAX tolerant mode handle multiple elements in a document better.
+ - The SAX parser went through a significant re-write. The options have changed. It is now 15% to 20% faster and much
+   better at recovering from errors. So much so that the tolerant options was removed and is now the default and only
+   behavior. Errors will cause callbacks but the parsing continues with the best guess as to how to recover.
 
-### Release 1.9.3
-
- - mcarpenter fixed a compile problem with Cygwin.
-
- - Now more tolerant when the :effort is set to :tolerant. Ox will let all sorts
-   of errors typical in HTML documents pass. The result may not be perfect but
-   at least parsed results are returned.
-   
-   - Attribute values need not be quoted or they can be quoted with single
-     quotes or there can be no =value are all.
-
-   - Elements not terminated will be terminated by the next element
-     termination. This effect goes up until a match is found on the element
-     name.
-
- - SAX parser also given a :tolerant option with the same tolerance as the string parser.
+ - HTML is now supported with the SAX parser. The parser knows some tags like <br> or <img> do not have to be
+   closed. Other hints as to how to parse and when to raise errors are also included. The parser does it's best to
+   continue parsing even after errors.
 
 ## <a name="description">Description</a>
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
-XML handling. It was designed to be an alternative to Nokogiri and other Ruby
+XML and now HTML handling. It was designed to be an alternative to Nokogiri and other Ruby
 XML parsers in generic XML parsing and as an alternative to Marshal for Object
 serialization.
 
