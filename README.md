@@ -44,6 +44,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
    closed. Other hints as to how to parse and when to raise errors are also included. The parser does it's best to
    continue parsing even after errors.
 
+ - Added symbolize option to the sax parser. This option, if set to false will use strings instead of symbols for
+   element and attribute names.
+
 ## <a name="description">Description</a>
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
