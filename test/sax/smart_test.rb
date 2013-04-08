@@ -34,7 +34,6 @@ class SaxSmartTest < ::Test::Unit::TestCase
 
 end
 
-
 class SaxSmartDoctypeTest < SaxSmartTest
 
   def test_doctype_html5
@@ -88,8 +87,6 @@ class SaxSmartDoctypeTest < SaxSmartTest
 
 end
 
-
-
 class SaxSmartTagOpenTest < SaxSmartTest
 
   def test_normal_tags
@@ -128,8 +125,8 @@ class SaxSmartTagOpenTest < SaxSmartTest
       [
         [:start_element, :html],
         [:error, "Not Terminated: text not terminated", 1, 27],
-        [:error, "Start End Mismatch: element 'html' not closed", 1, 27],
         [:text, "A not terminated text"],
+        [:error, "Start End Mismatch: element 'html' not closed", 1, 27],
         [:end_element, :html]
       ])
   end
@@ -203,9 +200,151 @@ class SaxSmartTagOpenTest < SaxSmartTest
         [:text, "A div"],
         [:end_element, :div],
         [:error, "Not Terminated: text not terminated", 1, 44],
-        [:error, "Start End Mismatch: element 'html' not closed", 1, 44],
         [:text, " text"],
+        [:error, "Start End Mismatch: element 'html' not closed", 1, 44],
         [:end_element, :html]
       ])
   end
+
 end
+
+# this can be renamed or moved around
+class SaxSmartHtmlTest < SaxSmartTest
+
+  def test_html_no_term
+    html = %{
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+  <head>
+    <title>Sax</title>
+  </head>
+  <body>
+    <p>great</p>
+    <img src="x.jpg">
+  </body>
+</html>
+}
+    parse_compare(html, [
+                         [:doctype, " HTML PUBLIC \"-//IETF//DTD HTML//EN\""],
+                         [:start_element, :html],
+                         [:start_element, :head],
+                         [:start_element, :title],
+                         [:text, "Sax"],
+                         [:end_element, :title],
+                         [:end_element, :head],
+                         [:start_element, :body],
+                         [:start_element, :p],
+                         [:text, "great"],
+                         [:end_element, :p],
+                         [:start_element, :img],
+                         [:attr, :src, "x.jpg"],
+                         [:end_element, :body],
+                         [:end_element, :html],
+                        ])
+  end
+
+  def test_html_invalid_element
+    html = %{
+<html>
+  <budy>Hello</budy>
+</html>
+}
+    parse_compare(html, [
+                         [:start_element, :html],
+                         [:error, "Invalid Element: budy is not a valid element type for a HTML document type.", 3, 9],
+                         [:start_element, :budy],
+                         [:text, "Hello"],
+                         [:end_element, :budy],
+                         [:end_element, :html]
+                        ])
+  end
+
+  def test_html_table
+    html = %{
+<html>
+  <body>Table
+    <table>
+      <tr><td>one</td><td>two</td></tr>
+      <tr><td>bad<td>bad2</tr>
+    </table>
+  </body>
+</html>
+}
+    parse_compare(html, [
+                         [:start_element, :html],
+                         [:start_element, :body],
+                         [:text, "Table\n    "],
+                         [:start_element, :table],
+                         [:start_element, :tr],
+                         [:start_element, :td],
+                         [:text, "one"],
+                         [:end_element, :td],
+                         [:start_element, :td],
+                         [:text, "two"],
+                         [:end_element, :td],
+                         [:end_element, :tr],
+                         [:start_element, :tr],
+                         [:start_element, :td],
+                         [:text, "bad"],
+                         [:error, "Invalid Element: td can not be nested in a HTML document, closing previous.", 6, 22],
+                         [:end_element, :td],
+                         [:start_element, :td],
+                         [:text, "bad2"],
+                         [:error, "Start End Mismatch: element 'tr' close does not match 'td' open", 6, 26],
+                         [:end_element, :td],
+                         [:end_element, :tr],
+                         [:end_element, :table],
+                         [:end_element, :body],
+                         [:end_element, :html]
+                        ])
+  end
+
+  def test_html_bad_table
+    html = %{
+<html>
+  <body>
+    <table>
+      <div>
+        <tr><td>one</td></tr>
+      </div>
+    </table>
+  </body>
+</html>
+}
+    parse_compare(html, [
+                         [:start_element, :html],
+                         [:start_element, :body],
+                         [:start_element, :table],
+                         [:start_element, :div],
+                         [:error, "Invalid Element: tr can not be a child of a div in a HTML document.", 6, 13],
+                         [:start_element, :tr],
+                         [:start_element, :td],
+                         [:text, "one"],
+                         [:end_element, :td],
+                         [:end_element, :tr],
+                         [:end_element, :div],
+                         [:end_element, :table],
+                         [:end_element, :body],
+                         [:end_element, :html]
+                        ])
+  end
+
+  def test_html_nested
+    html = %{
+<html>
+  <body>
+    <div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div><div>
+Word
+    </div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div></div>
+  </body>
+</html>
+}
+    parse_compare(html,
+                  [[:start_element, :html], [:start_element, :body]] +
+                  [[:start_element, :div]] * 20 +
+                  [[:text, "\nWord\n    "]] +
+                  [[:end_element, :div]] * 20 +
+                  [[:end_element, :body],[:end_element, :html]])
+  end
+end # SaxSmartHtmlTest
+

@@ -863,10 +863,13 @@ read_text(SaxDrive dr) {
     while ('<' != (c = buf_get(&dr->buf))) {
         if ('\0' == c) {
             ox_sax_drive_error(dr, NO_TERM "text not terminated");
-            return '\0';
+	    break;
+            //return '\0';
         }
     }
-    *(dr->buf.tail - 1) = '\0';
+    if ('\0' != c) {
+	*(dr->buf.tail - 1) = '\0';
+    }
     if (dr->has.value) {
         VALUE   args[1];
 

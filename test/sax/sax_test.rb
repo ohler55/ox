@@ -7,35 +7,23 @@
 
 $VERBOSE = true
 
-$: << File.join(File.dirname(__FILE__), "../lib")
-$: << File.join(File.dirname(__FILE__), "../ext")
-$: << File.join(File.dirname(__FILE__), "./sax")
+$: << File.join(File.dirname(__FILE__), "../../lib")
+$: << File.join(File.dirname(__FILE__), "../../ext")
+$: << File.join(File.dirname(__FILE__), ".")
 
 require 'stringio'
 require 'test/unit'
 require 'optparse'
 require 'handlers'
+require 'helpers'
 require 'ox'
-
 
 opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
-
-
 class SaxBaseTest < ::Test::Unit::TestCase
-  def parse_compare(xml, expected, handler_class=AllSax, special=false, tolerant=false)
-    handler = handler_class.new()
-    input = StringIO.new(xml)
-    if special
-      Ox.sax_parse(handler, input, :convert_special => true, :smart => tolerant)
-    else
-      Ox.sax_parse(handler, input, :smart => tolerant)
-    end
-    puts "\nexpected: #{expected}\n  actual: #{handler.calls}" if expected != handler.calls
-    assert_equal(expected, handler.calls)
-  end
+  include SaxTestHelpers
 
   def test_sax_io_pipe
     handler = AllSax.new()
@@ -311,7 +299,7 @@ encoding = "UTF-8" ?>},
                    [:attr, :name, 'A&Z'],
                    [:text, "This is <some> text."],
                    [:end_element, :top]
-                  ], AllSax, true)
+                  ], AllSax, :convert_special => true)
   end
 
   def test_sax_whitespace
@@ -326,6 +314,7 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<top>This is some text.},
                   [[:start_element, :top],
                    [:error, "Not Terminated: text not terminated", 1, 23],
+                   [:text, "This is some text."],
                    [:error, "Start End Mismatch: element 'top' not closed", 1, 23],
                    [:end_element, :top]])
   end
@@ -742,29 +731,37 @@ encoding = "UTF-8" ?>},
   This is a test of the &tolerant&# effort option.
   </body>
 </html>
-<ps>after thought</ps>
+<p>after thought</p>
 }
-      parse_compare(xml,
-                    [[:doctype, " HTML"],
-                     [:start_element, :html],
-                     [:attr, :lang, "en"],
-                     [:start_element, :head],
-                     [:attr, :garbage, "trash"],
-                     [:start_element, :bad],
-                     [:attr, :attr, "some&#xthing"],
-                     [:start_element, :bad],
-                     [:attr, :alone, ""],
-                     [:error, "invalid format, element start and end names do not match", 6, 10],
-                     [:end_element, :bad],
-                     [:end_element, :bad],
-                     [:end_element, :head],
-                     [:start_element, :body],
-                     [:text, "\n  This is a test of the &tolerant&# effort option.\n  "],
-                     [:end_element, :body],
-                     [:end_element, :html],
-                     [:start_element, :ps],
-                     [:text, "after thought"],
-                     [:end_element, :ps]],
-                    AllSax, false, true)
+    parse_compare(xml,
+                  [
+                   [:error, "Case Error: expected DOCTYPE all in caps", 1, 10],
+                   [:doctype, " HTML"],
+                   [:start_element, :html],
+                   [:error, "Unexpected Character: attibute value not in quotes", 2, 13],
+                   [:attr, :lang, "en"],
+                   [:start_element, :head],
+                   [:attr, :garbage, "trash"],
+                   [:error, "Invalid Element: bad is not a valid element type for a HTML document type.", 4, 10],
+                   [:start_element, :bad],
+                   [:error, "Not Terminated: special character does not end with a semicolon", 4, 30],
+                   [:attr, :attr, "some&#xthing"],
+                   [:error, "Invalid Element: bad is not a valid element type for a HTML document type.", 5, 10],
+                   [:start_element, :bad],
+                   [:error, "Unexpected Character: no attribute value", 5, 16],
+                   [:attr, :alone, ""],
+                   [:error, "Start End Mismatch: element 'head' close does not match 'bad' open", 6, 3],
+                   [:end_element, :bad],
+                   [:end_element, :bad],
+                   [:end_element, :head],
+                   [:start_element, :body],
+                   [:text, "\n  This is a test of the &tolerant&# effort option.\n  "],
+                   [:end_element, :body],
+                   [:end_element, :html],
+                   [:error, "Out of Order: multiple top level elements", 12, 2],
+                   [:start_element, :p],
+                   [:text, "after thought"],
+                   [:end_element, :p]],
+                  AllSax, :convert_special => false, :smart => true)
   end
 end

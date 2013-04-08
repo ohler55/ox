@@ -17,6 +17,24 @@ module SaxTestHelpers
   #                 [:end_element, :top]
   #                ], AllSax, :convert_special => true, :smart => true)
   #
+  def xparse_compare(xml, expected, handler_class=AllSax, special=false, smart=false)
+    handler = handler_class.new()
+    input = StringIO.new(xml)
+    options = {
+      :convert_special => false,
+      :smart => false
+    }.merge(opts)
+
+    if special
+      Ox.sax_parse(handler, input, :convert_special => true, :smart => smart)
+    else
+      Ox.sax_parse(handler, input, :smart => smart)
+    end
+    puts "\nexpected: #{expected}\n  actual: #{handler.calls}" if expected != handler.calls
+    assert_equal(expected, handler.calls)
+  end
+
+
   def parse_compare(xml, expected, handler_class=AllSax, opts={})
     handler = handler_class.new()
     input = StringIO.new(xml)

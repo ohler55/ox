@@ -144,3 +144,51 @@ class ErrorSax < ::Ox::Sax
     @errors << message
   end
 end
+
+class HtmlSax < ::Ox::Sax
+  attr_accessor :calls
+
+  def initialize()
+    @calls = []
+  end
+
+  def start_element(name)
+    @calls << [:start_element, name]
+  end
+
+  def end_element(name)
+    @calls << [:end_element, name]
+  end
+
+  def attr(name, value)
+    @calls << [:attr, name, value]
+  end
+
+  def instruct(target)
+    @calls << [:instruct, target]
+  end
+
+  def end_instruct(target)
+    @calls << [:end_instruct, target]
+  end
+
+  def doctype(value)
+    @calls << [:doctype, value]
+  end
+
+  def comment(value)
+    @calls << [:comment, value]
+  end
+
+  def cdata(value)
+    @calls << [:cdata, value]
+  end
+
+  def text(value)
+    @calls << [:text, value]
+  end
+
+  def error(message, line, column)
+    @calls << [:error, message, line, column]
+  end
+end
