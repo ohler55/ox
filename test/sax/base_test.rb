@@ -7,14 +7,14 @@
 
 $VERBOSE = true
 
-$: << File.join(File.dirname(__FILE__), "../lib")
-$: << File.join(File.dirname(__FILE__), "../ext")
-$: << File.join(File.dirname(__FILE__), "./sax")
+$: << File.join(File.dirname(__FILE__), "../../lib")
+$: << File.join(File.dirname(__FILE__), "../../ext")
+$: << File.join(File.dirname(__FILE__), "../sax")
 
 require 'stringio'
 require 'test/unit'
 require 'optparse'
-require 'handlers'
+require 'helpers'
 require 'ox'
 
 
@@ -25,17 +25,9 @@ opts.parse(ARGV)
 
 
 class SaxBaseTest < ::Test::Unit::TestCase
-  def parse_compare(xml, expected, handler_class=AllSax, special=false, tolerant=false)
-    handler = handler_class.new()
-    input = StringIO.new(xml)
-    if special
-      Ox.sax_parse(handler, input, :convert_special => true, :smart => tolerant)
-    else
-      Ox.sax_parse(handler, input, :smart => tolerant)
-    end
-    puts "\nexpected: #{expected}\n  actual: #{handler.calls}" if expected != handler.calls
-    assert_equal(expected, handler.calls)
-  end
+
+  include SaxTestHelpers
+
 
   def test_sax_io_pipe
     handler = AllSax.new()
@@ -49,7 +41,7 @@ class SaxBaseTest < ::Test::Unit::TestCase
 
   def test_sax_io_file
     handler = AllSax.new()
-    input = IO.open(IO.sysopen(File.join(File.dirname(__FILE__), 'basic.xml')))
+    input = IO.open(IO.sysopen(File.join(File.dirname(__FILE__), '../basic.xml')))
     Ox.sax_parse(handler, input)
     assert_equal([[:start_element, :top],
                   [:end_element, :top]], handler.calls)
@@ -311,7 +303,7 @@ encoding = "UTF-8" ?>},
                    [:attr, :name, 'A&Z'],
                    [:text, "This is <some> text."],
                    [:end_element, :top]
-                  ], AllSax, true)
+                  ], AllSax, :convert_special => true)
   end
 
   def test_sax_whitespace
@@ -731,40 +723,4 @@ encoding = "UTF-8" ?>},
     assert_equal([], handler.errors)
   end
 
-  def test_sax_tolerant
-    xml = %{<!doctype HTML>
-<html lang=en>
-  <head garbage='trash'>
-    <bad attr="some&#xthing">
-    <bad alone>
-  </head>
-  <body>
-  This is a test of the &tolerant&# effort option.
-  </body>
-</html>
-<ps>after thought</ps>
-}
-      parse_compare(xml,
-                    [[:doctype, " HTML"],
-                     [:start_element, :html],
-                     [:attr, :lang, "en"],
-                     [:start_element, :head],
-                     [:attr, :garbage, "trash"],
-                     [:start_element, :bad],
-                     [:attr, :attr, "some&#xthing"],
-                     [:start_element, :bad],
-                     [:attr, :alone, ""],
-                     [:error, "invalid format, element start and end names do not match", 6, 10],
-                     [:end_element, :bad],
-                     [:end_element, :bad],
-                     [:end_element, :head],
-                     [:start_element, :body],
-                     [:text, "\n  This is a test of the &tolerant&# effort option.\n  "],
-                     [:end_element, :body],
-                     [:end_element, :html],
-                     [:start_element, :ps],
-                     [:text, "after thought"],
-                     [:end_element, :ps]],
-                    AllSax, false, true)
-  end
 end
