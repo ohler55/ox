@@ -14,7 +14,6 @@ $: << File.join(File.dirname(__FILE__), ".")
 require 'stringio'
 require 'test/unit'
 require 'optparse'
-require 'handlers'
 require 'helpers'
 require 'ox'
 
@@ -122,7 +121,7 @@ encoding = "UTF-8" ?>},
                   [[:start_element, :top],
                    [:attr, :x, "57"],
                    [:attr, :y, "42"],
-                   [:error, "Unexpected Character: attibute value not in quotes", 1, 22],
+                   [:error, "Unexpected Character: attribute value not in quotes", 1, 22],
                    [:attr, :z, "33"],
                    [:end_element, :top]])
   end
@@ -738,7 +737,7 @@ encoding = "UTF-8" ?>},
                    [:error, "Case Error: expected DOCTYPE all in caps", 1, 10],
                    [:doctype, " HTML"],
                    [:start_element, :html],
-                   [:error, "Unexpected Character: attibute value not in quotes", 2, 13],
+                   [:error, "Unexpected Character: attribute value not in quotes", 2, 13],
                    [:attr, :lang, "en"],
                    [:start_element, :head],
                    [:attr, :garbage, "trash"],
