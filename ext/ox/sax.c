@@ -1,21 +1,21 @@
 /* sax.c
  * Copyright (c) 2011, Peter Ohler
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *  - Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  *  - Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  *  - Neither the name of Peter Ohler nor the names of its contributors may be
  *    used to endorse or promote products derived from this software without
  *    specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -34,7 +34,7 @@
 #include <strings.h>
 #include <sys/types.h>
 #if NEEDS_UIO
-#include <sys/uio.h>    
+#include <sys/uio.h>
 #endif
 #include <unistd.h>
 #include <time.h>
@@ -86,7 +86,7 @@ VALUE	ox_sax_value_class = Qnil;
 #ifdef NEEDS_STPCPY
 char *stpncpy(char *dest, const char *src, size_t n) {
     size_t	cnt = strlen(src) + 1;
-    
+
     if (n < cnt) {
 	cnt = n;
     }
@@ -99,7 +99,7 @@ char *stpncpy(char *dest, const char *src, size_t n) {
 void
 ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
     struct _SaxDrive    dr;
-    
+
     sax_drive_init(&dr, handler, io, options);
 #if 0
     printf("*** sax_parse with these flags\n");
@@ -804,7 +804,7 @@ read_element_end(SaxDrive dr) {
 	    // Not found so open and close element.
 	    char	*ename = 0;
 	    Hint	h = ox_hint_find(dr->hints, dr->buf.str);
-	    
+
 	    if (0 != h && h->empty) {
 		// Just close normally
 		name = str2sym(dr, dr->buf.str, &ename);
@@ -922,7 +922,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
     int		line;
     int		col;
     char	*attr_value;
-    
+
     // already protected by caller
     dr->buf.str = dr->buf.tail;
     if (is_white(c)) {
@@ -1080,7 +1080,7 @@ read_quoted_value(SaxDrive dr) {
     }
     // not quoted, look for something that terminates the string
     dr->buf.str = dr->buf.tail - 1;
-    ox_sax_drive_error(dr, WRONG_CHAR "attibute value not in quotes");
+    ox_sax_drive_error(dr, WRONG_CHAR "attribute value not in quotes");
     while ('\0' != (c = buf_get(&dr->buf))) {
 	switch (c) {
 	case ' ':
@@ -1110,7 +1110,7 @@ ox_sax_collapse_special(SaxDrive dr, char *str) {
             int         c;
             char        *end;
 	    int		x = 0;
-            
+
             s++;
             if ('#' == *s) {
                 s++;
