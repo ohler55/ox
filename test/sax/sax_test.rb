@@ -14,8 +14,11 @@ $: << File.join(File.dirname(__FILE__), ".")
 require 'stringio'
 require 'test/unit'
 require 'optparse'
-require 'helpers'
+
 require 'ox'
+
+require 'helpers'
+require 'smart_test'
 
 opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }

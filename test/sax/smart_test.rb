@@ -262,36 +262,36 @@ end
 class SaxSmartVoidTagTest < SaxSmartTest
 
   VOIDELEMENTS = [
-    "area",
-    "base",
-    "br",
-    "col",
-    "command",
-    "embed",
-    "hr",
-    "img",
-    "input",
-    "keygen",
-    "link",
-    "meta",
-    "param",
-    "source",
-    "track",
-    "wbr"
-  ]
+                  #"area", # only in map
+                  #"base", # only in head
+                  "br",
+                  #"col", # only in colgroup
+                  #"command", # not a void tag
+                  "embed",
+                  "hr",
+                  "img",
+                  #"input", # only in form
+                  "keygen",
+                  #"link", # only in head
+                  #"meta", # only in head
+                  "param",
+                  #"source", # only in media (audio, video)
+                  #"track", # only in media (audio, video)
+                  "wbr"
+                 ]
 
   def test_closed
     VOIDELEMENTS.each do |el|
       html = %{<html>A terminated <#{el}/> text</html>}
       parse_compare(html,
-        [
-          [:start_element, :html],
-          [:text, "A terminated "],
-          [:start_element, el.to_sym],
-          [:end_element, el.to_sym],
-          [:text, " text"],
-          [:end_element, :html]
-        ])
+                    [
+                     [:start_element, :html],
+                     [:text, "A terminated "],
+                     [:start_element, el.to_sym],
+                     [:end_element, el.to_sym],
+                     [:text, " text"],
+                     [:end_element, :html]
+                    ])
     end
   end
 
@@ -299,37 +299,36 @@ class SaxSmartVoidTagTest < SaxSmartTest
     VOIDELEMENTS.each do |el|
       html = %{<html>A terminated <#{el}> text</html>}
       parse_compare(html,
-        [
-          [:start_element, :html],
-          [:text, "A terminated "],
-          [:start_element, el.to_sym],
-          [:end_element, el.to_sym],
-          [:text, " text"],
-          [:end_element, :html]
-        ])
+                    [
+                     [:start_element, :html],
+                     [:text, "A terminated "],
+                     [:start_element, el.to_sym],
+                     [:end_element, el.to_sym],
+                     [:text, " text"],
+                     [:end_element, :html]
+                    ])
     end
   end
 
   # Fix this error to be supported
   def test_invalid_syntax
     VOIDELEMENTS.each do |el|
-      html = %{<html>A terminated <#{el}>nice</#{el}> text</html>}
+      html = %{<html>A terminated <#{el}>nice\n</#{el}> text</html>}
       parse_compare(html,
-        [
-          [:start_element, :html],
-          [:text, "A terminated "],
-          [:start_element, el.to_sym],
-          [:end_element, el.to_sym],
-          [:text, "nice"],
-          [:error, "Start End Mismatch: element '#{el}' should not have a separate close element", 1, 27],
-          [:text, " text"],
-          [:end_element, :html]
-        ])
+                    [
+                     [:start_element, :html],
+                     [:text, "A terminated "],
+                     [:start_element, el.to_sym],
+                     [:end_element, el.to_sym],
+                     [:text, "nice\n"],
+                     [:error, "Start End Mismatch: element '#{el}' should not have a separate close element", 2, 1],
+                     [:text, " text"],
+                     [:end_element, :html]
+                    ])
     end
   end
 
 end
-
 
 
 ##
