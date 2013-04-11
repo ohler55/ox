@@ -270,7 +270,7 @@ class SaxSmartVoidTagTest < SaxSmartTest
                   "embed",
                   "hr",
                   "img",
-                  #"input", # only in form
+                  "input",
                   "keygen",
                   #"link", # only in head
                   #"meta", # only in head
