@@ -84,7 +84,11 @@ buf_get(Buf buf) {
 static inline void
 buf_backup(Buf buf) {
     buf->tail--;
-    buf->col--;	// should reverse wrap but not worth it
+    buf->col--;
+    if (0 >= buf->col) {
+	buf->line--;
+	// allow col to be negative since we never backup twice in a row
+    }
 }
 
 static inline void

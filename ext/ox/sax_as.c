@@ -144,7 +144,7 @@ sax_value_as_s(VALUE self) {
 	return Qnil;
     }
     if (dr->options.convert_special) {
-	ox_sax_collapse_special(dr, dr->buf.str);
+	ox_sax_collapse_special(dr, dr->buf.str, dr->buf.line, dr->buf.col);
     }
     rs = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT

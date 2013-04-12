@@ -61,7 +61,7 @@ typedef struct _SaxDrive {
 extern void	ox_sax_parse(VALUE handler, VALUE io, SaxOptions options);
 extern void	ox_sax_drive_cleanup(SaxDrive dr);
 extern void	ox_sax_drive_error(SaxDrive dr, const char *msg);
-extern int	ox_sax_collapse_special(SaxDrive dr, char *str);
+extern int	ox_sax_collapse_special(SaxDrive dr, char *str, int line, int col);
 
 extern VALUE	ox_sax_value_class;
 
