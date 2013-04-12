@@ -14,8 +14,11 @@ $: << File.join(File.dirname(__FILE__), ".")
 require 'stringio'
 require 'test/unit'
 require 'optparse'
-require 'helpers'
+
 require 'ox'
+
+require 'helpers'
+require 'smart_test'
 
 opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
@@ -187,11 +190,11 @@ encoding = "UTF-8" ?>},
   </child>Some text.
 </top>},
                   [[:instruct, 'xml', 1, 1],
-                   [:attr, :version, "1.0", 1, 6],
+                   [:attr, :version, "1.0", 1, 14],
                    [:end_instruct, 'xml', 1, 20],
                    [:doctype, " top PUBLIC \"top.dtd\"", 2, 1],
                    [:start_element, :top, 3, 1],
-                   [:attr, :attr, "one", 3, 6],
+                   [:attr, :attr, "one", 3, 11],
                    [:comment, " family ", 4, 4],
                    [:start_element, :child, 5, 3],
                    [:start_element, :grandchild, 6, 5],

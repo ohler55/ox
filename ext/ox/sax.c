@@ -407,7 +407,7 @@ read_instruction(SaxDrive dr) {
 	    VALUE   args[1];
 
 	    if (dr->options.convert_special) {
-		ox_sax_collapse_special(dr, content);
+		ox_sax_collapse_special(dr, content, line, col);
 	    }
 	    args[0] = rb_str_new2(content);
 #if HAS_ENCODING_SUPPORT
@@ -869,7 +869,6 @@ read_text(SaxDrive dr) {
         if ('\0' == c) {
             ox_sax_drive_error(dr, NO_TERM "text not terminated");
 	    break;
-            //return '\0';
         }
     }
     if ('\0' != c) {
@@ -890,7 +889,7 @@ read_text(SaxDrive dr) {
         VALUE   args[1];
 
         if (dr->options.convert_special) {
-            ox_sax_collapse_special(dr, dr->buf.str);
+            ox_sax_collapse_special(dr, dr->buf.str, line, col);
         }
         args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
@@ -958,6 +957,8 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
 		attr_value = (char*)"";
 	    }
         } else {
+	    line = dr->buf.line;
+	    col = dr->buf.col;
 	    c = read_quoted_value(dr);
 	    attr_value = dr->buf.str;
 	    if (is_encoding) {
@@ -985,7 +986,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
             VALUE       args[2];
 
             args[0] = name;
-            ox_sax_collapse_special(dr, dr->buf.str);
+            ox_sax_collapse_special(dr, dr->buf.str, line, col);
             args[1] = rb_str_new2(attr_value);
 #if HAS_ENCODING_SUPPORT
             if (0 != dr->encoding) {
@@ -1101,7 +1102,7 @@ read_quoted_value(SaxDrive dr) {
 }
 
 int
-ox_sax_collapse_special(SaxDrive dr, char *str) {
+ox_sax_collapse_special(SaxDrive dr, char *str, int line, int col) {
     char        *s = str;
     char        *b = str;
 
@@ -1130,29 +1131,39 @@ ox_sax_collapse_special(SaxDrive dr, char *str) {
 		    }
 		    continue;
                 }
+		col += (int)(end - s);
                 s = end + 1;
             } else if (0 == strncasecmp(s, "lt;", 3)) {
                 c = '<';
                 s += 3;
+		col += 3;
             } else if (0 == strncasecmp(s, "gt;", 3)) {
                 c = '>';
                 s += 3;
+		col += 3;
             } else if (0 == strncasecmp(s, "amp;", 4)) {
                 c = '&';
                 s += 4;
+		col += 4;
             } else if (0 == strncasecmp(s, "quot;", 5)) {
                 c = '"';
                 s += 5;
+		col += 5;
             } else if (0 == strncasecmp(s, "apos;", 5)) {
                 c = '\'';
                 s += 5;
             } else {
-		ox_sax_drive_error(dr, NO_TERM "special character does not end with a semicolon");
-		*b++ = '&';
+		ox_sax_drive_error_at(dr, NO_TERM "special character does not end with a semicolon", line, col);
 		c = '&';
             }
             *b++ = (char)c;
+	    col++;
         } else {
+	    if ('\n' == *s) {
+		line++;
+		col = 0;
+	    }
+	    col++;
             *b++ = *s++;
         }
     }

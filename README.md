@@ -37,8 +37,11 @@ A fast XML parser and Object marshaller as a Ruby gem.
 ### Release 2.0.0
 
  - The SAX parser went through a significant re-write. The options have changed. It is now 15% faster on large files and
-   much better at recovering from errors. So much so that the tolerant options was removed and is now the default and
-   only behavior. Errors will cause callbacks but the parsing continues with the best guess as to how to recover.
+   much better at recovering from errors. So much so that the tolerant option was removed and is now the default and
+   only behavior. A smart option was added however. The smart option recognizes a file as an HTML file and will apply a
+   simple set of validation rules that allow the HTML to be parsed more reasonably. Errors will cause callbacks but the
+   parsing continues with the best guess as to how to recover. Rubymaniac has helped with testing and prompted the
+   rewrite to support parsing HTML pages.
 
  - HTML is now supported with the SAX parser. The parser knows some tags like <br> or <img> do not have to be
    closed. Other hints as to how to parse and when to raise errors are also included. The parser does it's best to
