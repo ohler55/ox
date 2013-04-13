@@ -23,7 +23,7 @@ do
     cd ../../test
     rbenv local $ruby
     ./tests.rb
-    ./sax_test.rb
+    ./sax/sax_test.rb
     cd ..
 
     echo "\n"
@@ -42,7 +42,7 @@ echo "\nRunning tests for jruby-1.6.7.2 --1.8"
 cd ../../test
 rbenv local jruby-1.6.7.2
 ./tests.rb
-./sax_test.rb
+./sax/sax_test.rb
 cd ..
 
 echo "\n"
@@ -60,7 +60,7 @@ echo "\nRunning tests for jruby-1.6.7.2 --1.9"
 cd ../../test
 rbenv local jruby-1.6.7.2
 ./tests.rb
-./sax_test.rb
+./sax/sax_test.rb
 cd ..
 
 echo "\n"
@@ -75,7 +75,7 @@ make
 echo "\nRunning tests for OS X Ruby"
 cd ../../test
 ./tests.rb
-./sax_test.rb
+./sax/sax_test.rb
 cd ..
 
 echo "resetting to 1.9.3-p374\n"

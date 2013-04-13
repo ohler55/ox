@@ -5,20 +5,6 @@
 
 - todo
  
-- sax parser rewrite
- - keep stack of element names as an array
-  - allows back searches for closed elements
- - don't make recursive
-  - should simplify parse error recovery
- - add rules for different element name recovery strategies
-  - no children - doctype, if html, hr, br)
-  - no same 1st gen children - if html, table, td, tr
-  - javascript optimization
-  - set flags or expected sets on start element match
- - element end and start callbacks include a 'implied' arg for auto generated start or ends
- - generate an error if something is wrong
- 
-
 - add UTF-16 support
 U+0000..U+D7FF, U+E000..U+EFFF  00000xxxxxxxxxxxxxxxx  xxxxxxxxxxxxxxxx
 U+10000..U+10FFFF               uuuuuxxxxxxyyyyyyyyyy  110110wwwwxxxxxx 110111yyyyyyyyyy (where uuuuu = wwww + 1)

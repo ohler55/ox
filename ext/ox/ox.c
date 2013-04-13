@@ -35,6 +35,7 @@
 
 #include "ruby.h"
 #include "ox.h"
+#include "sax.h"
 
 /* maximum to allocate on the stack, arbitrary limit */
 #define SMALL_XML	65536
@@ -128,8 +129,9 @@ static VALUE	object_sym;
 static VALUE	opt_format_sym;
 static VALUE	optimized_sym;
 static VALUE	strict_sym;
-static VALUE	strict_sym;
+static VALUE	smart_sym;
 static VALUE	symbolize_keys_sym;
+static VALUE	symbolize_sym;
 static VALUE	tolerant_sym;
 static VALUE	trace_sym;
 static VALUE	with_dtd_sym;
@@ -623,12 +625,16 @@ load_file(int argc, VALUE *argv, VALUE self) {
  * @param [IO|String] io IO Object to read from
  * @param [Hash] options parse options
  * @param [true|false] :convert_special flag indicating special characters like &lt; are converted
- * @param [true|false] :tolerant flag indicating the parser should be tolerant of XML errors
+ * @param [true|false] :symbolize flag indicating the parser symbolize element and attribute names
+ * @param [true|false] :smart flag indicating the parser use hints if available (use with html)
  */
 static VALUE
 sax_parse(int argc, VALUE *argv, VALUE self) {
-    int convert = 0;
-    int tolerant = 0;
+    struct _SaxOptions	options;
+
+    options.symbolize = 1;
+    options.convert_special = 0;
+    options.smart = 0;
 
     if (argc < 2) {
 	rb_raise(ox_parse_error_class, "Wrong number of arguments to sax_parse.\n");
@@ -638,13 +644,16 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
 	VALUE	v;
 	
 	if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
-	    convert = (Qtrue == v);
+	    options.convert_special = (Qtrue == v);
 	}
-	if (Qnil != (v = rb_hash_lookup(h, tolerant_sym))) {
-	    tolerant = (Qtrue == v);
+	if (Qnil != (v = rb_hash_lookup(h, smart_sym))) {
+	    options.smart = (Qtrue == v);
+	}
+	if (Qnil != (v = rb_hash_lookup(h, symbolize_sym))) {
+	    options.symbolize = (Qtrue == v);
 	}
     }
-    ox_sax_parse(argv[0], argv[1], convert, tolerant);
+    ox_sax_parse(argv[0], argv[1], &options);
 
     return Qnil;
 }
@@ -875,8 +884,10 @@ void Init_ox() {
     opt_format_sym = ID2SYM(rb_intern("opt_format"));		rb_gc_register_address(&opt_format_sym);
     optimized_sym = ID2SYM(rb_intern("optimized"));		rb_gc_register_address(&optimized_sym);
     ox_encoding_sym = ID2SYM(rb_intern("encoding"));		rb_gc_register_address(&ox_encoding_sym);
+    smart_sym = ID2SYM(rb_intern("smart"));			rb_gc_register_address(&smart_sym);
     strict_sym = ID2SYM(rb_intern("strict"));			rb_gc_register_address(&strict_sym);
     symbolize_keys_sym = ID2SYM(rb_intern("symbolize_keys"));	rb_gc_register_address(&symbolize_keys_sym);
+    symbolize_sym = ID2SYM(rb_intern("symbolize"));		rb_gc_register_address(&symbolize_sym);
     tolerant_sym = ID2SYM(rb_intern("tolerant"));		rb_gc_register_address(&tolerant_sym);
     trace_sym = ID2SYM(rb_intern("trace"));			rb_gc_register_address(&trace_sym);
     with_dtd_sym = ID2SYM(rb_intern("with_dtd"));		rb_gc_register_address(&with_dtd_sym);
