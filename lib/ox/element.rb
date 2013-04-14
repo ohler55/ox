@@ -222,29 +222,6 @@ module Ox
         end
       end
     end
-		
-		# args = attributes and/or children in any order, multiple appearance is possible
-		# @overload build(name,attributes,children)
-		#   @param [String] name name of the Element
-		#   @param [Hash] attributes
-		#   @param [String|Element|Array] children text, (built) child element or array of (built) elements
-		def self.build(name, *args)
-			n = new(name)
 
-			for arg in args
-				case arg
-				when Hash
-					arg.each { |k,v| n[k.to_s] = v }
-				when Array
-					arg.each { |c| n << c }
-				when NilClass
-				else
-					n << arg
-				end
-			end
-
-			n
-		end
-		
   end # Element
 end # Ox
