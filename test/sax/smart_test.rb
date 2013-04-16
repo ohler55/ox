@@ -50,6 +50,7 @@ class SaxSmartTest < ::Test::Unit::TestCase
     "dt" => { "parents" => ["dl"] },
     "dd" => { "parents" => ["dl"] },
     "del" => {},
+    "details" => { "childs" => ["summary"] },
     "dfn" => {},
     "div" => {},
     "em" => {},
@@ -105,7 +106,7 @@ class SaxSmartTest < ::Test::Unit::TestCase
     "summary" => { "parents" => ["details"] },
     "sup" => {},
     "table" => { "childs" => ["caption", "colgroup", "thead", "tbody", "tfoot", "tr"] },
-    "tbody" => { "childs" => ["tr"] },
+    "tbody" => { "childs" => ["tr"], "parents" => ["table"] },
     "td" => { "parents" => ["tr"] },
     "textarea" => {},
     "tfoot" => { "parents" => ["table"], "childs" => ["tr"] },
@@ -140,8 +141,61 @@ class SaxSmartTest < ::Test::Unit::TestCase
   }
 
   # Make the :smart => true option the default one
-  def parse_compare(xml, expected, handler=AllSax, opts={})
-    super(xml, expected, handler, opts.merge(:smart => true))
+  def parse_compare(xml, expected, handler = AllSax, opts = {}, handler_attr = :calls)
+    super(xml, expected, handler, opts.merge(:smart => true), handler_attr)
+  end
+
+end
+
+
+class ErrorsOnParentNormalElementTest < SaxSmartTest
+
+  attr_reader :w
+
+  def initialize(*args)
+    @w = lambda { |s, ws| "<#{ws}>" + s + "</#{ws}>" }
+    super(*args)
+  end
+
+  def parents_of(el)
+    return [] if el == "html"
+    NORMALELEMENTS[el]["parents"] || ["body"]
+  end
+
+  def ancestry_of(el, parent = nil)
+    p = parent || parents_of(el)[0]
+    [el] + (p ? ancestry_of(p) : [])
+  end
+
+  def ancestries(el)
+    parents_of(el).map { |p| ancestry_of(el, p) }
+  end
+
+  def test_no_error_in_dependent_parent_elements
+    NORMALELEMENTS.each_key do |el|
+      ancestries(el).each do |arr|
+        html = arr.reduce(&w)
+        parse_compare(html, [], ErrorSax, {}, :errors)
+      end
+    end
+  end
+
+end
+
+
+class ErrorsOnParentVoidElementTest < SaxSmartTest
+
+  def construct_html(el)
+    str = (VOIDELEMENTS[el]["parents"] || []).each_with_object("") do |p, s|
+      s += "<#{p}><#{el}></#{p}>"
+    end
+    "<html><body>#{str}</body></html>"
+  end
+
+  def test_no_error_in_dependent_parent_on_void_elements
+    VOIDELEMENTS.each_key do |el|
+      parse_compare(construct_html(el), [], ErrorSax, {}, :errors)
+    end
   end
 
 end
