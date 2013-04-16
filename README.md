@@ -113,7 +113,7 @@ Ox is compatible with Ruby 1.8.7, 1.9.2, JRuby, and RBX.
     xml = Ox.dump(obj)
     # Convert the object back into a Sample Object.
     obj2 = Ox.parse_obj(xml)
-    ```
+```
 
 ### Generic XML Writing and Parsing:
 
@@ -146,7 +146,7 @@ Ox is compatible with Ruby 1.8.7, 1.9.2, JRuby, and RBX.
     doc2 = Ox.parse(xml)
     puts "Same? #{doc == doc2}"
     # true
-    ```
+```
 
 ### SAX XML Parsing:
 
@@ -181,7 +181,7 @@ Ox is compatible with Ruby 1.8.7, 1.9.2, JRuby, and RBX.
     # end: bottom
     # end: middle
     # end: top
-    ```
+```
 
 ### Object XML format
 
