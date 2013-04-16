@@ -27,9 +27,175 @@ opts.parse(ARGV)
 class SaxSmartTest < ::Test::Unit::TestCase
   include SaxTestHelpers
 
+  NORMALELEMENTS = {
+    "a" => {},
+    "abbr" => {},
+    "address" => {},
+    "article" => {},
+    "aside" => {},
+    "audio" => {},
+    "b" => {},
+    "bdi" => {},
+    "bdo" => {},
+    "blockquote" => {},
+    "body" => { "parents" => ["html"] },
+    "button" => {},
+    "canvas" => {},
+    "caption" => { "parents" => ["table"] },
+    "cite" => {},
+    "colgroup" => { "parents" => ["table"], "childs" => ["col"] },
+    "data" => {},
+    "datalist" => { "childs" => ["option"]},
+    "dl" => { "childs" => ["dt", "dd"] },
+    "dt" => { "parents" => ["dl"] },
+    "dd" => { "parents" => ["dl"] },
+    "del" => {},
+    "details" => { "childs" => ["summary"] },
+    "dfn" => {},
+    "div" => {},
+    "em" => {},
+    "fieldset" => {},
+    "figcaption" => {},
+    "figure" => {},
+    "footer" => {},
+    "form" => {},
+    "h1" => {},
+    "h2" => {},
+    "h3" => {},
+    "h4" => {},
+    "h5" => {},
+    "h6" => {},
+    "head" => { "parents" => ["html"] },
+    "hgroup" => { "childs" => ["h1", "h2", "h3", "h4", "h5", "h6"] },
+    "html" => { "childs" => ["head", "body"] },
+    "i" => {},
+    "iframe" => {},
+    "ins" => {},
+    "kdb" => {},
+    "label" => {},
+    "legend" => { "parents" => ["fieldset"] },
+    "li" => { "parents" => ["ul", "ol", "menu"] },
+    "map" => {},
+    "mark" => {},
+    "menu" => { "childs" => ["li"] },
+    "meter" => {},
+    "nav" => {},
+    "noscript" => {},
+    "object" => { "childs" => ["param"] },
+    "ol" => { "childs" => ["li"] },
+    "optgroup" => { "parents" => ["select"], "childs" => ["option"] },
+    "option" => { "parents" => ["optgroup", "select", "datalist"] },
+    "output" => {},
+    "p" => {},
+    "pre" => {},
+    "progress" => {},
+    "q" => {},
+    "rp" => { "parents" => ["ruby"] },
+    "rt" => { "parents" => ["ruby"] },
+    "ruby" => { "childs" => ["rt", "rp"] },
+    "s" => {},
+    "samp" => {},
+    "script" => {},
+    "section" => {},
+    "select" => { "childs" => ["option", "optgroup"] },
+    "small" => {},
+    "span" => {},
+    "strong" => {},
+    "style" => {},
+    "sub" => {},
+    "summary" => { "parents" => ["details"] },
+    "sup" => {},
+    "table" => { "childs" => ["caption", "colgroup", "thead", "tbody", "tfoot", "tr"] },
+    "tbody" => { "childs" => ["tr"], "parents" => ["table"] },
+    "td" => { "parents" => ["tr"] },
+    "textarea" => {},
+    "tfoot" => { "parents" => ["table"], "childs" => ["tr"] },
+    "th" => { "parents" => ["tr"] },
+    "thead" => { "childs" => ["tr"], "parents" => ["table"] },
+    "time" => {},
+    "title" => { "parents" => ["head"] },
+    "tr" => { "parents" => ["table", "thead", "tbody", "tfoot"], "childs" => ["td", "th"] },
+    "u" => {},
+    "ul" => { "childs" => ["li"] },
+    "var" => {},
+    "video" => {}
+  }
+
+  VOIDELEMENTS = {
+    "area" => { "parents" => ["map"] },
+    "base" => { "parents" => ["head"] },
+    "br" => {},
+    "col" => { "parents" => ["colgroup"] },
+    "command" => { "parents" => ["colgroup"] },
+    "embed" => {},
+    "hr" => {},
+    "img" => {},
+    "input" => {},
+    "keygen" => {},
+    "link" => {},
+    "meta" => { "parents" => ["head"] },
+    "param" => { "parents" => ["object"] },
+    "source" => { "parents" => ["audio", "video"] },
+    "track" => { "parents" => ["audio", "video"] },
+    "wbr" => {}
+  }
+
   # Make the :smart => true option the default one
-  def parse_compare(xml, expected, handler=AllSax, opts={})
-    super(xml, expected, handler, opts.merge(:smart => true))
+  def parse_compare(xml, expected, handler = AllSax, opts = {}, handler_attr = :calls)
+    super(xml, expected, handler, opts.merge(:smart => true), handler_attr)
+  end
+
+end
+
+
+class ErrorsOnParentNormalElementTest < SaxSmartTest
+
+  attr_reader :w
+
+  def initialize(*args)
+    @w = lambda { |s, ws| "<#{ws}>" + s + "</#{ws}>" }
+    super(*args)
+  end
+
+  def parents_of(el)
+    return [] if el == "html"
+    NORMALELEMENTS[el]["parents"] || ["body"]
+  end
+
+  def ancestry_of(el, parent = nil)
+    p = parent || parents_of(el)[0]
+    [el] + (p ? ancestry_of(p) : [])
+  end
+
+  def ancestries(el)
+    parents_of(el).map { |p| ancestry_of(el, p) }
+  end
+
+  def test_no_error_in_dependent_parent_elements
+    NORMALELEMENTS.each_key do |el|
+      ancestries(el).each do |arr|
+        html = arr.reduce(&w)
+        parse_compare(html, [], ErrorSax, {}, :errors)
+      end
+    end
+  end
+
+end
+
+
+class ErrorsOnParentVoidElementTest < SaxSmartTest
+
+  def construct_html(el)
+    str = (VOIDELEMENTS[el]["parents"] || []).each_with_object("") do |p, s|
+      s += "<#{p}><#{el}></#{p}>"
+    end
+    "<html><body>#{str}</body></html>"
+  end
+
+  def test_no_error_in_dependent_parent_on_void_elements
+    VOIDELEMENTS.each_key do |el|
+      parse_compare(construct_html(el), [], ErrorSax, {}, :errors)
+    end
   end
 
 end
@@ -259,6 +425,7 @@ end
 # A class that groups tests concerning the so called void elements of an html document.
 # More info: http://www.w3.org/TR/html5/syntax.html#void-elements
 ##
+=begin
 class SaxSmartVoidTagTest < SaxSmartTest
 
   VOIDELEMENTS = [
@@ -329,6 +496,7 @@ class SaxSmartVoidTagTest < SaxSmartTest
   end
 
 end
+=end
 
 
 ##
