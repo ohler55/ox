@@ -595,9 +595,9 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         e.closed = (0 >= cnt);
         out->w_start(out, &e);
         if (!e.closed) {
-            VALUE       *np = RARRAY_PTR(obj);
-            int         i;
-            int         d2 = depth + 1;
+            VALUE	*np = RARRAY_PTR(obj);
+            int		i;
+            int		d2 = depth + 1;
 
             for (i = cnt; 0 < i; i--, np++) {
                 dump_obj(0, *np, d2, out);

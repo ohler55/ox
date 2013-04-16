@@ -50,6 +50,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
  - Added symbolize option to the sax parser. This option, if set to false will use strings instead of symbols for
    element and attribute names.
 
+ - A contrib directory was added for people to submit useful bits of code that can be used with Ox. The first
+   contributor is Notezen with a nice way of building XML.
+
 ## <a name="description">Description</a>
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
