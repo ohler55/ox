@@ -43,7 +43,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
    parsing continues with the best guess as to how to recover. Rubymaniac has helped with testing and prompted the
    rewrite to support parsing HTML pages.
 
- - HTML is now supported with the SAX parser. The parser knows some tags like <br> or <img> do not have to be
+ - HTML is now supported with the SAX parser. The parser knows some tags like \<br\> or \<img\> do not have to be
    closed. Other hints as to how to parse and when to raise errors are also included. The parser does it's best to
    continue parsing even after errors.
 
@@ -94,6 +94,7 @@ Ox is compatible with Ruby 1.8.7, 1.9.2, JRuby, and RBX.
 
 ### Object Dump Sample:
 
+```ruby
     require 'ox'
   
     class Sample
@@ -112,9 +113,11 @@ Ox is compatible with Ruby 1.8.7, 1.9.2, JRuby, and RBX.
     xml = Ox.dump(obj)
     # Convert the object back into a Sample Object.
     obj2 = Ox.parse_obj(xml)
+    ```
 
 ### Generic XML Writing and Parsing:
 
+```ruby
     require 'ox'
 
     doc = Ox::Document.new(:version => '1.0')
@@ -143,9 +146,11 @@ Ox is compatible with Ruby 1.8.7, 1.9.2, JRuby, and RBX.
     doc2 = Ox.parse(xml)
     puts "Same? #{doc == doc2}"
     # true
+    ```
 
 ### SAX XML Parsing:
 
+```ruby
     require 'stringio'
     require 'ox'
     
@@ -176,6 +181,7 @@ Ox is compatible with Ruby 1.8.7, 1.9.2, JRuby, and RBX.
     # end: bottom
     # end: middle
     # end: top
+    ```
 
 ### Object XML format
 
