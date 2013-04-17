@@ -36,18 +36,16 @@
 static const char	*audio_video_0[] = { "audio", "video", 0 };
 static const char	*colgroup_0[] = { "colgroup", 0 };
 static const char	*details_0[] = { "details", 0 };
-static const char	*dt_0[] = { "dt", 0 };
+static const char	*dl_0[] = { "dl", 0 };
 static const char	*dt_th_0[] = { "dt", "th", 0 };
 static const char	*fieldset_0[] = { "fieldset", 0 };
 static const char	*figure_0[] = { "figure", 0 };
-static const char	*form_0[] = { "form", 0 };
 static const char	*frameset_0[] = { "frameset", 0 };
 static const char	*head_0[] = { "head", 0 };
 static const char	*html_0[] = { "html", 0 };
 static const char	*map_0[] = { "map", 0 };
 static const char	*ol_ul_menu_0[] = { "ol", "ul", "menu", 0 };
 static const char	*optgroup_select_datalist_0[] = { "optgroup", "select", "datalist", 0 };
-static const char	*rt_0[] = { "rt", 0 };
 static const char	*ruby_0[] = { "ruby", 0 };
 static const char	*table_0[] = { "table", 0 };
 static const char	*tr_0[] = { "tr", 0 };
@@ -81,18 +79,18 @@ static struct _Hint	html_hint_array[] = {
     { "colgroup", 0, 0, 0 },
     { "command", 1, 0, 0 },
     { "datalist", 0, 0, 0 },
-    { "dd", 0, 0, dt_0 },
+    { "dd", 0, 0, dl_0 },
     { "del", 0, 0, 0 },
     { "details", 0, 0, 0 },
     { "dfn", 0, 0, 0 },
     { "dialog", 0, 0, dt_th_0 },
     { "dir", 0, 0, 0 },
     { "div", 0, 1, 0 },
-    { "dl", 0, 0, dt_0 },
-    { "dt", 0, 1, 0 },
+    { "dl", 0, 0, 0 },
+    { "dt", 0, 1, dl_0 },
     { "em", 0, 0, 0 },
     { "embed", 1, 0, 0 },
-    { "fieldset", 0, 0, form_0 },
+    { "fieldset", 0, 0, 0 },
     { "figcaption", 0, 0, figure_0 },
     { "figure", 0, 0, 0 },
     { "font", 0, 1, 0 },
@@ -140,7 +138,7 @@ static struct _Hint	html_hint_array[] = {
     { "pre", 0, 0, 0 },
     { "progress", 0, 0, 0 },
     { "q", 0, 0, 0 },
-    { "rp", 0, 0, rt_0 },
+    { "rp", 0, 0, ruby_0 },
     { "rt", 0, 0, ruby_0 },
     { "ruby", 0, 0, 0 },
     { "s", 0, 0, 0 },

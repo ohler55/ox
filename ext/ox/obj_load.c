@@ -382,16 +382,7 @@ parse_regexp(const char *text) {
     int         options = 0;
             
     te = text + strlen(text) - 1;
-#if HAS_ENCODING_SUPPORT
-    for (; text < te && '/' != *te; te--) {
-        switch (*te) {
-        case 'i':       options |= ONIG_OPTION_IGNORECASE;      break;
-        case 'm':       options |= ONIG_OPTION_MULTILINE;       break;
-        case 'x':       options |= ONIG_OPTION_EXTEND;          break;
-        default:                                                break;
-        }
-    }
-#elif HAS_PRIVATE_ENCODING
+#if HAS_ONIG
     for (; text < te && '/' != *te; te--) {
         switch (*te) {
         case 'i':       options |= ONIG_OPTION_IGNORECASE;      break;

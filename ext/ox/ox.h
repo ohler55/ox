@@ -186,7 +186,7 @@ typedef struct _Options {
     char	mode;		/* LoadMode */
     char	effort;		/* Effort */
     char	sym_keys;	/* symbolize keys */
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
     rb_encoding	*rb_enc;
 #elif HAS_PRIVATE_ENCODING
     VALUE	rb_enc;

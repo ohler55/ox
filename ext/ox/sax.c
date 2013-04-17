@@ -138,10 +138,12 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
     if ('\0' == *ox_default_options.encoding) {
 	VALUE	encoding;
 
+	dr->encoding = 0;
 	if (rb_respond_to(io, ox_external_encoding_id) && Qnil != (encoding = rb_funcall(io, ox_external_encoding_id, 0))) {
-	    dr->encoding = rb_enc_from_index(rb_enc_get_index(encoding));
-	} else {
-	    dr->encoding = 0;
+	    int	e = rb_enc_get_index(encoding);
+	    if (0 <= e) {
+		dr->encoding = rb_enc_from_index(e);
+	    }
 	}
     } else {
         dr->encoding = rb_enc_find(ox_default_options.encoding);

@@ -186,7 +186,8 @@ end
 class ErrorsOnParentVoidElementTest < SaxSmartTest
 
   def construct_html(el)
-    str = (VOIDELEMENTS[el]["parents"] || []).each_with_object("") do |p, s|
+    s = ""
+    str = (VOIDELEMENTS[el]["parents"] || []).each() do |p|
       s += "<#{p}><#{el}></#{p}>"
     end
     "<html><body>#{str}</body></html>"

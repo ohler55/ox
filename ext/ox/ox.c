@@ -308,7 +308,7 @@ set_def_opts(VALUE self, VALUE opts) {
     } else {
 	Check_Type(v, T_STRING);
 	strncpy(ox_default_options.encoding, StringValuePtr(v), sizeof(ox_default_options.encoding) - 1);
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
 	ox_default_options.rb_enc = rb_enc_find(ox_default_options.encoding);
 #elif HAS_PRIVATE_ENCODING
 	ox_default_options.rb_enc = rb_str_new2(ox_default_options.encoding);
@@ -474,7 +474,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding) {
 	    options.sym_keys = (Qfalse == v) ? No : Yes;
 	}
     }
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
     if ('\0' == *options.encoding) {
 	if (Qnil != encoding) {
 	    options.rb_enc = rb_enc_from_index(rb_enc_get_index(encoding));
@@ -550,8 +550,12 @@ load_str(int argc, VALUE *argv, VALUE self) {
     } else {
 	xml = ALLOCA_N(char, len);
     }
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAS_ENCODING_SUPPORT
+#ifdef MACRUBY_RUBY
+    encoding = rb_funcall(*argv, rb_intern("encoding"), 0);
+#else
     encoding = rb_obj_encoding(*argv);
+#endif
 #elif HAS_PRIVATE_ENCODING
     encoding = rb_funcall(*argv, rb_intern("encoding"), 0);
 #else

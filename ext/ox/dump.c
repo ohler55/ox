@@ -595,7 +595,7 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
         e.closed = (0 >= cnt);
         out->w_start(out, &e);
         if (!e.closed) {
-            VALUE	*np = RARRAY_PTR(obj);
+            const VALUE	*np = RARRAY_PTR(obj);
             int		i;
             int		d2 = depth + 1;
 
@@ -835,10 +835,10 @@ dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
             e.closed = (0 >= cnt);
             out->w_start(out, &e);
             if (0 < cnt) {
-                VALUE           *np = RARRAY_PTR(vars);
-                ID              vid;
-                unsigned int    od = out->depth;
-                int             i;
+                const VALUE	*np = RARRAY_PTR(vars);
+                ID		vid;
+                unsigned int	od = out->depth;
+                int		i;
 
                 out->depth = depth + 1;
                 for (i = cnt; 0 < i; i--, np++) {
@@ -1105,9 +1105,9 @@ dump_gen_nodes(VALUE obj, unsigned int depth, Out out) {
     int         indent_needed = 1;
     
     if (0 < cnt) {
-        VALUE   *np = RARRAY_PTR(obj);
-        VALUE   clas;
-        int     d2 = depth + 1;
+        const VALUE	*np = RARRAY_PTR(obj);
+        VALUE		clas;
+        int		d2 = depth + 1;
 
         for (; 0 < cnt; cnt--, np++) {
             clas = rb_obj_class(*np);
@@ -1117,7 +1117,7 @@ dump_gen_nodes(VALUE obj, unsigned int depth, Out out) {
                 dump_gen_instruct(*np, d2, out);
                 indent_needed = (1 == cnt) ? 0 : 1;
             } else if (rb_cString == clas) {
-                dump_str_value(out, StringValuePtr(*np), RSTRING_LEN(*np));
+                dump_str_value(out, StringValuePtr(*(VALUE*)np), RSTRING_LEN(*np));
                 indent_needed = (1 == cnt) ? 0 : 1;
             } else if (ox_comment_clas == clas) {
                 dump_gen_val_node(*np, d2, "<!-- ", 5, " -->", 4, out);
