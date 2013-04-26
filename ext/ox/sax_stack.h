@@ -77,7 +77,7 @@ stack_push(NStack stack, const char *name, VALUE val, Hint hint) {
 	    stack->head = ALLOC_N(struct _Nv, len + STACK_INC);
 	    memcpy(stack->head, stack->base, sizeof(struct _Nv) * len);
 	} else {
-	    stack->head = REALLOC_N(stack->head, struct _Nv, len + STACK_INC);
+	    REALLOC_N(stack->head, struct _Nv, len + STACK_INC);
 	}
 	stack->tail = stack->head + toff;
 	stack->end = stack->head + len + STACK_INC;
