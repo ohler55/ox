@@ -43,6 +43,8 @@
 #include "ox.h"
 #include "sax.h"
 
+#define BUF_PAD	8
+
 static VALUE		rescue_cb(VALUE rdr, VALUE err);
 static VALUE		io_cb(VALUE rdr);
 static VALUE		partial_io_cb(VALUE rdr);
@@ -95,7 +97,7 @@ ox_sax_buf_init(Buf buf, VALUE io) {
     }
     buf->head = buf->base;
     *buf->head = '\0';
-    buf->end = buf->head + sizeof(buf->base) - 1; /* 1 less to make debugging easier */
+    buf->end = buf->head + sizeof(buf->base) - BUF_PAD;
     buf->tail = buf->head;
     buf->read_end = buf->head;
     buf->pro = 0;
@@ -118,10 +120,10 @@ ox_sax_buf_read(Buf buf) {
         } else {
             shift = buf->pro - buf->head;
         }
-        /*printf("\n*** shift: %lu\n", shift); */
+        printf("\n*** shift: %lu\n", shift);
         if (0 == shift) { /* no space left so allocate more */
             char        *old = buf->head;
-            size_t      size = buf->end - buf->head;
+            size_t      size = buf->end - buf->head + BUF_PAD;
         
             if (buf->head == buf->base) {
                 buf->head = ALLOC_N(char, size * 2);
@@ -129,7 +131,7 @@ ox_sax_buf_read(Buf buf) {
             } else {
 		REALLOC_N(buf->head, char, size * 2);
             }
-            buf->end = buf->head + size * 2;
+            buf->end = buf->head + size * 2 - BUF_PAD;
             buf->tail = buf->head + (buf->tail - old);
             buf->read_end = buf->head + (buf->read_end - old);
             if (0 != buf->pro) {
