@@ -43,7 +43,7 @@
 #include "ox.h"
 #include "sax.h"
 
-#define BUF_PAD	8
+#define BUF_PAD	4
 
 static VALUE		rescue_cb(VALUE rdr, VALUE err);
 static VALUE		io_cb(VALUE rdr);
@@ -120,7 +120,6 @@ ox_sax_buf_read(Buf buf) {
         } else {
             shift = buf->pro - buf->head;
         }
-        printf("\n*** shift: %lu\n", shift);
         if (0 == shift) { /* no space left so allocate more */
             char        *old = buf->head;
             size_t      size = buf->end - buf->head + BUF_PAD;
