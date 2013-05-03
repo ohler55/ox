@@ -98,92 +98,92 @@ Ox is compatible with Ruby 1.8.7, 1.9.2, JRuby, and RBX.
 ### Object Dump Sample:
 
 ```ruby
-    require 'ox'
-  
-    class Sample
-      attr_accessor :a, :b, :c
-  
-      def initialize(a, b, c)
-        @a = a
-        @b = b
-        @c = c
-      end
-    end
-  
-    # Create Object
-    obj = Sample.new(1, "bee", ['x', :y, 7.0])
-    # Now dump the Object to an XML String.
-    xml = Ox.dump(obj)
-    # Convert the object back into a Sample Object.
-    obj2 = Ox.parse_obj(xml)
+require 'ox'
+
+class Sample
+  attr_accessor :a, :b, :c
+
+  def initialize(a, b, c)
+    @a = a
+    @b = b
+    @c = c
+  end
+end
+
+# Create Object
+obj = Sample.new(1, "bee", ['x', :y, 7.0])
+# Now dump the Object to an XML String.
+xml = Ox.dump(obj)
+# Convert the object back into a Sample Object.
+obj2 = Ox.parse_obj(xml)
 ```
 
 ### Generic XML Writing and Parsing:
 
 ```ruby
-    require 'ox'
+require 'ox'
 
-    doc = Ox::Document.new(:version => '1.0')
-    
-    top = Ox::Element.new('top')
-    top[:name] = 'sample'
-    doc << top
-    
-    mid = Ox::Element.new('middle')
-    mid[:name] = 'second'
-    top << mid
-    
-    bot = Ox::Element.new('bottom')
-    bot[:name] = 'third'
-    mid << bot
-    
-    xml = Ox.dump(doc)
-    
-    # xml =
-    # <top name="sample">
-    #   <middle name="second">
-    #     <bottom name="third"/>
-    #   </middle>
-    # </top>
-    
-    doc2 = Ox.parse(xml)
-    puts "Same? #{doc == doc2}"
-    # true
+doc = Ox::Document.new(:version => '1.0')
+
+top = Ox::Element.new('top')
+top[:name] = 'sample'
+doc << top
+
+mid = Ox::Element.new('middle')
+mid[:name] = 'second'
+top << mid
+
+bot = Ox::Element.new('bottom')
+bot[:name] = 'third'
+mid << bot
+
+xml = Ox.dump(doc)
+
+# xml =
+# <top name="sample">
+#   <middle name="second">
+#     <bottom name="third"/>
+#   </middle>
+# </top>
+
+doc2 = Ox.parse(xml)
+puts "Same? #{doc == doc2}"
+# true
 ```
 
 ### SAX XML Parsing:
 
 ```ruby
-    require 'stringio'
-    require 'ox'
-    
-    class Sample < ::Ox::Sax
-      def start_element(name); puts "start: #{name}";        end
-      def end_element(name);   puts "end: #{name}";          end
-      def attr(name, value);   puts "  #{name} => #{value}"; end
-      def text(value);         puts "text #{value}";         end
-    end
-    
-    io = StringIO.new(%{
-    <top name="sample">
-      <middle name="second">
-        <bottom name="third"/>
-      </middle>
-    </top>
-    })
-    
-    handler = Sample.new()
-    Ox.sax_parse(handler, io)
-    # outputs
-    # start: top
-    #   name => sample
-    # start: middle
-    #   name => second
-    # start: bottom
-    #   name => third
-    # end: bottom
-    # end: middle
-    # end: top
+require 'stringio'
+require 'ox'
+
+class Sample < ::Ox::Sax
+  def start_element(name); puts "start: #{name}";        end
+  def end_element(name);   puts "end: #{name}";          end
+  def attr(name, value);   puts "  #{name} => #{value}"; end
+  def text(value);         puts "text #{value}";         end
+end
+
+io = StringIO.new(%{
+<top name="sample">
+  <middle name="second">
+    <bottom name="third"/>
+  </middle>
+</top>
+})
+
+handler = Sample.new()
+Ox.sax_parse(handler, io)
+# outputs
+# start: top
+#   name => sample
+# start: middle
+#   name => second
+# start: bottom
+#   name => third
+# end: bottom
+# end: middle
+# end: top
 ```
 
 ### Object XML format
