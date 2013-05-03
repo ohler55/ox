@@ -1,38 +1,35 @@
 # Ox gem
 A fast XML parser and Object marshaller as a Ruby gem.
 
-## <a name="installation">Installation</a>
+## Installation
+
     gem install ox
 
-## <a name="documentation">Documentation</a>
+## Documentation
 
 *Documentation*: http://www.ohler.com/ox
 
-## <a name="source">Source</a>
+## Source
 
-*GitHub* *repo*: https://github.com/ohler55/ox
+* **GitHub** *repo*: https://github.com/ohler55/ox
+* **RubyGems** *repo*: https://rubygems.org/gems/ox
 
-*RubyGems* *repo*: https://rubygems.org/gems/ox
-
-## <a name="follow">Follow @oxgem on Twitter</a>
+## Follow @oxgem on Twitter
 
 [Follow @peterohler on Twitter](http://twitter.com/#!/peterohler) for announcements and news about the Ox gem.
 
-## <a name="build_status">Build Status</a>
+## Build Status
 
 [![Build Status](https://secure.travis-ci.org/ohler55/ox.png?branch=master)](http://travis-ci.org/ohler55/ox)
 
-## <a name="links">Links of Interest</a>
+## Links of Interest
 
-[Ruby XML Gem Comparison](http://www.ohler.com/dev/xml_with_ruby/xml_with_ruby.html) for a perfomance comparison between Ox, Nokogiri, and LibXML.
+* [Ruby XML Gem Comparison](http://www.ohler.com/dev/xml_with_ruby/xml_with_ruby.html) for a perfomance comparison between Ox, Nokogiri, and LibXML.
+* [Fast Ruby XML Serialization](http://www.ohler.com/dev/ruby_object_xml_serialization/ruby_object_xml_serialization.html) to see how Ox can be used as a faster replacement for Marshal.
+* *Fast JSON parser and marshaller on RubyGems*: https://rubygems.org/gems/oj
+* *Fast JSON parser and marshaller on GitHub*: https://rubygems.org/gems/oj
 
-[Fast Ruby XML Serialization](http://www.ohler.com/dev/ruby_object_xml_serialization/ruby_object_xml_serialization.html) to see how Ox can be used as a faster replacement for Marshal.
-
-*Fast JSON parser and marshaller on RubyGems*: https://rubygems.org/gems/oj
-
-*Fast JSON parser and marshaller on GitHub*: https://rubygems.org/gems/oj
-
-## <a name="release">Release Notes</a>
+## Release Notes
 
 ### Release 2.0.0
 
@@ -53,7 +50,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
  - A contrib directory was added for people to submit useful bits of code that can be used with Ox. The first
    contributor is Notezen with a nice way of building XML.
 
-## <a name="description">Description</a>
+## Description
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
 XML and now HTML handling. It was designed to be an alternative to Nokogiri and other Ruby
@@ -196,27 +193,27 @@ necessary.
 
 The type indicator map is:
 
-- **a** => Array
-- **b** => Base64
-- **c** => Class
-- **f** => Float
-- **g** => Regexp
-- **h** => Hash
-- **i** => Fixnum
-- **j** => Bignum
-- **l** => Rational
-- **m** => Symbol
-- **n** => FalseClass
-- **o** => Object
-- **p** => Ref
-- **r** => Range
-- **s** => String
-- **t** => Time
-- **u** => Struct
-- **v** => Complex
-- **x** => Raw
-- **y** => TrueClass
-- **z** => NilClass
+- **a** => `Array`
+- **b** => `Base64`
+- **c** => `Class`
+- **f** => `Float`
+- **g** => `Regexp`
+- **h** => `Hash`
+- **i** => `Fixnum`
+- **j** => `Bignum`
+- **l** => `Rational`
+- **m** => `Symbol`
+- **n** => `FalseClass`
+- **o** => `Object`
+- **p** => `Ref`
+- **r** => `Range`
+- **s** => `String`
+- **t** => `Time`
+- **u** => `Struct`
+- **v** => `Complex`
+- **x** => `Raw`
+- **y** => `TrueClass`
+- **z** => `NilClass`
 
 If the type is an Object, type 'o' then an attribute named 'c' should be set
 with the full Class name including the Module names. If the XML element
@@ -231,25 +228,31 @@ interpreter.)
 Values are encoded as the text portion of an element or in the sub-elements
 of the principle. For example, a Fixnum is encoded as:
 
-    <i>123</i>
+```xml
+<i>123</i>
+```
 
 An Array has sub-elements and is encoded similar to this example.
 
-    <a>
-      <i>1</i>
-      <s>abc</s>
-    </a>
+```xml
+<a>
+  <i>1</i>
+  <s>abc</s>
+</a>
+```
 
 A Hash is encoded with an even number of elements where the first element is
 the key and the second is the value. This is repeated for each entry in the
 Hash. An example is of { 1 => 'one', 2 => 'two' } encoding is:
 
-    <h>
-      <i>1</i>
-      <s>one</s>
-      <i>2</i>
-      <s>two</s>
-    </h>
+```xml
+<h>
+  <i>1</i>
+  <s>one</s>
+  <i>2</i>
+  <s>two</s>
+</h>
+```
 
 Strings with characters not allowed in XML are base64 encoded amd will be
 converted back into a String when loaded.
