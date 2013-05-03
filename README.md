@@ -196,7 +196,7 @@ necessary.
 
 The type indicator map is:
 
-- **a** => Array
+- **a** => `Array`
 - **b** => Base64
 - **c** => Class
 - **f** => Float
@@ -230,27 +230,27 @@ interpreter.)
 
 Values are encoded as the text portion of an element or in the sub-elements
 of the principle. For example, a Fixnum is encoded as:
-
+```xml
     <i>123</i>
-
+```
 An Array has sub-elements and is encoded similar to this example.
-
+```xml
     <a>
       <i>1</i>
       <s>abc</s>
     </a>
-
+```
 A Hash is encoded with an even number of elements where the first element is
 the key and the second is the value. This is repeated for each entry in the
 Hash. An example is of { 1 => 'one', 2 => 'two' } encoding is:
-
+```xml
     <h>
       <i>1</i>
       <s>one</s>
       <i>2</i>
       <s>two</s>
     </h>
-
+```
 Strings with characters not allowed in XML are base64 encoded amd will be
 converted back into a String when loaded.
 
