@@ -35,6 +35,7 @@ typedef struct _Has {
     int         instruct;
     int         end_instruct;
     int         attr;
+    int         attrs_done;
     int         attr_value;
     int         doctype;
     int         comment;
@@ -70,6 +71,7 @@ has_init(Has has, VALUE handler) {
     has->end_instruct = respond_to(handler, ox_end_instruct_id);
     has->attr = respond_to(handler, ox_attr_id);
     has->attr_value = respond_to(handler, ox_attr_value_id);
+    has->attrs_done = respond_to(handler, ox_attrs_done_id);
     has->doctype = respond_to(handler, ox_doctype_id);
     has->comment = respond_to(handler, ox_comment_id);
     has->cdata = respond_to(handler, ox_cdata_id);

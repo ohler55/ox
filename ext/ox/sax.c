@@ -107,6 +107,7 @@ ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
     printf("    has_end_instruct = %s\n", dr.has.end_instruct ? "true" : "false");
     printf("    has_attr = %s\n", dr.has.attr ? "true" : "false");
     printf("    has_attr_value = %s\n", dr.has.attr_value ? "true" : "false");
+    printf("    has_attrs_done = %s\n", dr.has.attrs_done ? "true" : "false");
     printf("    has_doctype = %s\n", dr.has.doctype ? "true" : "false");
     printf("    has_comment = %s\n", dr.has.comment ? "true" : "false");
     printf("    has_cdata = %s\n", dr.has.cdata ? "true" : "false");
@@ -404,6 +405,9 @@ read_instruction(SaxDrive dr) {
     buf_reset(&dr->buf);
     dr->err = 0;
     c = read_attrs(dr, c, '?', '?', is_xml, 1);
+    if (dr->has.attrs_done) {
+	    rb_funcall(dr->handler, ox_attrs_done_id, 0);
+    }
     if (dr->err) {
 	if (dr->has.text) {
 	    VALUE   args[1];
@@ -748,6 +752,9 @@ read_element_start(SaxDrive dr) {
 	    c = buf_next_non_white(&dr->buf);
 	}
 	closed = ('/' == c);
+    }
+    if (dr->has.attrs_done) {
+	    rb_funcall(dr->handler, ox_attrs_done_id, 0);
     }
     if (closed) {
 	c = buf_next_non_white(&dr->buf);

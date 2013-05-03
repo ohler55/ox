@@ -57,6 +57,7 @@ ID	ox_at_value_id;
 ID	ox_attr_id;
 ID	ox_attr_value_id;
 ID	ox_attributes_id;
+ID	ox_attrs_done_id;
 ID	ox_beg_id;
 ID	ox_cdata_id;
 ID	ox_comment_id;
@@ -832,6 +833,7 @@ void Init_ox() {
     ox_attr_id = rb_intern("attr");
     ox_attr_value_id = rb_intern("attr_value");
     ox_attributes_id = rb_intern("@attributes");
+    ox_attrs_done_id = rb_intern("attrs_done");
     ox_beg_id = rb_intern("@beg");
     ox_cdata_id = rb_intern("cdata");
     ox_comment_id = rb_intern("comment");

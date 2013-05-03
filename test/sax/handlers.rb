@@ -1,6 +1,5 @@
 require 'ox'
 
-
 class StartSax < ::Ox::Sax
   attr_accessor :calls
 
@@ -16,7 +15,6 @@ class StartSax < ::Ox::Sax
     @calls << [:attr, name, value]
   end
 end
-
 
 class AllSax < StartSax
   def initialize()
@@ -55,7 +53,6 @@ class AllSax < StartSax
     @calls << [:error, message, line, column]
   end
 end
-
 
 class LineColSax < StartSax
   def initialize()
@@ -100,11 +97,14 @@ class LineColSax < StartSax
     @calls << [:attr, name, value, @line, @column]
   end
 
+  def attrs_done()
+    @calls << [:attrs_done, @line, @column]
+  end
+
   def error(message, line, column)
     @calls << [:error, message, line, column]
   end
 end
-
 
 class TypeSax < ::Ox::Sax
   attr_accessor :item
@@ -124,7 +124,6 @@ class TypeSax < ::Ox::Sax
     @item = value.send(@type)
   end
 end
-
 
 class ErrorSax < ::Ox::Sax
   attr_reader :errors

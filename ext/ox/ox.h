@@ -228,6 +228,7 @@ extern ID	ox_at_line_id;
 extern ID	ox_at_value_id;
 extern ID	ox_attr_id;
 extern ID	ox_attr_value_id;
+extern ID	ox_attrs_done_id;
 extern ID	ox_attributes_id;
 extern ID	ox_beg_id;
 extern ID	ox_cdata_id;

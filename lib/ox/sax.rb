@@ -27,14 +27,16 @@ module Ox
   # not be called during parsing. The 'name' argument in the callback methods
   # will be a Symbol. The 'str' arguments will be a String. The 'value'
   # arguments will be Ox::Sax::Value objects. Since both the text() and the
-  # value() methods are called for the same element in the XML document the
-  # the text() method is ignored if the value() method is defined or
-  # public. The same is true for attr() and attr_value().
+  # value() methods are called for the same element in the XML document the the
+  # text() method is ignored if the value() method is defined or public. The
+  # same is true for attr() and attr_value(). When all attribtues have been read
+  # the attr_done() callback will be invoked.
   #
   #    def instruct(target); end
   #    def end_instruct(target); end
   #    def attr(name, str); end
   #    def attr_value(name, value); end
+  #    def attrs_done(); end
   #    def doctype(str); end
   #    def comment(str); end
   #    def cdata(str); end
@@ -43,9 +45,10 @@ module Ox
   #    def start_element(name); end
   #    def end_element(name); end
   #
-  # Initializing @line in the initializer will cause that variable to be updated before each callback with the XML line
-  # number. The same is true for the @column but it will be updated with the column in the XML file that is the start of
-  # the element or node just read.
+  # Initializing @line in the initializer will cause that variable to be updated
+  # before each callback with the XML line number. The same is true for the
+  # @column but it will be updated with the column in the XML file that is the
+  # start of the element or node just read.
   class Sax
     # Create a new instance of the Sax handler class.
     def initialize()
@@ -68,6 +71,9 @@ module Ox
     end
 
     def attr_value(name, value)
+    end
+
+    def attrs_done()
     end
 
     def doctype(str)
