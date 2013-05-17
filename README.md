@@ -41,9 +41,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Fixed bug in SAX parser where raising an exception in the handler routines would not cleanup.
 
- - Added the max_stack option to provide control over how much space is used on the stack for buffer allocation.
-
- - Reduced stack use in a few places to improve fiber support.
+ - [TBD] Reduced stack use in a few places to improve fiber support.
 
 ### Release 2.0.0
 
