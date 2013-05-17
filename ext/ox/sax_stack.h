@@ -57,7 +57,7 @@ stack_init(NStack stack) {
 
 inline static int
 stack_empty(NStack stack) {
-    return (stack->head == stack->base);
+    return (stack->head == stack->tail);
 }
 
 inline static void

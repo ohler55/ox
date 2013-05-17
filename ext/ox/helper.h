@@ -57,7 +57,7 @@ helper_stack_init(HelperStack stack) {
 
 inline static int
 helper_stack_empty(HelperStack stack) {
-    return (stack->head == stack->base);
+    return (stack->head == stack->tail);
 }
 
 inline static void

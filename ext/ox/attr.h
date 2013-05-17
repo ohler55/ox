@@ -57,7 +57,7 @@ attr_stack_init(AttrStack stack) {
 
 inline static int
 attr_stack_empty(AttrStack stack) {
-    return (stack->head == stack->base);
+    return (stack->head == stack->tail);
 }
 
 inline static void
