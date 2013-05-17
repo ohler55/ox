@@ -38,7 +38,8 @@
 #include "sax.h"
 
 /* maximum to allocate on the stack, arbitrary limit */
-#define SMALL_XML	65536
+#define SMALL_XML	4096
+//#define SMALL_XML	65536
 
 typedef struct _YesNoOpt {
     VALUE	sym;

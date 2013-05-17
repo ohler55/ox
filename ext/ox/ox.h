@@ -62,7 +62,7 @@ enum st_retval {ST_CONTINUE = 0, ST_STOP = 1, ST_DELETE = 2, ST_CHECK};
 #define raise_error(msg, xml, current) _ox_raise_error(msg, xml, current, __FILE__, __LINE__)
 
 #define MAX_TEXT_LEN	4096
-#define MAX_ATTRS	1024
+#define MAX_ATTRS	256
 #define MAX_DEPTH	1024
 
 #define SILENT		0

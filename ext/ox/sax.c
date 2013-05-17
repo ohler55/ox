@@ -96,9 +96,16 @@ char *stpncpy(char *dest, const char *src, size_t n) {
 }
 #endif
 
+static VALUE protect_parse(VALUE drp) {
+    parse((SaxDrive)drp);
+
+    return Qnil;
+}
+
 void
 ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
     struct _SaxDrive    dr;
+    int			line = 0;
 
     sax_drive_init(&dr, handler, io, options);
 #if 0
@@ -119,8 +126,12 @@ ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
     printf("    has_line = %s\n", dr.has.line ? "true" : "false");
     printf("    has_column = %s\n", dr.has.column ? "true" : "false");
 #endif
-    parse(&dr);
+    //parse(&dr);
+    rb_protect(protect_parse, (VALUE)&dr, &line);
     ox_sax_drive_cleanup(&dr);
+    if (0 != line) {
+	rb_jump_tag(line);
+    }
 }
 
 static void

@@ -4,6 +4,11 @@
 ^c^s show subtree
 
 - todo
+ - max_stack
+  - used for stack error
+  - some fraction used for alloc up to a max
+ - cut down on MAX_ATTRS and realloc when needed
+
  - continuous sax parser
   - parse input stream and continue waiting for next one
  
