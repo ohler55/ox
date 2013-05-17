@@ -59,10 +59,13 @@ enum st_retval {ST_CONTINUE = 0, ST_STOP = 1, ST_DELETE = 2, ST_CHECK};
 
 #include "cache.h"
 
+#include "type.h"
+#include "attr.h"
+#include "helper.h"
+
 #define raise_error(msg, xml, current) _ox_raise_error(msg, xml, current, __FILE__, __LINE__)
 
 #define MAX_TEXT_LEN	4096
-#define MAX_ATTRS	256
 #define MAX_DEPTH	1024
 
 #define SILENT		0
@@ -114,46 +117,6 @@ typedef enum {
     LimMode  = 'l',
     NoMode   = 0
 } LoadMode;
-
-typedef enum {
-    NoCode	   = 0,
-    ArrayCode	   = 'a',
-    String64Code   = 'b', /* base64 encoded String */
-    ClassCode	   = 'c',
-    Symbol64Code   = 'd', /* base64 encoded Symbol */
-    DateCode	   = 'D',
-    ExceptionCode  = 'e',
-    FloatCode	   = 'f',
-    RegexpCode	   = 'g',
-    HashCode	   = 'h',
-    FixnumCode	   = 'i',
-    BignumCode	   = 'j',
-    KeyCode	   = 'k', /* indicates the value is a hash key, kind of a hack */
-    RationalCode   = 'l',
-    SymbolCode	   = 'm',
-    FalseClassCode = 'n',
-    ObjectCode	   = 'o',
-    RefCode	   = 'p',
-    RangeCode	   = 'r',
-    StringCode	   = 's',
-    TimeCode	   = 't',
-    StructCode	   = 'u',
-    ComplexCode	   = 'v',
-    RawCode	   = 'x',
-    TrueClassCode  = 'y',
-    NilClassCode   = 'z',
-} Type;
-
-typedef struct _Attr {
-    const char	*name;
-    const char	*value;
-} *Attr;
-
-typedef struct _Helper {
-    ID		var;	/* Object var ID */
-    VALUE	obj;	/* object created or Qundef if not appropriate */
-    Type	type;	/* type of object in obj */
-} *Helper;
 
 typedef struct _PInfo	*PInfo;
 

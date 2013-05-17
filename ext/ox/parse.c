@@ -35,6 +35,8 @@
 
 #include "ruby.h"
 #include "ox.h"
+#include "attr.h"
+#include "helper.h"
 
 static void	read_instruction(PInfo pi);
 static void	read_doctype(PInfo pi);
@@ -191,16 +193,18 @@ gather_content(const char *src, char *content, size_t len) {
 static void
 read_instruction(PInfo pi) {
     char		content[1024];
-    struct _Attr	attrs[MAX_ATTRS + 1];
-    Attr		a = attrs;
+    struct _AttrStack	attrs;
+    char		*attr_name;
+    char		*attr_value;
     char		*target;
     char		*end;
     char		c;
     char		*cend;
     int			attrs_ok = 1;
 
+
     *content = '\0';
-    memset(attrs, 0, sizeof(attrs));
+    attr_stack_init(&attrs);
     target = read_name_token(pi);
     end = pi->s;
     if (0 == (cend = gather_content(pi->s, content, sizeof(content) - 1))) {
@@ -213,10 +217,11 @@ read_instruction(PInfo pi) {
 	while ('?' != c) {
 	    pi->last = 0;
 	    if ('\0' == *pi->s) {
+		attr_stack_cleanup(&attrs);
 		raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
 	    }
 	    next_non_white(pi);
-	    a->name = read_name_token(pi);
+	    attr_name = read_name_token(pi);
 	    end = pi->s;
 	    next_non_white(pi);
 	    if ('=' != *pi->s++) {
@@ -226,12 +231,8 @@ read_instruction(PInfo pi) {
 	    *end = '\0'; /* terminate name */
 	    /* read value */
 	    next_non_white(pi);
-	    a->value = read_quoted_value(pi);
-	    a++;
-	    if (MAX_ATTRS <= (a - attrs)) {
-		attrs_ok = 0;
-		break;
-	    }
+	    attr_value = read_quoted_value(pi);
+	    attr_stack_push(&attrs, attr_name, attr_value);
 	    next_non_white(pi);
 	    if ('\0' == pi->last) {
 		c = *pi->s;
@@ -247,6 +248,7 @@ read_instruction(PInfo pi) {
     }
     if (attrs_ok) {
 	if ('>' != *pi->s++) {
+	    attr_stack_cleanup(&attrs);
 	    raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
 	}
     } else {
@@ -254,11 +256,12 @@ read_instruction(PInfo pi) {
     }
     if (0 != pi->pcb->instruct) {
 	if (attrs_ok) {
-	    pi->pcb->instruct(pi, target, attrs, 0);
+	    pi->pcb->instruct(pi, target, attrs.head, 0);
 	} else {
-	    pi->pcb->instruct(pi, target, attrs, content);
+	    pi->pcb->instruct(pi, target, attrs.head, content);
 	}
     }
+    attr_stack_cleanup(&attrs);
 }
 
 /* Entered after the "<!DOCTYPE" sequence plus the first character after
@@ -334,8 +337,9 @@ read_comment(PInfo pi) {
  */
 static char*
 read_element(PInfo pi) {
-    struct _Attr	attrs[MAX_ATTRS];
-    Attr		ap = attrs;
+    struct _AttrStack	attrs;
+    const char		*attr_name;
+    const char		*attr_value;
     char		*name;
     char		*ename;
     char		*end;
@@ -344,6 +348,7 @@ read_element(PInfo pi) {
     int			hasChildren = 0;
     int			done = 0;
 
+    attr_stack_init(&attrs);
     ename = read_name_token(pi);
     end = pi->s;
     elen = end - ename;
@@ -355,13 +360,14 @@ read_element(PInfo pi) {
 	pi->s++;
 	if ('>' != *pi->s) {
 	    /*printf("*** '%s' ***\n", pi->s); */
+	    attr_stack_cleanup(&attrs);
 	    raise_error("invalid format, element not closed", pi->str, pi->s);
 	}
 	pi->s++;	/* past > */
-	ap->name = 0;
-	pi->pcb->add_element(pi, ename, attrs, hasChildren);
+	pi->pcb->add_element(pi, ename, attrs.head, hasChildren);
 	pi->pcb->end_element(pi, ename);
 
+	attr_stack_cleanup(&attrs);
 	return 0;
     }
     /* read attribute names until the close (/ or >) is reached */
@@ -373,31 +379,32 @@ read_element(PInfo pi) {
 	pi->last = 0;
 	switch (c) {
 	case '\0':
+	    attr_stack_cleanup(&attrs);
 	    raise_error("invalid format, document not terminated", pi->str, pi->s);
 	case '/':
 	    /* Element with just attributes. */
 	    pi->s++;
 	    if ('>' != *pi->s) {
+		attr_stack_cleanup(&attrs);
 		raise_error("invalid format, element not closed", pi->str, pi->s);
 	    }
 	    pi->s++;
-	    ap->name = 0;
-	    pi->pcb->add_element(pi, ename, attrs, hasChildren);
+	    pi->pcb->add_element(pi, ename, attrs.head, hasChildren);
 	    pi->pcb->end_element(pi, ename);
 
+	    attr_stack_cleanup(&attrs);
 	    return 0;
 	case '>':
 	    /* has either children or a value */
 	    pi->s++;
 	    hasChildren = 1;
 	    done = 1;
-	    ap->name = 0;
-	    pi->pcb->add_element(pi, ename, attrs, hasChildren);
+	    pi->pcb->add_element(pi, ename, attrs.head, hasChildren);
 	    break;
 	default:
 	    /* Attribute name so it's an element and the attribute will be */
 	    /* added to it. */
-	    ap->name = read_name_token(pi);
+	    attr_name = read_name_token(pi);
 	    end = pi->s;
 	    next_non_white(pi);
 	    if ('=' != *pi->s++) {
@@ -405,29 +412,25 @@ read_element(PInfo pi) {
 		    pi->s--;
 		    pi->last = *pi->s;
 		    *end = '\0'; /* terminate name */
-		    ap->value = "";
-		    ap++;
-		    if (MAX_ATTRS <= (ap - attrs)) {
-			raise_error("too many attributes", pi->str, pi->s);
-		    }
+		    attr_value = "";
+		    attr_stack_push(&attrs, attr_name, attr_value);
 		    break;
 		} else {
+		    attr_stack_cleanup(&attrs);
 		    raise_error("invalid format, no attribute value", pi->str, pi->s);
 		}
 	    }
 	    *end = '\0'; /* terminate name */
 	    /* read value */
 	    next_non_white(pi);
-	    ap->value = read_quoted_value(pi);
-	    if (0 != strchr(ap->value, '&')) {
-		if (0 != collapse_special(pi, (char*)ap->value)) {
+	    attr_value = read_quoted_value(pi);
+	    if (0 != strchr(attr_value, '&')) {
+		if (0 != collapse_special(pi, (char*)attr_value)) {
+		    attr_stack_cleanup(&attrs);
 		    raise_error("invalid format, special character does not end with a semicolon", pi->str, pi->s);
 		}
 	    }
-	    ap++;
-	    if (MAX_ATTRS <= (ap - attrs)) {
-		raise_error("too many attributes", pi->str, pi->s);
-	    }
+	    attr_stack_push(&attrs, attr_name, attr_value);
 	    break;
 	}
 	if ('\0' == pi->last) {
@@ -448,6 +451,7 @@ read_element(PInfo pi) {
 	    next_non_white(pi);
 	    c = *pi->s++;
 	    if ('\0' == c) {
+		attr_stack_cleanup(&attrs);
 		raise_error("invalid format, document not terminated", pi->str, pi->s);
 	    }
 	    if ('<' == c) {
@@ -465,6 +469,7 @@ read_element(PInfo pi) {
 			pi->s += 7;
 			read_cdata(pi);
 		    } else {
+			attr_stack_cleanup(&attrs);
 			raise_error("invalid format, invalid comment or CDATA format", pi->str, pi->s);
 		    }
 		    break;
@@ -481,6 +486,7 @@ read_element(PInfo pi) {
 		    c = *pi->s;
 		    *end = '\0';
 		    if (0 != strcmp(name, ename)) {
+			attr_stack_cleanup(&attrs);
 			if (TolerantEffort == pi->options->effort) {
 			    pi->pcb->end_element(pi, ename);
 			    return name;
@@ -489,6 +495,7 @@ read_element(PInfo pi) {
 			}
 		    }
 		    if ('>' != c) {
+			attr_stack_cleanup(&attrs);
 			raise_error("invalid format, element not closed", pi->str, pi->s);
 		    }
 		    if (first && start != slash - 1) {
@@ -498,8 +505,10 @@ read_element(PInfo pi) {
 		    }
 		    pi->s++;
 		    pi->pcb->end_element(pi, ename);
+		    attr_stack_cleanup(&attrs);
 		    return 0;
 		case '\0':
+		    attr_stack_cleanup(&attrs);
 		    if (TolerantEffort == pi->options->effort) {
 			return 0;
 		    } else {
@@ -510,6 +519,7 @@ read_element(PInfo pi) {
 		    /* a child element */
 		    // Child closed with mismatched name.
 		    if (0 != (name = read_element(pi))) {
+			attr_stack_cleanup(&attrs);
 			if (0 == strcmp(name, ename)) {
 			    pi->s++;
 			    pi->pcb->end_element(pi, ename);
@@ -534,11 +544,13 @@ read_element(PInfo pi) {
 		    /* close tag after text so treat as a value */
 		    pi->s += elen + 3;
 		    pi->pcb->end_element(pi, ename);
+		    attr_stack_cleanup(&attrs);
 		    return 0;
 		}
 	    }
 	}
     }
+    attr_stack_cleanup(&attrs);
     return 0;
 }
 
