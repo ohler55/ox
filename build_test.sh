@@ -9,7 +9,7 @@ for ruby in \
  rbx-2.0.0-dev\
  ree-1.8.7-2012.02\
  1.9.3-p385 \
- 2.0.0-p0
+ 2.0.0-p195
 do
     echo "\n********************************************************************************"
     echo "Building $ruby\n"
@@ -81,8 +81,8 @@ cd ..
 echo "resetting to 1.9.3-p374\n"
 
 cd ext/ox
-rbenv local 2.0.0-p0
+rbenv local 2.0.0-p195
 cd ../../test
-rbenv local 2.0.0-p0
+rbenv local 2.0.0-p195
 cd ..
 echo "\n"
