@@ -66,7 +66,6 @@ enum st_retval {ST_CONTINUE = 0, ST_STOP = 1, ST_DELETE = 2, ST_CHECK};
 #define raise_error(msg, xml, current) _ox_raise_error(msg, xml, current, __FILE__, __LINE__)
 
 #define MAX_TEXT_LEN	4096
-#define MAX_DEPTH	1024
 
 #define SILENT		0
 #define TRACE		1
@@ -160,8 +159,7 @@ typedef struct _Options {
 
 /* parse information structure */
 struct _PInfo {
-    struct _Helper	helpers[MAX_DEPTH];
-    Helper		h;		/* current helper or 0 if not set */
+    struct _HelperStack	helpers;
     char		*str;		/* buffer being read from */
     char		*s;		/* current position in buffer */
     VALUE		obj;

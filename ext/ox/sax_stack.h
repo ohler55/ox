@@ -33,7 +33,7 @@
 
 #include "sax_hint.h"
 
-#define STACK_INC	100
+#define STACK_INC	32
 
 typedef struct _Nv {
     const char	*name;

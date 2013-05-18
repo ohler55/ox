@@ -39,31 +39,31 @@
 #include "base64.h"
 #include "ox.h"
 
-static void     instruct(PInfo pi, const char *target, Attr attrs, const char *content);
-static void     add_text(PInfo pi, char *text, int closed);
-static void     add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren);
-static void     end_element(PInfo pi, const char *ename);
+static void	instruct(PInfo pi, const char *target, Attr attrs, const char *content);
+static void	add_text(PInfo pi, char *text, int closed);
+static void	add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren);
+static void	end_element(PInfo pi, const char *ename);
 
-static VALUE    parse_time(const char *text, VALUE clas);
-static VALUE    parse_xsd_time(const char *text, VALUE clas);
-static VALUE    parse_double_time(const char *text, VALUE clas);
-static VALUE    parse_regexp(const char *text);
+static VALUE	parse_time(const char *text, VALUE clas);
+static VALUE	parse_xsd_time(const char *text, VALUE clas);
+static VALUE	parse_double_time(const char *text, VALUE clas);
+static VALUE	parse_regexp(const char *text);
 
-static VALUE            get_var_sym_from_attrs(Attr a, void *encoding);
-static VALUE            get_obj_from_attrs(Attr a, PInfo pi, VALUE base_class);
-static VALUE            get_class_from_attrs(Attr a, PInfo pi, VALUE base_class);
-static VALUE            classname2class(const char *name, PInfo pi, VALUE base_class);
-static unsigned long    get_id_from_attrs(PInfo pi, Attr a);
-static CircArray        circ_array_new(void);
-static void             circ_array_free(CircArray ca);
-static void             circ_array_set(CircArray ca, VALUE obj, unsigned long id);
-static VALUE            circ_array_get(CircArray ca, unsigned long id);
+static VALUE		get_var_sym_from_attrs(Attr a, void *encoding);
+static VALUE		get_obj_from_attrs(Attr a, PInfo pi, VALUE base_class);
+static VALUE		get_class_from_attrs(Attr a, PInfo pi, VALUE base_class);
+static VALUE		classname2class(const char *name, PInfo pi, VALUE base_class);
+static unsigned long	get_id_from_attrs(PInfo pi, Attr a);
+static CircArray	circ_array_new(void);
+static void		circ_array_free(CircArray ca);
+static void		circ_array_set(CircArray ca, VALUE obj, unsigned long id);
+static VALUE		circ_array_get(CircArray ca, unsigned long id);
 
-static void             debug_stack(PInfo pi, const char *comment);
-static void             fill_indent(PInfo pi, char *buf, size_t size);
+static void		debug_stack(PInfo pi, const char *comment);
+static void		fill_indent(PInfo pi, char *buf, size_t size);
 
 
-struct _ParseCallbacks   _ox_obj_callbacks = {
+struct _ParseCallbacks	 _ox_obj_callbacks = {
     instruct, /* instruct, */
     0, /* add_doctype, */
     0, /* add_comment, */
@@ -73,9 +73,9 @@ struct _ParseCallbacks   _ox_obj_callbacks = {
     end_element,
 };
 
-ParseCallbacks   ox_obj_callbacks = &_ox_obj_callbacks;
+ParseCallbacks	 ox_obj_callbacks = &_ox_obj_callbacks;
 
-extern ParseCallbacks   ox_gen_callbacks;
+extern ParseCallbacks	ox_gen_callbacks;
 
 
 inline static VALUE
@@ -99,11 +99,11 @@ str2sym(const char *str, void *encoding) {
 
 inline static ID
 name2var(const char *name, void *encoding) {
-    VALUE       *slot;
-    ID          var_id;
+    VALUE	*slot;
+    ID		var_id;
 
     if ('0' <= *name && *name <= '9') {
-        var_id = INT2NUM(atoi(name));
+	var_id = INT2NUM(atoi(name));
     } else if (Qundef == (var_id = ox_cache_get(ox_attr_cache, name, &slot, 0))) {
 #ifdef HAVE_RUBY_ENCODING_H
 	if (0 != encoding) {
@@ -119,36 +119,36 @@ name2var(const char *name, void *encoding) {
 #else
 	var_id = rb_intern(name);
 #endif
-        *slot = var_id;
+	*slot = var_id;
     }
     return var_id;
 }
 
 inline static VALUE
 resolve_classname(VALUE mod, const char *class_name, Effort effort, VALUE base_class) {
-    VALUE       clas;
-    ID          ci = rb_intern(class_name);
+    VALUE	clas;
+    ID		ci = rb_intern(class_name);
 
     switch (effort) {
     case TolerantEffort:
-        if (rb_const_defined_at(mod, ci)) {
-            clas = rb_const_get_at(mod, ci);
-        } else {
-            clas = Qundef;
-        }
-        break;
+	if (rb_const_defined_at(mod, ci)) {
+	    clas = rb_const_get_at(mod, ci);
+	} else {
+	    clas = Qundef;
+	}
+	break;
     case AutoEffort:
-        if (rb_const_defined_at(mod, ci)) {
-            clas = rb_const_get_at(mod, ci);
-        } else {
-            clas = rb_define_class_under(mod, class_name, base_class);
-        }
-        break;
+	if (rb_const_defined_at(mod, ci)) {
+	    clas = rb_const_get_at(mod, ci);
+	} else {
+	    clas = rb_define_class_under(mod, class_name, base_class);
+	}
+	break;
     case StrictEffort:
     default:
-        /* raise an error if name is not defined */
-        clas = rb_const_get_at(mod, ci);
-        break;
+	/* raise an error if name is not defined */
+	clas = rb_const_get_at(mod, ci);
+	break;
     }
     return clas;
 }
@@ -158,26 +158,26 @@ classname2obj(const char *name, PInfo pi, VALUE base_class) {
     VALUE   clas = classname2class(name, pi, base_class);
     
     if (Qundef == clas) {
-        return Qnil;
+	return Qnil;
     } else {
-        return rb_obj_alloc(clas);
+	return rb_obj_alloc(clas);
     }
 }
 
 #if HAS_RSTRUCT
 inline static VALUE
 structname2obj(const char *name) {
-    VALUE       ost;
-    const char  *s = name;
+    VALUE	ost;
+    const char	*s = name;
 
     for (; 1; s++) {
-        if ('\0' == *s) {
-            s = name;
-            break;
-        } else if (':' == *s) {
-            s += 2;
-            break;
-        }
+	if ('\0' == *s) {
+	    s = name;
+	    break;
+	} else if (':' == *s) {
+	    s += 2;
+	    break;
+	}
     }
     ost = rb_const_get(ox_struct_class, rb_intern(s));
     /* use encoding as the indicator for Ruby 1.8.7 or 1.9.x */
@@ -208,49 +208,49 @@ parse_ulong(const char *s, PInfo pi) {
 /* 2010-07-09T10:47:45.895826162+09:00 */
 inline static VALUE
 parse_time(const char *text, VALUE clas) {
-    VALUE       t;
+    VALUE	t;
 
     if (Qnil == (t = parse_double_time(text, clas)) &&
-        Qnil == (t = parse_xsd_time(text, clas))) {
-        VALUE       args[1];
+	Qnil == (t = parse_xsd_time(text, clas))) {
+	VALUE	    args[1];
 
-        /*printf("**** time parse\n"); */
-        *args = rb_str_new2(text);
-        t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
+	/*printf("**** time parse\n"); */
+	*args = rb_str_new2(text);
+	t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
     }
     return t;
 }
 
 static VALUE
 classname2class(const char *name, PInfo pi, VALUE base_class) {
-    VALUE       *slot;
-    VALUE       clas;
-            
+    VALUE	*slot;
+    VALUE	clas;
+	    
     if (Qundef == (clas = ox_cache_get(ox_class_cache, name, &slot, 0))) {
-        char            class_name[1024];
-        char            *s;
-        const char      *n = name;
+	char		class_name[1024];
+	char		*s;
+	const char	*n = name;
 
-        clas = rb_cObject;
-        for (s = class_name; '\0' != *n; n++) {
-            if (':' == *n) {
-                *s = '\0';
-                n++;
+	clas = rb_cObject;
+	for (s = class_name; '\0' != *n; n++) {
+	    if (':' == *n) {
+		*s = '\0';
+		n++;
 		if (':' != *n) {
-                    raise_error("Invalid classname, expected another ':'", pi->str, pi->s);
+		    raise_error("Invalid classname, expected another ':'", pi->str, pi->s);
 		}
-                if (Qundef == (clas = resolve_classname(clas, class_name, pi->options->effort, base_class))) {
-                    return Qundef;
-                }
-                s = class_name;
-            } else {
-                *s++ = *n;
-            }
-        }
-        *s = '\0';
-        if (Qundef != (clas = resolve_classname(clas, class_name, pi->options->effort, base_class))) {
-            *slot = clas;
-        }
+		if (Qundef == (clas = resolve_classname(clas, class_name, pi->options->effort, base_class))) {
+		    return Qundef;
+		}
+		s = class_name;
+	    } else {
+		*s++ = *n;
+	    }
+	}
+	*s = '\0';
+	if (Qundef != (clas = resolve_classname(clas, class_name, pi->options->effort, base_class))) {
+	    *slot = clas;
+	}
     }
     return clas;
 }
@@ -258,9 +258,9 @@ classname2class(const char *name, PInfo pi, VALUE base_class) {
 static VALUE
 get_var_sym_from_attrs(Attr a, void *encoding) {
     for (; 0 != a->name; a++) {
-        if ('a' == *a->name && '\0' == *(a->name + 1)) {
-            return name2var(a->value, encoding);
-        }
+	if ('a' == *a->name && '\0' == *(a->name + 1)) {
+	    return name2var(a->value, encoding);
+	}
     }
     return Qundef;
 }
@@ -268,9 +268,9 @@ get_var_sym_from_attrs(Attr a, void *encoding) {
 static VALUE
 get_obj_from_attrs(Attr a, PInfo pi, VALUE base_class) {
     for (; 0 != a->name; a++) {
-        if ('c' == *a->name && '\0' == *(a->name + 1)) {
-            return classname2obj(a->value, pi, base_class);
-        }
+	if ('c' == *a->name && '\0' == *(a->name + 1)) {
+	    return classname2obj(a->value, pi, base_class);
+	}
     }
     return Qundef;
 }
@@ -279,9 +279,9 @@ get_obj_from_attrs(Attr a, PInfo pi, VALUE base_class) {
 static VALUE
 get_struct_from_attrs(Attr a) {
     for (; 0 != a->name; a++) {
-        if ('c' == *a->name && '\0' == *(a->name + 1)) {
-            return structname2obj(a->value);
-        }
+	if ('c' == *a->name && '\0' == *(a->name + 1)) {
+	    return structname2obj(a->value);
+	}
     }
     return Qundef;
 }
@@ -290,9 +290,9 @@ get_struct_from_attrs(Attr a) {
 static VALUE
 get_class_from_attrs(Attr a, PInfo pi, VALUE base_class) {
     for (; 0 != a->name; a++) {
-        if ('c' == *a->name && '\0' == *(a->name + 1)) {
-            return classname2class(a->value, pi, base_class);
-        }
+	if ('c' == *a->name && '\0' == *(a->name + 1)) {
+	    return classname2class(a->value, pi, base_class);
+	}
     }
     return Qundef;
 }
@@ -300,28 +300,28 @@ get_class_from_attrs(Attr a, PInfo pi, VALUE base_class) {
 static unsigned long
 get_id_from_attrs(PInfo pi, Attr a) {
     for (; 0 != a->name; a++) {
-        if ('i' == *a->name && '\0' == *(a->name + 1)) {
-            unsigned long       id = 0;
-            const char          *text = a->value;
-            char                c;
-            
-            for (; '\0' != *text; text++) {
-                c = *text;
-                if ('0' <= c && c <= '9') {
-                    id = id * 10 + (c - '0');
-                } else {
-                    raise_error("bad number format", pi->str, pi->s);
-                }
-            }
-            return id;
-        }
+	if ('i' == *a->name && '\0' == *(a->name + 1)) {
+	    unsigned long	id = 0;
+	    const char		*text = a->value;
+	    char		c;
+	    
+	    for (; '\0' != *text; text++) {
+		c = *text;
+		if ('0' <= c && c <= '9') {
+		    id = id * 10 + (c - '0');
+		} else {
+		    raise_error("bad number format", pi->str, pi->s);
+		}
+	    }
+	    return id;
+	}
     }
     return 0;
 }
 
 static CircArray
 circ_array_new() {
-    CircArray   ca;
+    CircArray	ca;
     
     ca = ALLOC(struct _CircArray);
     ca->objs = ca->obj_array;
@@ -334,7 +334,7 @@ circ_array_new() {
 static void
 circ_array_free(CircArray ca) {
     if (ca->objs != ca->obj_array) {
-        xfree(ca->objs);
+	xfree(ca->objs);
     }
     xfree(ca);
 }
@@ -342,54 +342,54 @@ circ_array_free(CircArray ca) {
 static void
 circ_array_set(CircArray ca, VALUE obj, unsigned long id) {
     if (0 < id) {
-        unsigned long   i;
+	unsigned long	i;
 
-        if (ca->size < id) {
-            unsigned long       cnt = id + 512;
+	if (ca->size < id) {
+	    unsigned long	cnt = id + 512;
 
-            if (ca->objs == ca->obj_array) {
-                ca->objs = ALLOC_N(VALUE, cnt);
-                memcpy(ca->objs, ca->obj_array, sizeof(VALUE) * ca->cnt);
-            } else {
+	    if (ca->objs == ca->obj_array) {
+		ca->objs = ALLOC_N(VALUE, cnt);
+		memcpy(ca->objs, ca->obj_array, sizeof(VALUE) * ca->cnt);
+	    } else {
 		REALLOC_N(ca->objs, VALUE, cnt);
-            }
-            ca->size = cnt;
-        }
-        id--;
-        for (i = ca->cnt; i < id; i++) {
-            ca->objs[i] = Qundef;
-        }
-        ca->objs[id] = obj;
-        if (ca->cnt <= id) {
-            ca->cnt = id + 1;
-        }
+	    }
+	    ca->size = cnt;
+	}
+	id--;
+	for (i = ca->cnt; i < id; i++) {
+	    ca->objs[i] = Qundef;
+	}
+	ca->objs[id] = obj;
+	if (ca->cnt <= id) {
+	    ca->cnt = id + 1;
+	}
     }
 }
 
 static VALUE
 circ_array_get(CircArray ca, unsigned long id) {
-    VALUE       obj = Qundef;
+    VALUE	obj = Qundef;
 
     if (id <= ca->cnt) {
-        obj = ca->objs[id - 1];
+	obj = ca->objs[id - 1];
     }
     return obj;
 }
 
 static VALUE
 parse_regexp(const char *text) {
-    const char  *te;
-    int         options = 0;
-            
+    const char	*te;
+    int		options = 0;
+	    
     te = text + strlen(text) - 1;
 #if HAS_ONIG
     for (; text < te && '/' != *te; te--) {
-        switch (*te) {
-        case 'i':       options |= ONIG_OPTION_IGNORECASE;      break;
-        case 'm':       options |= ONIG_OPTION_MULTILINE;       break;
-        case 'x':       options |= ONIG_OPTION_EXTEND;          break;
-        default:                                                break;
-        }
+	switch (*te) {
+	case 'i':	options |= ONIG_OPTION_IGNORECASE;	break;
+	case 'm':	options |= ONIG_OPTION_MULTILINE;	break;
+	case 'x':	options |= ONIG_OPTION_EXTEND;		break;
+	default:						break;
+	}
     }
 #endif
     return rb_reg_new(text + 1, te - text - 1, options);
@@ -399,214 +399,215 @@ static void
 instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
     if (0 == strcmp("xml", target)) {
 #if HAS_ENCODING_SUPPORT
-        for (; 0 != attrs->name; attrs++) {
-            if (0 == strcmp("encoding", attrs->name)) {
-                pi->options->rb_enc = rb_enc_find(attrs->value);
-            }
-        }
+	for (; 0 != attrs->name; attrs++) {
+	    if (0 == strcmp("encoding", attrs->name)) {
+		pi->options->rb_enc = rb_enc_find(attrs->value);
+	    }
+	}
 #elif HAS_PRIVATE_ENCODING
-        for (; 0 != attrs->name; attrs++) {
-            if (0 == strcmp("encoding", attrs->name)) {
-                pi->options->rb_enc = rb_str_new2(attrs->value);
-            }
-        }
+	for (; 0 != attrs->name; attrs++) {
+	    if (0 == strcmp("encoding", attrs->name)) {
+		pi->options->rb_enc = rb_str_new2(attrs->value);
+	    }
+	}
 #endif
     }
 }
 
 static void
 add_text(PInfo pi, char *text, int closed) {
+    Helper	h = helper_stack_peek(&pi->helpers);
+
     if (!closed) {
-        raise_error("Text not closed", pi->str, pi->s);
+	raise_error("Text not closed", pi->str, pi->s);
+    }
+    if (0 == h) {
+	raise_error("Unexpected text", pi->str, pi->s);
     }
     if (DEBUG <= pi->options->trace) {
-        char    indent[128];
+	char	indent[128];
 
-        fill_indent(pi, indent, sizeof(indent));
-        printf("%s '%s' to type %c\n", indent, text, pi->h->type);
+	fill_indent(pi, indent, sizeof(indent));
+	printf("%s '%s' to type %c\n", indent, text, h->type);
     }
-    switch (pi->h->type) {
+    switch (h->type) {
     case NoCode:
     case StringCode:
-        pi->h->obj = rb_str_new2(text);
+	h->obj = rb_str_new2(text);
 #if HAS_ENCODING_SUPPORT
-        if (0 != pi->options->rb_enc) {
-            rb_enc_associate(pi->h->obj, pi->options->rb_enc);
-        }
+	if (0 != pi->options->rb_enc) {
+	    rb_enc_associate(h->obj, pi->options->rb_enc);
+	}
 #elif HAS_PRIVATE_ENCODING
-        if (Qnil != pi->options->rb_enc) {
-	    rb_funcall(pi->h->obj, ox_force_encoding_id, 1, pi->options->rb_enc);
-        }
+	if (Qnil != pi->options->rb_enc) {
+	    rb_funcall(h->obj, ox_force_encoding_id, 1, pi->options->rb_enc);
+	}
 #endif
-        if (0 != pi->circ_array) {
-            circ_array_set(pi->circ_array, pi->h->obj, (unsigned long)pi->id);
-        }
-        break;
+	if (0 != pi->circ_array) {
+	    circ_array_set(pi->circ_array, h->obj, (unsigned long)pi->id);
+	}
+	break;
     case FixnumCode:
     {
-        long        n = 0;
-        char        c;
-        int         neg = 0;
+	long	n = 0;
+	char	c;
+	int	neg = 0;
 
-        if ('-' == *text) {
-            neg = 1;
-            text++;
-        }
-        for (; '\0' != *text; text++) {
-            c = *text;
-            if ('0' <= c && c <= '9') {
-                n = n * 10 + (c - '0');
-            } else {
-                raise_error("bad number format", pi->str, pi->s);
-            }
-        }
-        if (neg) {
-            n = -n;
-        }
-        pi->h->obj = LONG2NUM(n);
-        break;
+	if ('-' == *text) {
+	    neg = 1;
+	    text++;
+	}
+	for (; '\0' != *text; text++) {
+	    c = *text;
+	    if ('0' <= c && c <= '9') {
+		n = n * 10 + (c - '0');
+	    } else {
+		raise_error("bad number format", pi->str, pi->s);
+	    }
+	}
+	if (neg) {
+	    n = -n;
+	}
+	h->obj = LONG2NUM(n);
+	break;
     }
     case FloatCode:
-        pi->h->obj = rb_float_new(strtod(text, 0));
-        break;
+	h->obj = rb_float_new(strtod(text, 0));
+	break;
     case SymbolCode:
     {
-        VALUE   sym;
-        VALUE   *slot;
+	VALUE	sym;
+	VALUE	*slot;
 
-        if (Qundef == (sym = ox_cache_get(ox_symbol_cache, text, &slot, 0))) {
+	if (Qundef == (sym = ox_cache_get(ox_symbol_cache, text, &slot, 0))) {
 	    sym = str2sym(text, (void*)pi->options->rb_enc);
-            *slot = sym;
-        }
-        pi->h->obj = sym;
-        break;
+	    *slot = sym;
+	}
+	h->obj = sym;
+	break;
     }
     case DateCode:
     {
 	VALUE	args[1];
 
 	*args = parse_ulong(text, pi);
-        pi->h->obj = rb_funcall2(ox_date_class, ox_jd_id, 1, args);
-        break;
+	h->obj = rb_funcall2(ox_date_class, ox_jd_id, 1, args);
+	break;
     }
     case TimeCode:
-        pi->h->obj = parse_time(text, ox_time_class);
-        break;
+	h->obj = parse_time(text, ox_time_class);
+	break;
     case String64Code:
     {
-        unsigned long   str_size = b64_orig_size(text);
-        VALUE           v;
-        char            *str = ALLOCA_N(char, str_size + 1);
-        
-        from_base64(text, (uchar*)str);
-        v = rb_str_new(str, str_size);
+	unsigned long	str_size = b64_orig_size(text);
+	VALUE		v;
+	char		*str = ALLOCA_N(char, str_size + 1);
+	
+	from_base64(text, (uchar*)str);
+	v = rb_str_new(str, str_size);
 #if HAS_ENCODING_SUPPORT
-        if (0 != pi->options->rb_enc) {
-            rb_enc_associate(v, pi->options->rb_enc);
-        }
+	if (0 != pi->options->rb_enc) {
+	    rb_enc_associate(v, pi->options->rb_enc);
+	}
 #elif HAS_PRIVATE_ENCODING
-        if (0 != pi->options->rb_enc) {
+	if (0 != pi->options->rb_enc) {
 	    rb_funcall(v, ox_force_encoding_id, 1, pi->options->rb_enc);
-        }
+	}
 #endif
-        if (0 != pi->circ_array) {
-            circ_array_set(pi->circ_array, v, (unsigned long)pi->h->obj);
-        }
-        pi->h->obj = v;
-        break;
+	if (0 != pi->circ_array) {
+	    circ_array_set(pi->circ_array, v, (unsigned long)h->obj);
+	}
+	h->obj = v;
+	break;
     }
     case Symbol64Code:
     {
-        VALUE           sym;
-        VALUE           *slot;
-        unsigned long   str_size = b64_orig_size(text);
-        char            *str = ALLOCA_N(char, str_size + 1);
-        
-        from_base64(text, (uchar*)str);
-        if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, 0))) {
+	VALUE		sym;
+	VALUE		*slot;
+	unsigned long	str_size = b64_orig_size(text);
+	char		*str = ALLOCA_N(char, str_size + 1);
+	
+	from_base64(text, (uchar*)str);
+	if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, 0))) {
 	    sym = str2sym(str, (void*)pi->options->rb_enc);
-            *slot = sym;
-        }
-        pi->h->obj = sym;
-        break;
+	    *slot = sym;
+	}
+	h->obj = sym;
+	break;
     }
     case RegexpCode:
-        if ('/' == *text) {
-            pi->h->obj = parse_regexp(text);
-        } else {
-            unsigned long       str_size = b64_orig_size(text);
+	if ('/' == *text) {
+	    h->obj = parse_regexp(text);
+	} else {
+	    unsigned long	str_size = b64_orig_size(text);
 	    char		*str = ALLOCA_N(char, str_size + 1);
-        
-            from_base64(text, (uchar*)str);
-            pi->h->obj = parse_regexp(str);
-        }
-        break;
+	
+	    from_base64(text, (uchar*)str);
+	    h->obj = parse_regexp(str);
+	}
+	break;
     case BignumCode:
-        pi->h->obj = rb_cstr_to_inum(text, 10, 1);
-        break;
+	h->obj = rb_cstr_to_inum(text, 10, 1);
+	break;
     default:
-        pi->h->obj = Qnil;
-        break;
+	h->obj = Qnil;
+	break;
     }
 }
 
 static void
 add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
-    Attr                a;
-    Helper              h;
-    unsigned long       id;
+    Attr		a;
+    Helper		h;
+    unsigned long	id;
 
     if (TRACE <= pi->options->trace) {
-        char    buf[1024];
-        char    indent[128];
-        char    *s = buf;
-        char    *end = buf + sizeof(buf) - 2;
+	char	buf[1024];
+	char	indent[128];
+	char	*s = buf;
+	char	*end = buf + sizeof(buf) - 2;
 
-        s += snprintf(s, end - s, " <%s%s", (hasChildren) ? "" : "/", ename);
-        for (a = attrs; 0 != a->name; a++) {
-            s += snprintf(s, end - s, " %s=%s", a->name, a->value);
-        }
-        *s++ = '>';
-        *s++ = '\0';
-        if (DEBUG <= pi->options->trace) {
-            debug_stack(pi, buf);
-        } else {
-            fill_indent(pi, indent, sizeof(indent));
-            printf("%s%s\n", indent, buf);
-        }
+	s += snprintf(s, end - s, " <%s%s", (hasChildren) ? "" : "/", ename);
+	for (a = attrs; 0 != a->name; a++) {
+	    s += snprintf(s, end - s, " %s=%s", a->name, a->value);
+	}
+	*s++ = '>';
+	*s++ = '\0';
+	if (DEBUG <= pi->options->trace) {
+	    printf("===== add element stack(%d) =====\n", helper_stack_depth(&pi->helpers));
+	    debug_stack(pi, buf);
+	} else {
+	    fill_indent(pi, indent, sizeof(indent));
+	    printf("%s%s\n", indent, buf);
+	}
     }
-    if (0 == pi->h) { /* top level object */
-        pi->h = pi->helpers;
-        if (0 != (id = get_id_from_attrs(pi, attrs))) {
-            pi->circ_array = circ_array_new();
-        }
-    } else {
-        pi->h++;
+    if (helper_stack_empty(&pi->helpers)) { /* top level object */
+	if (0 != (id = get_id_from_attrs(pi, attrs))) {
+	    pi->circ_array = circ_array_new();
+	}
     }
     if ('\0' != ename[1]) {
-        raise_error("Invalid element name", pi->str, pi->s);
+	raise_error("Invalid element name", pi->str, pi->s);
     }
-    h = pi->h;
-    h->type = *ename;
-    h->var = get_var_sym_from_attrs(attrs, (void*)pi->options->rb_enc);
+    h = helper_stack_push(&pi->helpers, get_var_sym_from_attrs(attrs, (void*)pi->options->rb_enc), Qundef, *ename);
     switch (h->type) {
     case NilClassCode:
-        h->obj = Qnil;
-        break;
+	h->obj = Qnil;
+	break;
     case TrueClassCode:
-        h->obj = Qtrue;
-        break;
+	h->obj = Qtrue;
+	break;
     case FalseClassCode:
-        h->obj = Qfalse;
-        break;
+	h->obj = Qfalse;
+	break;
     case StringCode:
-        /* h->obj will be replaced by add_text if it is called */
-        h->obj = ox_empty_string;
-        if (0 != pi->circ_array) {
-            pi->id = get_id_from_attrs(pi, attrs);
-            circ_array_set(pi->circ_array, h->obj, pi->id);
-        }
-        break;
+	/* h->obj will be replaced by add_text if it is called */
+	h->obj = ox_empty_string;
+	if (0 != pi->circ_array) {
+	    pi->id = get_id_from_attrs(pi, attrs);
+	    circ_array_set(pi->circ_array, h->obj, pi->id);
+	}
+	break;
     case FixnumCode:
     case FloatCode:
     case SymbolCode:
@@ -617,213 +618,220 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     case DateCode:
     case TimeCode:
     case RationalCode: /* sub elements read next */
-        /* value will be read in the following add_text */
-        h->obj = Qundef;
-        break;
+	/* value will be read in the following add_text */
+	h->obj = Qundef;
+	break;
     case String64Code:
-        h->obj = Qundef;
-        if (0 != pi->circ_array) {
-            pi->id = get_id_from_attrs(pi, attrs);
-        }
-        break;
+	h->obj = Qundef;
+	if (0 != pi->circ_array) {
+	    pi->id = get_id_from_attrs(pi, attrs);
+	}
+	break;
     case ArrayCode:
-        h->obj = rb_ary_new();
-        if (0 != pi->circ_array) {
-            circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
-        }
-        break;
+	h->obj = rb_ary_new();
+	if (0 != pi->circ_array) {
+	    circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+	}
+	break;
     case HashCode:
-        h->obj = rb_hash_new();
-        if (0 != pi->circ_array) {
-            circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
-        }
-        break;
+	h->obj = rb_hash_new();
+	if (0 != pi->circ_array) {
+	    circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+	}
+	break;
     case RangeCode:
-        h->obj = rb_range_new(ox_zero_fixnum, ox_zero_fixnum, Qfalse);
-        break;
+	h->obj = rb_range_new(ox_zero_fixnum, ox_zero_fixnum, Qfalse);
+	break;
     case RawCode:
-        if (hasChildren) {
-            h->obj = ox_parse(pi->s, ox_gen_callbacks, &pi->s, pi->options);
-            if (0 != pi->circ_array) {
-                circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
-            }
-        } else {
-            h->obj = Qnil;
-        }
-        break;
+	if (hasChildren) {
+	    h->obj = ox_parse(pi->s, ox_gen_callbacks, &pi->s, pi->options);
+	    if (0 != pi->circ_array) {
+		circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+	    }
+	} else {
+	    h->obj = Qnil;
+	}
+	break;
     case ExceptionCode:
-        h->obj = get_obj_from_attrs(attrs, pi, rb_eException);
-        if (0 != pi->circ_array && Qnil != h->obj) {
-            circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
-        }
-        break;
+	h->obj = get_obj_from_attrs(attrs, pi, rb_eException);
+	if (0 != pi->circ_array && Qnil != h->obj) {
+	    circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+	}
+	break;
     case ObjectCode:
-        h->obj = get_obj_from_attrs(attrs, pi, ox_bag_clas);
-        if (0 != pi->circ_array && Qnil != h->obj) {
-            circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
-        }
-        break;
+	h->obj = get_obj_from_attrs(attrs, pi, ox_bag_clas);
+	if (0 != pi->circ_array && Qnil != h->obj) {
+	    circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+	}
+	break;
     case StructCode:
 #if HAS_RSTRUCT
-        h->obj = get_struct_from_attrs(attrs);
-        if (0 != pi->circ_array) {
-            circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
-        }
+	h->obj = get_struct_from_attrs(attrs);
+	if (0 != pi->circ_array) {
+	    circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
+	}
 #else
-        raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+	raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
 #endif
-        break;
+	break;
     case ClassCode:
-        h->obj = get_class_from_attrs(attrs, pi, ox_bag_clas);
-        break;
+	h->obj = get_class_from_attrs(attrs, pi, ox_bag_clas);
+	break;
     case RefCode:
-        h->obj = Qundef;
-        if (0 != pi->circ_array) {
-            h->obj = circ_array_get(pi->circ_array, get_id_from_attrs(pi, attrs));
-        }
-        if (Qundef == h->obj) {
-            raise_error("Invalid circular reference", pi->str, pi->s);
-        }
-        break;
+	h->obj = Qundef;
+	if (0 != pi->circ_array) {
+	    h->obj = circ_array_get(pi->circ_array, get_id_from_attrs(pi, attrs));
+	}
+	if (Qundef == h->obj) {
+	    raise_error("Invalid circular reference", pi->str, pi->s);
+	}
+	break;
     default:
-        raise_error("Invalid element name", pi->str, pi->s);
-        break;
+	raise_error("Invalid element name", pi->str, pi->s);
+	break;
     }
     if (DEBUG <= pi->options->trace) {
-        debug_stack(pi, "   -----------");
+	debug_stack(pi, "   -----------");
     }
 }
 
 static void
 end_element(PInfo pi, const char *ename) {
     if (TRACE <= pi->options->trace) {
-        char    indent[128];
-        
-        if (DEBUG <= pi->options->trace) {
-            char    buf[1024];
+	char	indent[128];
+	
+	if (DEBUG <= pi->options->trace) {
+	    char    buf[1024];
 
-            snprintf(buf, sizeof(buf) - 1, "</%s>", ename);
-            debug_stack(pi, buf);
-        } else {
-            fill_indent(pi, indent, sizeof(indent));
-            printf("%s</%s>\n", indent, ename);
-        }
+	    printf("===== end element stack(%d) =====\n", helper_stack_depth(&pi->helpers));
+	    snprintf(buf, sizeof(buf) - 1, "</%s>", ename);
+	    debug_stack(pi, buf);
+	} else {
+	    fill_indent(pi, indent, sizeof(indent));
+	    printf("%s</%s>\n", indent, ename);
+	}
     }
-    if (0 != pi->h && pi->helpers <= pi->h) {
-        Helper  h = pi->h;
+    if (!helper_stack_empty(&pi->helpers)) {
+	Helper	h = helper_stack_pop(&pi->helpers);
+	Helper	ph = helper_stack_peek(&pi->helpers);
 
-        if (ox_empty_string == h->obj) {
-            /* special catch for empty strings */
-            h->obj = rb_str_new2("");
-        }
-        pi->obj = h->obj;
-        pi->h--;
-        if (pi->helpers <= pi->h) {
-            switch (pi->h->type) {
-            case ArrayCode:
-                rb_ary_push(pi->h->obj, h->obj);
-                break;
-            case ExceptionCode:
-            case ObjectCode:
-                if (Qnil != pi->h->obj) {
-                    rb_ivar_set(pi->h->obj, h->var, h->obj);
-                }
-                break;
-            case StructCode:
+	if (ox_empty_string == h->obj) {
+	    /* special catch for empty strings */
+	    h->obj = rb_str_new2("");
+	}
+	pi->obj = h->obj;
+	if (0 != ph) {
+	    switch (ph->type) {
+	    case ArrayCode:
+		rb_ary_push(ph->obj, h->obj);
+		break;
+	    case ExceptionCode:
+	    case ObjectCode:
+		if (Qnil != ph->obj) {
+		    rb_ivar_set(ph->obj, h->var, h->obj);
+		}
+		break;
+	    case StructCode:
 #if HAS_RSTRUCT
-                rb_struct_aset(pi->h->obj, h->var, h->obj);
+		rb_struct_aset(ph->obj, h->var, h->obj);
 #else
-                raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+		raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
 #endif
-                break;
-            case HashCode:
-                h->type = KeyCode;
-                pi->h++;
-                break;
-            case RangeCode:
+		break;
+	    case HashCode:
+		// put back h
+		helper_stack_push(&pi->helpers, h->var, h->obj, KeyCode);
+		break;
+	    case RangeCode:
 #if HAS_RSTRUCT
-                if (ox_beg_id == h->var) {
-                    RSTRUCT_PTR(pi->h->obj)[0] = h->obj;
-                } else if (ox_end_id == h->var) {
-                    RSTRUCT_PTR(pi->h->obj)[1] = h->obj;
-                } else if (ox_excl_id == h->var) {
-                    RSTRUCT_PTR(pi->h->obj)[2] = h->obj;
-                } else {
-                    raise_error("Invalid range attribute", pi->str, pi->s);
-                }
+		if (ox_beg_id == h->var) {
+		    RSTRUCT_PTR(ph->obj)[0] = h->obj;
+		} else if (ox_end_id == h->var) {
+		    RSTRUCT_PTR(ph->obj)[1] = h->obj;
+		} else if (ox_excl_id == h->var) {
+		    RSTRUCT_PTR(ph->obj)[2] = h->obj;
+		} else {
+		    raise_error("Invalid range attribute", pi->str, pi->s);
+		}
 #else
-                raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+		raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
 #endif
-                break;
-            case KeyCode:
-                rb_hash_aset((pi->h - 1)->obj, pi->h->obj, h->obj);
-                pi->h--;
-                break;
-            case ComplexCode:
+		break;
+	    case KeyCode:
+		{
+		    Helper	gh;
+
+		    helper_stack_pop(&pi->helpers);
+		    gh = helper_stack_peek(&pi->helpers);
+
+		    rb_hash_aset(gh->obj, ph->obj, h->obj);
+		}
+		break;
+	    case ComplexCode:
 #ifdef T_COMPLEX
-                if (Qundef == pi->h->obj) {
-                    pi->h->obj = h->obj;
-                } else {
-                    pi->h->obj = rb_complex_new(pi->h->obj, h->obj);
-                }
+		if (Qundef == ph->obj) {
+		    ph->obj = h->obj;
+		} else {
+		    ph->obj = rb_complex_new(ph->obj, h->obj);
+		}
 #else
-                raise_error("Complex Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
+		raise_error("Complex Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
 #endif
-                break;
-            case RationalCode:
+		break;
+	    case RationalCode:
 #ifdef T_RATIONAL
-                if (Qundef == pi->h->obj) {
-                    pi->h->obj = h->obj;
-                } else {
+		if (Qundef == ph->obj) {
+		    ph->obj = h->obj;
+		} else {
 #ifdef RUBINIUS_RUBY
-                    pi->h->obj = rb_Rational(pi->h->obj, h->obj);
+		    ph->obj = rb_Rational(ph->obj, h->obj);
 #else
-                    pi->h->obj = rb_rational_new(pi->h->obj, h->obj);
+		    ph->obj = rb_rational_new(ph->obj, h->obj);
 #endif
-                }
+		}
 #else
-                raise_error("Rational Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
+		raise_error("Rational Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
 #endif
-                break;
-            default:
-                raise_error("Corrupt parse stack, container is wrong type", pi->str, pi->s);
-                break;
-            }
-        }
+		break;
+	    default:
+		raise_error("Corrupt parse stack, container is wrong type", pi->str, pi->s);
+		break;
+	    }
+	}
     }
-    if (0 != pi->circ_array && pi->helpers > pi->h) {
-        circ_array_free(pi->circ_array);
-        pi->circ_array = 0;
+    if (0 != pi->circ_array && helper_stack_empty(&pi->helpers)) {
+	circ_array_free(pi->circ_array);
+	pi->circ_array = 0;
     }
     if (DEBUG <= pi->options->trace) {
-        debug_stack(pi, "   ----------");
+	debug_stack(pi, "   ----------");
     }
 }
 
 static VALUE
 parse_double_time(const char *text, VALUE clas) {
-    long        v = 0;
-    long        v2 = 0;
-    const char  *dot = 0;
-    char        c;
+    long	v = 0;
+    long	v2 = 0;
+    const char	*dot = 0;
+    char	c;
     
     for (; '.' != *text; text++) {
-        c = *text;
-        if (c < '0' || '9' < c) {
-            return Qnil;
-        }
-        v = 10 * v + (long)(c - '0');
+	c = *text;
+	if (c < '0' || '9' < c) {
+	    return Qnil;
+	}
+	v = 10 * v + (long)(c - '0');
     }
     dot = text++;
     for (; '\0' != *text && text - dot <= 6; text++) {
-        c = *text;
-        if (c < '0' || '9' < c) {
-            return Qnil;
-        }
-        v2 = 10 * v2 + (long)(c - '0');
+	c = *text;
+	if (c < '0' || '9' < c) {
+	    return Qnil;
+	}
+	v2 = 10 * v2 + (long)(c - '0');
     }
     for (; text - dot <= 9; text++) {
-        v2 *= 10;
+	v2 *= 10;
     }
 #if HAS_NANO_TIME
     return rb_time_nano_new(v, v2);
@@ -833,47 +841,47 @@ parse_double_time(const char *text, VALUE clas) {
 }
 
 typedef struct _Tp {
-    int         cnt;
-    char        end;
-    char        alt;
+    int		cnt;
+    char	end;
+    char	alt;
 } *Tp;
 
 static VALUE
 parse_xsd_time(const char *text, VALUE clas) {
-    long        cargs[10];
-    long        *cp = cargs;
-    long        v;
-    int         i;
-    char        c;
-    struct _Tp  tpa[10] = { { 4, '-', '-' },
-                           { 2, '-', '-' },
-                           { 2, 'T', 'T' },
-                           { 2, ':', ':' },
-                           { 2, ':', ':' },
-                           { 2, '.', '.' },
-                           { 9, '+', '-' },
-                           { 2, ':', ':' },
-                           { 2, '\0', '\0' },
-                           { 0, '\0', '\0' } };
-    Tp          tp = tpa;
-    struct tm   tm;
+    long	cargs[10];
+    long	*cp = cargs;
+    long	v;
+    int		i;
+    char	c;
+    struct _Tp	tpa[10] = { { 4, '-', '-' },
+			   { 2, '-', '-' },
+			   { 2, 'T', 'T' },
+			   { 2, ':', ':' },
+			   { 2, ':', ':' },
+			   { 2, '.', '.' },
+			   { 9, '+', '-' },
+			   { 2, ':', ':' },
+			   { 2, '\0', '\0' },
+			   { 0, '\0', '\0' } };
+    Tp		tp = tpa;
+    struct tm	tm;
 
     for (; 0 != tp->cnt; tp++) {
-        for (i = tp->cnt, v = 0; 0 < i ; text++, i--) {
-            c = *text;
-            if (c < '0' || '9' < c) {
-                if (tp->end == c || tp->alt == c) {
-                    break;
-                }
-                return Qnil;
-            }
-            v = 10 * v + (long)(c - '0');
-        }
-        c = *text++;
-        if (tp->end != c && tp->alt != c) {
-            return Qnil;
-        }
-        *cp++ = v;
+	for (i = tp->cnt, v = 0; 0 < i ; text++, i--) {
+	    c = *text;
+	    if (c < '0' || '9' < c) {
+		if (tp->end == c || tp->alt == c) {
+		    break;
+		}
+		return Qnil;
+	    }
+	    v = 10 * v + (long)(c - '0');
+	}
+	c = *text++;
+	if (tp->end != c && tp->alt != c) {
+	    return Qnil;
+	}
+	*cp++ = v;
     }
     tm.tm_year = (int)cargs[0] - 1900;
     tm.tm_mon = (int)cargs[1] - 1;
@@ -891,48 +899,49 @@ parse_xsd_time(const char *text, VALUE clas) {
 /* debug functions */
 static void
 fill_indent(PInfo pi, char *buf, size_t size) {
-    if (0 != pi->h) {
-        size_t  cnt = pi->h - pi->helpers + 1;
+    size_t	cnt;
 
-        if (size < cnt + 1) {
-            cnt = size - 1;
-        }
-        memset(buf, ' ', cnt);
-        buf += cnt;
+    if (0 < (cnt = helper_stack_depth(&pi->helpers))) {
+	cnt *= 2;
+	if (size < cnt + 1) {
+	    cnt = size - 1;
+	}
+	memset(buf, ' ', cnt);
+	buf += cnt;
     }
     *buf = '\0';
 }
 
 static void
 debug_stack(PInfo pi, const char *comment) {
-    char        indent[128];
-    Helper      h;
+    char	indent[128];
+    Helper	h;
 
     fill_indent(pi, indent, sizeof(indent));
     printf("%s%s\n", indent, comment);
-    if (0 != pi->h) {
-        for (h = pi->helpers; h <= pi->h; h++) {
-            const char  *clas = "---";
-            const char  *key = "---";
+    if (!helper_stack_empty(&pi->helpers)) {
+	for (h = pi->helpers.head; h < pi->helpers.tail; h++) {
+	    const char	*clas = "---";
+	    const char	*key = "---";
 
-            if (Qundef != h->obj) {
-                VALUE   c =  rb_obj_class(h->obj);
+	    if (Qundef != h->obj) {
+		VALUE	c =  rb_obj_class(h->obj);
 
-                clas = rb_class2name(c);
-            }
-            if (Qundef != h->var) {
-                if (HashCode == h->type) {
-                    VALUE       v;
-                    
-                    v = rb_funcall2(h->var, rb_intern("to_s"), 0, 0);
-                    key = StringValuePtr(v);
-                } else if (ObjectCode == (h - 1)->type || ExceptionCode == (h - 1)->type || RangeCode == (h - 1)->type || StructCode == (h - 1)->type) {
-                    key = rb_id2name(h->var);
-                } else {
-                    printf("%s*** corrupt stack ***\n", indent);
-                }
-            }
-            printf("%s   [%c] %s : %s\n", indent, h->type, clas, key);
-        }
+		clas = rb_class2name(c);
+	    }
+	    if (Qundef != h->var) {
+		if (HashCode == h->type) {
+		    VALUE	v;
+		    
+		    v = rb_funcall2(h->var, rb_intern("to_s"), 0, 0);
+		    key = StringValuePtr(v);
+		} else if (ObjectCode == (h - 1)->type || ExceptionCode == (h - 1)->type || RangeCode == (h - 1)->type || StructCode == (h - 1)->type) {
+		    key = rb_id2name(h->var);
+		} else {
+		    printf("%s*** corrupt stack ***\n", indent);
+		}
+	    }
+	    printf("%s [%c] %s : %s\n", indent, h->type, clas, key);
+	}
     }
 }

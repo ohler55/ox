@@ -92,12 +92,12 @@ create_doc(PInfo pi) {
     VALUE       doc;
     VALUE       nodes;
 
-    pi->h = pi->helpers;
+    helper_stack_init(&pi->helpers);
     doc = rb_obj_alloc(ox_document_clas);
     nodes = rb_ary_new();
     rb_ivar_set(doc, ox_attributes_id, rb_hash_new());
     rb_ivar_set(doc, ox_nodes_id, nodes);
-    pi->h->obj = nodes;
+    helper_stack_push(&pi->helpers, 0, nodes, NoCode);
     pi->obj = doc;
 }
 
@@ -108,10 +108,9 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     VALUE       nodes;
     VALUE	sym;
 
-    if (0 != pi->h) { /* top level object */
+    if (!helper_stack_empty(&pi->helpers)) { /* top level object */
         rb_raise(rb_eSyntaxError, "Prolog must be the first element in an XML document.\n");
     }
-    pi->h = pi->helpers;
     doc = rb_obj_alloc(ox_document_clas);
     ah = rb_hash_new();
     for (; 0 != attrs->name; attrs++) {
@@ -165,7 +164,7 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     nodes = rb_ary_new();
     rb_ivar_set(doc, ox_attributes_id, ah);
     rb_ivar_set(doc, ox_nodes_id, nodes);
-    pi->h->obj = nodes;
+    helper_stack_push(&pi->helpers, 0, nodes, ArrayCode);
     pi->obj = doc;
 }
 
@@ -201,13 +200,13 @@ nomode_instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
                 if (0 == strcmp("object", attrs->value)) {
                     pi->pcb = ox_obj_callbacks;
                     pi->obj = Qnil;
-                    pi->h = 0;
+		    helper_stack_init(&pi->helpers);
                 } else if (0 == strcmp("generic", attrs->value)) {
                     pi->pcb = ox_gen_callbacks;
                 } else if (0 == strcmp("limited", attrs->value)) {
                     pi->pcb = ox_limited_callbacks;
                     pi->obj = Qnil;
-                    pi->h = 0;
+		    helper_stack_init(&pi->helpers);
                 } else {
                     rb_raise(rb_eSyntaxError, "%s is not a valid processing instruction mode.\n", attrs->value);
                 }
@@ -235,10 +234,10 @@ add_doctype(PInfo pi, const char *docType) {
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
-    if (0 == pi->h) { /* top level object */
+    if (helper_stack_empty(&pi->helpers)) { /* top level object */
 	create_doc(pi);
     }
-    rb_ary_push(pi->h->obj, n);
+    rb_ary_push(helper_stack_peek(&pi->helpers)->obj, n);
 }
 
 static void
@@ -256,10 +255,10 @@ add_comment(PInfo pi, const char *comment) {
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
-    if (0 == pi->h) { /* top level object */
+    if (helper_stack_empty(&pi->helpers)) { /* top level object */
 	create_doc(pi);
     }
-    rb_ary_push(pi->h->obj, n);
+    rb_ary_push(helper_stack_peek(&pi->helpers)->obj, n);
 }
 
 static void
@@ -277,10 +276,10 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
-    if (0 == pi->h) { /* top level object */
+    if (helper_stack_empty(&pi->helpers)) { /* top level object */
 	create_doc(pi);
     }
-    rb_ary_push(pi->h->obj, n);
+    rb_ary_push(helper_stack_peek(&pi->helpers)->obj, n);
 }
 
 static void
@@ -296,10 +295,10 @@ add_text(PInfo pi, char *text, int closed) {
 	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
     }
 #endif
-    if (0 == pi->h) { /* top level object */
+    if (helper_stack_empty(&pi->helpers)) { /* top level object */
 	create_doc(pi);
     }
-    rb_ary_push(pi->h->obj, s);
+    rb_ary_push(helper_stack_peek(&pi->helpers)->obj, s);
 }
 
 static void
@@ -376,29 +375,25 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         }
         rb_ivar_set(e, ox_attributes_id, ah);
     }
-    if (0 == pi->h) { /* top level object */
-        pi->h = pi->helpers;
-        pi->obj = e;
+    if (helper_stack_empty(&pi->helpers)) { /* top level object */
+	pi->obj = e;
     } else {
-        rb_ary_push(pi->h->obj, e);
-        pi->h++;
+	rb_ary_push(helper_stack_peek(&pi->helpers)->obj, e);
     }
     if (hasChildren) {
         VALUE   nodes = rb_ary_new();
 
         rb_ivar_set(e, ox_nodes_id, nodes);
-        pi->h->obj = nodes;
+	helper_stack_push(&pi->helpers, 0, nodes, NoCode);
+    } else {
+	helper_stack_push(&pi->helpers, 0, Qnil, NoCode); // will be popped in end_element
     }
 }
 
 static void
 end_element(PInfo pi, const char *ename) {
-    if (0 != pi->h) {
-	if (pi->helpers < pi->h) {
-	    pi->h--;
-	} else {
-	    pi->h = 0;
-	}
+    if (!helper_stack_empty(&pi->helpers)) {
+	helper_stack_pop(&pi->helpers);
     }
 }
 
@@ -488,8 +483,8 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
         }
         rb_ivar_set(inst, ox_attributes_id, ah);
     }
-    if (0 == pi->h) { /* top level object */
+    if (helper_stack_empty(&pi->helpers)) { /* top level object */
 	create_doc(pi);
     }
-    rb_ary_push(pi->h->obj, inst);
+    rb_ary_push(helper_stack_peek(&pi->helpers)->obj, inst);
 }

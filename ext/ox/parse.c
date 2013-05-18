@@ -112,9 +112,9 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
 	printf("Parsing xml:\n%s\n", xml);
     }
     /* initialize parse info */
+    helper_stack_init(&pi.helpers);
     pi.str = xml;
     pi.s = xml;
-    pi.h = 0;
     pi.pcb = pcb;
     pi.obj = Qnil;
     pi.circ_array = 0;

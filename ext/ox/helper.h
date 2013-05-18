@@ -60,6 +60,11 @@ helper_stack_empty(HelperStack stack) {
     return (stack->head == stack->tail);
 }
 
+inline static int
+helper_stack_depth(HelperStack stack) {
+    return (stack->tail - stack->head);
+}
+
 inline static void
 helper_stack_cleanup(HelperStack stack) {
     if (stack->base != stack->head) {
@@ -68,7 +73,7 @@ helper_stack_cleanup(HelperStack stack) {
     }
 }
 
-inline static void
+inline static Helper
 helper_stack_push(HelperStack stack, ID var, VALUE obj, Type type) {
     if (stack->end <= stack->tail) {
 	size_t	len = stack->end - stack->head;
@@ -87,6 +92,8 @@ helper_stack_push(HelperStack stack, ID var, VALUE obj, Type type) {
     stack->tail->obj = obj;
     stack->tail->type = type;
     stack->tail++;
+
+    return stack->tail - 1;
 }
 
 inline static Helper

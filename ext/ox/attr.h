@@ -33,7 +33,7 @@
 
 #include "ox.h"
 
-#define ATTR_STACK_INC	16
+#define ATTR_STACK_INC	8
 
 typedef struct _Attr {
     const char	*name;
