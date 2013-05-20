@@ -109,7 +109,8 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     VALUE	sym;
 
     if (!helper_stack_empty(&pi->helpers)) { /* top level object */
-        rb_raise(rb_eSyntaxError, "Prolog must be the first element in an XML document.\n");
+        ox_err_set(&pi->err, rb_eSyntaxError, "Prolog must be the first element in an XML document.\n");
+	return;
     }
     doc = rb_obj_alloc(ox_document_clas);
     ah = rb_hash_new();
@@ -176,7 +177,8 @@ instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
         for (; 0 != attrs->name; attrs++) {
             if (0 == strcmp("version", attrs->name)) {
                 if (0 != strcmp("1.0", attrs->value)) {
-                    rb_raise(rb_eSyntaxError, "Only Ox XML Object version 1.0 supported, not %s.\n", attrs->value);
+                    ox_err_set(&pi->err, rb_eSyntaxError, "Only Ox XML Object version 1.0 supported, not %s.\n", attrs->value);
+		    return;
                 }
             }
             /* ignore other instructions */
@@ -194,7 +196,8 @@ nomode_instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
         for (; 0 != attrs->name; attrs++) {
             if (0 == strcmp("version", attrs->name)) {
                 if (0 != strcmp("1.0", attrs->value)) {
-                    rb_raise(rb_eSyntaxError, "Only Ox XML Object version 1.0 supported, not %s.\n", attrs->value);
+                    ox_err_set(&pi->err, rb_eSyntaxError, "Only Ox XML Object version 1.0 supported, not %s.\n", attrs->value);
+		    return;
                 }
             } else if (0 == strcmp("mode", attrs->name)) {
                 if (0 == strcmp("object", attrs->value)) {
@@ -208,7 +211,8 @@ nomode_instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
                     pi->obj = Qnil;
 		    helper_stack_init(&pi->helpers);
                 } else {
-                    rb_raise(rb_eSyntaxError, "%s is not a valid processing instruction mode.\n", attrs->value);
+                    ox_err_set(&pi->err, rb_eSyntaxError, "%s is not a valid processing instruction mode.\n", attrs->value);
+		    return;
                 }
             }
         }

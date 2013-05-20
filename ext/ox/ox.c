@@ -385,20 +385,25 @@ to_obj(VALUE self, VALUE ruby_xml) {
     size_t		len;
     VALUE		obj;
     struct _Options	options = ox_default_options;
+    struct _Err		err;
 
+    err_init(&err);
     Check_Type(ruby_xml, T_STRING);
     /* the xml string gets modified so make a copy of it */
     len = RSTRING_LEN(ruby_xml) + 1;
+    x = defuse_bom(StringValuePtr(ruby_xml), &options);
     if (SMALL_XML < len) {
 	xml = ALLOC_N(char, len);
     } else {
 	xml = ALLOCA_N(char, len);
     }
-    memcpy(xml, StringValuePtr(ruby_xml), len);
-    x = defuse_bom(xml, &options);
-    obj = ox_parse(x, ox_obj_callbacks, 0, &options);
+    memcpy(xml, x, len);
+    obj = ox_parse(xml, ox_obj_callbacks, 0, &options, &err);
     if (SMALL_XML < len) {
 	xfree(xml);
+    }
+    if (err_has(&err)) {
+	ox_err_raise(&err);
     }
     return obj;
 }
@@ -416,26 +421,31 @@ to_gen(VALUE self, VALUE ruby_xml) {
     size_t		len;
     VALUE		obj;
     struct _Options	options = ox_default_options;
+    struct _Err		err;
 
+    err_init(&err);
     Check_Type(ruby_xml, T_STRING);
     /* the xml string gets modified so make a copy of it */
     len = RSTRING_LEN(ruby_xml) + 1;
+    x = defuse_bom(StringValuePtr(ruby_xml), &options);
     if (SMALL_XML < len) {
 	xml = ALLOC_N(char, len);
     } else {
 	xml = ALLOCA_N(char, len);
     }
-    memcpy(xml, StringValuePtr(ruby_xml), len);
-    x = defuse_bom(xml, &options);
-    obj = ox_parse(x, ox_gen_callbacks, 0, &options);
+    memcpy(xml, x, len);
+    obj = ox_parse(xml, ox_gen_callbacks, 0, &options, &err);
     if (SMALL_XML < len) {
 	xfree(xml);
+    }
+    if (err_has(&err)) {
+	ox_err_raise(&err);
     }
     return obj;
 }
 
 static VALUE
-load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding) {
+load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
     VALUE		obj;
     struct _Options	options = ox_default_options;
 
@@ -500,19 +510,19 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding) {
     xml = defuse_bom(xml, &options);
     switch (options.mode) {
     case ObjMode:
-	obj = ox_parse(xml, ox_obj_callbacks, 0, &options);
+	obj = ox_parse(xml, ox_obj_callbacks, 0, &options, err);
 	break;
     case GenMode:
-	obj = ox_parse(xml, ox_gen_callbacks, 0, &options);
+	obj = ox_parse(xml, ox_gen_callbacks, 0, &options, err);
 	break;
     case LimMode:
-	obj = ox_parse(xml, ox_limited_callbacks, 0, &options);
+	obj = ox_parse(xml, ox_limited_callbacks, 0, &options, err);
 	break;
     case NoMode:
-	obj = ox_parse(xml, ox_nomode_callbacks, 0, &options);
+	obj = ox_parse(xml, ox_nomode_callbacks, 0, &options, err);
 	break;
     default:
-	obj = ox_parse(xml, ox_gen_callbacks, 0, &options);
+	obj = ox_parse(xml, ox_gen_callbacks, 0, &options, err);
 	break;
     }
     return obj;
@@ -542,7 +552,9 @@ load_str(int argc, VALUE *argv, VALUE self) {
     size_t	len;
     VALUE	obj;
     VALUE	encoding;
-    
+    struct _Err	err;
+
+    err_init(&err);
     Check_Type(*argv, T_STRING);
     /* the xml string gets modified so make a copy of it */
     len = RSTRING_LEN(*argv) + 1;
@@ -563,9 +575,12 @@ load_str(int argc, VALUE *argv, VALUE self) {
     encoding = Qnil;
 #endif
     memcpy(xml, StringValuePtr(*argv), len);
-    obj = load(xml, argc - 1, argv + 1, self, encoding);
+    obj = load(xml, argc - 1, argv + 1, self, encoding, &err);
     if (SMALL_XML < len) {
 	xfree(xml);
+    }
+    if (err_has(&err)) {
+	ox_err_raise(&err);
     }
     return obj;
 }
@@ -595,7 +610,9 @@ load_file(int argc, VALUE *argv, VALUE self) {
     FILE	*f;
     size_t	len;
     VALUE	obj;
-    
+    struct _Err	err;
+
+    err_init(&err);
     Check_Type(*argv, T_STRING);
     path = StringValuePtr(*argv);
     if (0 == (f = fopen(path, "r"))) {
@@ -610,14 +627,18 @@ load_file(int argc, VALUE *argv, VALUE self) {
     }
     fseek(f, 0, SEEK_SET);
     if (len != fread(xml, 1, len, f)) {
-	fclose(f);
-	rb_raise(rb_eLoadError, "Failed to read %ld bytes from %s.\n", (long)len, path);
+	ox_err_set(&err, rb_eLoadError, "Failed to read %ld bytes from %s.\n", (long)len, path);
+	obj = Qnil;
+    } else {
+	xml[len] = '\0';
+	obj = load(xml, argc - 1, argv + 1, self, Qnil, &err);
     }
     fclose(f);
-    xml[len] = '\0';
-    obj = load(xml, argc - 1, argv + 1, self, Qnil);
     if (SMALL_XML < len) {
 	xfree(xml);
+    }
+    if (err_has(&err)) {
+	ox_err_raise(&err);
     }
     return obj;
 }

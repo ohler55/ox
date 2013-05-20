@@ -199,7 +199,8 @@ parse_ulong(const char *s, PInfo pi) {
 	if ('0' <= *s && *s <= '9') {
 	    n = n * 10 + (*s - '0');
 	} else {
-	    raise_error("Invalid number for a julian day", pi->str, pi->s);
+	    set_error(&pi->err, "Invalid number for a julian day", pi->str, pi->s);
+	    return Qundef;
 	}
     }
     return ULONG2NUM(n);
@@ -237,7 +238,8 @@ classname2class(const char *name, PInfo pi, VALUE base_class) {
 		*s = '\0';
 		n++;
 		if (':' != *n) {
-		    raise_error("Invalid classname, expected another ':'", pi->str, pi->s);
+		    set_error(&pi->err, "Invalid classname, expected another ':'", pi->str, pi->s);
+		    return Qundef;
 		}
 		if (Qundef == (clas = resolve_classname(clas, class_name, pi->options->effort, base_class))) {
 		    return Qundef;
@@ -310,7 +312,8 @@ get_id_from_attrs(PInfo pi, Attr a) {
 		if ('0' <= c && c <= '9') {
 		    id = id * 10 + (c - '0');
 		} else {
-		    raise_error("bad number format", pi->str, pi->s);
+		    set_error(&pi->err, "bad number format", pi->str, pi->s);
+		    return 0;
 		}
 	    }
 	    return id;
@@ -419,10 +422,12 @@ add_text(PInfo pi, char *text, int closed) {
     Helper	h = helper_stack_peek(&pi->helpers);
 
     if (!closed) {
-	raise_error("Text not closed", pi->str, pi->s);
+	set_error(&pi->err, "Text not closed", pi->str, pi->s);
+	return;
     }
     if (0 == h) {
-	raise_error("Unexpected text", pi->str, pi->s);
+	set_error(&pi->err, "Unexpected text", pi->str, pi->s);
+	return;
     }
     if (DEBUG <= pi->options->trace) {
 	char	indent[128];
@@ -462,7 +467,8 @@ add_text(PInfo pi, char *text, int closed) {
 	    if ('0' <= c && c <= '9') {
 		n = n * 10 + (c - '0');
 	    } else {
-		raise_error("bad number format", pi->str, pi->s);
+		set_error(&pi->err, "bad number format", pi->str, pi->s);
+		return;
 	    }
 	}
 	if (neg) {
@@ -490,7 +496,9 @@ add_text(PInfo pi, char *text, int closed) {
     {
 	VALUE	args[1];
 
-	*args = parse_ulong(text, pi);
+	if (Qundef == (*args = parse_ulong(text, pi))) {
+	    return;
+	}
 	h->obj = rb_funcall2(ox_date_class, ox_jd_id, 1, args);
 	break;
     }
@@ -587,7 +595,8 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	}
     }
     if ('\0' != ename[1]) {
-	raise_error("Invalid element name", pi->str, pi->s);
+	set_error(&pi->err, "Invalid element name", pi->str, pi->s);
+	return;
     }
     h = helper_stack_push(&pi->helpers, get_var_sym_from_attrs(attrs, (void*)pi->options->rb_enc), Qundef, *ename);
     switch (h->type) {
@@ -644,7 +653,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	break;
     case RawCode:
 	if (hasChildren) {
-	    h->obj = ox_parse(pi->s, ox_gen_callbacks, &pi->s, pi->options);
+	    h->obj = ox_parse(pi->s, ox_gen_callbacks, &pi->s, pi->options, &pi->err);
 	    if (0 != pi->circ_array) {
 		circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
 	    }
@@ -653,13 +662,17 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	}
 	break;
     case ExceptionCode:
-	h->obj = get_obj_from_attrs(attrs, pi, rb_eException);
+	if (Qundef == (h->obj = get_obj_from_attrs(attrs, pi, rb_eException))) {
+	    return;
+	}
 	if (0 != pi->circ_array && Qnil != h->obj) {
 	    circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
 	}
 	break;
     case ObjectCode:
-	h->obj = get_obj_from_attrs(attrs, pi, ox_bag_clas);
+	if (Qundef == (h->obj = get_obj_from_attrs(attrs, pi, ox_bag_clas))) {
+	    return;
+	}
 	if (0 != pi->circ_array && Qnil != h->obj) {
 	    circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
 	}
@@ -671,11 +684,14 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	    circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
 	}
 #else
-	raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+	set_error(&pi->err, "Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+	return;
 #endif
 	break;
     case ClassCode:
-	h->obj = get_class_from_attrs(attrs, pi, ox_bag_clas);
+	if (Qundef == (h->obj = get_class_from_attrs(attrs, pi, ox_bag_clas))) {
+	    return;
+	}
 	break;
     case RefCode:
 	h->obj = Qundef;
@@ -683,11 +699,13 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	    h->obj = circ_array_get(pi->circ_array, get_id_from_attrs(pi, attrs));
 	}
 	if (Qundef == h->obj) {
-	    raise_error("Invalid circular reference", pi->str, pi->s);
+	    set_error(&pi->err, "Invalid circular reference", pi->str, pi->s);
+	    return;
 	}
 	break;
     default:
-	raise_error("Invalid element name", pi->str, pi->s);
+	set_error(&pi->err, "Invalid element name", pi->str, pi->s);
+	return;
 	break;
     }
     if (DEBUG <= pi->options->trace) {
@@ -735,7 +753,8 @@ end_element(PInfo pi, const char *ename) {
 #if HAS_RSTRUCT
 		rb_struct_aset(ph->obj, h->var, h->obj);
 #else
-		raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+		set_error(&pi->err, "Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+		return;
 #endif
 		break;
 	    case HashCode:
@@ -751,10 +770,12 @@ end_element(PInfo pi, const char *ename) {
 		} else if (ox_excl_id == h->var) {
 		    RSTRUCT_PTR(ph->obj)[2] = h->obj;
 		} else {
-		    raise_error("Invalid range attribute", pi->str, pi->s);
+		    set_error(&pi->err, "Invalid range attribute", pi->str, pi->s);
+		    return;
 		}
 #else
-		raise_error("Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+		set_error(&pi->err, "Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
+		return;
 #endif
 		break;
 	    case KeyCode:
@@ -775,7 +796,8 @@ end_element(PInfo pi, const char *ename) {
 		    ph->obj = rb_complex_new(ph->obj, h->obj);
 		}
 #else
-		raise_error("Complex Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
+		set_error(&pi->err, "Complex Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
+		return;
 #endif
 		break;
 	    case RationalCode:
@@ -790,11 +812,13 @@ end_element(PInfo pi, const char *ename) {
 #endif
 		}
 #else
-		raise_error("Rational Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
+		set_error(&pi->err, "Rational Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
+		return;
 #endif
 		break;
 	    default:
-		raise_error("Corrupt parse stack, container is wrong type", pi->str, pi->s);
+		set_error(&pi->err, "Corrupt parse stack, container is wrong type", pi->str, pi->s);
+		return;
 		break;
 	    }
 	}

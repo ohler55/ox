@@ -4,7 +4,10 @@
 ^c^s show subtree
 
 - todo
- - use helper stack in gen_load and obj_load
+ - handle exceptions differently, place in PInfo and process on return
+ - struct of VALUE (class) and msg[128]
+ - pass as pointer arg after init to ox_parse, defuse_bom
+
 
 
  - continuous sax parser

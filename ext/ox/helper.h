@@ -62,7 +62,7 @@ helper_stack_empty(HelperStack stack) {
 
 inline static int
 helper_stack_depth(HelperStack stack) {
-    return (stack->tail - stack->head);
+    return (int)(stack->tail - stack->head);
 }
 
 inline static void

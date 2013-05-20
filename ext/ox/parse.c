@@ -35,6 +35,7 @@
 
 #include "ruby.h"
 #include "ox.h"
+#include "err.h"
 #include "attr.h"
 #include "helper.h"
 
@@ -101,18 +102,20 @@ next_white(PInfo pi) {
 }
 
 VALUE
-ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
+ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err) {
     struct _PInfo	pi;
     int			body_read = 0;
 
     if (0 == xml) {
-	raise_error("Invalid arg, xml string can not be null", xml, 0);
+	set_error(err, "Invalid arg, xml string can not be null", xml, 0);
+	return Qnil;
     }
     if (DEBUG <= options->trace) {
 	printf("Parsing xml:\n%s\n", xml);
     }
     /* initialize parse info */
     helper_stack_init(&pi.helpers);
+    err_init(&pi.err);
     pi.str = xml;
     pi.s = xml;
     pi.pcb = pcb;
@@ -129,7 +132,9 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
 	    break;
 	}
 	if ('<' != *pi.s) {		/* all top level entities start with < */
-	    raise_error("invalid format, expected <", pi.str, pi.s);
+	    set_error(err, "invalid format, expected <", pi.str, pi.s);
+	    helper_stack_cleanup(&pi.helpers);
+	    return Qnil;
 	}
 	pi.s++;		/* past < */
 	switch (*pi.s) {
@@ -140,11 +145,15 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
 	case '!':	/* comment or doctype */
 	    pi.s++;
 	    if ('\0' == *pi.s) {
-		raise_error("invalid format, DOCTYPE or comment not terminated", pi.str, pi.s);
+		set_error(err, "invalid format, DOCTYPE or comment not terminated", pi.str, pi.s);
+		helper_stack_cleanup(&pi.helpers);
+		return Qnil;
 	    } else if ('-' == *pi.s) {
 		pi.s++;	/* skip - */
 		if ('-' != *pi.s) {
-		    raise_error("invalid format, bad comment format", pi.str, pi.s);
+		    set_error(err, "invalid format, bad comment format", pi.str, pi.s);
+		    helper_stack_cleanup(&pi.helpers);
+		    return Qnil;
 		} else {
 		    pi.s++;	/* skip second - */
 		    read_comment(&pi);
@@ -153,17 +162,27 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options) {
 		pi.s += 7;
 		read_doctype(&pi);
 	    } else {
-		raise_error("invalid format, DOCTYPE or comment expected", pi.str, pi.s);
+		set_error(err, "invalid format, DOCTYPE or comment expected", pi.str, pi.s);
+		helper_stack_cleanup(&pi.helpers);
+		return Qnil;
 	    }
 	    break;
 	case '\0':
-	    raise_error("invalid format, document not terminated", pi.str, pi.s);
+	    set_error(err, "invalid format, document not terminated", pi.str, pi.s);
+	    helper_stack_cleanup(&pi.helpers);
+	    return Qnil;
 	default:
 	    read_element(&pi);
 	    body_read = 1;
 	    break;
 	}
+	if (err_has(&pi.err)) {
+	    *err = pi.err;
+	    helper_stack_cleanup(&pi.helpers);
+	    return Qnil;
+	}
     }
+    helper_stack_cleanup(&pi.helpers);
     return pi.obj;
 }
 
@@ -205,10 +224,13 @@ read_instruction(PInfo pi) {
 
     *content = '\0';
     attr_stack_init(&attrs);
-    target = read_name_token(pi);
+    if (0 == (target = read_name_token(pi))) {
+	return;
+    }
     end = pi->s;
     if (0 == (cend = gather_content(pi->s, content, sizeof(content) - 1))) {
-	raise_error("processing instruction content too large or not terminated", pi->str, pi->s);
+	set_error(&pi->err, "processing instruction content too large or not terminated", pi->str, pi->s);
+	return;
     }
     next_non_white(pi);
     c = *pi->s;
@@ -218,10 +240,14 @@ read_instruction(PInfo pi) {
 	    pi->last = 0;
 	    if ('\0' == *pi->s) {
 		attr_stack_cleanup(&attrs);
-		raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
+		set_error(&pi->err, "invalid format, processing instruction not terminated", pi->str, pi->s);
+		return;
 	    }
 	    next_non_white(pi);
-	    attr_name = read_name_token(pi);
+	    if (0 == (attr_name = read_name_token(pi))) {
+		attr_stack_cleanup(&attrs);
+		return;
+	    }
 	    end = pi->s;
 	    next_non_white(pi);
 	    if ('=' != *pi->s++) {
@@ -231,7 +257,10 @@ read_instruction(PInfo pi) {
 	    *end = '\0'; /* terminate name */
 	    /* read value */
 	    next_non_white(pi);
-	    attr_value = read_quoted_value(pi);
+	    if (0 == (attr_value = read_quoted_value(pi))) {
+		attr_stack_cleanup(&attrs);
+		return;
+	    }
 	    attr_stack_push(&attrs, attr_name, attr_value);
 	    next_non_white(pi);
 	    if ('\0' == pi->last) {
@@ -249,7 +278,8 @@ read_instruction(PInfo pi) {
     if (attrs_ok) {
 	if ('>' != *pi->s++) {
 	    attr_stack_cleanup(&attrs);
-	    raise_error("invalid format, processing instruction not terminated", pi->str, pi->s);
+	    set_error(&pi->err, "invalid format, processing instruction not terminated", pi->str, pi->s);
+	    return;
 	}
     } else {
 	pi->s = cend + 1;
@@ -278,7 +308,8 @@ read_doctype(PInfo pi) {
     while (1) {
 	c = *pi->s++;
 	if ('\0' == c) {
-	    raise_error("invalid format, prolog not terminated", pi->str, pi->s);
+	    set_error(&pi->err, "invalid format, prolog not terminated", pi->str, pi->s);
+	    return;
 	} else if ('<' == c) {
 	    depth++;
 	} else if ('>' == c) {
@@ -309,7 +340,8 @@ read_comment(PInfo pi) {
     comment = pi->s;
     end = strstr(pi->s, "-->");
     if (0 == end) {
-	raise_error("invalid format, comment not terminated", pi->str, pi->s);
+	set_error(&pi->err, "invalid format, comment not terminated", pi->str, pi->s);
+	return;
     }
     for (s = end - 1; pi->s < s && !done; s--) {
 	switch(*s) {
@@ -349,7 +381,9 @@ read_element(PInfo pi) {
     int			done = 0;
 
     attr_stack_init(&attrs);
-    ename = read_name_token(pi);
+    if (0 == (ename = read_name_token(pi))) {
+	return 0;
+    }
     end = pi->s;
     elen = end - ename;
     next_non_white(pi);
@@ -361,7 +395,8 @@ read_element(PInfo pi) {
 	if ('>' != *pi->s) {
 	    /*printf("*** '%s' ***\n", pi->s); */
 	    attr_stack_cleanup(&attrs);
-	    raise_error("invalid format, element not closed", pi->str, pi->s);
+	    set_error(&pi->err, "invalid format, element not closed", pi->str, pi->s);
+	    return 0;
 	}
 	pi->s++;	/* past > */
 	pi->pcb->add_element(pi, ename, attrs.head, hasChildren);
@@ -380,13 +415,15 @@ read_element(PInfo pi) {
 	switch (c) {
 	case '\0':
 	    attr_stack_cleanup(&attrs);
-	    raise_error("invalid format, document not terminated", pi->str, pi->s);
+	    set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
+	    return 0;
 	case '/':
 	    /* Element with just attributes. */
 	    pi->s++;
 	    if ('>' != *pi->s) {
 		attr_stack_cleanup(&attrs);
-		raise_error("invalid format, element not closed", pi->str, pi->s);
+		set_error(&pi->err, "invalid format, element not closed", pi->str, pi->s);
+		return 0;
 	    }
 	    pi->s++;
 	    pi->pcb->add_element(pi, ename, attrs.head, hasChildren);
@@ -404,7 +441,10 @@ read_element(PInfo pi) {
 	default:
 	    /* Attribute name so it's an element and the attribute will be */
 	    /* added to it. */
-	    attr_name = read_name_token(pi);
+	    if (0 == (attr_name = read_name_token(pi))) {
+		attr_stack_cleanup(&attrs);
+		return 0;
+	    }
 	    end = pi->s;
 	    next_non_white(pi);
 	    if ('=' != *pi->s++) {
@@ -417,17 +457,21 @@ read_element(PInfo pi) {
 		    break;
 		} else {
 		    attr_stack_cleanup(&attrs);
-		    raise_error("invalid format, no attribute value", pi->str, pi->s);
+		    set_error(&pi->err, "invalid format, no attribute value", pi->str, pi->s);
+		    return 0;
 		}
 	    }
 	    *end = '\0'; /* terminate name */
 	    /* read value */
 	    next_non_white(pi);
-	    attr_value = read_quoted_value(pi);
+	    if (0 == (attr_value = read_quoted_value(pi))) {
+		return 0;
+	    }
 	    if (0 != strchr(attr_value, '&')) {
 		if (0 != collapse_special(pi, (char*)attr_value)) {
 		    attr_stack_cleanup(&attrs);
-		    raise_error("invalid format, special character does not end with a semicolon", pi->str, pi->s);
+		    set_error(&pi->err, "invalid format, special character does not end with a semicolon", pi->str, pi->s);
+		    return 0;
 		}
 	    }
 	    attr_stack_push(&attrs, attr_name, attr_value);
@@ -452,7 +496,8 @@ read_element(PInfo pi) {
 	    c = *pi->s++;
 	    if ('\0' == c) {
 		attr_stack_cleanup(&attrs);
-		raise_error("invalid format, document not terminated", pi->str, pi->s);
+		set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
+		return 0;
 	    }
 	    if ('<' == c) {
 		char	*slash;
@@ -470,7 +515,8 @@ read_element(PInfo pi) {
 			read_cdata(pi);
 		    } else {
 			attr_stack_cleanup(&attrs);
-			raise_error("invalid format, invalid comment or CDATA format", pi->str, pi->s);
+			set_error(&pi->err, "invalid format, invalid comment or CDATA format", pi->str, pi->s);
+			return 0;
 		    }
 		    break;
 		case '?':	/* processing instruction */
@@ -480,7 +526,10 @@ read_element(PInfo pi) {
 		case '/':
 		    slash = pi->s;
 		    pi->s++;
-		    name = read_name_token(pi);
+		    if (0 == (name = read_name_token(pi))) {
+			attr_stack_cleanup(&attrs);
+			return 0;
+		    }
 		    end = pi->s;
 		    next_non_white(pi);
 		    c = *pi->s;
@@ -491,12 +540,14 @@ read_element(PInfo pi) {
 			    pi->pcb->end_element(pi, ename);
 			    return name;
 			} else {
-			    raise_error("invalid format, elements overlap", pi->str, pi->s);
+			    set_error(&pi->err, "invalid format, elements overlap", pi->str, pi->s);
+			    return 0;
 			}
 		    }
 		    if ('>' != c) {
 			attr_stack_cleanup(&attrs);
-			raise_error("invalid format, element not closed", pi->str, pi->s);
+			set_error(&pi->err, "invalid format, element not closed", pi->str, pi->s);
+			return 0;
 		    }
 		    if (first && start != slash - 1) {
 			/* some white space between start and here so add as text */
@@ -512,7 +563,8 @@ read_element(PInfo pi) {
 		    if (TolerantEffort == pi->options->effort) {
 			return 0;
 		    } else {
-			raise_error("invalid format, document not terminated", pi->str, pi->s);
+			set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
+			return 0;
 		    }
 		default:
 		    first = 0;
@@ -528,6 +580,8 @@ read_element(PInfo pi) {
 			    pi->pcb->end_element(pi, ename);
 			    return name;
 			}
+		    } else if (err_has(&pi->err)) {
+			return 0;
 		    }
 		    break;
 		}
@@ -571,7 +625,8 @@ read_text(PInfo pi) {
 	    pi->s--;
 	    break;
 	case '\0':
-	    raise_error("invalid format, document not terminated", pi->str, pi->s);
+	    set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
+	    return;
 	default:
 	    if (end <= (b + (('&' == c) ? 7 : 0))) { /* extra 8 for special just in case it is sequence of bytes */
 		unsigned long	size;
@@ -633,7 +688,8 @@ read_reduced_text(PInfo pi) {
 	    pi->s--;
 	    break;
 	case '\0':
-	    raise_error("invalid format, document not terminated", pi->str, pi->s);
+	    set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
+	    return;
 	default:
 	    if (end <= (b + spc + (('&' == c) ? 7 : 0))) { /* extra 8 for special just in case it is sequence of bytes */
 		unsigned long	size;
@@ -694,7 +750,8 @@ read_name_token(PInfo pi) {
 	    return start;
 	case '\0':
 	    /* documents never terminate after a name token */
-	    raise_error("invalid format, document not terminated", pi->str, pi->s);
+	    set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
+	    return 0;
 	    break; /* to avoid warnings */
 	default:
 	    break;
@@ -711,7 +768,8 @@ read_cdata(PInfo pi) {
     start = pi->s;
     end = strstr(pi->s, "]]>");
     if (end == 0) {
-	raise_error("invalid format, CDATA not terminated", pi->str, pi->s);
+	set_error(&pi->err, "invalid format, CDATA not terminated", pi->str, pi->s);
+	return;
     }
     *end = '\0';
     pi->s = end + 3;
@@ -752,19 +810,22 @@ read_quoted_value(PInfo pi) {
         value = pi->s;
         for (; *pi->s != term; pi->s++) {
             if ('\0' == *pi->s) {
-                raise_error("invalid format, document not terminated", pi->str, pi->s);
+                set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
+		return 0;
             }
         }
         *pi->s = '\0';	/* terminate value */
         pi->s++;	/* move past quote */
     } else if (StrictEffort == pi->options->effort) {
-	raise_error("invalid format, expected a quote character", pi->str, pi->s);
+	set_error(&pi->err, "invalid format, expected a quote character", pi->str, pi->s);
+	return 0;
     } else if (TolerantEffort == pi->options->effort) {
         value = pi->s;
         for (; 1; pi->s++) {
 	    switch (*pi->s) {
 	    case '\0':
-                raise_error("invalid format, document not terminated", pi->str, pi->s);
+                set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
+		return 0;
 	    case ' ':
 	    case '/':
 	    case '>':
@@ -784,7 +845,8 @@ read_quoted_value(PInfo pi) {
         value = pi->s;
         next_white(pi);
 	if ('\0' == *pi->s) {
-	    raise_error("invalid format, document not terminated", pi->str, pi->s);
+	    set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
+	    return 0;
         }
         *pi->s++ = '\0'; /* terminate value */
     }
@@ -924,8 +986,9 @@ read_coded_chars(PInfo pi, char *text) {
 		*text++ = '&';
 		return text;
 	    } else {
-		/*raise_error("Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s); */
-		raise_error("Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);
+		/*set_error(&pi->err, "Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s); */
+		set_error(&pi->err, "Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);
+		return 0;
 	    }
 	    pi->s = s;
 	}
@@ -1006,8 +1069,9 @@ collapse_special(PInfo pi, char *str) {
 		    pi->options->rb_enc = ox_utf8_encoding;
 		    b = ucs_to_utf8_chars(b, u);
 		} else {
-		    /* raise_error("Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);*/
-		    raise_error("Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);
+		    /* set_error(&pi->err, "Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);*/
+		    set_error(&pi->err, "Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);
+		    return 0;
 		}
 		s = end + 1;
 	    } else {

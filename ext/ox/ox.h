@@ -59,6 +59,7 @@ enum st_retval {ST_CONTINUE = 0, ST_STOP = 1, ST_DELETE = 2, ST_CHECK};
 
 #include "cache.h"
 
+#include "err.h"
 #include "type.h"
 #include "attr.h"
 #include "helper.h"
@@ -160,6 +161,7 @@ typedef struct _Options {
 /* parse information structure */
 struct _PInfo {
     struct _HelperStack	helpers;
+    struct _Err		err;
     char		*str;		/* buffer being read from */
     char		*s;		/* current position in buffer */
     VALUE		obj;
@@ -170,7 +172,7 @@ struct _PInfo {
     char		last;		/* last character read, rarely set */
 };
 
-extern VALUE	ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options);
+extern VALUE	ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err);
 extern void	_ox_raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
 
 extern void	ox_sax_define(void);
@@ -235,11 +237,9 @@ extern VALUE		ox_utf8_encoding;
 extern void		*ox_utf8_encoding;
 #endif
 
-extern VALUE	ox_arg_error_class;
 extern VALUE	ox_date_class;
 extern VALUE	ox_empty_string;
 extern VALUE	ox_encoding_sym;
-extern VALUE	ox_parse_error_class;
 extern VALUE	ox_stringio_class;
 extern VALUE	ox_struct_class;
 extern VALUE	ox_time_class;
