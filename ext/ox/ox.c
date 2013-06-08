@@ -238,6 +238,9 @@ defuse_bom(char *xml, Options options) {
  * - effort: [:strict|:tolerant|:auto_define] set the tolerance level for loading
  * - symbolize_keys: [true|false|nil] symbolize element attribute keys or leave as Strings
  * @return [Hash] all current option settings.
+ *
+ * Note that an indent of less than zero will result in a tight one line output
+ * unless the text in the XML fields contain new line characters.
  */
 static VALUE
 get_def_opts(VALUE self) {
@@ -755,6 +758,9 @@ parse_dump_options(VALUE ropts, Options copts) {
  * @param [:strict|:tolerant] :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
  *  - *:strict* - raise an NotImplementedError if an undumpable object is encountered
  *  - *:tolerant* - replaces undumplable objects with nil
+ *
+ * Note that an indent of less than zero will result in a tight one line output
+ * unless the text in the XML fields contain new line characters.
  */
 static VALUE
 dump(int argc, VALUE *argv, VALUE self) {
@@ -795,6 +801,9 @@ dump(int argc, VALUE *argv, VALUE self) {
  * @param [:strict|:tolerant] :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
  *  - *:strict* - raise an NotImplementedError if an undumpable object is encountered
  *  - *:tolerant* - replaces undumplable objects with nil
+ *
+ * Note that an indent of less than zero will result in a tight one line output
+ * unless the text in the XML fields contain new line characters.
  */
 static VALUE
 to_file(int argc, VALUE *argv, VALUE self) {

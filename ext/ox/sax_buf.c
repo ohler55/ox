@@ -118,9 +118,9 @@ ox_sax_buf_read(Buf buf) {
         if (0 == buf->pro) {
             shift = buf->tail - buf->head;
         } else {
-            shift = buf->pro - buf->head;
+            shift = buf->pro - buf->head - 1; // leave one character so we cab backup one
         }
-        if (0 == shift) { /* no space left so allocate more */
+        if (0 >= shift) { /* no space left so allocate more */
             char        *old = buf->head;
             size_t      size = buf->end - buf->head + BUF_PAD;
         

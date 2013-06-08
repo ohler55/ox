@@ -194,5 +194,4 @@ buf_checkback(Buf buf, CheckPt cp) {
     return cp->c;
 }
 
-
 #endif /* __OX_SAX_BUF_H__ */

@@ -34,17 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 2.0.1
+### Release 2.0.2
 
- - Added an attrs_done callback to the sax parser that will be called when all
-   attributes for an element have been read.
-
- - Fixed bug in SAX parser where raising an exception in the handler routines
-   would not cleanup. The test put together by griffinmyers was a huge help.
-
- - Reduced stack use in a several places to improve fiber support.
-
- - Changed exception handling to assure proper cleanup with new stack minimizing.
+ - Fixed buffer sliding window off by 1 error in the SAX parser.
 
 ## <a name="description">Description</a>
 
