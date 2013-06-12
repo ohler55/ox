@@ -114,7 +114,8 @@ ox_sax_buf_read(Buf buf) {
     int         err;
     size_t      shift = 0;
     
-    if (buf->head < buf->tail) {
+    // if there is not much room to read into, shift or realloc a larger buffer.
+    if (buf->head < buf->tail && 4096 > buf->end - buf->tail) {
         if (0 == buf->pro) {
             shift = buf->tail - buf->head;
         } else {
@@ -170,7 +171,7 @@ rescue_cb(VALUE rbuf, VALUE err) {
 #endif
 	Buf	buf = (Buf)rbuf;
 
-        ox_sax_drive_cleanup(buf->dr);
+        //ox_sax_drive_cleanup(buf->dr); called after exiting protect
         rb_raise(err, "at line %d, column %d\n", buf->line, buf->col);
     }
 #endif
@@ -189,7 +190,7 @@ partial_io_cb(VALUE rbuf) {
     rstr = rb_funcall2(buf->io, ox_readpartial_id, 1, args);
     str = StringValuePtr(rstr);
     cnt = strlen(str);
-    /*printf("*** read %lu bytes, str: '%s'\n", cnt, str); */
+    //printf("*** read %lu bytes, str: '%s'\n", cnt, str);
     strcpy(buf->tail, str);
     buf->read_end = buf->tail + cnt;
 

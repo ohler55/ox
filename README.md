@@ -34,9 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 2.0.2
+### Release 2.0.3
 
- - Fixed buffer sliding window off by 1 error in the SAX parser.
+ - Fixed excessive memory allocation issue for very large file parsing (half a gig).
 
 ## <a name="description">Description</a>
 

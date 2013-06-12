@@ -153,8 +153,9 @@ buf_next_white(Buf buf) {
 
 static inline void
 buf_cleanup(Buf buf) {
-    if (buf->base != buf->head) {
+    if (buf->base != buf->head && 0 != buf->head) {
         xfree(buf->head);
+	buf->head = 0;
     }
 }
 
