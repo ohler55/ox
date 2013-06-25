@@ -38,6 +38,7 @@
 #include "err.h"
 #include "attr.h"
 #include "helper.h"
+#include "special.h"
 
 static void	read_instruction(PInfo pi);
 static void	read_doctype(PInfo pi);
@@ -50,7 +51,6 @@ static char*	read_name_token(PInfo pi);
 static char*	read_quoted_value(PInfo pi);
 static char*	read_hex_uint64(char *b, uint64_t *up);
 static char*	read_10_uint64(char *b, uint64_t *up);
-static char*	ucs_to_utf8_chars(char *text, uint64_t u);
 static char*	read_coded_chars(PInfo pi, char *text);
 static void	next_non_white(PInfo pi);
 static int	collapse_special(PInfo pi, char *str);
@@ -893,51 +893,6 @@ read_10_uint64(char *b, uint64_t *up) {
     return b;
 }
 
-/*
-u0000..u007F                00000000000000xxxxxxx  0xxxxxxx
-u0080..u07FF                0000000000yyyyyxxxxxx  110yyyyy 10xxxxxx
-u0800..uD7FF, uE000..uFFFF  00000zzzzyyyyyyxxxxxx  1110zzzz 10yyyyyy 10xxxxxx
-u10000..u10FFFF             uuuzzzzzzyyyyyyxxxxxx  11110uuu 10zzzzzz 10yyyyyy 10xxxxxx
-*/
-static char*
-ucs_to_utf8_chars(char *text, uint64_t u) {
-    int			reading = 0;
-    int			i;
-    unsigned char	c;
-
-    if (u <= 0x000000000000007FULL) {
-	/* 0xxxxxxx */
-	*text++ = (char)u;
-    } else if (u <= 0x00000000000007FFULL) {
-	/* 110yyyyy 10xxxxxx */
-	*text++ = (char)(0x00000000000000C0ULL | (0x000000000000001FULL & (u >> 6)));
-	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & u));
-    } else if (u <= 0x000000000000D7FFULL || (0x000000000000E000ULL <= u && u <= 0x000000000000FFFFULL)) {
-	/* 1110zzzz 10yyyyyy 10xxxxxx */
-	*text++ = (char)(0x00000000000000E0ULL | (0x000000000000000FULL & (u >> 12)));
-	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & (u >> 6)));
-	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & u));
-    } else if (0x0000000000010000ULL <= u && u <= 0x000000000010FFFFULL) {
-	/* 11110uuu 10zzzzzz 10yyyyyy 10xxxxxx */
-	*text++ = (char)(0x00000000000000F0ULL | (0x0000000000000007ULL & (u >> 18)));
-	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & (u >> 12)));
-	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & (u >> 6)));
-	*text++ = (char)(0x0000000000000080ULL | (0x000000000000003FULL & u));
-    } else {
-	/* assume it is UTF-8 encoded directly and not UCS */
-	for (i = 56; 0 <= i; i -= 8) {
-	    c = (unsigned char)((u >> i) & 0x00000000000000FFULL);
-	    if (reading) {
-		*text++ = (char)c;
-	    } else if ('\0' != c) {
-		*text++ = (char)c;
-		reading = 1;
-	    }
-	}
-    }
-    return text;
-}
-
 static char*
 read_coded_chars(PInfo pi, char *text) {
     char	*b, buf[32];
@@ -974,14 +929,14 @@ read_coded_chars(PInfo pi, char *text) {
 #else
 	    } else if (ox_utf8_encoding == pi->options->rb_enc) {
 #endif
-		text = ucs_to_utf8_chars(text, u);
+		text = ox_ucs_to_utf8_chars(text, u);
 #if HAS_PRIVATE_ENCODING
 	    } else if (Qnil == pi->options->rb_enc) {
 #else
 	    } else if (0 == pi->options->rb_enc) {
 #endif
 		pi->options->rb_enc = ox_utf8_encoding;
-		text = ucs_to_utf8_chars(text, u);
+		text = ox_ucs_to_utf8_chars(text, u);
 	    } else if (TolerantEffort == pi->options->effort) {
 		*text++ = '&';
 		return text;
@@ -1059,7 +1014,7 @@ collapse_special(PInfo pi, char *str) {
 #else
 		} else if (ox_utf8_encoding == pi->options->rb_enc) {
 #endif
-		    b = ucs_to_utf8_chars(b, u);
+		    b = ox_ucs_to_utf8_chars(b, u);
 		    /* TBD support UTF-16 */
 #if HAS_PRIVATE_ENCODING
 		} else if (Qnil == pi->options->rb_enc) {
@@ -1067,7 +1022,7 @@ collapse_special(PInfo pi, char *str) {
 		} else if (0 == pi->options->rb_enc) {
 #endif
 		    pi->options->rb_enc = ox_utf8_encoding;
-		    b = ucs_to_utf8_chars(b, u);
+		    b = ox_ucs_to_utf8_chars(b, u);
 		} else {
 		    /* set_error(&pi->err, "Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);*/
 		    set_error(&pi->err, "Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);

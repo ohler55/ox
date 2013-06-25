@@ -44,6 +44,7 @@
 #include "sax.h"
 #include "sax_stack.h"
 #include "sax_buf.h"
+#include "special.h"
 
 #define NAME_MISMATCH	1
 
@@ -1121,6 +1122,46 @@ read_quoted_value(SaxDrive dr) {
     return '\0'; // should never get here
 }
 
+static char*
+read_hex_uint64(char *b, uint64_t *up) {
+    uint64_t	u = 0;
+    char	c;
+
+    for (; ';' != *b; b++) {
+	c = *b;
+	if ('0' <= c && c <= '9') {
+	    u = (u << 4) | (uint64_t)(c - '0');
+	} else if ('a' <= c && c <= 'f') {
+	    u = (u << 4) | (uint64_t)(c - 'a' + 10);
+	} else if ('A' <= c && c <= 'F') {
+	    u = (u << 4) | (uint64_t)(c - 'A' + 10);
+	} else {
+	    return 0;
+	}
+    }
+    *up = u;
+
+    return b;
+}
+
+static char*
+read_10_uint64(char *b, uint64_t *up) {
+    uint64_t	u = 0;
+    char	c;
+
+    for (; ';' != *b; b++) {
+	c = *b;
+	if ('0' <= c && c <= '9') {
+	    u = (u * 10) + (uint64_t)(c - '0');
+	} else {
+	    return 0;
+	}
+    }
+    *up = u;
+
+    return b;
+}
+
 int
 ox_sax_collapse_special(SaxDrive dr, char *str, int line, int col) {
     char        *s = str;
@@ -1128,31 +1169,59 @@ ox_sax_collapse_special(SaxDrive dr, char *str, int line, int col) {
 
     while ('\0' != *s) {
         if ('&' == *s) {
-            int         c;
+            int         c = 0;
             char        *end;
-	    int		x = 0;
+	    //int		x = 0;
 
             s++;
             if ('#' == *s) {
-                s++;
+		uint64_t	u = 0;
+		char		x;
+
+		s++;
 		if ('x' == *s || 'X' == *s) {
+		    x = *s;
 		    s++;
-		    x = 1;
-		    c = (int)strtol(s, &end, 16);
+		    end = read_hex_uint64(s, &u);
 		} else {
-		    c = (int)strtol(s, &end, 10);
+		    x = '\0';
+		    end = read_10_uint64(s, &u);
 		}
-                if (';' != *end) {
+		if (0 == end) {
 		    ox_sax_drive_error(dr, NO_TERM "special character does not end with a semicolon");
 		    *b++ = '&';
 		    *b++ = '#';
-		    if (x) {
-			*b++ = *(s - 1);
+		    if ('\0' != x) {
+			*b++ = x;
 		    }
 		    continue;
-                }
-		col += (int)(end - s);
-                s = end + 1;
+		}
+		if (u <= 0x000000000000007FULL) {
+		    *b++ = (char)u;
+#if HAS_ENCODING_SUPPORT
+		} else if (ox_utf8_encoding == dr->encoding) {
+		    b = ox_ucs_to_utf8_chars(b, u);
+		} else if (0 == dr->encoding) {
+		    dr->encoding = ox_utf8_encoding;
+		    b = ox_ucs_to_utf8_chars(b, u);
+#elif HAS_PRIVATE_ENCODING
+		} else if (ox_utf8_encoding == dr->encoding ||
+			   0 == strcasecmp(rb_str_ptr(rb_String(ox_utf8_encoding)), rb_str_ptr(rb_String(dr->encoding)))) {
+		    b = ox_ucs_to_utf8_chars(b, u);
+		} else if (Qnil == dr->encoding) {
+		    dr->encoding = ox_utf8_encoding;
+		    b = ox_ucs_to_utf8_chars(b, u);
+#endif
+		} else {
+		    ox_sax_drive_error(dr, NO_TERM "Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.");
+		    *b++ = '&';
+		    *b++ = '#';
+		    if ('\0' != x) {
+			*b++ = x;
+		    }
+		    continue;
+		}
+		s = end + 1;
             } else if (0 == strncasecmp(s, "lt;", 3)) {
                 c = '<';
                 s += 3;

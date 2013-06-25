@@ -579,4 +579,3 @@ class SaxSmartTableTagTest < SaxSmartTest
       ])
   end
 end
-
