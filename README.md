@@ -34,9 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 2.0.4
+### Release 2.0.5
 
- - Fixed SAX parser handling of &#nnnn; encoded characters.
+ - Better support for special character encoding with 1.8.7.
 
 ## <a name="description">Description</a>
 
