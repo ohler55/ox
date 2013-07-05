@@ -55,6 +55,8 @@ typedef struct _SaxDrive {
     rb_encoding *encoding;
 #elif HAS_PRIVATE_ENCODING
     VALUE	encoding;
+#else
+    const char	*encoding;
 #endif
 } *SaxDrive;
 

@@ -62,6 +62,8 @@
 #define EL_MISMATCH	"Start End Mismatch: "
 #define INV_ELEMENT	"Invalid Element: "
 
+#define UTF8_STR	"UTF-8"
+
 static void		sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options);
 static void		parse(SaxDrive dr);
 // All read functions should return the next character after the 'thing' that was read and leave dr->cur one after that.
@@ -173,6 +175,8 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
     } else {
         dr->encoding = rb_str_new2(ox_default_options.encoding);
     }
+#else
+    dr->encoding = 0;
 #endif
 }
 
@@ -216,6 +220,8 @@ skipBOM(SaxDrive dr) {
 	    dr->encoding = ox_utf8_encoding;
 #elif HAS_PRIVATE_ENCODING
 	    dr->encoding = ox_utf8_encoding;
+#else
+	    dr->encoding = UTF8_STR;
 #endif
 	    c = buf_get(&dr->buf);
 	} else {
@@ -987,6 +993,8 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
 		dr->encoding = rb_enc_find(dr->buf.str);
 #elif HAS_PRIVATE_ENCODING
 		dr->encoding = rb_str_new2(dr->buf.str);
+#else
+		dr->encoding = dr->buf.str;
 #endif
 		is_encoding = 0;
 	    }
@@ -1210,6 +1218,12 @@ ox_sax_collapse_special(SaxDrive dr, char *str, int line, int col) {
 		    b = ox_ucs_to_utf8_chars(b, u);
 		} else if (Qnil == dr->encoding) {
 		    dr->encoding = ox_utf8_encoding;
+		    b = ox_ucs_to_utf8_chars(b, u);
+#else
+		} else if (0 == dr->encoding) {
+		    dr->encoding = UTF8_STR;
+		    b = ox_ucs_to_utf8_chars(b, u);
+		} else if (0 == strcasecmp(UTF8_STR, dr->encoding)) {
 		    b = ox_ucs_to_utf8_chars(b, u);
 #endif
 		} else {
