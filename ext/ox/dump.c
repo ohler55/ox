@@ -39,6 +39,7 @@
 #include "ox.h"
 
 #define USE_B64	0
+#define MAX_DEPTH 1000
 
 typedef unsigned long   ulong;
 
@@ -74,13 +75,13 @@ typedef struct _Out {
 static void     dump_obj_to_xml(VALUE obj, Options copts, Out out);
 
 static void     dump_first_obj(VALUE obj, Out out);
-static void     dump_obj(ID aid, VALUE obj, unsigned int depth, Out out);
-static void     dump_gen_doc(VALUE obj, unsigned int depth, Out out);
-static void     dump_gen_element(VALUE obj, unsigned int depth, Out out);
-static void	dump_gen_instruct(VALUE obj, unsigned int depth, Out out);
+static void     dump_obj(ID aid, VALUE obj, int depth, Out out);
+static void     dump_gen_doc(VALUE obj, int depth, Out out);
+static void     dump_gen_element(VALUE obj, int depth, Out out);
+static void	dump_gen_instruct(VALUE obj, int depth, Out out);
 static int      dump_gen_attr(VALUE key, VALUE value, Out out);
-static int      dump_gen_nodes(VALUE obj, unsigned int depth, Out out);
-static void     dump_gen_val_node(VALUE obj, unsigned int depth,
+static int      dump_gen_nodes(VALUE obj, int depth, Out out);
+static void     dump_gen_val_node(VALUE obj, int depth,
                                   const char *pre, size_t plen,
                                   const char *suf, size_t slen, Out out);
 
@@ -102,7 +103,7 @@ static int      is_xml_friendly(const uchar *str, int len);
 
 static const char	hex_chars[17] = "0123456789abcdef";
 
-static char     xml_friendly_chars[256] = "\
+static char     xml_friendly_chars[257] = "\
 88888888811881888888888888888888\
 11611156111111111111111111114141\
 11111111111111111111111111111111\
@@ -553,12 +554,15 @@ dump_first_obj(VALUE obj, Out out) {
 }
 
 static void
-dump_obj(ID aid, VALUE obj, unsigned int depth, Out out) {
+dump_obj(ID aid, VALUE obj, int depth, Out out) {
     struct _Element     e;
     VALUE		prev_obj = out->obj;
     char                value_buf[64];
     int                 cnt;
 
+    if (MAX_DEPTH < depth) {
+	rb_raise(rb_eSysStackError, "maximum depth exceeded");
+    }
     out->obj = obj;
     if (0 == aid) {
         /*e.attr.str = 0; */
@@ -985,7 +989,7 @@ dump_hash(VALUE key, VALUE value, Out out) {
 }
 
 static void
-dump_gen_doc(VALUE obj, unsigned int depth, Out out) {
+dump_gen_doc(VALUE obj, int depth, Out out) {
     VALUE       attrs = rb_attr_get(obj, ox_attributes_id);
     VALUE       nodes = rb_attr_get(obj, ox_nodes_id);
 
@@ -1018,7 +1022,7 @@ dump_gen_doc(VALUE obj, unsigned int depth, Out out) {
 }
 
 static void
-dump_gen_element(VALUE obj, unsigned int depth, Out out) {
+dump_gen_element(VALUE obj, int depth, Out out) {
     VALUE       rname = rb_attr_get(obj, ox_at_value_id);
     VALUE       attrs = rb_attr_get(obj, ox_attributes_id);
     VALUE       nodes = rb_attr_get(obj, ox_nodes_id);
@@ -1066,7 +1070,7 @@ dump_gen_element(VALUE obj, unsigned int depth, Out out) {
 }
 
 static void
-dump_gen_instruct(VALUE obj, unsigned int depth, Out out) {
+dump_gen_instruct(VALUE obj, int depth, Out out) {
     VALUE	rname = rb_attr_get(obj, ox_at_value_id);
     VALUE	attrs = rb_attr_get(obj, ox_attributes_id);
     VALUE	rcontent = rb_attr_get(obj, ox_at_content_id);
@@ -1100,7 +1104,7 @@ dump_gen_instruct(VALUE obj, unsigned int depth, Out out) {
 }
 
 static int
-dump_gen_nodes(VALUE obj, unsigned int depth, Out out) {
+dump_gen_nodes(VALUE obj, int depth, Out out) {
     long        cnt = RARRAY_LEN(obj);
     int         indent_needed = 1;
     
@@ -1109,6 +1113,9 @@ dump_gen_nodes(VALUE obj, unsigned int depth, Out out) {
         VALUE		clas;
         int		d2 = depth + 1;
 
+	if (MAX_DEPTH < depth) {
+	    rb_raise(rb_eSysStackError, "maximum depth exceeded");
+	}
         for (; 0 < cnt; cnt--, np++) {
             clas = rb_obj_class(*np);
             if (ox_element_clas == clas) {
@@ -1159,7 +1166,7 @@ dump_gen_attr(VALUE key, VALUE value, Out out) {
 }
 
 static void
-dump_gen_val_node(VALUE obj, unsigned int depth,
+dump_gen_val_node(VALUE obj, int depth,
                   const char *pre, size_t plen,
                   const char *suf, size_t slen, Out out) {
     VALUE       v = rb_attr_get(obj, ox_at_value_id);

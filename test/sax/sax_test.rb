@@ -526,56 +526,59 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_encoding
-    if RUBY_VERSION.start_with?('1.8')
-      assert(true)
-    else
-      parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
+    parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
 <top>ピーター</top>
 },
-                    [[:instruct, "xml"],
-                     [:attr, :version, "1.0"],
-                     [:attr, :encoding, "UTF-8"],
-                     [:end_instruct, 'xml'],
-                     [:start_element, :top],
-                     [:text, 'ピーター'],
-                     [:end_element, :top]])
-    end
+                  [[:instruct, "xml"],
+                   [:attr, :version, "1.0"],
+                   [:attr, :encoding, "UTF-8"],
+                   [:end_instruct, 'xml'],
+                   [:start_element, :top],
+                   [:text, 'ピーター'],
+                   [:end_element, :top]])
   end
 
   def test_sax_bom
-    if RUBY_VERSION.start_with?('1.8')
-      assert(true)
-    else
-      xml = %{\xEF\xBB\xBF<?xml?>
+    xml = %{\xEF\xBB\xBF<?xml?>
 <top>ピーター</top>
 }
+    if !RUBY_VERSION.start_with?('1.8')
       xml.force_encoding('ASCII')
-      parse_compare(xml,
-                    [[:instruct, "xml"],
-                     [:end_instruct, 'xml'],
-                     [:start_element, :top],
-                     [:text, 'ピーター'],
-                     [:end_element, :top]])
     end
+    parse_compare(xml,
+                  [[:instruct, "xml"],
+                   [:end_instruct, 'xml'],
+                   [:start_element, :top],
+                   [:text, 'ピーター'],
+                   [:end_element, :top]])
   end
 
   def test_sax_full_encoding
-    if RUBY_VERSION.start_with?('1.8')
-      assert(true)
-    else
-      parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
-<いち name="ピーター" つま="まきえ">ピーター</いち>
+    parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
+<いち name="ピーター" つま="まきえ">ピーター is katakana</いち>
 },
-                    [[:instruct, "xml"],
-                     [:attr, :version, "1.0"],
-                     [:attr, :encoding, "UTF-8"],
-                     [:end_instruct, 'xml'],
-                     [:start_element, 'いち'.to_sym],
-                     [:attr, :name, 'ピーター'],
-                     [:attr, 'つま'.to_sym, 'まきえ'],
-                     [:text, 'ピーター'],
-                     [:end_element, 'いち'.to_sym]])
-    end
+                  [[:instruct, "xml"],
+                   [:attr, :version, "1.0"],
+                   [:attr, :encoding, "UTF-8"],
+                   [:end_instruct, 'xml'],
+                   [:start_element, 'いち'.to_sym],
+                   [:attr, :name, 'ピーター'],
+                   [:attr, 'つま'.to_sym, 'まきえ'],
+                   [:text, 'ピーター is katakana'],
+                   [:end_element, 'いち'.to_sym]])
+  end
+
+  def test_sax_amp_hash
+    parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
+<text>&#233; is e with an accent</text>
+},
+                  [[:instruct, "xml"],
+                   [:attr, :version, "1.0"],
+                   [:attr, :encoding, "UTF-8"],
+                   [:end_instruct, 'xml'],
+                   [:start_element, :text],
+                   [:text, 'é is e with an accent'],
+                   [:end_element, :text]])
   end
 
   def test_sax_implied_encoding

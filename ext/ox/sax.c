@@ -1179,7 +1179,6 @@ ox_sax_collapse_special(SaxDrive dr, char *str, int line, int col) {
         if ('&' == *s) {
             int         c = 0;
             char        *end;
-	    //int		x = 0;
 
             s++;
             if ('#' == *s) {
@@ -1236,6 +1235,7 @@ ox_sax_collapse_special(SaxDrive dr, char *str, int line, int col) {
 		    continue;
 		}
 		s = end + 1;
+		continue;
             } else if (0 == strncasecmp(s, "lt;", 3)) {
                 c = '<';
                 s += 3;

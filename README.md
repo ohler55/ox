@@ -34,9 +34,11 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 2.0.5
+### Release 2.0.6
 
- - Better support for special character encoding with 1.8.7.
+ - Fixed bug in special character decoding that chopped of text.
+
+ - Limit depth on dump to 1000 to avoid core dump on circular references if the user does not specify circular.
 
 ## <a name="description">Description</a>
 

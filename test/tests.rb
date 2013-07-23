@@ -500,6 +500,17 @@ class Func < ::Test::Unit::TestCase
     end
   end
 
+  # verify that an exception is raised if a circular ref object is created.
+  def test_circular_limit
+    h = {}
+    h[:h] = h
+    begin
+      Ox.dump(h)
+    rescue Exception
+      assert(true)
+    end
+  end
+
   def test_raw
     raw = Ox::Element.new('raw')
     su = Ox::Element.new('sushi')

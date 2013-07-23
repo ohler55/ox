@@ -22,7 +22,7 @@ module SaxTestHelpers
     input = StringIO.new(xml)
     options = {
       :symbolize => true,
-      :convert_special => false,
+      :convert_special => true,
       :smart => false
     }.merge(opts)
 
@@ -34,4 +34,9 @@ module SaxTestHelpers
     assert_equal(expected, actual)
   end
 
+  # This is needed to stop test/unit from complaining that there is no test
+  # specified.
+  def test_hack
+    assert(true)
+  end
 end
