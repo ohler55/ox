@@ -3,13 +3,13 @@
 export RBXOPT=-X19
 
 for ruby in \
- 1.8.7-p358\
+ 1.8.7-p334\
  1.9.2-p290\
  rbx-1.2.4\
  rbx-2.0.0-dev\
  ree-1.8.7-2012.02\
- 1.9.3-p385 \
- 2.0.0-p195
+ 1.9.3-p448 \
+ 2.0.0-p247
 do
     echo "\n********************************************************************************"
     echo "Building $ruby\n"
@@ -17,14 +17,17 @@ do
     rbenv local $ruby
     ruby extconf.rb
     make clean
+    find . -name "*.rbc" -exec rm {} \;
     make
 
     echo "\nRunning tests for $ruby"
     cd ../../test
     rbenv local $ruby
     ./tests.rb
-    ./sax/sax_test.rb
-    cd ..
+    cd sax
+    rbenv local $ruby
+    ./sax_test.rb
+    cd ../..
 
     echo "\n"
 done
@@ -42,8 +45,10 @@ echo "\nRunning tests for jruby-1.6.7.2 --1.8"
 cd ../../test
 rbenv local jruby-1.6.7.2
 ./tests.rb
-./sax/sax_test.rb
-cd ..
+cd sax
+rbenv local jruby-1.6.7.2
+./sax_test.rb
+cd ../..
 
 echo "\n"
 
@@ -60,8 +65,10 @@ echo "\nRunning tests for jruby-1.6.7.2 --1.9"
 cd ../../test
 rbenv local jruby-1.6.7.2
 ./tests.rb
-./sax/sax_test.rb
-cd ..
+cd sax
+rbenv local jruby-1.6.7.2
+./sax_test.rb
+cd ../..
 
 echo "\n"
 
@@ -70,6 +77,7 @@ echo "\n************************************************************************
 echo "Building OS X Ruby\n"
 cd ext/ox
 ruby extconf.rb
+make clean
 make
 
 echo "\nRunning tests for OS X Ruby"
@@ -81,8 +89,10 @@ cd ..
 echo "resetting to 1.9.3-p374\n"
 
 cd ext/ox
-rbenv local 2.0.0-p195
+rbenv local 2.0.0-p247
 cd ../../test
-rbenv local 2.0.0-p195
-cd ..
+rbenv local 2.0.0-p247
+cd sax
+rbenv local 2.0.0-p247
+cd ../..
 echo "\n"

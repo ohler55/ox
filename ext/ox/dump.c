@@ -1142,16 +1142,31 @@ dump_gen_nodes(VALUE obj, int depth, Out out) {
 
 static int
 dump_gen_attr(VALUE key, VALUE value, Out out) {
+    const char	*ks;
+    size_t      klen;
+    size_t      size;
+
 #if HAS_PRIVATE_ENCODING
     // There seems to be a bug in jruby for converting symbols to strings and preserving the encoding. This is a work
     // around.
-    const char	*ks = rb_str_ptr(rb_String(key));
+    ks = rb_str_ptr(rb_String(key));
 #else
-    const char  *ks = (T_SYMBOL == rb_type(key)) ? rb_id2name(SYM2ID(key)) : StringValuePtr(key);
+    switch (rb_type(key)) {
+    case T_SYMBOL:
+	ks = rb_id2name(SYM2ID(key));
+	break;
+    case T_STRING:
+	ks = StringValuePtr(key);
+	break;
+    default:
+	key = rb_String(key);
+	ks = StringValuePtr(key);
+	break;
+    }
 #endif
-    size_t      klen = strlen(ks);
-    size_t      size = 4 + klen + RSTRING_LEN(value);
-
+    klen = strlen(ks);
+    value = rb_String(value);
+    size = 4 + klen + RSTRING_LEN(value);
     if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }

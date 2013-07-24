@@ -40,6 +40,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Limit depth on dump to 1000 to avoid core dump on circular references if the user does not specify circular.
 
+ - Handles dumping non-string values for attributes correctly by converting the value to a string.
+
 ## <a name="description">Description</a>
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
