@@ -1226,6 +1226,8 @@ ox_sax_collapse_special(SaxDrive dr, char *str, int line, int col) {
 		    b = ox_ucs_to_utf8_chars(b, u);
 #endif
 		} else {
+		    b = ox_ucs_to_utf8_chars(b, u);
+		    /*
 		    ox_sax_drive_error(dr, NO_TERM "Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.");
 		    *b++ = '&';
 		    *b++ = '#';
@@ -1233,6 +1235,7 @@ ox_sax_collapse_special(SaxDrive dr, char *str, int line, int col) {
 			*b++ = x;
 		    }
 		    continue;
+		    */
 		}
 		s = end + 1;
 		continue;
