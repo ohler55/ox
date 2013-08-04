@@ -294,32 +294,60 @@ read_instruction(PInfo pi) {
     attr_stack_cleanup(&attrs);
 }
 
-/* Entered after the "<!DOCTYPE" sequence plus the first character after
- * that. Ready to read the rest. Returns error code.
- */
 static void
-read_doctype(PInfo pi) {
-    char	*docType;
-    int		depth = 1;
+read_delimited(PInfo pi, char end) {
     char	c;
 
-    next_non_white(pi);
-    docType = pi->s;
-    while (1) {
-	c = *pi->s++;
-	if ('\0' == c) {
-	    set_error(&pi->err, "invalid format, prolog not terminated", pi->str, pi->s);
-	    return;
-	} else if ('<' == c) {
-	    depth++;
-	} else if ('>' == c) {
-	    depth--;
-	    if (0 == depth) {	/* done, at the end */
-		pi->s--;
+    if ('"' == end || '\'' == end) {
+	for (c = *pi->s++; end != c; c = *pi->s++) {
+	    if ('\0' == c) {
+		set_error(&pi->err, "invalid format, dectype not terminated", pi->str, pi->s);
+		return;
+	    }
+	}
+    } else {
+	while (1) {
+	    c = *pi->s++;
+	    if (end == c) {
+		return;
+	    }
+	    switch (c) {
+	    case '\0':
+		set_error(&pi->err, "invalid format, dectype not terminated", pi->str, pi->s);
+		return;
+	    case '"':
+		read_delimited(pi, c);
+		break;
+	    case '\'':
+		read_delimited(pi, c);
+		break;
+	    case '[':
+		read_delimited(pi, ']');
+		break;
+	    case '<':
+		read_delimited(pi, '>');
+		break;
+	    default:
 		break;
 	    }
 	}
     }
+}
+
+/* Entered after the "<!DOCTYPE" sequence plus the first character after
+ * that. Ready to read the rest.
+ */
+static void
+read_doctype(PInfo pi) {
+    char	*docType;
+
+    next_non_white(pi);
+    docType = pi->s;
+    read_delimited(pi, '>');
+    if (err_has(&pi->err)) {
+	return;
+    }
+    pi->s--;
     *pi->s = '\0';
     pi->s++;
     if (0 != pi->pcb->add_doctype) {

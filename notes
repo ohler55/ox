@@ -4,9 +4,15 @@
 ^c^s show subtree
 
 - todo
- - handle exceptions differently, place in PInfo and process on return
- - struct of VALUE (class) and msg[128]
- - pass as pointer arg after init to ox_parse, defuse_bom
+ - doctype
+  - !ELEMENT
+  - !ATTRLIST
+  - !ENTITY
+  - !NOTATION
+  - ?
+  - %abc;
+ - callback for doctype elements (markup)
+  - title, xx, yy, zz
 
 
 

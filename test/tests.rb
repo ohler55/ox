@@ -282,6 +282,12 @@ class Func < ::Test::Unit::TestCase
     assert_equal('html', doc.nodes[0].value)
   end
 
+  def test_big_dtd
+    xml = %{<!DOCTYPE Objects [<!ELEMENT Objects (RentObjects)><!ENTITY euml "&#235;"><!ENTITY Atilde "&#195;">]>}
+    doc = Ox.parse(xml)
+    assert_equal(%{Objects [<!ELEMENT Objects (RentObjects)><!ENTITY euml "&#235;"><!ENTITY Atilde "&#195;">]}, doc.nodes[0].value)
+  end
+
   def test_quote_value
     xml = %{<top name="Pete"/>}
     doc = Ox.parse(xml)

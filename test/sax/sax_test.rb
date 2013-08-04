@@ -339,6 +339,19 @@ encoding = "UTF-8" ?>},
                    [:end_element, :top]])
   end
 
+  def test_sax_doctype_big
+    parse_compare(%{<?xml version="1.0"?>
+<!DOCTYPE Objects [<!ELEMENT Objects (RentObjects)><!ENTITY euml "&#235;"><!ENTITY Atilde "&#195;">]>
+<top/>
+},
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:end_instruct, 'xml'],
+                   [:doctype, %{ Objects [<!ELEMENT Objects (RentObjects)><!ENTITY euml "&#235;"><!ENTITY Atilde "&#195;">]}],
+                   [:start_element, :top],
+                   [:end_element, :top]])
+  end
+
   def test_sax_doctype_bad_order
     parse_compare(%{<?xml version="1.0"?>
 <top/>

@@ -483,23 +483,58 @@ read_instruction(SaxDrive dr) {
     return c;
 }
 
+static char
+read_delimited(SaxDrive dr, char end) {
+    char	c;
+
+    if ('"' == end || '\'' == end) {
+	while (end != (c = buf_get(&dr->buf))) {
+	    if ('\0' == c) {
+		ox_sax_drive_error(dr, NO_TERM "doctype not terminated");
+		return c;
+	    }
+	}
+    } else {
+	while (1) {
+	    c = buf_get(&dr->buf);
+	    if (end == c) {
+		return c;
+	    }
+	    switch (c) {
+	    case '\0':
+		ox_sax_drive_error(dr, NO_TERM "doctype not terminated");
+		return c;
+	    case '"':
+		c = read_delimited(dr, c);
+		break;
+	    case '\'':
+		c = read_delimited(dr, c);
+		break;
+	    case '[':
+		c = read_delimited(dr, ']');
+		break;
+	    case '<':
+		c = read_delimited(dr, '>');
+		break;
+	    default:
+		break;
+	    }
+	}
+    }
+    return c;
+}
+
 /* Entered after the "<!DOCTYPE" sequence. Ready to read the rest.
  */
 static char
 read_doctype(SaxDrive dr) {
-    char        c;
     int		line = dr->buf.line;
     int		col = dr->buf.col - 10;
     char	*s;
 
     buf_backup(&dr->buf); /* back up to the start in case the cdata is empty */
     buf_protect(&dr->buf);
-    while ('>' != (c = buf_get(&dr->buf))) {
-        if ('\0' == c) {
-            ox_sax_drive_error(dr, NO_TERM "doctype not terminated");
-            return c;
-        }
-    }
+    read_delimited(dr, '>');
     if (dr->options.smart && 0 == dr->hints) {
 	for (s = dr->buf.str; is_white(*s); s++) { }
 	if (0 == strncasecmp("HTML", s, 4)) {
