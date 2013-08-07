@@ -831,7 +831,7 @@ static char*
 read_quoted_value(PInfo pi) {
     char	*value = 0;
     
-    if ('"' == *pi->s || ('\'' == *pi->s && StrictEffort != pi->options->effort)) {
+    if ('"' == *pi->s || '\'' == *pi->s) {
         char	term = *pi->s;
         
         pi->s++;	/* skip quote character */

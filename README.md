@@ -34,9 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 2.0.7
+### Release 2.0.8
 
- - Fixed DOCTYPE parsing to handle nested '>' characters.
+ - Allow single quoted strings in all modes.
 
 ## <a name="description">Description</a>
 
