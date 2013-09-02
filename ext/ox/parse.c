@@ -674,7 +674,9 @@ read_text(PInfo pi) {
 		end = alloc_buf + size - 2;
 	    }
 	    if ('&' == c) {
-		b = read_coded_chars(pi, b);
+		if (0 == (b = read_coded_chars(pi, b))) {
+		    return;
+		}
 	    } else {
 		*b++ = c;
 	    }
@@ -741,7 +743,9 @@ read_reduced_text(PInfo pi) {
 	    }
 	    spc = 0;
 	    if ('&' == c) {
-		b = read_coded_chars(pi, b);
+		if (0 == (b = read_coded_chars(pi, b))) {
+		    return;
+		}
 	    } else {
 		*b++ = c;
 	    }
@@ -968,6 +972,8 @@ read_coded_chars(PInfo pi, char *text) {
 	    } else if (TolerantEffort == pi->options->effort) {
 		*text++ = '&';
 		return text;
+	    } else if (u <= 0x00000000000000FFULL) {
+		*text++ = (char)u;
 	    } else {
 		/*set_error(&pi->err, "Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s); */
 		set_error(&pi->err, "Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);

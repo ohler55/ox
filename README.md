@@ -34,9 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 2.0.8
+### Release 2.0.9
 
- - Allow single quoted strings in all modes.
+ - Fixed bug that did not allow ISO-8859-1 characters and caused a crash.
 
 ## <a name="description">Description</a>
 
