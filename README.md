@@ -171,6 +171,38 @@ Ox.sax_parse(handler, io)
 # end: top
 ```
 
+### Yielding results immediately while SAX XML Parsing:
+
+```ruby
+require 'stringio'
+require 'ox'
+
+class Yielder < ::Ox::Sax
+  def initialize(block); @yield_to = block; end
+  def start_element(name); @yield_to.call(name); end
+end
+
+io = StringIO.new(%{
+<top name="sample">
+  <middle name="second">
+    <bottom name="third"/>
+  </middle>
+</top>
+})
+
+proc = Proc.new { |name| puts name }
+handler = Yielder.new(proc)
+puts "before parse"
+Ox.sax_parse(handler, io)
+puts "after parse"
+# outputs
+# before parse
+# top
+# middle
+# bottom
+# after parse
+```
+
 ### Object XML format
 
 The XML format used for Object encoding follows the structure of the
