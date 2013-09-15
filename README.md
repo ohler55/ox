@@ -38,6 +38,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Fixed bug that did not allow ISO-8859-1 characters and caused a crash.
 
+
 ## <a name="description">Description</a>
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
