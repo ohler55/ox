@@ -79,9 +79,9 @@ module Ox
     # Returns the first String in the elements nodes array or nil if there is
     # no String node.
     def text()
-      nodes.each { |n| return n if n.is_a?(String) }
-      nil
-    end
+		  nodes.each { |n| return n.force_encoding('UTF-8') if n.is_a?(String) }
+		  nil
+	  end
 
     # Returns an array of Nodes or Strings that correspond to the locations
     # specified by the path parameter. The path parameter describes the path
