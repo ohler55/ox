@@ -49,7 +49,7 @@ module Ox
     # Element.
     # @return [Array] all child Nodes.
     def nodes
-      @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
+      return [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       @nodes
     end
 
@@ -57,8 +57,8 @@ module Ox
     # so multiple appends can be chained together.
     # @param [Node] node Node to append to the nodes array
     def <<(node)
-      @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
+      @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       @nodes << node
       self
     end

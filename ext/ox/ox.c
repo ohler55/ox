@@ -402,10 +402,17 @@ to_obj(VALUE self, VALUE ruby_xml) {
 	xml = ALLOCA_N(char, len);
     }
     memcpy(xml, x, len);
+#if HAS_GC_GUARD
+    rb_gc_disable();
+#endif
     obj = ox_parse(xml, ox_obj_callbacks, 0, &options, &err);
     if (SMALL_XML < len) {
 	xfree(xml);
     }
+#if HAS_GC_GUARD
+    RB_GC_GUARD(obj);
+    rb_gc_enable();
+#endif
     if (err_has(&err)) {
 	ox_err_raise(&err);
     }
@@ -514,7 +521,14 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
     xml = defuse_bom(xml, &options);
     switch (options.mode) {
     case ObjMode:
+#if HAS_GC_GUARD
+	rb_gc_disable();
+#endif
 	obj = ox_parse(xml, ox_obj_callbacks, 0, &options, err);
+#if HAS_GC_GUARD
+	RB_GC_GUARD(obj);
+	rb_gc_enable();
+#endif
 	break;
     case GenMode:
 	obj = ox_parse(xml, ox_gen_callbacks, 0, &options, err);
@@ -971,5 +985,8 @@ _ox_raise_error(const char *msg, const char *xml, const char *current, const cha
 	    xline++;
 	}
     }
+#if HAS_GC_GUARD
+    rb_gc_enable();
+#endif
     rb_raise(ox_parse_error_class, "%s at line %d, column %d [%s:%d]\n", msg, xline, col, file, line);
 }

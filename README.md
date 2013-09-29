@@ -34,10 +34,11 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 2.0.9
+### Release 2.0.10
 
- - Fixed bug that did not allow ISO-8859-1 characters and caused a crash.
+ - Small fix to not create an empty element from a closed element when using locate().
 
+ - Fixed to keep objects from being garbages collected in Ruby 2.x.
 
 ## <a name="description">Description</a>
 
