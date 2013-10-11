@@ -34,11 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 2.0.10
+### Release 2.0.11
 
- - Small fix to not create an empty element from a closed element when using locate().
-
- - Fixed to keep objects from being garbages collected in Ruby 2.x.
+ - Added support for BigDecimals in :object mode.
 
 ## <a name="description">Description</a>
 

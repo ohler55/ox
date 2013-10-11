@@ -38,6 +38,7 @@ typedef enum {
     ClassCode	   = 'c',
     Symbol64Code   = 'd', /* base64 encoded Symbol */
     DateCode	   = 'D',
+    BigDecimalCode = 'B',
     ExceptionCode  = 'e',
     FloatCode	   = 'f',
     RegexpCode	   = 'g',

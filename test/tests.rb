@@ -13,6 +13,7 @@ $: << File.join(File.dirname(__FILE__), "../ext")
 require 'test/unit'
 require 'optparse'
 require 'date'
+require 'bigdecimal'
 require 'ox'
 
 $ruby = RUBY_DESCRIPTION.split(' ')[0]
@@ -160,6 +161,15 @@ class Func < ::Test::Unit::TestCase
   def test_bignum
     dump_and_load(7 ** 55, false)
     dump_and_load(-7 ** 55, false)
+  end
+
+  def test_bigdecimal
+    if 'jruby' == RUBY_ENGINE
+      assert(true)
+    else
+      bd = BigDecimal.new('7.123456789')
+      dump_and_load(bd, false)
+    end
   end
 
   def test_complex_number

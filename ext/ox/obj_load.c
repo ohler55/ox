@@ -557,6 +557,13 @@ add_text(PInfo pi, char *text, int closed) {
     case BignumCode:
 	h->obj = rb_cstr_to_inum(text, 10, 1);
 	break;
+    case BigDecimalCode:
+#if HAS_BIGDECIMAL
+	h->obj = rb_funcall(ox_bigdecimal_class, ox_new_id, 1, rb_str_new2(text));
+#else
+	h->obj = Qnil;
+#endif
+	break;
     default:
 	h->obj = Qnil;
 	break;
@@ -623,6 +630,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     case Symbol64Code:
     case RegexpCode:
     case BignumCode:
+    case BigDecimalCode:
     case ComplexCode:
     case DateCode:
     case TimeCode:

@@ -80,6 +80,7 @@ ID	ox_local_id;
 ID	ox_mesg_id;
 ID	ox_message_id;
 ID	ox_nodes_id;
+ID	ox_new_id;
 ID	ox_num_id;
 ID	ox_parse_id;
 ID	ox_read_id;
@@ -102,6 +103,7 @@ VALUE	ox_zero_fixnum;
 
 VALUE	ox_arg_error_class;
 VALUE	ox_bag_clas;
+VALUE	ox_bigdecimal_class;
 VALUE	ox_cdata_clas;
 VALUE	ox_comment_clas;
 VALUE	ox_date_class;
@@ -868,6 +870,7 @@ void Init_ox() {
 
     rb_require("time");
     rb_require("date");
+    rb_require("bigdecimal");
     rb_require("stringio");
 
     ox_at_column_id = rb_intern("@column");
@@ -900,6 +903,7 @@ void Init_ox() {
     ox_mesg_id = rb_intern("mesg");
     ox_message_id = rb_intern("message");
     ox_nodes_id = rb_intern("@nodes");
+    ox_new_id = rb_intern("new");
     ox_num_id = rb_intern("@num");
     ox_parse_id = rb_intern("parse");
     ox_read_id = rb_intern("read");
@@ -921,6 +925,7 @@ void Init_ox() {
     ox_arg_error_class = rb_const_get_at(Ox, rb_intern("ArgError"));
     ox_struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
     ox_stringio_class = rb_const_get(rb_cObject, rb_intern("StringIO"));
+    ox_bigdecimal_class = rb_const_get(rb_cObject, rb_intern("BigDecimal"));
 
     auto_define_sym = ID2SYM(rb_intern("auto_define"));		rb_gc_register_address(&auto_define_sym);
     auto_sym = ID2SYM(rb_intern("auto"));			rb_gc_register_address(&auto_sym);

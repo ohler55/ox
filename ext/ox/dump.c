@@ -739,6 +739,14 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 		dump_date(out, obj);
 		e.indent = -1;
 		out->w_end(out, &e);
+	    } else if (0 == strcmp("BigDecimal", classname)) {
+		VALUE	rs = rb_funcall(obj, ox_to_s_id, 0);
+
+		e.type = BigDecimalCode;
+		out->w_start(out, &e);
+		dump_value(out, StringValuePtr(rs), RSTRING_LEN(rs));
+		e.indent = -1;
+		out->w_end(out, &e);
 	    } else {
 		if (StrictEffort == out->opts->effort) {
 		    rb_raise(rb_eNotImpError, "Failed to dump T_DATA %s\n", classname);

@@ -214,6 +214,7 @@ extern ID	ox_local_id;
 extern ID	ox_mesg_id;
 extern ID	ox_message_id;
 extern ID	ox_nodes_id;
+extern ID	ox_new_id;
 extern ID	ox_num_id;
 extern ID	ox_parse_id;
 extern ID	ox_read_id;
@@ -237,6 +238,7 @@ extern VALUE		ox_utf8_encoding;
 extern void		*ox_utf8_encoding;
 #endif
 
+extern VALUE	ox_bigdecimal_class;
 extern VALUE	ox_date_class;
 extern VALUE	ox_empty_string;
 extern VALUE	ox_encoding_sym;
