@@ -6,6 +6,7 @@ dir_config(extension_name)
 parts = RUBY_DESCRIPTION.split(' ')
 type = parts[0].downcase()
 type = 'ree' if 'ruby' == type && RUBY_DESCRIPTION.include?('Ruby Enterprise Edition')
+is_windows = RbConfig::CONFIG['host_os'] =~ /(mingw|mswin)/
 platform = RUBY_PLATFORM
 version = RUBY_VERSION.split('.')
 puts ">>>>> Creating Makefile for #{type} version #{RUBY_VERSION} on #{platform} <<<<<"
@@ -28,7 +29,7 @@ dflags = {
   'HAS_PRIVATE_ENCODING' => ('jruby' == type && '1' == version[0] && '9' == version[1]) ? 1 : 0,
   'HAS_NANO_TIME' => ('ruby' == type && ('1' == version[0] && '9' == version[1]) || '2' <= version[0]) ? 1 : 0,
   'HAS_RSTRUCT' => ('ruby' == type || 'ree' == type) ? 1 : 0,
-  'HAS_IVAR_HELPERS' => ('ruby' == type && ('1' == version[0] && '9' == version[1]) || '2' <= version[0]) ? 1 : 0,
+  'HAS_IVAR_HELPERS' => ('ruby' == type && !is_windows && (('1' == version[0] && '9' == version[1]) || '2' <= version[0])) ? 1 : 0,
   'HAS_PROC_WITH_BLOCK' => ('ruby' == type && ('1' == version[0] && '9' == version[1]) || '2' <= version[0]) ? 1 : 0,
   'HAS_GC_GUARD' => ('jruby' != type && 'rubinius' != type) ? 1 : 0,
   'HAS_BIGDECIMAL' => ('jruby' != type) ? 1 : 0,

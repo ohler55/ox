@@ -41,69 +41,69 @@
 #define USE_B64	0
 #define MAX_DEPTH 1000
 
-typedef unsigned long   ulong;
+typedef unsigned long	ulong;
 
 typedef struct _Str {
-    const char  *str;
-    size_t      len;
+    const char	*str;
+    size_t	len;
 } *Str;
 
 typedef struct _Element {
-    struct _Str         clas;
-    struct _Str         attr;
-    unsigned long       id;
-    int                 indent; /* < 0 indicates no \n */
-    int                 closed;
-    char                type;
+    struct _Str		clas;
+    struct _Str		attr;
+    unsigned long	id;
+    int			indent; /* < 0 indicates no \n */
+    int			closed;
+    char		type;
 } *Element;
 
 typedef struct _Out {
-    void                (*w_start)(struct _Out *out, Element e);
-    void                (*w_end)(struct _Out *out, Element e);
-    void                (*w_time)(struct _Out *out, VALUE obj);
-    char                *buf;
-    char                *end;
-    char                *cur;
-    Cache8              circ_cache;
-    unsigned long       circ_cnt;
-    int                 indent;
-    int                 depth; /* used by dumpHash */
-    Options             opts;
+    void		(*w_start)(struct _Out *out, Element e);
+    void		(*w_end)(struct _Out *out, Element e);
+    void		(*w_time)(struct _Out *out, VALUE obj);
+    char		*buf;
+    char		*end;
+    char		*cur;
+    Cache8		circ_cache;
+    unsigned long	circ_cnt;
+    int			indent;
+    int			depth; /* used by dumpHash */
+    Options		opts;
     VALUE		obj;
 } *Out;
 
-static void     dump_obj_to_xml(VALUE obj, Options copts, Out out);
+static void	dump_obj_to_xml(VALUE obj, Options copts, Out out);
 
-static void     dump_first_obj(VALUE obj, Out out);
-static void     dump_obj(ID aid, VALUE obj, int depth, Out out);
-static void     dump_gen_doc(VALUE obj, int depth, Out out);
-static void     dump_gen_element(VALUE obj, int depth, Out out);
+static void	dump_first_obj(VALUE obj, Out out);
+static void	dump_obj(ID aid, VALUE obj, int depth, Out out);
+static void	dump_gen_doc(VALUE obj, int depth, Out out);
+static void	dump_gen_element(VALUE obj, int depth, Out out);
 static void	dump_gen_instruct(VALUE obj, int depth, Out out);
-static int      dump_gen_attr(VALUE key, VALUE value, Out out);
-static int      dump_gen_nodes(VALUE obj, int depth, Out out);
-static void     dump_gen_val_node(VALUE obj, int depth,
-                                  const char *pre, size_t plen,
-                                  const char *suf, size_t slen, Out out);
+static int	dump_gen_attr(VALUE key, VALUE value, Out out);
+static int	dump_gen_nodes(VALUE obj, int depth, Out out);
+static void	dump_gen_val_node(VALUE obj, int depth,
+				  const char *pre, size_t plen,
+				  const char *suf, size_t slen, Out out);
 
-static void     dump_start(Out out, Element e);
-static void     dump_end(Out out, Element e);
+static void	dump_start(Out out, Element e);
+static void	dump_end(Out out, Element e);
 
-static void     grow(Out out, size_t len);
+static void	grow(Out out, size_t len);
 
-static void     dump_value(Out out, const char *value, size_t size);
-static void     dump_str_value(Out out, const char *value, size_t size);
-static int      dump_var(ID key, VALUE value, Out out);
-static void     dump_num(Out out, VALUE obj);
-static void     dump_date(Out out, VALUE obj);
-static void     dump_time_thin(Out out, VALUE obj);
-static void     dump_time_xsd(Out out, VALUE obj);
-static int      dump_hash(VALUE key, VALUE value, Out out);
+static void	dump_value(Out out, const char *value, size_t size);
+static void	dump_str_value(Out out, const char *value, size_t size);
+static int	dump_var(ID key, VALUE value, Out out);
+static void	dump_num(Out out, VALUE obj);
+static void	dump_date(Out out, VALUE obj);
+static void	dump_time_thin(Out out, VALUE obj);
+static void	dump_time_xsd(Out out, VALUE obj);
+static int	dump_hash(VALUE key, VALUE value, Out out);
 
-static int      is_xml_friendly(const uchar *str, int len);
+static int	is_xml_friendly(const uchar *str, int len);
 
 static const char	hex_chars[17] = "0123456789abcdef";
 
-static char     xml_friendly_chars[257] = "\
+static char	xml_friendly_chars[257] = "\
 88888888811881888888888888888888\
 11611156111111111111111111114141\
 11111111111111111111111111111111\
@@ -116,9 +116,9 @@ static char     xml_friendly_chars[257] = "\
 inline static int
 is_xml_friendly(const uchar *str, int len) {
     for (; 0 < len; str++, len--) {
-        if ('1' != xml_friendly_chars[*str]) {
-            return 0;
-        }
+	if ('1' != xml_friendly_chars[*str]) {
+	    return 0;
+	}
     }
     return 1;
 }
@@ -147,55 +147,55 @@ obj_class_code(VALUE obj) {
     VALUE	clas = rb_obj_class(obj);
 
     switch (rb_type(obj)) {
-    case T_NIL:            return NilClassCode;
-    case T_ARRAY:          return ArrayCode;
-    case T_HASH:           return HashCode;
-    case T_TRUE:           return TrueClassCode;
-    case T_FALSE:          return FalseClassCode;
-    case T_FIXNUM:         return FixnumCode;
-    case T_FLOAT:          return FloatCode;
-    case T_STRING:         return (is_xml_friendly((uchar*)StringValuePtr(obj), (int)RSTRING_LEN(obj))) ? StringCode : String64Code;
+    case T_NIL:		   return NilClassCode;
+    case T_ARRAY:	   return ArrayCode;
+    case T_HASH:	   return HashCode;
+    case T_TRUE:	   return TrueClassCode;
+    case T_FALSE:	   return FalseClassCode;
+    case T_FIXNUM:	   return FixnumCode;
+    case T_FLOAT:	   return FloatCode;
+    case T_STRING:	   return (is_xml_friendly((uchar*)StringValuePtr(obj), (int)RSTRING_LEN(obj))) ? StringCode : String64Code;
     case T_SYMBOL:
     {
-        const char      *sym = rb_id2name(SYM2ID(obj));
+	const char	*sym = rb_id2name(SYM2ID(obj));
 
-        return (is_xml_friendly((uchar*)sym, (int)strlen(sym))) ? SymbolCode : Symbol64Code;
+	return (is_xml_friendly((uchar*)sym, (int)strlen(sym))) ? SymbolCode : Symbol64Code;
     }
-    case T_DATA:           return (rb_cTime == clas) ? TimeCode : ((ox_date_class == clas) ? DateCode : 0);
-    case T_STRUCT:         return (rb_cRange == clas) ? RangeCode : StructCode;
-    case T_OBJECT:         return (ox_document_clas == clas || ox_element_clas == clas) ? RawCode : ObjectCode;
-    case T_REGEXP:         return RegexpCode;
-    case T_BIGNUM:         return BignumCode;
+    case T_DATA:	   return (rb_cTime == clas) ? TimeCode : ((ox_date_class == clas) ? DateCode : 0);
+    case T_STRUCT:	   return (rb_cRange == clas) ? RangeCode : StructCode;
+    case T_OBJECT:	   return (ox_document_clas == clas || ox_element_clas == clas) ? RawCode : ObjectCode;
+    case T_REGEXP:	   return RegexpCode;
+    case T_BIGNUM:	   return BignumCode;
 #ifdef T_COMPLEX
-    case T_COMPLEX:        return ComplexCode;
+    case T_COMPLEX:	   return ComplexCode;
 #endif
 #ifdef T_RATIONAL
-    case T_RATIONAL:       return RationalCode;
+    case T_RATIONAL:	   return RationalCode;
 #endif
-    case T_CLASS:          return ClassCode;
-    default:                    return 0;
+    case T_CLASS:	   return ClassCode;
+    default:			return 0;
     }
 }
 
 inline static void
 fill_indent(Out out, int cnt) {
     if (0 <= cnt) {
-        *out->cur++ = '\n';
-        for (; 0 < cnt; cnt--) {
-            *out->cur++ = ' ';
-        }
+	*out->cur++ = '\n';
+	for (; 0 < cnt; cnt--) {
+	    *out->cur++ = ' ';
+	}
     }
 }
 
 inline static void
 fill_value(Out out, const char *value, size_t len) {
     if (6 < len) {
-        memcpy(out->cur, value, len);
-        out->cur += len;
+	memcpy(out->cur, value, len);
+	out->cur += len;
     } else {
-        for (; '\0' != *value; value++) {
-            *out->cur++ = *value;
-        }
+	for (; '\0' != *value; value++) {
+	    *out->cur++ = *value;
+	}
     }
 }
 
@@ -206,23 +206,23 @@ fill_attr(Out out, char name, const char *value, size_t len) {
     *out->cur++ = '=';
     *out->cur++ = '"';
     if (6 < len) {
-        memcpy(out->cur, value, len);
-        out->cur += len;
+	memcpy(out->cur, value, len);
+	out->cur += len;
     } else {
-        for (; '\0' != *value; value++) {
-            *out->cur++ = *value;
-        }
+	for (; '\0' != *value; value++) {
+	    *out->cur++ = *value;
+	}
     }
     *out->cur++ = '"';
 }
 
 inline static const char*
 ulong2str(ulong num, char *end) {
-    char        *b;
+    char	*b;
 
     *end-- = '\0';
     for (b = end; 0 < num || b == end; num /= 10, b--) {
-        *b = (num % 10) + '0';
+	*b = (num % 10) + '0';
     }
     b++;
 
@@ -236,17 +236,17 @@ check_circular(Out out, VALUE obj, Element e) {
     int		result;
     
     if (0 == (id = ox_cache8_get(out->circ_cache, obj, &slot))) {
-        out->circ_cnt++;
-        id = out->circ_cnt;
-        *slot = id;
-        e->id = id;
-        result = 0;
+	out->circ_cnt++;
+	id = out->circ_cnt;
+	*slot = id;
+	e->id = id;
+	result = 0;
     } else {
-        e->type = RefCode;  e->clas.len = 0;  e->clas.str = 0;
-        e->closed = 1;
-        e->id = id;
-        out->w_start(out, e);
-        result = 1;
+	e->type = RefCode;  e->clas.len = 0;  e->clas.str = 0;
+	e->closed = 1;
+	e->id = id;
+	out->w_start(out, e);
+	result = 1;
     }
     return result;
 }
@@ -255,10 +255,10 @@ static void
 grow(Out out, size_t len) {
     size_t  size = out->end - out->buf;
     long    pos = out->cur - out->buf;
-        
+	
     size *= 2;
     if (size <= len * 2 + pos) {
-        size += len;
+	size += len;
     }
     REALLOC_N(out->buf, char, size + 10); /* 10 extra for terminator character plus extra (paranoid) */
     out->end = out->buf + size;
@@ -267,40 +267,40 @@ grow(Out out, size_t len) {
 
 static void
 dump_start(Out out, Element e) {
-    size_t      size = e->indent + 4;
+    size_t	size = e->indent + 4;
 
     if (0 < e->attr.len) { /* a="attr" */
-        size += e->attr.len + 5;
+	size += e->attr.len + 5;
     }
     if (0 < e->clas.len) { /* c="class" */
-        size += e->clas.len + 5;
+	size += e->clas.len + 5;
     }
     if (0 < e->id) { /* i="id" */
-        size += 24; /* over estimate, 19 digits */
+	size += 24; /* over estimate, 19 digits */
     }
     if (out->end - out->cur <= (long)size) {
-        grow(out, size);
+	grow(out, size);
     }
     if (out->buf < out->cur) {
-        fill_indent(out, e->indent);
+	fill_indent(out, e->indent);
     }
     *out->cur++ = '<';
     *out->cur++ = e->type;
     if (0 < e->attr.len) {
-        fill_attr(out, 'a', e->attr.str, e->attr.len);
+	fill_attr(out, 'a', e->attr.str, e->attr.len);
     }
     if ((ObjectCode == e->type || ExceptionCode == e->type || StructCode == e->type || ClassCode == e->type) && 0 < e->clas.len) {
-        fill_attr(out, 'c', e->clas.str, e->clas.len);
+	fill_attr(out, 'c', e->clas.str, e->clas.len);
     }
     if (0 < e->id) {
-        char            buf[32];
-        char            *end = buf + sizeof(buf) - 1;
-        const char      *s = ulong2str(e->id, end);
-        
-        fill_attr(out, 'i', s, end - s);
+	char		buf[32];
+	char		*end = buf + sizeof(buf) - 1;
+	const char	*s = ulong2str(e->id, end);
+	
+	fill_attr(out, 'i', s, end - s);
     }
     if (e->closed) {
-        *out->cur++ = '/';
+	*out->cur++ = '/';
     }
     *out->cur++ = '>';
     *out->cur = '\0';
@@ -308,10 +308,10 @@ dump_start(Out out, Element e) {
 
 static void
 dump_end(Out out, Element e) {
-    size_t      size = e->indent + 5;
+    size_t	size = e->indent + 5;
 
     if (out->end - out->cur <= (long)size) {
-        grow(out, size);
+	grow(out, size);
     }
     fill_indent(out, e->indent);
     *out->cur++ = '<';
@@ -324,15 +324,15 @@ dump_end(Out out, Element e) {
 inline static void
 dump_value(Out out, const char *value, size_t size) {
     if (out->end - out->cur <= (long)size) {
-        grow(out, size);
+	grow(out, size);
     }
     if (6 < size) {
-        memcpy(out->cur, value, size);
-        out->cur += size;
+	memcpy(out->cur, value, size);
+	out->cur += size;
     } else {
-        for (; '\0' != *value; value++) {
-            *out->cur++ = *value;
-        }
+	for (; '\0' != *value; value++) {
+	    *out->cur++ = *value;
+	}
     }
     *out->cur = '\0';
 }
@@ -342,7 +342,7 @@ dump_str_value(Out out, const char *value, size_t size) {
     size_t	xsize = xml_str_len((const uchar*)value, size);
 
     if (out->end - out->cur <= (long)xsize) {
-        grow(out, xsize);
+	grow(out, xsize);
     }
     for (; '\0' != *value; value++) {
 	if ('1' == xml_friendly_chars[(uchar)*value]) {
@@ -391,33 +391,33 @@ dump_str_value(Out out, const char *value, size_t size) {
 
 inline static void
 dump_num(Out out, VALUE obj) {
-    char        buf[32];
-    char        *b = buf + sizeof(buf) - 1;
-    long        num = NUM2LONG(obj);
-    int         neg = 0;
+    char	buf[32];
+    char	*b = buf + sizeof(buf) - 1;
+    long	num = NUM2LONG(obj);
+    int		neg = 0;
 
     if (0 > num) {
-        neg = 1;
-        num = -num;
+	neg = 1;
+	num = -num;
     }
     *b-- = '\0';
     if (0 < num) {
-        for (; 0 < num; num /= 10, b--) {
-            *b = (num % 10) + '0';
-        }
-        if (neg) {
-            *b = '-';
-        } else {
-            b++;
-        }
+	for (; 0 < num; num /= 10, b--) {
+	    *b = (num % 10) + '0';
+	}
+	if (neg) {
+	    *b = '-';
+	} else {
+	    b++;
+	}
     } else {
-        *b = '0';
+	*b = '0';
     }
     if (out->end - out->cur <= (long)(sizeof(buf) - (b - buf))) {
-        grow(out, sizeof(buf) - (b - buf));
+	grow(out, sizeof(buf) - (b - buf));
     }
     for (; '\0' != *b; b++) {
-        *out->cur++ = *b;
+	*out->cur++ = *b;
     }
     *out->cur = '\0';
 }
@@ -443,16 +443,16 @@ dump_time_thin(Out out, VALUE obj) {
 
     *b-- = '\0';
     for (; dot < b; b--, nsec /= 10) {
-        *b = '0' + (nsec % 10);
+	*b = '0' + (nsec % 10);
     }
     *b-- = '.';
     for (; 0 < sec; b--, sec /= 10) {
-        *b = '0' + (sec % 10);
+	*b = '0' + (sec % 10);
     }
     b++;
     size = sizeof(buf) - (b - buf) - 1;
     if (out->end - out->cur <= size) {
-        grow(out, size);
+	grow(out, size);
     }
     memcpy(out->cur, b, size);
     out->cur += size;
@@ -460,14 +460,14 @@ dump_time_thin(Out out, VALUE obj) {
 
 static void
 dump_date(Out out, VALUE obj) {
-    char        buf[64];
-    char        *b = buf + sizeof(buf) - 1;
-    long        jd = NUM2LONG(rb_funcall2(obj, ox_jd_id, 0, 0));
-    long        size;
+    char	buf[64];
+    char	*b = buf + sizeof(buf) - 1;
+    long	jd = NUM2LONG(rb_funcall2(obj, ox_jd_id, 0, 0));
+    long	size;
 
     *b-- = '\0';
     for (; 0 < jd; b--, jd /= 10) {
-        *b = '0' + (jd % 10);
+	*b = '0' + (jd % 10);
     }
     b++;
     if ('\0' == *b) {
@@ -476,7 +476,7 @@ dump_date(Out out, VALUE obj) {
     }
     size = sizeof(buf) - (b - buf) - 1;
     if (out->end - out->cur <= size) {
-        grow(out, size);
+	grow(out, size);
     }
     memcpy(out->cur, b, size);
     out->cur += size;
@@ -501,18 +501,18 @@ dump_time_xsd(Out out, VALUE obj) {
     char		tzsign = '+';
 
     if (out->end - out->cur <= 33) {
-        grow(out, 33);
+	grow(out, 33);
     }
     /* 2010-07-09T10:47:45.895826+09:00 */
     tm = localtime(&sec);
 #if HAS_TM_GMTOFF
     if (0 > tm->tm_gmtoff) {
-        tzsign = '-';
-        tzhour = (int)(tm->tm_gmtoff / -3600);
-        tzmin = (int)(tm->tm_gmtoff / -60) - (tzhour * 60);
+	tzsign = '-';
+	tzhour = (int)(tm->tm_gmtoff / -3600);
+	tzmin = (int)(tm->tm_gmtoff / -60) - (tzhour * 60);
     } else {
-        tzhour = (int)(tm->tm_gmtoff / 3600);
-        tzmin = (int)(tm->tm_gmtoff / 60) - (tzhour * 60);
+	tzhour = (int)(tm->tm_gmtoff / 3600);
+	tzmin = (int)(tm->tm_gmtoff / 60) - (tzhour * 60);
     }
 #else
     tzhour = 0;
@@ -527,157 +527,157 @@ dump_time_xsd(Out out, VALUE obj) {
 
 static void
 dump_first_obj(VALUE obj, Out out) {
-    char        buf[128];
-    Options     copts = out->opts;
-    int         cnt;
+    char	buf[128];
+    Options	copts = out->opts;
+    int		cnt;
 
     if (Yes == copts->with_xml) {
-        if ('\0' == *copts->encoding) {
-            dump_value(out, "<?xml version=\"1.0\"?>", 21);
-        } else {
-            cnt = sprintf(buf, "<?xml version=\"1.0\" encoding=\"%s\"?>", copts->encoding);
-            dump_value(out, buf, cnt);
-        }
+	if ('\0' == *copts->encoding) {
+	    dump_value(out, "<?xml version=\"1.0\"?>", 21);
+	} else {
+	    cnt = sprintf(buf, "<?xml version=\"1.0\" encoding=\"%s\"?>", copts->encoding);
+	    dump_value(out, buf, cnt);
+	}
     }
     if (Yes == copts->with_instruct) {
-        cnt = sprintf(buf, "%s<?ox version=\"1.0\" mode=\"object\"%s%s?>",
-                      (out->buf < out->cur) ? "\n" : "",
-                      (Yes == copts->circular) ? " circular=\"yes\"" : ((No == copts->circular) ? " circular=\"no\"" : ""),
-                      (Yes == copts->xsd_date) ? " xsd_date=\"yes\"" : ((No == copts->xsd_date) ? " xsd_date=\"no\"" : ""));
-        dump_value(out, buf, cnt);
+	cnt = sprintf(buf, "%s<?ox version=\"1.0\" mode=\"object\"%s%s?>",
+		      (out->buf < out->cur) ? "\n" : "",
+		      (Yes == copts->circular) ? " circular=\"yes\"" : ((No == copts->circular) ? " circular=\"no\"" : ""),
+		      (Yes == copts->xsd_date) ? " xsd_date=\"yes\"" : ((No == copts->xsd_date) ? " xsd_date=\"no\"" : ""));
+	dump_value(out, buf, cnt);
     }
     if (Yes == copts->with_dtd) {
-        cnt = sprintf(buf, "%s<!DOCTYPE %c SYSTEM \"ox.dtd\">", (out->buf < out->cur) ? "\n" : "", obj_class_code(obj));
-        dump_value(out, buf, cnt);
+	cnt = sprintf(buf, "%s<!DOCTYPE %c SYSTEM \"ox.dtd\">", (out->buf < out->cur) ? "\n" : "", obj_class_code(obj));
+	dump_value(out, buf, cnt);
     }
     dump_obj(0, obj, 0, out);
 }
 
 static void
 dump_obj(ID aid, VALUE obj, int depth, Out out) {
-    struct _Element     e;
+    struct _Element	e;
     VALUE		prev_obj = out->obj;
-    char                value_buf[64];
-    int                 cnt;
+    char		value_buf[64];
+    int			cnt;
 
     if (MAX_DEPTH < depth) {
 	rb_raise(rb_eSysStackError, "maximum depth exceeded");
     }
     out->obj = obj;
     if (0 == aid) {
-        /*e.attr.str = 0; */
-        e.attr.len = 0;
+	/*e.attr.str = 0; */
+	e.attr.len = 0;
     } else {
-        e.attr.str = rb_id2name(aid);
-        e.attr.len = strlen(e.attr.str);
+	e.attr.str = rb_id2name(aid);
+	e.attr.len = strlen(e.attr.str);
     }
     e.closed = 0;
     if (0 == depth) {
-        e.indent = (0 <= out->indent) ? 0 : -1;
+	e.indent = (0 <= out->indent) ? 0 : -1;
     } else if (0 > out->indent) {
-        e.indent = -1;
+	e.indent = -1;
     } else if (0 == out->indent) {
-        e.indent = 0;
+	e.indent = 0;
     } else {
-        e.indent = depth * out->indent;
+	e.indent = depth * out->indent;
     }
     e.id = 0;
     e.clas.len = 0;
     e.clas.str = 0;
     switch (rb_type(obj)) {
     case T_NIL:
-        e.type = NilClassCode;
-        e.closed = 1;
-        out->w_start(out, &e);
-        break;
+	e.type = NilClassCode;
+	e.closed = 1;
+	out->w_start(out, &e);
+	break;
     case T_ARRAY:
-        if (0 != out->circ_cache && check_circular(out, obj, &e)) {
-            break;
-        }
-        cnt = (int)RARRAY_LEN(obj);
-        e.type = ArrayCode;
-        e.closed = (0 >= cnt);
-        out->w_start(out, &e);
-        if (!e.closed) {
-            const VALUE	*np = RARRAY_PTR(obj);
-            int		i;
-            int		d2 = depth + 1;
+	if (0 != out->circ_cache && check_circular(out, obj, &e)) {
+	    break;
+	}
+	cnt = (int)RARRAY_LEN(obj);
+	e.type = ArrayCode;
+	e.closed = (0 >= cnt);
+	out->w_start(out, &e);
+	if (!e.closed) {
+	    const VALUE	*np = RARRAY_PTR(obj);
+	    int		i;
+	    int		d2 = depth + 1;
 
-            for (i = cnt; 0 < i; i--, np++) {
-                dump_obj(0, *np, d2, out);
-            }
-            out->w_end(out, &e);
-        }
-        break;
+	    for (i = cnt; 0 < i; i--, np++) {
+		dump_obj(0, *np, d2, out);
+	    }
+	    out->w_end(out, &e);
+	}
+	break;
     case T_HASH:
-        if (0 != out->circ_cache && check_circular(out, obj, &e)) {
-            break;
-        }
-        cnt = (int)RHASH_SIZE(obj);
-        e.type = HashCode;
-        e.closed = (0 >= cnt);
-        out->w_start(out, &e);
-        if (0 < cnt) {
-            unsigned int        od = out->depth;
-            
-            out->depth = depth + 1;
-            rb_hash_foreach(obj, dump_hash, (VALUE)out);
-            out->depth = od;
-            out->w_end(out, &e);
-        }
-        break;
+	if (0 != out->circ_cache && check_circular(out, obj, &e)) {
+	    break;
+	}
+	cnt = (int)RHASH_SIZE(obj);
+	e.type = HashCode;
+	e.closed = (0 >= cnt);
+	out->w_start(out, &e);
+	if (0 < cnt) {
+	    unsigned int	od = out->depth;
+	    
+	    out->depth = depth + 1;
+	    rb_hash_foreach(obj, dump_hash, (VALUE)out);
+	    out->depth = od;
+	    out->w_end(out, &e);
+	}
+	break;
     case T_TRUE:
-        e.type = TrueClassCode;
-        e.closed = 1;
-        out->w_start(out, &e);
-        break;
+	e.type = TrueClassCode;
+	e.closed = 1;
+	out->w_start(out, &e);
+	break;
     case T_FALSE:
-        e.type = FalseClassCode;
-        e.closed = 1;
-        out->w_start(out, &e);
-        break;
+	e.type = FalseClassCode;
+	e.closed = 1;
+	out->w_start(out, &e);
+	break;
     case T_FIXNUM:
-        e.type = FixnumCode;
-        out->w_start(out, &e);
-        dump_num(out, obj);
-        e.indent = -1;
-        out->w_end(out, &e);
-        break;
+	e.type = FixnumCode;
+	out->w_start(out, &e);
+	dump_num(out, obj);
+	e.indent = -1;
+	out->w_end(out, &e);
+	break;
     case T_FLOAT:
-        e.type = FloatCode;
-        cnt = sprintf(value_buf, "%0.16g", rb_num2dbl(obj)); /* used sprintf due to bug in snprintf */
-        out->w_start(out, &e);
-        dump_value(out, value_buf, cnt);
-        e.indent = -1;
-        out->w_end(out, &e);
-        break;
+	e.type = FloatCode;
+	cnt = sprintf(value_buf, "%0.16g", rb_num2dbl(obj)); /* used sprintf due to bug in snprintf */
+	out->w_start(out, &e);
+	dump_value(out, value_buf, cnt);
+	e.indent = -1;
+	out->w_end(out, &e);
+	break;
     case T_STRING:
     {
-        const char      *str;
+	const char	*str;
 
-        if (0 != out->circ_cache && check_circular(out, obj, &e)) {
-            break;
-        }
-        str = StringValuePtr(obj);
-        cnt = (int)RSTRING_LEN(obj);
+	if (0 != out->circ_cache && check_circular(out, obj, &e)) {
+	    break;
+	}
+	str = StringValuePtr(obj);
+	cnt = (int)RSTRING_LEN(obj);
 #if USE_B64
-        if (is_xml_friendly((uchar*)str, cnt)) {
-            e.type = StringCode;
-            out->w_start(out, &e);
-            dump_str_value(out, str, cnt);
-            e.indent = -1;
-            out->w_end(out, &e);
-        } else {
-            ulong       size = b64_size(cnt);
-            char        *b64 = ALLOCA_N(char, size + 1);
+	if (is_xml_friendly((uchar*)str, cnt)) {
+	    e.type = StringCode;
+	    out->w_start(out, &e);
+	    dump_str_value(out, str, cnt);
+	    e.indent = -1;
+	    out->w_end(out, &e);
+	} else {
+	    ulong	size = b64_size(cnt);
+	    char	*b64 = ALLOCA_N(char, size + 1);
 
-            e.type = String64Code;
-            to_base64((uchar*)str, cnt, b64);
-            out->w_start(out, &e);
-            dump_value(out, b64, size);
-            e.indent = -1;
-            out->w_end(out, &e);
-        }
+	    e.type = String64Code;
+	    to_base64((uchar*)str, cnt, b64);
+	    out->w_start(out, &e);
+	    dump_value(out, b64, size);
+	    e.indent = -1;
+	    out->w_end(out, &e);
+	}
 #else
 	e.type = StringCode;
 	out->w_start(out, &e);
@@ -685,31 +685,31 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	e.indent = -1;
 	out->w_end(out, &e);
 #endif
-        break;
+	break;
     }
     case T_SYMBOL:
     {
-        const char      *sym = rb_id2name(SYM2ID(obj));
+	const char	*sym = rb_id2name(SYM2ID(obj));
 
-        cnt = (int)strlen(sym);
+	cnt = (int)strlen(sym);
 #if USE_B64
-        if (is_xml_friendly((uchar*)sym, cnt)) {
-            e.type = SymbolCode;
-            out->w_start(out, &e);
-            dump_str_value(out, sym, cnt);
-            e.indent = -1;
-            out->w_end(out, &e);
-        } else {
-            ulong       size = b64_size(cnt);
-            char        *b64 = ALLOCA_N(char, size + 1);
+	if (is_xml_friendly((uchar*)sym, cnt)) {
+	    e.type = SymbolCode;
+	    out->w_start(out, &e);
+	    dump_str_value(out, sym, cnt);
+	    e.indent = -1;
+	    out->w_end(out, &e);
+	} else {
+	    ulong	size = b64_size(cnt);
+	    char	*b64 = ALLOCA_N(char, size + 1);
 
-            e.type = Symbol64Code;
-            to_base64((uchar*)sym, cnt, b64);
-            out->w_start(out, &e);
-            dump_value(out, b64, size);
-            e.indent = -1;
-            out->w_end(out, &e);
-        }
+	    e.type = Symbol64Code;
+	    to_base64((uchar*)sym, cnt, b64);
+	    out->w_start(out, &e);
+	    dump_value(out, b64, size);
+	    e.indent = -1;
+	    out->w_end(out, &e);
+	}
 #else
 	e.type = SymbolCode;
 	out->w_start(out, &e);
@@ -717,19 +717,19 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	e.indent = -1;
 	out->w_end(out, &e);
 #endif
-        break;
+	break;
     }
     case T_DATA:
     {
-        VALUE   clas;
+	VALUE	clas;
 
-        clas = rb_obj_class(obj);
-        if (rb_cTime == clas) {
-            e.type = TimeCode;
-            out->w_start(out, &e);
-            out->w_time(out, obj);
-            e.indent = -1;
-            out->w_end(out, &e);
+	clas = rb_obj_class(obj);
+	if (rb_cTime == clas) {
+	    e.type = TimeCode;
+	    out->w_start(out, &e);
+	    out->w_time(out, obj);
+	    e.indent = -1;
+	    out->w_end(out, &e);
 	} else {
 	    const char	*classname = rb_class2name(clas);
 
@@ -740,7 +740,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 		e.indent = -1;
 		out->w_end(out, &e);
 	    } else if (0 == strcmp("BigDecimal", classname)) {
-		VALUE	rs = rb_funcall(obj, ox_to_s_id, 0);
+		volatile VALUE	rs = rb_funcall(obj, ox_to_s_id, 0);
 
 		e.type = BigDecimalCode;
 		out->w_start(out, &e);
@@ -756,217 +756,197 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 		    out->w_start(out, &e);
 		}
 	    }
-        }
-        break;
+	}
+	break;
     }
     case T_STRUCT:
     {
 #if HAS_RSTRUCT
-        VALUE   clas;
+	VALUE	clas;
 
-        if (0 != out->circ_cache && check_circular(out, obj, &e)) {
-            break;
-        }
-        clas = rb_obj_class(obj);
-        if (rb_cRange == clas) {
-            VALUE       beg = RSTRUCT_PTR(obj)[0];
-            VALUE       end = RSTRUCT_PTR(obj)[1];
-            VALUE       excl = RSTRUCT_PTR(obj)[2];
-            int         d2 = depth + 1;
+	if (0 != out->circ_cache && check_circular(out, obj, &e)) {
+	    break;
+	}
+	clas = rb_obj_class(obj);
+	if (rb_cRange == clas) {
+	    VALUE	beg = RSTRUCT_PTR(obj)[0];
+	    VALUE	end = RSTRUCT_PTR(obj)[1];
+	    VALUE	excl = RSTRUCT_PTR(obj)[2];
+	    int		d2 = depth + 1;
 
-            e.type = RangeCode;  e.clas.len = 5;  e.clas.str = "Range";
-            out->w_start(out, &e);
-            dump_obj(ox_beg_id, beg, d2, out);
-            dump_obj(ox_end_id, end, d2, out);
-            dump_obj(ox_excl_id, excl, d2, out);
-            out->w_end(out, &e);
-        } else {
-            char        num_buf[16];
-            VALUE       *vp;
-            int         i;
-            int         d2 = depth + 1;
-            
-            e.type = StructCode;
-            e.clas.str = rb_class2name(clas);
-            e.clas.len = strlen(e.clas.str);
-            out->w_start(out, &e);
-            cnt = (int)RSTRUCT_LEN(obj);
-            for (i = 0, vp = RSTRUCT_PTR(obj); i < cnt; i++, vp++) {
-                dump_obj(rb_intern(ulong2str(i, num_buf + sizeof(num_buf) - 1)), *vp, d2, out);
-            }
-            out->w_end(out, &e);
-        }
+	    e.type = RangeCode;	 e.clas.len = 5;  e.clas.str = "Range";
+	    out->w_start(out, &e);
+	    dump_obj(ox_beg_id, beg, d2, out);
+	    dump_obj(ox_end_id, end, d2, out);
+	    dump_obj(ox_excl_id, excl, d2, out);
+	    out->w_end(out, &e);
+	} else {
+	    char	num_buf[16];
+	    VALUE	*vp;
+	    int		i;
+	    int		d2 = depth + 1;
+	    
+	    e.type = StructCode;
+	    e.clas.str = rb_class2name(clas);
+	    e.clas.len = strlen(e.clas.str);
+	    out->w_start(out, &e);
+	    cnt = (int)RSTRUCT_LEN(obj);
+	    for (i = 0, vp = RSTRUCT_PTR(obj); i < cnt; i++, vp++) {
+		dump_obj(rb_intern(ulong2str(i, num_buf + sizeof(num_buf) - 1)), *vp, d2, out);
+	    }
+	    out->w_end(out, &e);
+	}
 #else
-        e.type = NilClassCode;
-        e.closed = 1;
-        out->w_start(out, &e);
+	e.type = NilClassCode;
+	e.closed = 1;
+	out->w_start(out, &e);
 #endif
-        break;
+	break;
     }
     case T_OBJECT:
     {
-        VALUE   clas;
+	VALUE	clas;
 
-        if (0 != out->circ_cache && check_circular(out, obj, &e)) {
-            break;
-        }
-        clas = rb_obj_class(obj);
-        e.clas.str = rb_class2name(clas);
-        e.clas.len = strlen(e.clas.str);
-        if (ox_document_clas == clas) {
-            e.type = RawCode;
-            out->w_start(out, &e);
-            dump_gen_doc(obj, depth + 1, out);
-            out->w_end(out, &e);
-        } else if (ox_element_clas == clas) {
-            e.type = RawCode;
-            out->w_start(out, &e);
-            dump_gen_element(obj, depth + 1, out);
-            out->w_end(out, &e);
-        } else { /* Object */
+	if (0 != out->circ_cache && check_circular(out, obj, &e)) {
+	    break;
+	}
+	clas = rb_obj_class(obj);
+	e.clas.str = rb_class2name(clas);
+	e.clas.len = strlen(e.clas.str);
+	if (ox_document_clas == clas) {
+	    e.type = RawCode;
+	    out->w_start(out, &e);
+	    dump_gen_doc(obj, depth + 1, out);
+	    out->w_end(out, &e);
+	} else if (ox_element_clas == clas) {
+	    e.type = RawCode;
+	    out->w_start(out, &e);
+	    dump_gen_element(obj, depth + 1, out);
+	    out->w_end(out, &e);
+	} else { /* Object */
 #if HAS_IVAR_HELPERS
-            e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
-            cnt = (int)rb_ivar_count(obj);
-            e.closed = (0 >= cnt);
-            out->w_start(out, &e);
-            if (0 < cnt) {
-                unsigned int        od = out->depth;
+	    e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
+	    cnt = (int)rb_ivar_count(obj);
+	    e.closed = (0 >= cnt);
+	    out->w_start(out, &e);
+	    if (0 < cnt) {
+		unsigned int	    od = out->depth;
 
-                out->depth = depth + 1;
-                rb_ivar_foreach(obj, dump_var, (VALUE)out);
-                out->depth = od;
-                out->w_end(out, &e);
-            }
+		out->depth = depth + 1;
+		rb_ivar_foreach(obj, dump_var, (VALUE)out);
+		out->depth = od;
+		out->w_end(out, &e);
+	    }
 #else
-            /*VALUE       vars = rb_obj_instance_variables(obj); */
-	    /*#else */
-            VALUE       vars = rb_funcall2(obj, rb_intern("instance_variables"), 0, 0);
-	    /*#endif             */
-            e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
-            cnt = (int)RARRAY_LEN(vars);
-            e.closed = (0 >= cnt);
-            out->w_start(out, &e);
-            if (0 < cnt) {
-                const VALUE	*np = RARRAY_PTR(vars);
-                ID		vid;
-                unsigned int	od = out->depth;
-                int		i;
+	    volatile VALUE	 vars = rb_obj_instance_variables(obj);
+	    //volatile VALUE	   vars = rb_funcall2(obj, rb_intern("instance_variables"), 0, 0);
 
-                out->depth = depth + 1;
-                for (i = cnt; 0 < i; i--, np++) {
-                    vid = rb_to_id(*np);
-                    dump_var(vid, rb_ivar_get(obj, vid), out);
-                }
-                out->depth = od;
-                out->w_end(out, &e);
-            }
+	    e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
+	    cnt = (int)RARRAY_LEN(vars);
+	    e.closed = (0 >= cnt);
+	    out->w_start(out, &e);
+	    if (0 < cnt) {
+		const VALUE	*np = RARRAY_PTR(vars);
+		ID		vid;
+		unsigned int	od = out->depth;
+		int		i;
+
+		out->depth = depth + 1;
+		for (i = cnt; 0 < i; i--, np++) {
+		    vid = rb_to_id(*np);
+		    dump_var(vid, rb_ivar_get(obj, vid), out);
+		}
+		out->depth = od;
+		out->w_end(out, &e);
+	    }
 #endif
-        }
-        break;
+	}
+	break;
     }
     case T_REGEXP:
     {
-#if 1
-        VALUE           rs = rb_funcall2(obj, ox_inspect_id, 0, 0);
-        const char      *s = StringValuePtr(rs);
+	volatile VALUE	rs = rb_funcall2(obj, ox_inspect_id, 0, 0);
+	const char	*s = StringValuePtr(rs);
 
-        cnt = (int)RSTRING_LEN(rs);
-#else
-        const char      *s = RREGEXP_SRC_PTR(obj);
-        int             options = rb_reg_options(obj);
-
-        cnt = (int)RREGEXP_SRC_LEN(obj);
-#endif
-        e.type = RegexpCode;
-        out->w_start(out, &e);
+	cnt = (int)RSTRING_LEN(rs);
+	e.type = RegexpCode;
+	out->w_start(out, &e);
 #if USE_B64
-        if (is_xml_friendly((uchar*)s, cnt)) {
-            /*dump_value(out, "/", 1); */
-            dump_str_value(out, s, cnt);
-        } else {
-            ulong       size = b64_size(cnt);
-            char        *b64 = ALLOCA_N(char, size + 1);
+	if (is_xml_friendly((uchar*)s, cnt)) {
+	    /*dump_value(out, "/", 1); */
+	    dump_str_value(out, s, cnt);
+	} else {
+	    ulong	size = b64_size(cnt);
+	    char	*b64 = ALLOCA_N(char, size + 1);
 
-            to_base64((uchar*)s, cnt, b64);
-            dump_value(out, b64, size);
-        }
+	    to_base64((uchar*)s, cnt, b64);
+	    dump_value(out, b64, size);
+	}
 #else
 	dump_str_value(out, s, cnt);
 #endif
-#if 0
-        dump_value(out, "/", 1);
-        if (0 != (ONIG_OPTION_MULTILINE & options)) {
-            dump_value(out, "m", 1);
-        }
-        if (0 != (ONIG_OPTION_IGNORECASE & options)) {
-            dump_value(out, "i", 1);
-        }
-        if (0 != (ONIG_OPTION_EXTEND & options)) {
-            dump_value(out, "x", 1);
-        }
-#endif
-        e.indent = -1;
-        out->w_end(out, &e);
-        break;
+	e.indent = -1;
+	out->w_end(out, &e);
+	break;
     }
     case T_BIGNUM:
     {
-        VALUE   rs = rb_big2str(obj, 10);
-        
-        e.type = BignumCode;
-        out->w_start(out, &e);
-        dump_value(out, StringValuePtr(rs), RSTRING_LEN(rs));
-        e.indent = -1;
-        out->w_end(out, &e);
-        break;
+	volatile VALUE	rs = rb_big2str(obj, 10);
+	
+	e.type = BignumCode;
+	out->w_start(out, &e);
+	dump_value(out, StringValuePtr(rs), RSTRING_LEN(rs));
+	e.indent = -1;
+	out->w_end(out, &e);
+	break;
     }
 #ifdef T_COMPLEX
     case T_COMPLEX:
-        e.type = ComplexCode;
-        out->w_start(out, &e);
+	e.type = ComplexCode;
+	out->w_start(out, &e);
 #ifdef RCOMPLEX
-        dump_obj(0, RCOMPLEX(obj)->real, depth + 1, out);
-        dump_obj(0, RCOMPLEX(obj)->imag, depth + 1, out);
+	dump_obj(0, RCOMPLEX(obj)->real, depth + 1, out);
+	dump_obj(0, RCOMPLEX(obj)->imag, depth + 1, out);
 #else
-        dump_obj(0, rb_funcall2(obj, rb_intern("real"), 0, 0), depth + 1, out);
-        dump_obj(0, rb_funcall2(obj, rb_intern("imag"), 0, 0), depth + 1, out);
+	dump_obj(0, rb_funcall2(obj, rb_intern("real"), 0, 0), depth + 1, out);
+	dump_obj(0, rb_funcall2(obj, rb_intern("imag"), 0, 0), depth + 1, out);
 #endif
-        out->w_end(out, &e);
-        break;
+	out->w_end(out, &e);
+	break;
 #endif
 #ifdef T_RATIONAL
     case T_RATIONAL:
-        e.type = RationalCode;
-        out->w_start(out, &e);
+	e.type = RationalCode;
+	out->w_start(out, &e);
 #ifdef RRATIONAL
-        dump_obj(0, RRATIONAL(obj)->num, depth + 1, out);
-        dump_obj(0, RRATIONAL(obj)->den, depth + 1, out);
+	dump_obj(0, RRATIONAL(obj)->num, depth + 1, out);
+	dump_obj(0, RRATIONAL(obj)->den, depth + 1, out);
 #else
-        dump_obj(0, rb_funcall2(obj, rb_intern("numerator"), 0, 0), depth + 1, out);
-        dump_obj(0, rb_funcall2(obj, rb_intern("denominator"), 0, 0), depth + 1, out);
+	dump_obj(0, rb_funcall2(obj, rb_intern("numerator"), 0, 0), depth + 1, out);
+	dump_obj(0, rb_funcall2(obj, rb_intern("denominator"), 0, 0), depth + 1, out);
 #endif
-        out->w_end(out, &e);
-        break;
+	out->w_end(out, &e);
+	break;
 #endif
     case T_CLASS:
     {
-        e.type = ClassCode;
-        e.clas.str = rb_class2name(obj);
-        e.clas.len = strlen(e.clas.str);
-        e.closed = 1;
-        out->w_start(out, &e);
-        break;
+	e.type = ClassCode;
+	e.clas.str = rb_class2name(obj);
+	e.clas.len = strlen(e.clas.str);
+	e.closed = 1;
+	out->w_start(out, &e);
+	break;
     }
     default:
-        if (StrictEffort == out->opts->effort) {
-            rb_raise(rb_eNotImpError, "Failed to dump %s Object (%02x)\n",
-                     rb_obj_classname(obj), rb_type(obj));
-        } else {
-            e.type = NilClassCode;
-            e.closed = 1;
-            out->w_start(out, &e);
-        }
-        break;
+	if (StrictEffort == out->opts->effort) {
+	    rb_raise(rb_eNotImpError, "Failed to dump %s Object (%02x)\n",
+		     rb_obj_classname(obj), rb_type(obj));
+	} else {
+	    e.type = NilClassCode;
+	    e.closed = 1;
+	    out->w_start(out, &e);
+	}
+	break;
     }
     out->obj = prev_obj;
 }
@@ -974,13 +954,13 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 static int
 dump_var(ID key, VALUE value, Out out) {
     if (T_DATA == rb_type(value) && key == ox_mesg_id) {
-        /* There is a secret recipe that keeps Exception mesg attributes as a
-         * T_DATA until it is needed. The safe way around this hack is to call
-         * the message() method and use the returned string as the
-         * message. Not pretty but it solves the most common use of this
-         * hack. If there are others they will have to be handled one at a
-         * time.
-         */
+	/* There is a secret recipe that keeps Exception mesg attributes as a
+	 * T_DATA until it is needed. The safe way around this hack is to call
+	 * the message() method and use the returned string as the
+	 * message. Not pretty but it solves the most common use of this
+	 * hack. If there are others they will have to be handled one at a
+	 * time.
+	 */
 	value = rb_funcall(out->obj, ox_message_id, 0);
     }
     dump_obj(key, value, out->depth, out);
@@ -998,80 +978,80 @@ dump_hash(VALUE key, VALUE value, Out out) {
 
 static void
 dump_gen_doc(VALUE obj, int depth, Out out) {
-    VALUE       attrs = rb_attr_get(obj, ox_attributes_id);
-    VALUE       nodes = rb_attr_get(obj, ox_nodes_id);
+    volatile VALUE	attrs = rb_attr_get(obj, ox_attributes_id);
+    volatile VALUE	nodes = rb_attr_get(obj, ox_nodes_id);
 
     if ('\0' == *out->opts->encoding && Qnil != attrs) {
-	VALUE	renc = rb_hash_lookup(attrs, ox_encoding_sym);
+	volatile VALUE	renc = rb_hash_lookup(attrs, ox_encoding_sym);
 
-        if (Qnil != renc) {
-	    const char  *enc = StringValuePtr(renc);
+	if (Qnil != renc) {
+	    const char	*enc = StringValuePtr(renc);
 
 	    strncpy(out->opts->encoding, enc, sizeof(out->opts->encoding) - 1);
-        }
+	}
     }
     if (Yes == out->opts->with_xml) {
-        dump_value(out, "<?xml", 5);
-        if (Qnil != attrs) {
-            rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
+	dump_value(out, "<?xml", 5);
+	if (Qnil != attrs) {
+	    rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
 	}
-        dump_value(out, "?>", 2);
+	dump_value(out, "?>", 2);
     }
     if (Yes == out->opts->with_instruct) {
-        if (out->buf < out->cur) {
-            dump_value(out, "\n<?ox version=\"1.0\" mode=\"generic\"?>", 36);
-        } else {
-            dump_value(out, "<?ox version=\"1.0\" mode=\"generic\"?>", 35);
-        }
+	if (out->buf < out->cur) {
+	    dump_value(out, "\n<?ox version=\"1.0\" mode=\"generic\"?>", 36);
+	} else {
+	    dump_value(out, "<?ox version=\"1.0\" mode=\"generic\"?>", 35);
+	}
     }
     if (Qnil != nodes) {
-        dump_gen_nodes(nodes, depth, out);
+	dump_gen_nodes(nodes, depth, out);
     }
 }
 
 static void
 dump_gen_element(VALUE obj, int depth, Out out) {
-    VALUE       rname = rb_attr_get(obj, ox_at_value_id);
-    VALUE       attrs = rb_attr_get(obj, ox_attributes_id);
-    VALUE       nodes = rb_attr_get(obj, ox_nodes_id);
-    const char  *name = StringValuePtr(rname);
-    long        nlen = RSTRING_LEN(rname);
-    size_t      size;
-    int         indent;
+    volatile VALUE	rname = rb_attr_get(obj, ox_at_value_id);
+    volatile VALUE	attrs = rb_attr_get(obj, ox_attributes_id);
+    volatile VALUE	nodes = rb_attr_get(obj, ox_nodes_id);
+    const char		*name = StringValuePtr(rname);
+    long		nlen = RSTRING_LEN(rname);
+    size_t		size;
+    int			indent;
     
     if (0 > out->indent) {
-        indent = -1;
+	indent = -1;
     } else if (0 == out->indent) {
-        indent = 0;
+	indent = 0;
     } else {
-        indent = depth * out->indent;
+	indent = depth * out->indent;
     }
     size = indent + 4 + nlen;
     if (out->end - out->cur <= (long)size) {
-        grow(out, size);
+	grow(out, size);
     }
     fill_indent(out, indent);
     *out->cur++ = '<';
     fill_value(out, name, nlen);
     if (Qnil != attrs) {
-        rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
+	rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
     }
     if (Qnil != nodes) {
-        int     do_indent;
-        
-        *out->cur++ = '>';
-        do_indent = dump_gen_nodes(nodes, depth, out);
-        if (out->end - out->cur <= (long)size) {
-            grow(out, size);
-        }
-        if (do_indent) {
-            fill_indent(out, indent);
-        }
-        *out->cur++ = '<';
-        *out->cur++ = '/';
-        fill_value(out, name, nlen);
+	int	do_indent;
+	
+	*out->cur++ = '>';
+	do_indent = dump_gen_nodes(nodes, depth, out);
+	if (out->end - out->cur <= (long)size) {
+	    grow(out, size);
+	}
+	if (do_indent) {
+	    fill_indent(out, indent);
+	}
+	*out->cur++ = '<';
+	*out->cur++ = '/';
+	fill_value(out, name, nlen);
     } else {
-        *out->cur++ = '/';
+	*out->cur++ = '/';
     }
     *out->cur++ = '>';
     *out->cur = '\0';
@@ -1079,14 +1059,14 @@ dump_gen_element(VALUE obj, int depth, Out out) {
 
 static void
 dump_gen_instruct(VALUE obj, int depth, Out out) {
-    VALUE	rname = rb_attr_get(obj, ox_at_value_id);
-    VALUE	attrs = rb_attr_get(obj, ox_attributes_id);
-    VALUE	rcontent = rb_attr_get(obj, ox_at_content_id);
-    const char	*name = StringValuePtr(rname);
-    const char	*content = 0;
-    long	nlen = RSTRING_LEN(rname);
-    long	clen = 0;
-    size_t	size;
+    volatile VALUE	rname = rb_attr_get(obj, ox_at_value_id);
+    volatile VALUE	attrs = rb_attr_get(obj, ox_attributes_id);
+    volatile VALUE	rcontent = rb_attr_get(obj, ox_at_content_id);
+    const char		*name = StringValuePtr(rname);
+    const char		*content = 0;
+    long		nlen = RSTRING_LEN(rname);
+    long		clen = 0;
+    size_t		size;
     
     if (T_STRING == rb_type(rcontent)) {
 	content = StringValuePtr(rcontent);
@@ -1096,7 +1076,7 @@ dump_gen_instruct(VALUE obj, int depth, Out out) {
 	size = 4 + nlen;
     }
     if (out->end - out->cur <= (long)size) {
-        grow(out, size);
+	grow(out, size);
     }
     *out->cur++ = '<';
     *out->cur++ = '?';
@@ -1104,7 +1084,7 @@ dump_gen_instruct(VALUE obj, int depth, Out out) {
     if (0 != content) {
 	fill_value(out, content, clen);
     } else if (Qnil != attrs) {
-        rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
+	rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
     }
     *out->cur++ = '?';
     *out->cur++ = '>';
@@ -1113,37 +1093,37 @@ dump_gen_instruct(VALUE obj, int depth, Out out) {
 
 static int
 dump_gen_nodes(VALUE obj, int depth, Out out) {
-    long        cnt = RARRAY_LEN(obj);
-    int         indent_needed = 1;
+    long	cnt = RARRAY_LEN(obj);
+    int		indent_needed = 1;
     
     if (0 < cnt) {
-        const VALUE	*np = RARRAY_PTR(obj);
-        VALUE		clas;
-        int		d2 = depth + 1;
+	const VALUE	*np = RARRAY_PTR(obj);
+	VALUE		clas;
+	int		d2 = depth + 1;
 
 	if (MAX_DEPTH < depth) {
 	    rb_raise(rb_eSysStackError, "maximum depth exceeded");
 	}
-        for (; 0 < cnt; cnt--, np++) {
-            clas = rb_obj_class(*np);
-            if (ox_element_clas == clas) {
-                dump_gen_element(*np, d2, out);
+	for (; 0 < cnt; cnt--, np++) {
+	    clas = rb_obj_class(*np);
+	    if (ox_element_clas == clas) {
+		dump_gen_element(*np, d2, out);
 	    } else if (ox_instruct_clas == clas) {
-                dump_gen_instruct(*np, d2, out);
-                indent_needed = (1 == cnt) ? 0 : 1;
-            } else if (rb_cString == clas) {
-                dump_str_value(out, StringValuePtr(*(VALUE*)np), RSTRING_LEN(*np));
-                indent_needed = (1 == cnt) ? 0 : 1;
-            } else if (ox_comment_clas == clas) {
-                dump_gen_val_node(*np, d2, "<!-- ", 5, " -->", 4, out);
-            } else if (ox_cdata_clas == clas) {
-                dump_gen_val_node(*np, d2, "<![CDATA[", 9, "]]>", 3, out);
-            } else if (ox_doctype_clas == clas) {
-                dump_gen_val_node(*np, d2, "<!DOCTYPE ", 10, " >", 2, out);
-            } else {
-                rb_raise(rb_eTypeError, "Unexpected class, %s, while dumping generic XML\n", rb_class2name(clas));
-            }
-        }
+		dump_gen_instruct(*np, d2, out);
+		indent_needed = (1 == cnt) ? 0 : 1;
+	    } else if (rb_cString == clas) {
+		dump_str_value(out, StringValuePtr(*(VALUE*)np), RSTRING_LEN(*np));
+		indent_needed = (1 == cnt) ? 0 : 1;
+	    } else if (ox_comment_clas == clas) {
+		dump_gen_val_node(*np, d2, "<!-- ", 5, " -->", 4, out);
+	    } else if (ox_cdata_clas == clas) {
+		dump_gen_val_node(*np, d2, "<![CDATA[", 9, "]]>", 3, out);
+	    } else if (ox_doctype_clas == clas) {
+		dump_gen_val_node(*np, d2, "<!DOCTYPE ", 10, " >", 2, out);
+	    } else {
+		rb_raise(rb_eTypeError, "Unexpected class, %s, while dumping generic XML\n", rb_class2name(clas));
+	    }
+	}
     }
     return indent_needed;
 }
@@ -1151,8 +1131,8 @@ dump_gen_nodes(VALUE obj, int depth, Out out) {
 static int
 dump_gen_attr(VALUE key, VALUE value, Out out) {
     const char	*ks;
-    size_t      klen;
-    size_t      size;
+    size_t	klen;
+    size_t	size;
 
 #if HAS_PRIVATE_ENCODING
     // There seems to be a bug in jruby for converting symbols to strings and preserving the encoding. This is a work
@@ -1176,7 +1156,7 @@ dump_gen_attr(VALUE key, VALUE value, Out out) {
     value = rb_String(value);
     size = 4 + klen + RSTRING_LEN(value);
     if (out->end - out->cur <= (long)size) {
-        grow(out, size);
+	grow(out, size);
     }
     *out->cur++ = ' ';
     fill_value(out, ks, klen);
@@ -1190,29 +1170,29 @@ dump_gen_attr(VALUE key, VALUE value, Out out) {
 
 static void
 dump_gen_val_node(VALUE obj, int depth,
-                  const char *pre, size_t plen,
-                  const char *suf, size_t slen, Out out) {
-    VALUE       v = rb_attr_get(obj, ox_at_value_id);
-    const char  *val;
-    size_t      vlen;
-    size_t      size;
-    int         indent;
+		  const char *pre, size_t plen,
+		  const char *suf, size_t slen, Out out) {
+    volatile VALUE	v = rb_attr_get(obj, ox_at_value_id);
+    const char		*val;
+    size_t		vlen;
+    size_t		size;
+    int			indent;
 
     if (T_STRING != rb_type(v)) {
-        return;
+	return;
     }
     val = StringValuePtr(v);
     vlen = RSTRING_LEN(v);
     if (0 > out->indent) {
-        indent = -1;
+	indent = -1;
     } else if (0 == out->indent) {
-        indent = 0;
+	indent = 0;
     } else {
-        indent = depth * out->indent;
+	indent = depth * out->indent;
     }
     size = indent + plen + slen + vlen;
     if (out->end - out->cur <= (long)size) {
-        grow(out, size);
+	grow(out, size);
     }
     fill_indent(out, indent);
     fill_value(out, pre, plen);
@@ -1223,7 +1203,7 @@ dump_gen_val_node(VALUE obj, int depth,
 
 static void
 dump_obj_to_xml(VALUE obj, Options copts, Out out) {
-    VALUE       clas = rb_obj_class(obj);
+    VALUE	clas = rb_obj_class(obj);
 
     out->w_time = (Yes == copts->xsd_date) ? dump_time_xsd : dump_time_thin;
     out->buf = ALLOC_N(char, 65336);
@@ -1234,7 +1214,7 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
     out->opts = copts;
     out->obj = obj;
     if (Yes == copts->circular) {
-        ox_cache8_new(&out->circ_cache);
+	ox_cache8_new(&out->circ_cache);
     }
     out->indent = copts->indent;
     if (ox_document_clas == clas) {
@@ -1242,13 +1222,13 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
     } else if (ox_element_clas == clas) {
 	dump_gen_element(obj, 0, out);
     } else {
-        out->w_start = dump_start;
-        out->w_end = dump_end;
-        dump_first_obj(obj, out);
+	out->w_start = dump_start;
+	out->w_end = dump_end;
+	dump_first_obj(obj, out);
     }
     dump_value(out, "\n", 1);
     if (Yes == copts->circular) {
-        ox_cache8_delete(out->circ_cache);
+	ox_cache8_delete(out->circ_cache);
     }
 }
 
@@ -1263,17 +1243,17 @@ ox_write_obj_to_str(VALUE obj, Options copts) {
 void
 ox_write_obj_to_file(VALUE obj, const char *path, Options copts) {
     struct _Out out;
-    size_t      size;
-    FILE        *f;    
+    size_t	size;
+    FILE	*f;    
 
     dump_obj_to_xml(obj, copts, &out);
     size = out.cur - out.buf;
     if (0 == (f = fopen(path, "w"))) {
-        rb_raise(rb_eIOError, "%s\n", strerror(errno));
+	rb_raise(rb_eIOError, "%s\n", strerror(errno));
     }
     if (size != fwrite(out.buf, 1, size, f)) {
-        int err = ferror(f);
-        rb_raise(rb_eIOError, "Write failed. [%d:%s]\n", err, strerror(err));
+	int err = ferror(f);
+	rb_raise(rb_eIOError, "Write failed. [%d:%s]\n", err, strerror(err));
     }
     xfree(out.buf);
     fclose(f);

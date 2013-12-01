@@ -12,6 +12,7 @@ $: << File.join(File.dirname(__FILE__), "../../ext")
 $: << File.join(File.dirname(__FILE__), ".")
 
 require 'stringio'
+require 'bigdecimal'
 require 'test/unit'
 require 'optparse'
 

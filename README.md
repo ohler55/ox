@@ -34,9 +34,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## <a name="release">Release Notes</a>
 
-### Release 2.0.11
+### Release 2.0.12
 
- - Added support for BigDecimals in :object mode.
+ - Fixed problem compiling with latest version of Rubinius.
 
 ## <a name="description">Description</a>
 
