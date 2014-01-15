@@ -25,7 +25,7 @@ module Ox
       alias :start_element :startElement
 
       def parse(str)
-        Ox.sax_parse(self, StringIO.new(str), :symbolize => false)
+        Ox.sax_parse(self, StringIO.new(str), :symbolize => false, :convert_special => true)
       end
     end
   end
