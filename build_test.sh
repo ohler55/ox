@@ -5,7 +5,7 @@ for ruby in \
  rubinius\
  ree-1.8.7-2012.02\
  1.9.3-p484\
- 2.0.0-p353
+ 2.1.0
 do
     echo "\n********************************************************************************"
     echo "Building $ruby\n"
@@ -42,13 +42,13 @@ cd ../../test
 ./sax/sax_test.rb
 cd ..
 
-echo "resetting to 2.0.0\n"
+echo "resetting to 2.1.0\n"
 
 cd ext/ox
-rbenv local 2.0.0-p247
+rbenv local 2.1.0
 cd ../../test
-rbenv local 2.0.0-p247
+rbenv local 2.1.0
 cd sax
-rbenv local 2.0.0-p247
+rbenv local 2.1.0
 cd ../..
 echo "\n"
