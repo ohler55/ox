@@ -12,14 +12,14 @@ module Ox
   #      @element_name = []
   #    end
   #
-  #    def start_element(name, attrs)
+  #    def start_element(name)
   #      @element_names << name
   #    end
   #  end
   #
   #  any = MySax.new()
   #  File.open('any.xml', 'r') do |f|
-  #    Xml.sax_parse(any, f)
+  #    Ox.sax_parse(any, f)
   #  end
   #
   # To make the desired methods active while parsing the desired method should
