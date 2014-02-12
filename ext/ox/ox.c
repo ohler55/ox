@@ -919,6 +919,19 @@ void Init_ox() {
     ox_tv_usec_id = rb_intern("tv_usec");
     ox_value_id = rb_intern("value");
 
+    rb_require("ox/version");
+    rb_require("ox/error");
+    rb_require("ox/hasattrs");
+    rb_require("ox/node");
+    rb_require("ox/comment");
+    rb_require("ox/instruct");
+    rb_require("ox/cdata");
+    rb_require("ox/doctype");
+    rb_require("ox/element");
+    rb_require("ox/document");
+    rb_require("ox/bag");
+    rb_require("ox/sax");
+
     ox_time_class = rb_const_get(rb_cObject, rb_intern("Time"));
     ox_date_class = rb_const_get(rb_cObject, rb_intern("Date"));
     ox_parse_error_class = rb_const_get_at(Ox, rb_intern("ParseError"));
