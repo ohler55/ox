@@ -34,6 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Release 2.1.1
+
+ - Worked around a module reset and clear that occurs on some Rubies.
+
 ### Release 2.1.0
 
  - Thanks to jfontan Ox now includes support for XMLRPC.
