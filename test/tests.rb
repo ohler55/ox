@@ -10,7 +10,9 @@ $VERBOSE = true
 $: << File.join(File.dirname(__FILE__), "../lib")
 $: << File.join(File.dirname(__FILE__), "../ext")
 
-require 'test/unit'
+require 'rubygems' if RUBY_VERSION.start_with?('1.8.')
+require 'minitest'
+require 'minitest/autorun'
 require 'optparse'
 require 'date'
 require 'bigdecimal'
@@ -26,7 +28,11 @@ opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
-class Func < ::Test::Unit::TestCase
+class Func < ::Minitest::Test
+
+  unless respond_to?(:assert_raise)
+    alias assert_raise assert_raises
+  end
 
   def test_get_options
     opts = Ox.default_options()
@@ -41,22 +47,12 @@ class Func < ::Test::Unit::TestCase
                    :xsd_date=>false,
                    :mode=>nil,
                    :symbolize_keys=>true,
+                   :skip=>:skip_none,
                    :effort=>:strict})
   end
 
   def test_set_options
-    orig = {
-      :encoding=>nil,
-      :indent=>2,
-      :trace=>0,
-      :with_dtd=>false,
-      :with_xml=>true,
-      :with_instructions=>false,
-      :circular=>false,
-      :xsd_date=>false,
-      :mode=>nil,
-      :symbolize_keys=>true,
-      :effort=>:strict}
+    orig = Ox.default_options()
     o2 = {
       :encoding=>"UTF-8",
       :indent=>4,
@@ -68,11 +64,12 @@ class Func < ::Test::Unit::TestCase
       :xsd_date=>true,
       :mode=>:object,
       :symbolize_keys=>true,
+      :skip=>:skip_return,
       :effort=>:tolerant }
     o3 = { :xsd_date=>false }
     Ox.default_options = o2
     opts = Ox.default_options()
-    assert_equal(opts, o2);
+    assert_equal(o2, opts);
     Ox.default_options = o3 # see if it throws an exception
     Ox.default_options = orig # return to original
   end

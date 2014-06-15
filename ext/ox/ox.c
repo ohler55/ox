@@ -994,7 +994,7 @@ void Init_ox() {
     ox_encoding_sym = ID2SYM(rb_intern("encoding"));		rb_gc_register_address(&ox_encoding_sym);
     skip_none_sym = ID2SYM(rb_intern("skip_none"));		rb_gc_register_address(&skip_none_sym);
     skip_return_sym = ID2SYM(rb_intern("skip_return"));		rb_gc_register_address(&skip_return_sym);
-    skip_sym = ID2SYM(rb_intern("ski"));			rb_gc_register_address(&skip_sym);
+    skip_sym = ID2SYM(rb_intern("skip"));			rb_gc_register_address(&skip_sym);
     skip_white_sym = ID2SYM(rb_intern("skip_white"));		rb_gc_register_address(&skip_white_sym);
     smart_sym = ID2SYM(rb_intern("smart"));			rb_gc_register_address(&smart_sym);
     strict_sym = ID2SYM(rb_intern("strict"));			rb_gc_register_address(&strict_sym);
