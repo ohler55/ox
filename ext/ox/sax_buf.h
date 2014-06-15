@@ -1,4 +1,4 @@
-/* sax_stack.h
+/* sax_buf.h
  * Copyright (c) 2011, Peter Ohler
  * All rights reserved.
  * 

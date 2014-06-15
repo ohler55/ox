@@ -132,8 +132,12 @@ static VALUE	mode_sym;
 static VALUE	object_sym;
 static VALUE	opt_format_sym;
 static VALUE	optimized_sym;
-static VALUE	strict_sym;
+static VALUE	skip_none_sym;
+static VALUE	skip_return_sym;
+static VALUE	skip_sym;
+static VALUE	skip_white_sym;
 static VALUE	smart_sym;
+static VALUE	strict_sym;
 static VALUE	symbolize_keys_sym;
 static VALUE	symbolize_sym;
 static VALUE	tolerant_sym;
@@ -163,6 +167,7 @@ struct _Options	 ox_default_options = {
     NoMode,		/* mode */
     StrictEffort,	/* effort */
     Yes,		/* sym_keys */
+    NoSkip,		/* skip */
 #if HAS_PRIVATE_ENCODING
     Qnil		/* rb_enc */
 #else
@@ -240,6 +245,7 @@ defuse_bom(char *xml, Options options) {
  * - mode: [:object|:generic|:limited|nil] load method to use for XML
  * - effort: [:strict|:tolerant|:auto_define] set the tolerance level for loading
  * - symbolize_keys: [true|false|nil] symbolize element attribute keys or leave as Strings
+ * - skip: [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
  * @return [Hash] all current option settings.
  *
  * Note that an indent of less than zero will result in a tight one line output
@@ -273,6 +279,12 @@ get_def_opts(VALUE self) {
     case NoEffort:
     default:			rb_hash_aset(opts, effort_sym, Qnil);			break;
     }
+    switch (ox_default_options.skip) {
+    case NoSkip:		rb_hash_aset(opts, skip_sym, skip_none_sym);		break;
+    case CrSkip:		rb_hash_aset(opts, skip_sym, skip_return_sym);		break;
+    case SpcSkip:		rb_hash_aset(opts, skip_sym, skip_white_sym);		break;
+    default:			rb_hash_aset(opts, skip_sym, Qnil);			break;
+    }
     return opts;
 }
 
@@ -291,6 +303,7 @@ get_def_opts(VALUE self) {
  * @param [:object|:generic|:limited|nil] :mode load method to use for XML
  * @param [:strict|:tolerant|:auto_define] :effort set the tolerance level for loading
  * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
+ * @param [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
  * @return [nil]
  */
 static VALUE
@@ -360,6 +373,20 @@ set_def_opts(VALUE self, VALUE opts) {
     } else {
 	rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, :auto_define, or nil.\n");
     }
+
+    v = rb_hash_aref(opts, skip_sym);
+    if (Qnil == v) {
+	ox_default_options.skip = NoSkip;
+    } else if (skip_none_sym == v) {
+	ox_default_options.skip = NoSkip;
+    } else if (skip_return_sym == v) {
+	ox_default_options.skip = CrSkip;
+    } else if (skip_white_sym == v) {
+	ox_default_options.skip = SpcSkip;
+    } else {
+	rb_raise(ox_parse_error_class, ":skip must be :skip_none, :skip_return, :skip_white, or nil.\n");
+    }
+
     for (o = ynos; 0 != o->attr; o++) {
 	v = rb_hash_lookup(opts, o->sym);
 	if (Qnil == v) {
@@ -490,6 +517,18 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 		rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
 	    }
 	}
+	if (Qnil != (v = rb_hash_lookup(h, skip_sym))) {
+	    if (skip_none_sym == v) {
+		options.skip = NoSkip;
+	    } else if (skip_return_sym == v) {
+		options.skip = CrSkip;
+	    } else if (skip_white_sym == v) {
+		options.skip = SpcSkip;
+	    } else {
+		rb_raise(ox_parse_error_class, ":effort must be :skip_none, :skip_return, or :skip_white.\n");
+	    }
+	}
+
 	if (Qnil != (v = rb_hash_lookup(h, trace_sym))) {
 	    Check_Type(v, T_FIXNUM);
 	    options.trace = FIX2INT(v);
@@ -953,6 +992,10 @@ void Init_ox() {
     opt_format_sym = ID2SYM(rb_intern("opt_format"));		rb_gc_register_address(&opt_format_sym);
     optimized_sym = ID2SYM(rb_intern("optimized"));		rb_gc_register_address(&optimized_sym);
     ox_encoding_sym = ID2SYM(rb_intern("encoding"));		rb_gc_register_address(&ox_encoding_sym);
+    skip_none_sym = ID2SYM(rb_intern("skip_none"));		rb_gc_register_address(&skip_none_sym);
+    skip_return_sym = ID2SYM(rb_intern("skip_return"));		rb_gc_register_address(&skip_return_sym);
+    skip_sym = ID2SYM(rb_intern("ski"));			rb_gc_register_address(&skip_sym);
+    skip_white_sym = ID2SYM(rb_intern("skip_white"));		rb_gc_register_address(&skip_white_sym);
     smart_sym = ID2SYM(rb_intern("smart"));			rb_gc_register_address(&smart_sym);
     strict_sym = ID2SYM(rb_intern("strict"));			rb_gc_register_address(&strict_sym);
     symbolize_keys_sym = ID2SYM(rb_intern("symbolize_keys"));	rb_gc_register_address(&symbolize_keys_sym);

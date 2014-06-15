@@ -118,6 +118,12 @@ typedef enum {
     NoMode   = 0
 } LoadMode;
 
+typedef enum {
+    NoSkip   = 'n',
+    CrSkip   = 'r',
+    SpcSkip  = 's',
+} SkipMode;
+
 typedef struct _PInfo	*PInfo;
 
 typedef struct _ParseCallbacks {
@@ -149,6 +155,7 @@ typedef struct _Options {
     char	mode;		/* LoadMode */
     char	effort;		/* Effort */
     char	sym_keys;	/* symbolize keys */
+    char	skip;		/* skip mode */
 #if HAS_ENCODING_SUPPORT
     rb_encoding	*rb_enc;
 #elif HAS_PRIVATE_ENCODING
