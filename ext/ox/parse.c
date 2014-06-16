@@ -711,6 +711,7 @@ read_text(PInfo pi) {
 		case NoSkip:
 		default:
 		    *b++ = c;
+		    break;
 		}
 	    }
 	    break;
