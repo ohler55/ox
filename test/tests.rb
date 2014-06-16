@@ -359,6 +359,28 @@ class Func < ::Minitest::Test
     assert_equal('Pete', doc.attributes[:name])
   end
 
+  def test_skip_none
+    xml = %{<top>  Pete\r\n  Ohler</top>}
+    doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_none)
+    x2 = Ox.dump(doc, :indent => 0)
+    puts "*** '#{x2}'"
+    assert_equal(%{\n<top>  Pete\r\n  Ohler</top>\n}, x2)
+  end
+
+  def test_skip_return
+    xml = %{<top>  Pete\r\n  Ohler</top>}
+    doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_return)
+    x2 = Ox.dump(doc)
+    assert_equal(%{\n<top>  Pete\n  Ohler</top>\n}, x2)
+  end
+
+  def test_skip_space
+    xml = %{<top>  Pete\r\n  Ohler</top>}
+    doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_white)
+    x2 = Ox.dump(doc)
+    assert_equal(%{\n<top> Pete Ohler</top>\n}, x2)
+  end
+
   def test_tolerant
     xml = %{<!doctype HTML>
 <html lang=en>

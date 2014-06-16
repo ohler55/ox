@@ -68,6 +68,21 @@ static int	collapse_special(PInfo pi, char *str);
  * all cases to parse the string.
  */
 
+inline static int
+is_white(char c) {
+    switch (c) {
+    case ' ':
+    case '\t':
+    case '\f':
+    case '\n':
+    case '\r':
+	return 1;
+    default:
+	return 0;
+    }
+}
+
+
 inline static void
 next_non_white(PInfo pi) {
     for (; 1; pi->s++) {
@@ -678,7 +693,25 @@ read_text(PInfo pi) {
 		    return;
 		}
 	    } else {
-		*b++ = c;
+		switch (pi->options->skip) {
+		case CrSkip:
+		    if ('\r' != c) {
+			*b++ = c;
+		    }
+		    break;
+		case SpcSkip:
+		    if (is_white(c)) {
+			if (buf == b || ' ' != *(b - 1)) {
+			    *b++ = ' ';
+			}
+		    } else {
+			*b++ = c;
+		    }			
+		    break;
+		case NoSkip:
+		default:
+		    *b++ = c;
+		}
 	    }
 	    break;
 	}
