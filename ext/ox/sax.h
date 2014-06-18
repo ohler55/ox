@@ -35,11 +35,13 @@
 #include "sax_has.h"
 #include "sax_stack.h"
 #include "sax_hint.h"
+#include "ox.h"
 
 typedef struct _SaxOptions {
     int			symbolize;
     int			convert_special;
     int			smart;
+    SkipMode		skip;
 } *SaxOptions;
 
 typedef struct _SaxDrive {
@@ -60,6 +62,7 @@ typedef struct _SaxDrive {
 #endif
 } *SaxDrive;
 
+extern void	ox_collapse_return(char *str);
 extern void	ox_sax_parse(VALUE handler, VALUE io, SaxOptions options);
 extern void	ox_sax_drive_cleanup(SaxDrive dr);
 extern void	ox_sax_drive_error(SaxDrive dr, const char *msg);

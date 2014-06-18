@@ -907,6 +907,7 @@ read_element_end(SaxDrive dr) {
 
 static char
 read_text(SaxDrive dr) {
+    VALUE	args[1];
     char        c;
     int		line = dr->buf.line;
     int		col = dr->buf.col - 1;
@@ -923,8 +924,6 @@ read_text(SaxDrive dr) {
 	*(dr->buf.tail - 1) = '\0';
     }
     if (dr->has.value) {
-        VALUE   args[1];
-
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	}
@@ -934,11 +933,19 @@ read_text(SaxDrive dr) {
 	*args = dr->value_obj;
         rb_funcall2(dr->handler, ox_value_id, 1, args);
     } else if (dr->has.text) {
-        VALUE   args[1];
-
         if (dr->options.convert_special) {
             ox_sax_collapse_special(dr, dr->buf.str, line, col);
         }
+	switch (dr->options.skip) {
+	case CrSkip:
+	    buf_collapse_return(dr->buf.str);
+	    break;
+	case SpcSkip:
+	    buf_collapse_white(dr->buf.str);
+	    break;
+	default:
+	    break;
+	}
         args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
         if (0 != dr->encoding) {

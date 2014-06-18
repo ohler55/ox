@@ -146,6 +146,16 @@ sax_value_as_s(VALUE self) {
     if (dr->options.convert_special) {
 	ox_sax_collapse_special(dr, dr->buf.str, dr->buf.line, dr->buf.col);
     }
+    switch (dr->options.skip) {
+    case CrSkip:
+	buf_collapse_return(dr->buf.str);
+	break;
+    case SpcSkip:
+	buf_collapse_white(dr->buf.str);
+	break;
+    default:
+	break;
+    }
     rs = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
     if (0 != dr->encoding) {

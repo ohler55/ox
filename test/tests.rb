@@ -363,7 +363,6 @@ class Func < ::Minitest::Test
     xml = %{<top>  Pete\r\n  Ohler</top>}
     doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_none)
     x2 = Ox.dump(doc, :indent => 0)
-    puts "*** '#{x2}'"
     assert_equal(%{\n<top>  Pete\r\n  Ohler</top>\n}, x2)
   end
 

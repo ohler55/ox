@@ -711,7 +711,8 @@ load_file(int argc, VALUE *argv, VALUE self) {
  * @param [Hash] options parse options
  * @param [true|false] :convert_special flag indicating special characters like &lt; are converted
  * @param [true|false] :symbolize flag indicating the parser symbolize element and attribute names
- * @param [true|false] :smart flag indicating the parser use hints if available (use with html)
+ * @param [true|false] :smart flag indicating the parser uses hints if available (use with html)
+ * @param [:skip_return|:skip_white] :skip flag indicating the parser skips \r or collpase white space into a single space. Default (skip nothing)
  */
 static VALUE
 sax_parse(int argc, VALUE *argv, VALUE self) {
@@ -720,6 +721,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
     options.symbolize = 1;
     options.convert_special = 0;
     options.smart = 0;
+    options.skip = NoSkip;
 
     if (argc < 2) {
 	rb_raise(ox_parse_error_class, "Wrong number of arguments to sax_parse.\n");
@@ -736,6 +738,13 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
 	}
 	if (Qnil != (v = rb_hash_lookup(h, symbolize_sym))) {
 	    options.symbolize = (Qtrue == v);
+	}
+	if (Qnil != (v = rb_hash_lookup(h, skip_sym))) {
+	    if (skip_return_sym == v) {
+		options.skip = CrSkip;
+	    } else if (skip_white_sym == v) {
+		options.skip = SpcSkip;
+	    }
 	}
     }
     ox_sax_parse(argv[0], argv[1], &options);

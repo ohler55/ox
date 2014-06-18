@@ -645,6 +645,27 @@ encoding = "UTF-8" ?>},
     assert_equal('cheese', handler.item)
   end
 
+  def test_sax_skip_none
+    handler = TypeSax.new(:as_s)
+    xml = %{<top>  Pete\r\n  Ohler</top>}
+    Ox.sax_parse(handler, StringIO.new(xml))
+    assert_equal(%{  Pete\r\n  Ohler}, handler.item)
+  end
+
+  def test_sax_skip_return
+    handler = TypeSax.new(:as_s)
+    xml = %{<top>  Pete\r\n  Ohler</top>}
+    Ox.sax_parse(handler, StringIO.new(xml), :skip => :skip_return)
+    assert_equal(%{  Pete\n  Ohler}, handler.item)
+  end
+
+  def test_sax_skip_white
+    handler = TypeSax.new(:as_s)
+    xml = %{<top>  Pete\r\n  Ohler</top>}
+    Ox.sax_parse(handler, StringIO.new(xml), :skip => :skip_white)
+    assert_equal(%{ Pete Ohler}, handler.item)
+  end
+
   def test_sax_value_float
     handler = TypeSax.new(:as_f)
     Ox.sax_parse(handler, StringIO.new(%{<top>7</top>}))

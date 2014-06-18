@@ -195,4 +195,40 @@ buf_checkback(Buf buf, CheckPt cp) {
     return cp->c;
 }
 
+static inline void
+buf_collapse_return(char *str) {
+    char	*back = str;
+
+    for (; '\0' != *str; str++) {
+	if ('\r' != *str) {
+	    *back++ = *str;
+	}
+    }
+    *back = '\0';
+}
+
+static inline void
+buf_collapse_white(char *str) {
+    char	*s = str;
+    char	*back = str;
+
+    for (; '\0' != *s; s++) {
+	switch(*s) {
+	case ' ':
+	case '\t':
+	case '\f':
+	case '\n':
+	case '\r':
+	    if (back == str || ' ' != *(back - 1)) {
+		*back++ = ' ';
+	    }
+	    break;
+	default:
+	    *back++ = *s;
+	    break;
+	}
+    }
+    *back = '\0';
+}
+
 #endif /* __OX_SAX_BUF_H__ */
