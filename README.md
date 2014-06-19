@@ -34,6 +34,11 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Release 2.1.2
+
+ - Added skip option to parsing. This allows white space to be collapsed in two
+   different ways.
+
 ### Release 2.1.1
 
  - Worked around a module reset and clear that occurs on some Rubies.
