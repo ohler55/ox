@@ -197,11 +197,14 @@ buf_checkback(Buf buf, CheckPt cp) {
 
 static inline void
 buf_collapse_return(char *str) {
+    char	*s = str;
     char	*back = str;
 
-    for (; '\0' != *str; str++) {
-	if ('\r' != *str) {
-	    *back++ = *str;
+    for (; '\0' != *s; s++) {
+	if (back != str && '\n' == *s && '\r' == *(back - 1)) {
+	    *(back - 1) = '\n';
+	} else {
+	    *back++ = *s;
 	}
     }
     *back = '\0';

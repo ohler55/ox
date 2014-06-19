@@ -695,7 +695,9 @@ read_text(PInfo pi) {
 	    } else {
 		switch (pi->options->skip) {
 		case CrSkip:
-		    if ('\r' != c) {
+		    if (buf != b && '\n' == c && '\r' == *(b - 1)) {
+			*(b - 1) = '\n';
+		    } else {
 			*b++ = c;
 		    }
 		    break;
