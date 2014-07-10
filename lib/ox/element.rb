@@ -148,6 +148,23 @@ module Ox
       raise NoMethodError.new("#{ids} not found", name)
     end
 
+    # @param [String|Symbol] id identifer of the attribute or method
+    # @param inc_all [Boolean] ignored
+    # @return true if the element has a member that matches the provided name.
+    def respond_to?(id, inc_all=false)
+      return true if super
+      id_str = id.to_s
+      id_sym = id.to_sym
+      nodes.each do |n|
+        return true if n.value == id_str || n.value == id_sym
+      end
+      if instance_variable_defined?(:@attributes)
+        return true if @attributes.has_key?(id_str)
+        return true if @attributes.has_key?(id_sym)
+      end
+      false
+    end
+
     # @param [Array] path array of steps in a path
     # @param [Array] found matching nodes
     def alocate(path, found)

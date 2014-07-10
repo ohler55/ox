@@ -853,6 +853,15 @@ class Func < ::Minitest::Test
     assert_equal(nil, doc.Family.Pete.text)
   end
 
+  def test_easy_respond_to
+    doc = Ox.parse(easy_xml)
+    assert_equal(true, doc.respond_to?(:Family))
+    assert_equal(true, doc.Family.respond_to?('Pete'))
+    assert_equal(false, doc.Family.respond_to?('Fred'))
+    assert_equal(true, doc.Family.Pete.respond_to?('age'))
+    assert_equal(false, doc.Family.Pete.respond_to?('email'))
+  end
+
   def test_easy_element_index
     doc = Ox.parse(easy_xml)
     assert_equal('Pamela', doc.Family.Pete.Kid(1).text)
