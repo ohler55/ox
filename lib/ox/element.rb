@@ -133,11 +133,13 @@ module Ox
     # @return [Element|Node|String|nil] the element, attribute value, or Node identifed by the name
     # @raise [NoMethodError] if no match is found
     def method_missing(id, *args, &block)
+      has_some = false
       ids = id.to_s
       i = args[0].to_i # will be 0 if no arg or parsing fails
       nodes.each do |n|
         if (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids)
           return n if 0 == i
+          has_some = true
           i -= 1
         end
       end
@@ -145,6 +147,7 @@ module Ox
         return @attributes[id] if @attributes.has_key?(id)
         return @attributes[ids] if @attributes.has_key?(ids)
       end
+      return nil if has_some
       raise NoMethodError.new("#{ids} not found", name)
     end
 
