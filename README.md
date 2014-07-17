@@ -34,14 +34,12 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
-### Release 2.1.3
-
- - Added respond_to? method for easy access method checking.
-
 ### Release 2.1.2
 
  - Added skip option to parsing. This allows white space to be collapsed in two
    different ways.
+
+ - Added respond_to? method for easy access method checking. 
 
 ### Release 2.1.1
 
