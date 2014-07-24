@@ -161,7 +161,7 @@ module Ox
       nodes.each do |n|
         return true if n.value == id_str || n.value == id_sym
       end
-      if instance_variable_defined?(:@attributes)
+      if instance_variable_defined?(:@attributes) && @attributes.present?
         return true if @attributes.has_key?(id_str)
         return true if @attributes.has_key?(id_sym)
       end
