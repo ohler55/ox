@@ -846,24 +846,6 @@ read_cdata(PInfo pi) {
     }
 }
 
-inline static void
-next_non_token(PInfo pi) {
-    for (; 1; pi->s++) {
-	switch(*pi->s) {
-	case ' ':
-	case '\t':
-	case '\f':
-	case '\n':
-	case '\r':
-	case '/':
-	case '>':
-	    return;
-	default:
-	    break;
-	}
-    }
-}
-
 /* Assume the value starts immediately and goes until the quote character is
  * reached again. Do not read the character after the terminating quote.
  */

@@ -13,7 +13,11 @@ $: << File.join(File.dirname(__FILE__), ".")
 
 require 'stringio'
 require 'bigdecimal'
-require 'test/unit'
+if '2.1.2' == RUBY_VERSION
+  require 'minitest/autorun'
+else
+  require 'test/unit'
+end
 require 'optparse'
 
 require 'ox'
@@ -25,7 +29,9 @@ opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
-class SaxBaseTest < ::Test::Unit::TestCase
+test_case = ('2.1.2' == RUBY_VERSION) ? ::Minitest::Test : ::Test::Unit::TestCase
+
+class SaxBaseTest < test_case
   include SaxTestHelpers
 
   def test_sax_io_pipe

@@ -41,13 +41,13 @@ cd ../../test
 ./sax/sax_test.rb
 cd ..
 
-echo "resetting to 2.1.0\n"
+echo "resetting to 2.1.2\n"
 
 cd ext/ox
-rbenv local 2.1.0
+rbenv local 2.1.2
 cd ../../test
-rbenv local 2.1.0
+rbenv local 2.1.2
 cd sax
-rbenv local 2.1.0
+rbenv local 2.1.2
 cd ../..
 echo "\n"

@@ -34,6 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Release 2.1.3
+
+ - Added check for @attributes being nil. Reported by and proposed fix by Elana.
+
 ### Release 2.1.2
 
  - Added skip option to parsing. This allows white space to be collapsed in two

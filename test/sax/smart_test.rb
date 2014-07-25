@@ -12,7 +12,11 @@ $: << File.join(File.dirname(__FILE__), "../../ext")
 $: << File.join(File.dirname(__FILE__), ".")
 
 require 'stringio'
-require 'test/unit'
+if '2.1.2' == RUBY_VERSION
+  require 'minitest/autorun'
+else
+  require 'test/unit'
+end
 require 'optparse'
 require 'helpers'
 require 'ox'
@@ -22,9 +26,9 @@ opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
+test_case = ('2.1.2' == RUBY_VERSION) ? ::Minitest::Test : ::Test::Unit::TestCase
 
-
-class SaxSmartTest < ::Test::Unit::TestCase
+class SaxSmartTest < test_case
   include SaxTestHelpers
 
   NORMALELEMENTS = {
