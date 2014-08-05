@@ -93,7 +93,7 @@ callbacks. Unlike Nokogiri and LibXML, Ox can be tuned to use only the SAX
 callbacks that are of interest to the caller. (See the perf_sax.rb file for an
 example.)
 
-Ox is compatible with Ruby 1.8.7, 1.9.2, 2.0.0, JRuby, and RBX.
+Ox is compatible with Ruby 1.8.7, 1.9.3, 2.1.2, and RBX.
 
 ### Object Dump Sample:
 
