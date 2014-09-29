@@ -84,6 +84,7 @@ VALUE	ox_bag_clas;
 VALUE	ox_bigdecimal_class;
 VALUE	ox_cdata_clas;
 VALUE	ox_comment_clas;
+VALUE	ox_raw_clas;
 VALUE	ox_date_class;
 VALUE	ox_doctype_clas;
 VALUE	ox_document_clas;
@@ -1012,6 +1013,7 @@ void Init_ox() {
     ox_element_clas = rb_const_get_at(Ox, rb_intern("Element"));
     ox_instruct_clas = rb_const_get_at(Ox, rb_intern("Instruct"));
     ox_comment_clas = rb_const_get_at(Ox, rb_intern("Comment"));
+    ox_raw_clas = rb_const_get_at(Ox, rb_intern("Raw"));
     ox_doctype_clas = rb_const_get_at(Ox, rb_intern("DocType"));
     ox_cdata_clas = rb_const_get_at(Ox, rb_intern("CData"));
     ox_bag_clas = rb_const_get_at(Ox, rb_intern("Bag"));

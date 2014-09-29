@@ -1091,6 +1091,8 @@ dump_gen_nodes(VALUE obj, int depth, Out out) {
 		indent_needed = (1 == cnt) ? 0 : 1;
 	    } else if (ox_comment_clas == clas) {
 		dump_gen_val_node(*np, d2, "<!-- ", 5, " -->", 4, out);
+	    } else if (ox_raw_clas == clas) {
+		dump_gen_val_node(*np, d2, "", 0, "", 0, out);
 	    } else if (ox_cdata_clas == clas) {
 		dump_gen_val_node(*np, d2, "<![CDATA[", 9, "]]>", 3, out);
 	    } else if (ox_doctype_clas == clas) {
