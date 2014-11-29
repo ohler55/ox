@@ -34,24 +34,14 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Current Release 2.1.4
+
+ - Fixed bug where the parser always started at the first position in a stringio
+   instead of the current position.
+
 ### Release 2.1.3
 
  - Added check for @attributes being nil. Reported by and proposed fix by Elana.
-
-### Release 2.1.2
-
- - Added skip option to parsing. This allows white space to be collapsed in two
-   different ways.
-
- - Added respond_to? method for easy access method checking. 
-
-### Release 2.1.1
-
- - Worked around a module reset and clear that occurs on some Rubies.
-
-### Release 2.1.0
-
- - Thanks to jfontan Ox now includes support for XMLRPC.
 
 ## Description
 

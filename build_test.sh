@@ -3,8 +3,8 @@
 for ruby in \
  1.8.7-p374\
  rbx-2.2.6\
- 1.9.3-p484\
- 2.1.2
+ 1.9.3-p547\
+ 2.1.4
 do
     echo "\n********************************************************************************"
     echo "Building $ruby\n"
@@ -41,13 +41,13 @@ cd ../../test
 ./sax/sax_test.rb
 cd ..
 
-echo "resetting to 2.1.2\n"
+echo "resetting to 2.1.4\n"
 
 cd ext/ox
-rbenv local 2.1.2
+rbenv local 2.1.4
 cd ../../test
-rbenv local 2.1.2
+rbenv local 2.1.4
 cd sax
-rbenv local 2.1.2
+rbenv local 2.1.4
 cd ../..
 echo "\n"

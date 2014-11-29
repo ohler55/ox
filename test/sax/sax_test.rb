@@ -13,7 +13,9 @@ $: << File.join(File.dirname(__FILE__), ".")
 
 require 'stringio'
 require 'bigdecimal'
-if '2.1.2' == RUBY_VERSION
+
+use_minitest = RUBY_VERSION.start_with?('2.1.') && RUBY_ENGINE != 'rbx'
+if use_minitest
   require 'minitest/autorun'
 else
   require 'test/unit'
@@ -29,7 +31,7 @@ opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
-test_case = ('2.1.2' == RUBY_VERSION) ? ::Minitest::Test : ::Test::Unit::TestCase
+test_case = (use_minitest) ? ::Minitest::Test : ::Test::Unit::TestCase
 
 class SaxBaseTest < test_case
   include SaxTestHelpers
@@ -769,6 +771,20 @@ encoding = "UTF-8" ?>},
     Ox.sax_parse(handler, StringIO.new(%{<?xml version="1.0"?><abcdefghijklmnop></abcdefghijklmnop>}))
     assert_equal([], handler.errors)
   end
+
+  def test_sax_offset_start
+    handler = AllSax.new()
+    xml = StringIO.new(%|
+this is not part of the xml document
+<top>this is xml</top>
+|)
+    xml.seek(37)
+    Ox.sax_parse(handler, xml)
+    assert_equal([[:start_element, :top],
+                  [:text, "this is xml"],
+                  [:end_element, :top]], handler.calls)
+  end
+
 
   def test_sax_tolerant
     xml = %{<!doctype HTML>

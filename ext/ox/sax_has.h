@@ -51,18 +51,7 @@ typedef struct _Has {
 
 inline static int
 respond_to(VALUE obj, ID method) {
-#ifdef JRUBY_RUBY
-    /* There is a bug in JRuby where rb_respond_to() returns true (1) even if
-     * a method is private. */
-    {
-	VALUE	args[1];
-
-	*args = ID2SYM(method);
-	return (Qtrue == rb_funcall2(obj, rb_intern("respond_to?"), 1, args));
-    }
-#else
     return rb_respond_to(obj, method);
-#endif
 }
 
 inline static void

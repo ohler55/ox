@@ -12,7 +12,8 @@ $: << File.join(File.dirname(__FILE__), "../../ext")
 $: << File.join(File.dirname(__FILE__), ".")
 
 require 'stringio'
-if '2.1.2' == RUBY_VERSION
+use_minitest = RUBY_VERSION.start_with?('2.1.') && RUBY_ENGINE != 'rbx'
+if use_minitest
   require 'minitest/autorun'
 else
   require 'test/unit'
@@ -26,7 +27,7 @@ opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
-test_case = ('2.1.2' == RUBY_VERSION) ? ::Minitest::Test : ::Test::Unit::TestCase
+test_case = (use_minitest) ? ::Minitest::Test : ::Test::Unit::TestCase
 
 class SaxSmartTest < test_case
   include SaxTestHelpers

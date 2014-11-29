@@ -49,24 +49,18 @@ static VALUE		rescue_cb(VALUE rdr, VALUE err);
 static VALUE		io_cb(VALUE rdr);
 static VALUE		partial_io_cb(VALUE rdr);
 static int		read_from_io(Buf buf);
-#ifndef JRUBY_RUBY
 static int		read_from_fd(Buf buf);
-#endif
 static int		read_from_io_partial(Buf buf);
 static int		read_from_str(Buf buf);
 
 void
 ox_sax_buf_init(Buf buf, VALUE io) {
-    if (ox_stringio_class == rb_obj_class(io)) {
+    if (ox_stringio_class == rb_obj_class(io) && 0 == FIX2INT(rb_funcall2(io, ox_pos_id, 0, 0))) {
 	VALUE	s = rb_funcall2(io, ox_string_id, 0, 0);
 
 	buf->read_func = read_from_str;
 	buf->in_str = StringValuePtr(s);
     } else if (rb_respond_to(io, ox_readpartial_id)) {
-#ifdef JRUBY_RUBY
-	buf->read_func = read_from_io_partial;
-	buf->io = io;
-#else
         VALUE   rfd;
 
         if (rb_respond_to(io, ox_fileno_id) && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
@@ -76,12 +70,7 @@ ox_sax_buf_init(Buf buf, VALUE io) {
             buf->read_func = read_from_io_partial;
             buf->io = io;
         }
-#endif
     } else if (rb_respond_to(io, ox_read_id)) {
-#ifdef JRUBY_RUBY
-	buf->read_func = read_from_io;
-	buf->io = io;
-#else
         VALUE   rfd;
 
         if (rb_respond_to(io, ox_fileno_id) && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
@@ -91,7 +80,6 @@ ox_sax_buf_init(Buf buf, VALUE io) {
             buf->read_func = read_from_io;
             buf->io = io;
         }
-#endif
     } else {
         rb_raise(ox_arg_error_class, "sax_parser io argument must respond to readpartial() or read().\n");
     }
@@ -160,10 +148,6 @@ ox_sax_buf_read(Buf buf) {
 
 static VALUE
 rescue_cb(VALUE rbuf, VALUE err) {
-#ifndef JRUBY_RUBY
-    /* JRuby seems to play by a different set if rules. It passes in an Fixnum
-     * instead of an error like other Rubies. For now assume all errors are
-     * EOF and deal with the results further down the line. */
 #if (defined(RUBINIUS_RUBY) || (1 == RUBY_VERSION_MAJOR && 8 == RUBY_VERSION_MINOR))
     if (rb_obj_class(err) != rb_eTypeError) {
 #else
@@ -174,7 +158,6 @@ rescue_cb(VALUE rbuf, VALUE err) {
         //ox_sax_drive_cleanup(buf->dr); called after exiting protect
         rb_raise(err, "at line %d, column %d\n", buf->line, buf->col);
     }
-#endif
     return Qfalse;
 }
 
@@ -226,7 +209,6 @@ read_from_io(Buf buf) {
     return (Qfalse == rb_rescue(io_cb, (VALUE)buf, rescue_cb, (VALUE)buf));
 }
 
-#ifndef JRUBY_RUBY
 static int
 read_from_fd(Buf buf) {
     ssize_t     cnt;
@@ -241,7 +223,6 @@ read_from_fd(Buf buf) {
     }
     return 0;
 }
-#endif
 
 static char*
 ox_stpncpy(char *dest, const char *src, size_t n) {
