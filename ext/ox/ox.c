@@ -1,21 +1,21 @@
 /* ox.c
  * Copyright (c) 2011, Peter Ohler
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * - Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * - Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * - Neither the name of Peter Ohler nor the names of its contributors may be
  *   used to endorse or promote products derived from this software without
  *   specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -107,6 +107,7 @@ VALUE	ox_bag_clas;
 VALUE	ox_bigdecimal_class;
 VALUE	ox_cdata_clas;
 VALUE	ox_comment_clas;
+VALUE   ox_raw_clas;
 VALUE	ox_date_class;
 VALUE	ox_doctype_clas;
 VALUE	ox_document_clas;
@@ -320,7 +321,7 @@ set_def_opts(VALUE self, VALUE opts) {
     };
     YesNoOpt	o;
     VALUE	v;
-    
+
     Check_Type(opts, T_HASH);
 
     v = rb_hash_aref(opts, ox_encoding_sym);
@@ -493,7 +494,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
     if (1 == argc && rb_cHash == rb_obj_class(*argv)) {
 	VALUE	h = *argv;
 	VALUE	v;
-	
+
 	if (Qnil != (v = rb_hash_lookup(h, mode_sym))) {
 	    if (object_sym == v) {
 		options.mode = ObjMode;
@@ -730,7 +731,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
     if (3 <= argc && rb_cHash == rb_obj_class(argv[2])) {
 	VALUE	h = argv[2];
 	VALUE	v;
-	
+
 	if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
 	    options.convert_special = (Qtrue == v);
 	}
@@ -764,10 +765,10 @@ parse_dump_options(VALUE ropts, Options copts) {
 	{ Qnil, 0 }
     };
     YesNoOpt	o;
-    
+
     if (rb_cHash == rb_obj_class(ropts)) {
 	VALUE	v;
-	
+
 	if (Qnil != (v = rb_hash_lookup(ropts, indent_sym))) {
 	    if (rb_cFixnum != rb_obj_class(v)) {
 		rb_raise(ox_parse_error_class, ":indent must be a Fixnum.\n");
@@ -833,7 +834,7 @@ dump(int argc, VALUE *argv, VALUE self) {
     char		*xml;
     struct _Options	copts = ox_default_options;
     VALUE		rstr;
-    
+
     if (2 == argc) {
 	parse_dump_options(argv[1], &copts);
     }
@@ -874,7 +875,7 @@ dump(int argc, VALUE *argv, VALUE self) {
 static VALUE
 to_file(int argc, VALUE *argv, VALUE self) {
     struct _Options	copts = ox_default_options;
-    
+
     if (3 == argc) {
 	parse_dump_options(argv[2], &copts);
     }
@@ -1025,6 +1026,7 @@ void Init_ox() {
     ox_element_clas = rb_const_get_at(Ox, rb_intern("Element"));
     ox_instruct_clas = rb_const_get_at(Ox, rb_intern("Instruct"));
     ox_comment_clas = rb_const_get_at(Ox, rb_intern("Comment"));
+    ox_raw_clas = rb_const_get_at(Ox, rb_intern("Raw"));
     ox_doctype_clas = rb_const_get_at(Ox, rb_intern("DocType"));
     ox_cdata_clas = rb_const_get_at(Ox, rb_intern("CData"));
     ox_bag_clas = rb_const_get_at(Ox, rb_intern("Bag"));
