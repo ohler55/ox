@@ -91,6 +91,71 @@ static VALUE protect_parse(VALUE drp) {
     return Qnil;
 }
 
+#if HAS_ENCODING_SUPPORT || HAS_PRIVATE_ENCODING
+static int
+strIsAscii(const char *s) {
+    for (; '\0' != *s; s++) {
+	if (*s < ' ' || '~' < *s) {
+	    return 0;
+	}
+    }
+    return 1;
+}
+#endif
+
+VALUE
+str2sym(SaxDrive dr, const char *str, const char **strp) {
+    VALUE	*slot;
+    VALUE	sym;
+
+    if (dr->options.symbolize) {
+	if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, strp))) {
+#if HAS_ENCODING_SUPPORT
+	    if (0 != dr->encoding && !strIsAscii(str)) {
+		VALUE	rstr = rb_str_new2(str);
+
+		// TBD if sym can be pinned down then use this all the time
+		rb_enc_associate(rstr, dr->encoding);
+		sym = rb_funcall(rstr, ox_to_sym_id, 0);
+		*slot = Qundef;
+	    } else {
+		sym = ID2SYM(rb_intern(str));
+		*slot = sym;
+	    }
+#elif HAS_PRIVATE_ENCODING
+	    if (Qnil != dr->encoding && !strIsAscii(str)) {
+		VALUE	rstr = rb_str_new2(str);
+
+		rb_funcall(rstr, ox_force_encoding_id, 1, dr->encoding);
+		sym = rb_funcall(rstr, ox_to_sym_id, 0);
+		*slot = Qundef;
+	    } else {
+		sym = ID2SYM(rb_intern(str));
+		*slot = sym;
+	    }
+#else
+	    sym = ID2SYM(rb_intern(str));
+	    *slot = sym;
+#endif
+	}
+    } else {
+	sym = rb_str_new2(str);
+#if HAS_ENCODING_SUPPORT
+	if (0 != dr->encoding) {
+	    rb_enc_associate(sym, dr->encoding);
+	}
+#elif HAS_PRIVATE_ENCODING
+	if (Qnil != dr->encoding) {
+	    rb_funcall(sym, ox_force_encoding_id, 1, dr->encoding);
+	}
+#endif
+	if (0 != strp) {
+	    *strp = StringValuePtr(sym);
+	}
+    }
+    return sym;
+}
+
 void
 ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
     struct _SaxDrive    dr;
@@ -708,14 +773,14 @@ read_comment(SaxDrive dr) {
  */
 static char
 read_element_start(SaxDrive dr) {
-    char	*ename = 0;
-    VALUE       name = Qnil;
-    char        c;
-    int         closed;
-    int		line = dr->buf.line;
-    int		col = dr->buf.col - 1;
-    Hint	h = 0;
-    int		stackless = 0;
+    const char		*ename = 0;
+    volatile VALUE	name = Qnil;
+    char        	c;
+    int			closed;
+    int			line = dr->buf.line;
+    int			col = dr->buf.col - 1;
+    Hint		h = 0;
+    int			stackless = 0;
 
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
@@ -850,19 +915,18 @@ read_element_end(SaxDrive dr) {
 
 	if (0 == match) {
 	    // Not found so open and close element.
-	    char	*ename = 0;
 	    Hint	h = ox_hint_find(dr->hints, dr->buf.str);
 
 	    if (0 != h && h->empty) {
 		// Just close normally
-		name = str2sym(dr, dr->buf.str, &ename);
+		name = str2sym(dr, dr->buf.str, 0);
 		snprintf(msg, sizeof(msg) - 1, "%selement '%s' should not have a separate close element", EL_MISMATCH, dr->buf.str);
 		ox_sax_drive_error_at(dr, msg, line, col);
 		return c;
 	    } else {
 		snprintf(msg, sizeof(msg) - 1, "%selement '%s' closed but not opened", EL_MISMATCH, dr->buf.str);
 		ox_sax_drive_error_at(dr, msg, line, col);
-		name = str2sym(dr, dr->buf.str, &ename);
+		name = str2sym(dr, dr->buf.str, 0);
 		if (dr->has.start_element) {
 		    VALUE       args[1];
 

@@ -34,14 +34,16 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
-### Current Release 2.1.4
+### Current Release 2.1.5
+
+ - Fixed symbol intern problem with Ruby 2.2.0. Symbols are not dynamic unless
+   rb_intern(). There does not seem to be a way to force symbols created with
+   encoding to be pinned.
+
+### Release 2.1.4
 
  - Fixed bug where the parser always started at the first position in a stringio
    instead of the current position.
-
-### Release 2.1.3
-
- - Added check for @attributes being nil. Reported by and proposed fix by Elana.
 
 ## Description
 

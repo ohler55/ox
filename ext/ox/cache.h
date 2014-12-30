@@ -37,7 +37,7 @@ typedef struct _Cache   *Cache;
 
 extern void     ox_cache_new(Cache *cache);
 
-extern VALUE    ox_cache_get(Cache cache, const char *key, VALUE **slot, char **keyp);
+extern VALUE    ox_cache_get(Cache cache, const char *key, VALUE **slot, const char **keyp);
 
 extern void     ox_cache_print(Cache cache);
 

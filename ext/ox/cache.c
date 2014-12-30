@@ -67,7 +67,7 @@ ox_cache_new(Cache *cache) {
 }
 
 VALUE
-ox_cache_get(Cache cache, const char *key, VALUE **slot, char **keyp) {
+ox_cache_get(Cache cache, const char *key, VALUE **slot, const char **keyp) {
     unsigned char       *k = (unsigned char*)key;
     Cache               *cp;
 
