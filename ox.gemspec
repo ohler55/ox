@@ -17,8 +17,8 @@ XML handling. It was designed to be an alternative to Nokogiri and other Ruby
 XML parsers for generic XML parsing and as an alternative to Marshal for Object
 serialization. }
 
-  s.licenses = ['MIT', 'GPL-3.0']
-  s.files = Dir["{lib,ext}/**/*.{rb,h,c}"] + ['LICENSE', 'README.md']
+  s.licenses = ['MIT']
+  s.files = Dir["{lib,ext}/**/*.{rb,h,c}"] + ['README.md']
 
   s.extensions = ["ext/ox/extconf.rb"]
   # s.executables = []

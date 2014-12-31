@@ -1,3 +1,7 @@
+/* cache8.h
+ * Copyright (c) 2011, Peter Ohler
+ * All rights reserved.
+ */
 
 #include <stdlib.h>
 #include <errno.h>
