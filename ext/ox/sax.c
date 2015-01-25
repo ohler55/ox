@@ -262,9 +262,11 @@ static void
 parse(SaxDrive dr) {
     char        c = skipBOM(dr);
     int		state = START_STATE;
+    int		child = 0;
 
     while ('\0' != c) {
 	buf_protect(&dr->buf);
+	// TBD only skip if not NoSkip
         if (is_white(c) && '\0' == (c = buf_next_non_white(&dr->buf))) {
             break;
         }
@@ -334,6 +336,33 @@ parse(SaxDrive dr) {
 		}
 		break;
 	    case '/': /* element end */
+		// TBD grab white space already skipped
+		printf("*** child at element end: %d skip: %c pro: '%s' str: '%s'\n", child, dr->options.skip, dr->buf.pro, dr->buf.str);
+		// TBD always emit "" or spaces if no children
+		if (!child && NoSkip == dr->options.skip) {
+		    VALUE	args[1];
+		    int		line = dr->buf.line;
+		    int		col = dr->buf.col - 1;
+
+		    args[0] = rb_str_new2("");
+#if HAS_ENCODING_SUPPORT
+		    if (0 != dr->encoding) {
+			rb_enc_associate(args[0], dr->encoding);
+		    }
+#elif HAS_PRIVATE_ENCODING
+		    if (Qnil != dr->encoding) {
+			rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
+		    }
+#endif
+		    if (dr->has.line) {
+			rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
+		    }
+		    if (dr->has.column) {
+			rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
+		    }
+		    rb_funcall2(dr->handler, ox_text_id, 1, args);
+		}
+		child = 0;
 		c = read_element_end(dr);
 		if (0 == stack_peek(&dr->stack)) {
 		    state = AFTER_STATE;
@@ -342,6 +371,7 @@ parse(SaxDrive dr) {
 	    case '\0':
 		goto DONE;
 	    default:
+		child = 0;
 		buf_backup(&dr->buf);
 		if (AFTER_STATE == state) {
 		    ox_sax_drive_error(dr, OUT_OF_ORDER "multiple top level elements");
@@ -355,6 +385,8 @@ parse(SaxDrive dr) {
 	    }
 	} else {
 	    buf_reset(&dr->buf);
+	    printf("*** reading text\n");
+	    child = 1;
 	    c = read_text(dr);
 	}
     }
@@ -975,6 +1007,7 @@ read_text(SaxDrive dr) {
         if (dr->options.convert_special) {
             ox_sax_collapse_special(dr, dr->buf.str, line, col);
         }
+	//printf("*** has text '%s'\n", dr->buf.str);
 	switch (dr->options.skip) {
 	case CrSkip:
 	    buf_collapse_return(dr->buf.str);
