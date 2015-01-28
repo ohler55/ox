@@ -13,6 +13,7 @@
 typedef struct _Nv {
     const char	*name;
     VALUE	val;
+    int		childCnt;
     Hint	hint;
 } *Nv;
 
@@ -60,6 +61,7 @@ stack_push(NStack stack, const char *name, VALUE val, Hint hint) {
     stack->tail->name = name;
     stack->tail->val = val;
     stack->tail->hint = hint;
+    stack->tail->childCnt = 0;
     stack->tail++;
 }
 

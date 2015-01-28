@@ -3,6 +3,11 @@
 ^c^d hide subtree
 ^c^s show subtree
 
+- handle empties
+ - add skip mode for all text, does between strings also
+  - abs no skip AbsNoSkip
+    
+
 - todo
  - doctype
   - !ELEMENT

@@ -35,7 +35,7 @@ test_case = (use_minitest) ? ::Minitest::Test : ::Test::Unit::TestCase
 
 class SaxBaseTest < test_case
   include SaxTestHelpers
-=begin
+
   def test_sax_io_pipe
     handler = AllSax.new()
     input,w = IO.pipe
@@ -140,6 +140,7 @@ encoding = "UTF-8" ?>},
   def test_sax_element_start_end
     parse_compare(%{<top></top>},
                   [[:start_element, :top],
+                   [:text, ""],
                    [:end_element, :top]])
   end
 
@@ -271,6 +272,7 @@ encoding = "UTF-8" ?>},
                    [:end_element, :top],
                   ])
   end
+
   def test_sax_element_no_term
     parse_compare(%{
 <top>
@@ -296,26 +298,28 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<top><mid></mid></top>},
                   [[:start_element, :top],
                    [:start_element, :mid],
+                   [:text, ""],
                    [:end_element, :mid],
                    [:end_element, :top]
                   ])
   end
-=end
+
   def test_sax_empty_element
-    parse_compare(%{<top></top>},
+    parse_compare(%{  <top>  </top>},
                   [[:start_element, :top],
+                   [:text, " "],
                    [:end_element, :top]
                   ], AllSax, { :skip => :skip_white })
   end
 
   def test_sax_empty_element_noskip
-    parse_compare(%{<top></top>},
+    parse_compare(%{  <top>  </top>},
                   [[:start_element, :top],
-                   [:text, ""],
+                   [:text, "  "],
                    [:end_element, :top]
                   ], AllSax, { :skip => :skip_none })
   end
-=begin
+
   def test_sax_special
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [[:start_element, :top],
@@ -863,5 +867,5 @@ this is not part of the xml document
                   ],
                   AllSax, :symbolize => false, :smart => true)
   end
-=end
+
 end

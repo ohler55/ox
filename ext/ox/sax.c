@@ -262,14 +262,16 @@ static void
 parse(SaxDrive dr) {
     char        c = skipBOM(dr);
     int		state = START_STATE;
-    int		child = 0;
+    Nv		parent;
 
     while ('\0' != c) {
 	buf_protect(&dr->buf);
 	// TBD only skip if not NoSkip
+	/*
         if (is_white(c) && '\0' == (c = buf_next_non_white(&dr->buf))) {
             break;
         }
+	*/
 	if ('<' == c) {
 	    c = buf_get(&dr->buf);
 	    switch (c) {
@@ -327,6 +329,11 @@ parse(SaxDrive dr) {
 			ox_sax_drive_error(dr, CASE_ERROR "expected CDATA all in caps");
 			c = read_cdata(dr);
 		    } else {
+			Nv	parent = stack_peek(&dr->stack);
+
+			if (0 != parent) {
+			    parent->childCnt++;
+			}
 			ox_sax_drive_error_at(dr, WRONG_CHAR "DOCTYPE, CDATA, or comment expected", line, col);
 			c = read_name_token(dr);
 			if ('>' == c) {
@@ -336,10 +343,8 @@ parse(SaxDrive dr) {
 		}
 		break;
 	    case '/': /* element end */
-		// TBD grab white space already skipped
-		printf("*** child at element end: %d skip: %c pro: '%s' str: '%s'\n", child, dr->options.skip, dr->buf.pro, dr->buf.str);
-		// TBD always emit "" or spaces if no children
-		if (!child && NoSkip == dr->options.skip) {
+		parent = stack_peek(&dr->stack);
+		if (0 != parent && 0 == parent->childCnt) {
 		    VALUE	args[1];
 		    int		line = dr->buf.line;
 		    int		col = dr->buf.col - 1;
@@ -362,7 +367,6 @@ parse(SaxDrive dr) {
 		    }
 		    rb_funcall2(dr->handler, ox_text_id, 1, args);
 		}
-		child = 0;
 		c = read_element_end(dr);
 		if (0 == stack_peek(&dr->stack)) {
 		    state = AFTER_STATE;
@@ -371,7 +375,6 @@ parse(SaxDrive dr) {
 	    case '\0':
 		goto DONE;
 	    default:
-		child = 0;
 		buf_backup(&dr->buf);
 		if (AFTER_STATE == state) {
 		    ox_sax_drive_error(dr, OUT_OF_ORDER "multiple top level elements");
@@ -385,8 +388,6 @@ parse(SaxDrive dr) {
 	    }
 	} else {
 	    buf_reset(&dr->buf);
-	    printf("*** reading text\n");
-	    child = 1;
 	    c = read_text(dr);
 	}
     }
@@ -482,7 +483,7 @@ read_instruction(SaxDrive dr) {
     dr->err = 0;
     c = read_attrs(dr, c, '?', '?', is_xml, 1);
     if (dr->has.attrs_done) {
-	    rb_funcall(dr->handler, ox_attrs_done_id, 0);
+	rb_funcall(dr->handler, ox_attrs_done_id, 0);
     }
     if (dr->err) {
 	if (dr->has.text) {
@@ -589,6 +590,7 @@ read_doctype(SaxDrive dr) {
     int		line = dr->buf.line;
     int		col = dr->buf.col - 10;
     char	*s;
+    Nv		parent = stack_peek(&dr->stack);
 
     buf_backup(&dr->buf); /* back up to the start in case the cdata is empty */
     buf_protect(&dr->buf);
@@ -600,6 +602,9 @@ read_doctype(SaxDrive dr) {
 	}
     }
     *(dr->buf.tail - 1) = '\0';
+    if (0 != parent) {
+	parent->childCnt++;
+    }
     if (dr->has.doctype) {
         VALUE       args[1];
 
@@ -626,7 +631,11 @@ read_cdata(SaxDrive dr) {
     int			line = dr->buf.line;
     int			col = dr->buf.col - 10;
     struct _CheckPt	cp = CHECK_PT_INIT;
+    Nv			parent = stack_peek(&dr->stack);
 
+    if (0 != parent) {
+	parent->childCnt++;
+    }
     buf_backup(&dr->buf); /* back up to the start in case the cdata is empty */
     buf_protect(&dr->buf);
     while (1) {
@@ -788,9 +797,14 @@ read_element_start(SaxDrive dr) {
     int			col = dr->buf.col - 1;
     Hint		h = 0;
     int			stackless = 0;
+    Nv			parent = stack_peek(&dr->stack);
+
 
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
+    }
+    if (0 != parent) {
+	parent->childCnt++;
     }
     if (dr->options.smart && 0 == dr->hints && stack_empty(&dr->stack) && 0 == strcasecmp("html", dr->buf.str)) {
 	dr->hints = ox_hints_html();
@@ -865,7 +879,7 @@ read_element_start(SaxDrive dr) {
 	closed = ('/' == c);
     }
     if (dr->has.attrs_done) {
-	    rb_funcall(dr->handler, ox_attrs_done_id, 0);
+	rb_funcall(dr->handler, ox_attrs_done_id, 0);
     }
     if (closed) {
 	c = buf_next_non_white(&dr->buf);
@@ -982,17 +996,45 @@ read_text(SaxDrive dr) {
     char        c;
     int		line = dr->buf.line;
     int		col = dr->buf.col - 1;
+    Nv		parent = stack_peek(&dr->stack);
+    int		allWhite = 1;
 
     buf_backup(&dr->buf);
     buf_protect(&dr->buf);
     while ('<' != (c = buf_get(&dr->buf))) {
-        if ('\0' == c) {
-            ox_sax_drive_error(dr, NO_TERM "text not terminated");
+	switch(c) {
+	case ' ':
+	case '\t':
+	case '\f':
+	case '\n':
+	case '\r':
 	    break;
-        }
+	case '\0':
+	    if (allWhite) {
+		return c;
+	    }
+            ox_sax_drive_error(dr, NO_TERM "text not terminated");
+	    goto END_OF_BUF;
+	    break;
+	default:
+	    allWhite = 0;
+	    break;
+	}
     }
+ END_OF_BUF:
     if ('\0' != c) {
 	*(dr->buf.tail - 1) = '\0';
+    }
+    if (allWhite) {
+	int	isEnd = ('/' == buf_get(&dr->buf));
+
+	buf_backup(&dr->buf);
+	if (!isEnd || 0 == parent || 0 < parent->childCnt) {
+	    return c;
+	}
+    }
+    if (0 != parent) {
+	parent->childCnt++;
     }
     if (dr->has.value) {
 	if (dr->has.line) {
