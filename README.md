@@ -34,6 +34,12 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Future Release 2.1.7
+
+ - Empty elements such as <foo></foo> are now called back with empty text.
+
+ - TBD fixed GC problem that occurs with the new GC in Ruby 2.2.
+
 ### Current Release 2.1.6
 
  - Update licenses. No other changes.
@@ -43,11 +49,6 @@ A fast XML parser and Object marshaller as a Ruby gem.
  - Fixed symbol intern problem with Ruby 2.2.0. Symbols are not dynamic unless
    rb_intern(). There does not seem to be a way to force symbols created with
    encoding to be pinned.
-
-### Release 2.1.4
-
- - Fixed bug where the parser always started at the first position in a stringio
-   instead of the current position.
 
 ## Description
 

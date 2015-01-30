@@ -3,10 +3,7 @@
 ^c^d hide subtree
 ^c^s show subtree
 
-- handle empties
- - add skip mode for all text, does between strings also
-  - abs no skip AbsNoSkip
-    
+- fix 2.2 GC bug    
 
 - todo
  - doctype
