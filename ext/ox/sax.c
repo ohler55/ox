@@ -266,12 +266,6 @@ parse(SaxDrive dr) {
 
     while ('\0' != c) {
 	buf_protect(&dr->buf);
-	// TBD only skip if not NoSkip
-	/*
-        if (is_white(c) && '\0' == (c = buf_next_non_white(&dr->buf))) {
-            break;
-        }
-	*/
 	if ('<' == c) {
 	    c = buf_get(&dr->buf);
 	    switch (c) {
@@ -627,6 +621,7 @@ read_doctype(SaxDrive dr) {
 static char
 read_cdata(SaxDrive dr) {
     char        	c;
+    char        	zero = '\0';
     int         	end = 0;
     int			line = dr->buf.line;
     int			col = dr->buf.col - 10;
@@ -665,6 +660,7 @@ read_cdata(SaxDrive dr) {
 	    if (buf_checkset(&cp)) {
 		c = buf_checkback(&dr->buf, &cp);
 		ox_sax_drive_error(dr, NO_TERM "CDATA not terminated");
+		zero = c;
 		*(dr->buf.tail - 1) = '\0';
 		goto CB;
 	    }
@@ -700,6 +696,9 @@ read_cdata(SaxDrive dr) {
 	}
         rb_funcall2(dr->handler, ox_cdata_id, 1, args);
     }
+    if ('\0' != zero) {
+	*(dr->buf.tail - 1) = zero;
+    }
     dr->buf.str = 0;
 
     return c;
@@ -710,6 +709,7 @@ read_cdata(SaxDrive dr) {
 static char
 read_comment(SaxDrive dr) {
     char        	c;
+    char        	zero = '\0';
     int         	end = 0;
     int			line = dr->buf.line;
     int			col = dr->buf.col - 4;
@@ -744,6 +744,7 @@ read_comment(SaxDrive dr) {
 	    if (buf_checkset(&cp)) {
 		c = buf_checkback(&dr->buf, &cp);
 		ox_sax_drive_error(dr, NO_TERM "comment not terminated");
+		zero = c;
 		*(dr->buf.tail - 1) = '\0';
 		goto CB;
 	    }
@@ -778,6 +779,9 @@ read_comment(SaxDrive dr) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
 	}
         rb_funcall2(dr->handler, ox_comment_id, 1, args);
+    }
+    if ('\0' != zero) {
+	*(dr->buf.tail - 1) = zero;
     }
     dr->buf.str = 0;
 
@@ -1049,7 +1053,6 @@ read_text(SaxDrive dr) {
         if (dr->options.convert_special) {
             ox_sax_collapse_special(dr, dr->buf.str, line, col);
         }
-	//printf("*** has text '%s'\n", dr->buf.str);
 	switch (dr->options.skip) {
 	case CrSkip:
 	    buf_collapse_return(dr->buf.str);
