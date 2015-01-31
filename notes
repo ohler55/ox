@@ -3,8 +3,6 @@
 ^c^d hide subtree
 ^c^s show subtree
 
-- fix 2.2 GC bug    
-
 - todo
  - doctype
   - !ELEMENT
