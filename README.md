@@ -34,13 +34,14 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
-### Future Release 2.1.7
+### Current Release 2.1.7
 
  - Empty elements such as <foo></foo> are now called back with empty text.
 
- - TBD fixed GC problem that occurs with the new GC in Ruby 2.2.
+ - Fixed GC problem that occurs with the new GC in Ruby 2.2 that garbage
+   collects Symbols.
 
-### Current Release 2.1.6
+### Release 2.1.6
 
  - Update licenses. No other changes.
 

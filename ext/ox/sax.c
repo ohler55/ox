@@ -103,6 +103,9 @@ str2sym(SaxDrive dr, const char *str, const char **strp) {
 
 		rb_funcall(rstr, ox_force_encoding_id, 1, dr->encoding);
 		sym = rb_funcall(rstr, ox_to_sym_id, 0);
+		// Needed for Ruby 2.2 to get around the GC of symbols created
+		// with to_sym which is needed for encoded symbols.
+		rb_ary_push(ox_sym_bank, sym);
 		*slot = Qundef;
 	    } else {
 		sym = ID2SYM(rb_intern(str));

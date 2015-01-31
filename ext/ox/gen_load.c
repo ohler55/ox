@@ -300,13 +300,14 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     e = rb_obj_alloc(ox_element_clas);
     rb_ivar_set(e, ox_at_value_id, s);
     if (0 != attrs->name) {
-        VALUE   ah = rb_hash_new();
+        volatile VALUE	ah = rb_hash_new();
         
         for (; 0 != attrs->name; attrs++) {
-            VALUE   sym;
-            VALUE   *slot;
+            volatile VALUE	sym;
 
 	    if (Yes == pi->options->sym_keys) {
+		VALUE	*slot;
+
 		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
 #if HAS_ENCODING_SUPPORT
 		    if (0 != pi->options->rb_enc) {
@@ -329,6 +330,9 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 #else
 		    sym = ID2SYM(rb_intern(attrs->name));
 #endif
+		    // Needed for Ruby 2.2 to get around the GC of symbols
+		    // created with to_sym which is needed for encoded symbols.
+		    rb_ary_push(ox_sym_bank, sym);
 		    *slot = sym;
 		}
 	    } else {
@@ -437,6 +441,9 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 #else
 		    sym = ID2SYM(rb_intern(attrs->name));
 #endif
+		    // Needed for Ruby 2.2 to get around the GC of symbols
+		    // created with to_sym which is needed for encoded symbols.
+		    rb_ary_push(ox_sym_bank, sym);
 		    *slot = sym;
 		}
 	    } else {

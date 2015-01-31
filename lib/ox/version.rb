@@ -1,5 +1,5 @@
 
 module Ox
   # Current version of the module. 
-  VERSION = '2.1.7b1'
+  VERSION = '2.1.7b2'
 end

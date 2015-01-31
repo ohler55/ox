@@ -76,6 +76,7 @@ VALUE	ox_encoding_sym;
 
 VALUE	ox_empty_string;
 VALUE	ox_zero_fixnum;
+VALUE	ox_sym_bank; // Array
 
 VALUE	ox_arg_error_class;
 VALUE	ox_bag_clas;
@@ -995,6 +996,7 @@ void Init_ox() {
 
     ox_empty_string = rb_str_new2("");				rb_gc_register_address(&ox_empty_string);
     ox_zero_fixnum = INT2NUM(0);				rb_gc_register_address(&ox_zero_fixnum);
+    ox_sym_bank = rb_ary_new();					rb_gc_register_address(&ox_sym_bank);
 
     ox_document_clas = rb_const_get_at(Ox, rb_intern("Document"));
     ox_element_clas = rb_const_get_at(Ox, rb_intern("Element"));
