@@ -34,22 +34,17 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
-### Current Release 2.1.7
+### Current Release 2.1.8
+
+ - Fixed a bug that caused all input to be read before parsing with the sax
+   parser and an IO.pipe.
+
+### Release 2.1.7
 
  - Empty elements such as <foo></foo> are now called back with empty text.
 
  - Fixed GC problem that occurs with the new GC in Ruby 2.2 that garbage
    collects Symbols.
-
-### Release 2.1.6
-
- - Update licenses. No other changes.
-
-### Release 2.1.5
-
- - Fixed symbol intern problem with Ruby 2.2.0. Symbols are not dynamic unless
-   rb_intern(). There does not seem to be a way to force symbols created with
-   encoding to be pinned.
 
 ## Description
 

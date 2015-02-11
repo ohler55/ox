@@ -30,31 +30,23 @@ static int		read_from_str(Buf buf);
 
 void
 ox_sax_buf_init(Buf buf, VALUE io) {
-    if (ox_stringio_class == rb_obj_class(io) && 0 == FIX2INT(rb_funcall2(io, ox_pos_id, 0, 0))) {
+    VALUE	io_class = rb_obj_class(io);
+    VALUE	rfd;
+
+    if (ox_stringio_class == io_class && 0 == FIX2INT(rb_funcall2(io, ox_pos_id, 0, 0))) {
 	VALUE	s = rb_funcall2(io, ox_string_id, 0, 0);
 
 	buf->read_func = read_from_str;
 	buf->in_str = StringValuePtr(s);
+    } else if (rb_cFile == io_class && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
+	buf->read_func = read_from_fd;
+	buf->fd = FIX2INT(rfd);
     } else if (rb_respond_to(io, ox_readpartial_id)) {
-        VALUE   rfd;
-
-        if (rb_respond_to(io, ox_fileno_id) && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
-            buf->read_func = read_from_fd;
-            buf->fd = FIX2INT(rfd);
-        } else {
-            buf->read_func = read_from_io_partial;
-            buf->io = io;
-        }
+	buf->read_func = read_from_io_partial;
+	buf->io = io;
     } else if (rb_respond_to(io, ox_read_id)) {
-        VALUE   rfd;
-
-        if (rb_respond_to(io, ox_fileno_id) && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
-            buf->read_func = read_from_fd;
-            buf->fd = FIX2INT(rfd);
-        } else {
-            buf->read_func = read_from_io;
-            buf->io = io;
-        }
+	buf->read_func = read_from_io;
+	buf->io = io;
     } else {
         rb_raise(ox_arg_error_class, "sax_parser io argument must respond to readpartial() or read().\n");
     }
@@ -123,11 +115,9 @@ ox_sax_buf_read(Buf buf) {
 
 static VALUE
 rescue_cb(VALUE rbuf, VALUE err) {
-#if (defined(RUBINIUS_RUBY) || (1 == RUBY_VERSION_MAJOR && 8 == RUBY_VERSION_MINOR))
-    if (rb_obj_class(err) != rb_eTypeError) {
-#else
-    if (rb_obj_class(err) != rb_eEOFError) {
-#endif
+    VALUE	err_class = rb_obj_class(err);
+
+    if (err_class != rb_eTypeError && err_class != rb_eEOFError) {
 	Buf	buf = (Buf)rbuf;
 
         //ox_sax_drive_cleanup(buf->dr); called after exiting protect
@@ -148,7 +138,7 @@ partial_io_cb(VALUE rbuf) {
     rstr = rb_funcall2(buf->io, ox_readpartial_id, 1, args);
     str = StringValuePtr(rstr);
     cnt = strlen(str);
-    //printf("*** read %lu bytes, str: '%s'\n", cnt, str);
+    //printf("*** read partial %lu bytes, str: '%s'\n", cnt, str);
     strcpy(buf->tail, str);
     buf->read_end = buf->tail + cnt;
 
@@ -167,7 +157,7 @@ io_cb(VALUE rbuf) {
     rstr = rb_funcall2(buf->io, ox_read_id, 1, args);
     str = StringValuePtr(rstr);
     cnt = strlen(str);
-    /*printf("*** read %lu bytes, str: '%s'\n", cnt, str); */
+    //printf("*** read %lu bytes, str: '%s'\n", cnt, str);
     strcpy(buf->tail, str);
     buf->read_end = buf->tail + cnt;
 

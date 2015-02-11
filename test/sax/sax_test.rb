@@ -46,10 +46,20 @@ class SaxBaseTest < test_case
                   [:end_element, :top]], handler.calls)
   end
 
+  def test_sax_file
+    handler = AllSax.new()
+    input = File.open(File.join(File.dirname(__FILE__), 'basic.xml'))
+    Ox.sax_parse(handler, input)
+    input.close
+    assert_equal([[:start_element, :top],
+                  [:end_element, :top]], handler.calls)
+  end
+
   def test_sax_io_file
     handler = AllSax.new()
     input = IO.open(IO.sysopen(File.join(File.dirname(__FILE__), 'basic.xml')))
     Ox.sax_parse(handler, input)
+    input.close
     assert_equal([[:start_element, :top],
                   [:end_element, :top]], handler.calls)
   end
