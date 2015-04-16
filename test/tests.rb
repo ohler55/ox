@@ -48,6 +48,8 @@ class Func < ::Minitest::Test
                    :mode=>nil,
                    :symbolize_keys=>true,
                    :skip=>:skip_none,
+                   :smart=>false,
+                   :convert_special=>false,
                    :effort=>:strict})
   end
 
@@ -65,6 +67,8 @@ class Func < ::Minitest::Test
       :mode=>:object,
       :symbolize_keys=>true,
       :skip=>:skip_return,
+      :smart=>true,
+      :convert_special=>true,
       :effort=>:tolerant }
     o3 = { :xsd_date=>false }
     Ox.default_options = o2

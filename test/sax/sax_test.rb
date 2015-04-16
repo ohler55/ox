@@ -339,6 +339,18 @@ encoding = "UTF-8" ?>},
                   ], AllSax, :convert_special => true)
   end
 
+  def test_sax_special_default
+    orig = Ox::default_options[:convert_special]
+    Ox::default_options = { :convert_special => true }
+    parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
+                  [[:start_element, :top],
+                   [:attr, :name, 'A&Z'],
+                   [:text, "This is <some> text."],
+                   [:end_element, :top]
+                  ], AllSax)
+    Ox::default_options = { :convert_special => orig }
+  end
+
   def test_sax_whitespace
     parse_compare(%{<top> This is some text.</top>},
                   [[:start_element, :top],

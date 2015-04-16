@@ -5,7 +5,7 @@ for ruby in \
  rbx-2.2.6\
  1.9.3-p547\
  2.1.5\
- 2.2.0
+ 2.2.2
 do
     echo "\n********************************************************************************"
     echo "Building $ruby\n"
@@ -42,13 +42,13 @@ cd ../../test
 ./sax/sax_test.rb
 cd ..
 
-echo "resetting to 2.2.0\n"
+echo "resetting to 2.2.2\n"
 
 cd ext/ox
-rbenv local 2.2.0
+rbenv local 2.2.2
 cd ../../test
-rbenv local 2.2.0
+rbenv local 2.2.2
 cd sax
-rbenv local 2.2.0
+rbenv local 2.2.2
 cd ../..
 echo "\n"

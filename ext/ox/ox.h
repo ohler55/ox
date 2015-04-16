@@ -131,6 +131,8 @@ typedef struct _Options {
     char	effort;		/* Effort */
     char	sym_keys;	/* symbolize keys */
     char	skip;		/* skip mode */
+    char	smart;		/* YesNo sax smart mode */
+    char	convert_special;/* YesNo sax smart mode */
 #if HAS_ENCODING_SUPPORT
     rb_encoding	*rb_enc;
 #elif HAS_PRIVATE_ENCODING

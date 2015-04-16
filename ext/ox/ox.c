@@ -145,6 +145,8 @@ struct _Options	 ox_default_options = {
     StrictEffort,	/* effort */
     Yes,		/* sym_keys */
     NoSkip,		/* skip */
+    No,			/* smart */
+    No,			/* convert_special */
 #if HAS_PRIVATE_ENCODING
     Qnil		/* rb_enc */
 #else
@@ -223,6 +225,8 @@ defuse_bom(char *xml, Options options) {
  * - effort: [:strict|:tolerant|:auto_define] set the tolerance level for loading
  * - symbolize_keys: [true|false|nil] symbolize element attribute keys or leave as Strings
  * - skip: [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
+ * - smart: [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
+ * - convert_special: [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
  * @return [Hash] all current option settings.
  *
  * Note that an indent of less than zero will result in a tight one line output
@@ -242,6 +246,8 @@ get_def_opts(VALUE self) {
     rb_hash_aset(opts, circular_sym, (Yes == ox_default_options.circular) ? Qtrue : ((No == ox_default_options.circular) ? Qfalse : Qnil));
     rb_hash_aset(opts, xsd_date_sym, (Yes == ox_default_options.xsd_date) ? Qtrue : ((No == ox_default_options.xsd_date) ? Qfalse : Qnil));
     rb_hash_aset(opts, symbolize_keys_sym, (Yes == ox_default_options.sym_keys) ? Qtrue : ((No == ox_default_options.sym_keys) ? Qfalse : Qnil));
+    rb_hash_aset(opts, smart_sym, (Yes == ox_default_options.smart) ? Qtrue : ((No == ox_default_options.smart) ? Qfalse : Qnil));
+    rb_hash_aset(opts, convert_special_sym, (Yes == ox_default_options.convert_special) ? Qtrue : ((No == ox_default_options.convert_special) ? Qfalse : Qnil));
     switch (ox_default_options.mode) {
     case ObjMode:	rb_hash_aset(opts, mode_sym, object_sym);	break;
     case GenMode:	rb_hash_aset(opts, mode_sym, generic_sym);	break;
@@ -292,6 +298,8 @@ set_def_opts(VALUE self, VALUE opts) {
 	{ xsd_date_sym, &ox_default_options.xsd_date },
 	{ circular_sym, &ox_default_options.circular },
 	{ symbolize_keys_sym, &ox_default_options.sym_keys },
+	{ smart_sym, &ox_default_options.smart },
+	{ convert_special_sym, &ox_default_options.convert_special },
 	{ Qnil, 0 }
     };
     YesNoOpt	o;
@@ -695,10 +703,10 @@ static VALUE
 sax_parse(int argc, VALUE *argv, VALUE self) {
     struct _SaxOptions	options;
 
-    options.symbolize = 1;
-    options.convert_special = 0;
-    options.smart = 0;
-    options.skip = NoSkip;
+    options.symbolize = (No != ox_default_options.sym_keys);
+    options.convert_special = ox_default_options.convert_special;
+    options.smart = ox_default_options.smart;
+    options.skip = ox_default_options.skip;
 
     if (argc < 2) {
 	rb_raise(ox_parse_error_class, "Wrong number of arguments to sax_parse.\n");
