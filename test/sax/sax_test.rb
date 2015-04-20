@@ -339,6 +339,15 @@ encoding = "UTF-8" ?>},
                   ], AllSax, :convert_special => true)
   end
 
+  def test_sax_not_special
+    parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
+                  [[:start_element, :top],
+                   [:attr, :name, 'A&Z'],
+                   [:text, "This is &lt;some&gt; text."],
+                   [:end_element, :top]
+                  ], AllSax, :convert_special => false)
+  end
+
   def test_sax_special_default
     orig = Ox::default_options[:convert_special]
     Ox::default_options = { :convert_special => true }
@@ -346,6 +355,18 @@ encoding = "UTF-8" ?>},
                   [[:start_element, :top],
                    [:attr, :name, 'A&Z'],
                    [:text, "This is <some> text."],
+                   [:end_element, :top]
+                  ], AllSax)
+    Ox::default_options = { :convert_special => orig }
+  end
+
+  def test_sax_not_special_default
+    orig = Ox::default_options[:convert_special]
+    Ox::default_options = { :convert_special => false }
+    parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
+                  [[:start_element, :top],
+                   [:attr, :name, 'A&Z'],
+                   [:text, "This is &lt;some&gt; text."],
                    [:end_element, :top]
                   ], AllSax)
     Ox::default_options = { :convert_special => orig }
@@ -634,7 +655,7 @@ encoding = "UTF-8" ?>},
                    [:end_instruct, 'xml'],
                    [:start_element, :text],
                    [:text, 'é is e with an accent'],
-                   [:end_element, :text]])
+                   [:end_element, :text]], AllSax, :convert_special => true)
   end
 
   def test_sax_implied_encoding

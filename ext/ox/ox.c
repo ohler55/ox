@@ -704,8 +704,8 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
     struct _SaxOptions	options;
 
     options.symbolize = (No != ox_default_options.sym_keys);
-    options.convert_special = ox_default_options.convert_special;
-    options.smart = ox_default_options.smart;
+    options.convert_special = (Yes == ox_default_options.convert_special);
+    options.smart = (Yes == ox_default_options.smart);
     options.skip = ox_default_options.skip;
 
     if (argc < 2) {
