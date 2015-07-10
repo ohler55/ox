@@ -49,6 +49,7 @@ static char		read_comment(SaxDrive dr);
 static char		read_element_start(SaxDrive dr);
 static char		read_element_end(SaxDrive dr);
 static char		read_text(SaxDrive dr);
+static char		read_jump(SaxDrive dr, const char *pat);
 static char		read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req);
 static char		read_name_token(SaxDrive dr);
 static char		read_quoted_value(SaxDrive dr);
@@ -341,7 +342,7 @@ parse(SaxDrive dr) {
 		break;
 	    case '/': /* element end */
 		parent = stack_peek(&dr->stack);
-		if (0 != parent && 0 == parent->childCnt) {
+		if (0 != parent && 0 == parent->childCnt && dr->has.text) {
 		    VALUE	args[1];
 		    int		line = dr->buf.line;
 		    int		col = dr->buf.col - 1;
@@ -895,6 +896,14 @@ read_element_start(SaxDrive dr) {
 	end_element_cb(dr, name, line, col);
     } else if (stackless) {
 	end_element_cb(dr, name, line, col);
+    } else if (0 != h && h->jump) {
+	stack_push(&dr->stack, ename, name, h);
+	if ('>' != c) {
+	    ox_sax_drive_error(dr, WRONG_CHAR "element not closed");
+	    return c;
+	}
+	read_jump(dr, h->name);
+	return '<';
     } else {
 	stack_push(&dr->stack, ename, name, h);
     }
@@ -1086,6 +1095,68 @@ read_text(SaxDrive dr) {
     }
     dr->buf.str = 0;
 
+    return c;
+}
+
+static char
+read_jump(SaxDrive dr, const char *pat) {
+    VALUE	args[1];
+    char        c;
+    int		line = dr->buf.line;
+    int		col = dr->buf.col - 1;
+    Nv		parent = stack_peek(&dr->stack);
+
+    buf_protect(&dr->buf);
+    while (1) {
+	c = buf_get(&dr->buf);
+	switch(c) {
+	case '<':
+	    // TBD use checkpoint here
+	    if ('/' != buf_get(&dr->buf)) {
+		buf_backup(&dr->buf);
+		break;
+	    }
+	    buf_backup(&dr->buf);
+	    goto END_OF_BUF;
+	    break;
+	case '\0':
+            ox_sax_drive_error(dr, NO_TERM "not terminated");
+	    goto END_OF_BUF;
+	    break;
+	default:
+	    break;
+	}
+    }
+ END_OF_BUF:
+    if ('\0' != c) {
+	*(dr->buf.tail - 1) = '\0';
+    }
+    if (0 != parent) {
+	parent->childCnt++;
+    }
+    if (dr->has.text) {
+        args[0] = rb_str_new2(dr->buf.str);
+#if HAS_ENCODING_SUPPORT
+        if (0 != dr->encoding) {
+            rb_enc_associate(args[0], dr->encoding);
+        }
+#elif HAS_PRIVATE_ENCODING
+        if (Qnil != dr->encoding) {
+	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
+        }
+#endif
+	if (dr->has.line) {
+	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
+	}
+	if (dr->has.column) {
+	    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
+	}
+        rb_funcall2(dr->handler, ox_text_id, 1, args);
+    }
+    dr->buf.str = 0;
+    if ('\0' != c) {
+	*(dr->buf.tail - 1) = '<';
+    }
     return c;
 }
 

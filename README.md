@@ -34,6 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Future Release 2.2.1
+
+ - Added support to handle script elements in html.
+
 ### Current Release 2.2.0
 
  - Added the SAX convert_special option to the default options.
@@ -46,13 +50,6 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Fixed a bug that caused all input to be read before parsing with the sax
    parser and an IO.pipe.
-
-### Release 2.1.7
-
- - Empty elements such as <foo></foo> are now called back with empty text.
-
- - Fixed GC problem that occurs with the new GC in Ruby 2.2 that garbage
-   collects Symbols.
 
 ## Description
 

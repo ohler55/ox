@@ -10,6 +10,7 @@ typedef struct _Hint {
     const char	*name;
     char	empty;	// must be closed or close auto it, not error
     char	nest;	// nesting allowed
+    char	jump;	// jump to end <script> ... </script>
     const char	**parents;
 } *Hint;
 
