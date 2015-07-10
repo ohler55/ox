@@ -55,6 +55,26 @@ class SaxBaseTest < test_case
                   [:end_element, :top]], handler.calls)
   end
 
+  def test_sax_file_line_col
+    handler = LineColSax.new()
+    input = File.open(File.join(File.dirname(__FILE__), 'trilevel.xml'))
+    Ox.sax_parse(handler, input)
+    input.close
+    assert_equal([[:instruct, "xml", 1, 1],
+                  [:attr, :version, "1.0", 1, 14],
+                  [:attrs_done, 1, 14],
+                  [:end_instruct, "xml", 1, 20],
+                  [:start_element, :top, 2, 1],
+                  [:attrs_done, 2, 1],
+                  [:start_element, :child, 3, 3],
+                  [:attrs_done, 3, 3],
+                  [:start_element, :grandchild, 4, 5],
+                  [:attrs_done, 4, 5],
+                  [:end_element, :grandchild, 4, 17],
+                  [:end_element, :child, 5, 3],
+                  [:end_element, :top, 6, 1]], handler.calls)
+  end
+
   def test_sax_io_file
     handler = AllSax.new()
     input = IO.open(IO.sysopen(File.join(File.dirname(__FILE__), 'basic.xml')))
@@ -208,7 +228,11 @@ encoding = "UTF-8" ?>},
     <grandchild/>
     <![CDATA[see data.]]>
   </child>Some text.
-</top>},
+</top>
+<second>
+  <inside/>
+</second>
+},
                   [[:instruct, 'xml', 1, 1],
                    [:attr, :version, "1.0", 1, 14],
                    [:attrs_done, 1, 14],
@@ -227,6 +251,13 @@ encoding = "UTF-8" ?>},
                    [:end_element, :child, 8, 3],
                    [:text, "Some text.\n", 8, 11],
                    [:end_element, :top, 9, 1],
+                   [:error, "Out of Order: multiple top level elements", 10, 2],
+                   [:start_element, :second, 10, 1],
+                   [:attrs_done, 10, 1],
+                   [:start_element, :inside, 11, 3],
+                   [:attrs_done, 11, 3],
+                   [:end_element, :inside, 11, 11],
+                   [:end_element, :second, 12, 1],
                   ], LineColSax)
   end
 
