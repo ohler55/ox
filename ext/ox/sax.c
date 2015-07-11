@@ -939,6 +939,9 @@ read_element_end(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
     }
+    if (is_white(c)) {
+	c = buf_next_non_white(&dr->buf);
+    }
     // c should be > and current is one past so read another char
     c = buf_get(&dr->buf);
     nv = stack_peek(&dr->stack);
@@ -1098,6 +1101,29 @@ read_text(SaxDrive dr) {
     return c;
 }
 
+static int
+read_jump_term(Buf buf, const char *pat) {
+    struct _CheckPt	cp;
+
+    buf_checkpoint(buf, &cp); // right after <
+    if ('/' != buf_next_non_white(buf)) {
+	return 0;
+    }
+    if (*pat != buf_next_non_white(buf)) {
+	return 0;
+    }
+    for (pat++; '\0' != *pat; pat++) {
+	if (*pat != buf_get(buf)) {
+	    return 0;
+	}
+    }
+    if ('>' != buf_next_non_white(buf)) {
+	return 0;
+    }
+    buf_checkback(buf, &cp);
+    return 1;
+}
+
 static char
 read_jump(SaxDrive dr, const char *pat) {
     VALUE	args[1];
@@ -1111,13 +1137,10 @@ read_jump(SaxDrive dr, const char *pat) {
 	c = buf_get(&dr->buf);
 	switch(c) {
 	case '<':
-	    // TBD use checkpoint here
-	    if ('/' != buf_get(&dr->buf)) {
-		buf_backup(&dr->buf);
+	    if (read_jump_term(&dr->buf, pat)) {
+		goto END_OF_BUF;
 		break;
 	    }
-	    buf_backup(&dr->buf);
-	    goto END_OF_BUF;
 	    break;
 	case '\0':
             ox_sax_drive_error(dr, NO_TERM "not terminated");

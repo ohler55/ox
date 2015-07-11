@@ -35,7 +35,7 @@ test_case = (use_minitest) ? ::Minitest::Test : ::Test::Unit::TestCase
 
 class SaxBaseTest < test_case
   include SaxTestHelpers
-=begin
+
   def test_sax_io_pipe
     handler = AllSax.new()
     input,w = IO.pipe
@@ -187,7 +187,7 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<top>
   <child>
     <grandchild/>
-  </child>
+  </child >
 </top>
 },
                   [[:start_element, :top],
@@ -943,7 +943,7 @@ this is not part of the xml document
                   ],
                   AllSax, :symbolize => false, :smart => true)
   end
-=end
+
   def test_sax_script
     html = %|<!DOCTYPE HTML>
 <html lang="en">
@@ -952,9 +952,10 @@ this is not part of the xml document
   <body>
     <script type='text/javascript'>
       def fake(c,d) {
-        return c<d
+        x = "</script";
+        return c<d;
       }
-    </script>
+    </ script >
   </body>
 </html>
 |
@@ -968,7 +969,7 @@ this is not part of the xml document
                    [:start_element, :body],
                    [:start_element, :script],
                    [:attr, :type, "text/javascript"],
-                   [:text, "\n      def fake(c,d) {\n        return c<d\n      }\n    "],
+                   [:text, "\n      def fake(c,d) {\n        x = \"</script\";\n        return c<d;\n      }\n    "],
                    [:end_element, :script],
                    [:end_element, :body],
                    [:end_element, :html]
