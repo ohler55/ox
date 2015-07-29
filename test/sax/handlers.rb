@@ -56,49 +56,50 @@ end
 
 class LineColSax < StartSax
   def initialize()
+    @pos = nil    # this initializes the @pos variable which will then be set by the parser
     @line = nil   # this initializes the @line variable which will then be set by the parser
     @column = nil # this initializes the @line variable which will then be set by the parser
     super
   end
 
   def instruct(target)
-    @calls << [:instruct, target, @line, @column]
+    @calls << [:instruct, target, @pos, @line, @column]
   end
 
   def start_element(name)
-    @calls << [:start_element, name, @line, @column]
+    @calls << [:start_element, name, @pos, @line, @column]
   end
 
   def end_instruct(target)
-    @calls << [:end_instruct, target, @line, @column]
+    @calls << [:end_instruct, target, @pos, @line, @column]
   end
 
   def doctype(value)
-    @calls << [:doctype, value, @line, @column]
+    @calls << [:doctype, value, @pos, @line, @column]
   end
 
   def comment(value)
-    @calls << [:comment, value, @line, @column]
+    @calls << [:comment, value, @pos, @line, @column]
   end
 
   def cdata(value)
-    @calls << [:cdata, value, @line, @column]
+    @calls << [:cdata, value, @pos, @line, @column]
   end
 
   def text(value)
-    @calls << [:text, value, @line, @column]
+    @calls << [:text, value, @pos, @line, @column]
   end
 
   def end_element(name)
-    @calls << [:end_element, name, @line, @column]
+    @calls << [:end_element, name, @pos, @line, @column]
   end
 
   def attr(name, value)
-    @calls << [:attr, name, value, @line, @column]
+    @calls << [:attr, name, value, @pos, @line, @column]
   end
 
   def attrs_done()
-    @calls << [:attrs_done, @line, @column]
+    @calls << [:attrs_done, @pos, @line, @column]
   end
 
   def error(message, line, column)

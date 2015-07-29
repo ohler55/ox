@@ -57,8 +57,10 @@ ox_sax_buf_init(Buf buf, VALUE io) {
     buf->read_end = buf->head;
     buf->pro = 0;
     buf->str = 0;
+    buf->pos = 0;
     buf->line = 1;
     buf->col = 0;
+    buf->pro_pos = 1;
     buf->pro_line = 1;
     buf->pro_col = 0;
     buf->dr = 0;

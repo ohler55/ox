@@ -38,6 +38,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Added support to handle script elements in html.
 
+ - Added support for position from start for the sax parser.
+
 ### Current Release 2.2.0
 
  - Added the SAX convert_special option to the default options.

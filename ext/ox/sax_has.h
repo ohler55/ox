@@ -20,6 +20,7 @@ typedef struct _Has {
     int         start_element;
     int         end_element;
     int         error;
+    int		pos;
     int		line;
     int		column;
 } *Has;
@@ -44,6 +45,7 @@ has_init(Has has, VALUE handler) {
     has->start_element = respond_to(handler, ox_start_element_id);
     has->end_element = respond_to(handler, ox_end_element_id);
     has->error = respond_to(handler, ox_error_id);
+    has->pos = (Qtrue == rb_ivar_defined(handler, ox_at_pos_id));
     has->line = (Qtrue == rb_ivar_defined(handler, ox_at_line_id));
     has->column = (Qtrue == rb_ivar_defined(handler, ox_at_column_id));
 }

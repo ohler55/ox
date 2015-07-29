@@ -14,8 +14,10 @@ typedef struct _Buf {
     char	*read_end;      /* one past last character read */
     char       	*pro;           /* protection start, buffer can not slide past this point */
     char        *str;           /* start of current string being read */
+    int		pos;
     int		line;
     int		col;
+    int		pro_pos;
     int		pro_line;
     int		pro_col;
     int		(*read_func)(struct _Buf *buf);
@@ -29,12 +31,13 @@ typedef struct _Buf {
 
 typedef struct _CheckPt {
     int		pro_dif;
+    int		pos;
     int		line;
     int		col;
     char	c;
 } *CheckPt;
 
-#define CHECK_PT_INIT { -1, 0, 0, '\0' }
+#define CHECK_PT_INIT { -1, 0, 0, 0, '\0' }
 
 extern void	ox_sax_buf_init(Buf buf, VALUE io);
 extern int	ox_sax_buf_read(Buf buf);
@@ -50,9 +53,11 @@ buf_get(Buf buf) {
     if ('\n' == *buf->tail) {
         buf->line++;
         buf->col = 0;
+    } else {
+	buf->col++;
     }
-    buf->col++;
-    
+    buf->pos++;
+
     return *buf->tail++;
 }
 
@@ -60,6 +65,7 @@ static inline void
 buf_backup(Buf buf) {
     buf->tail--;
     buf->col--;
+    buf->pos--;
     if (0 >= buf->col) {
 	buf->line--;
 	// allow col to be negative since we never backup twice in a row
@@ -70,6 +76,7 @@ static inline void
 buf_protect(Buf buf) {
     buf->pro = buf->tail;
     buf->str = buf->tail; // can't have str before pro
+    buf->pro_pos = buf->pos;
     buf->pro_line = buf->line;
     buf->pro_col = buf->col;
 }
@@ -77,6 +84,7 @@ buf_protect(Buf buf) {
 static inline void
 buf_reset(Buf buf) {
     buf->tail = buf->pro;
+    buf->pos = buf->pro_pos;
     buf->line = buf->pro_line;
     buf->col = buf->pro_col;
 }
@@ -152,6 +160,7 @@ is_white(char c) {
 static inline void
 buf_checkpoint(Buf buf, CheckPt cp) {
     cp->pro_dif = (int)(buf->tail - buf->pro);
+    cp->pos = buf->pos;
     cp->line = buf->line;
     cp->col = buf->col;
     cp->c = *(buf->tail - 1);
@@ -165,6 +174,7 @@ buf_checkset(CheckPt cp) {
 static inline char
 buf_checkback(Buf buf, CheckPt cp) {
     buf->tail = buf->pro + cp->pro_dif;
+    buf->pos = cp->pos;
     buf->line = cp->line;
     buf->col = cp->col;
     return cp->c;

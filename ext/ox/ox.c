@@ -29,6 +29,7 @@ ID	ox_at_column_id;
 ID	ox_at_content_id;
 ID	ox_at_id;
 ID	ox_at_line_id;
+ID	ox_at_pos_id;
 ID	ox_at_value_id;
 ID	ox_attr_id;
 ID	ox_attr_value_id;
@@ -910,6 +911,7 @@ void Init_ox() {
     ox_at_content_id = rb_intern("@content");
     ox_at_id = rb_intern("at");
     ox_at_line_id = rb_intern("@line");
+    ox_at_pos_id = rb_intern("@pos");
     ox_at_value_id = rb_intern("@value");
     ox_attr_id = rb_intern("attr");
     ox_attr_value_id = rb_intern("attr_value");

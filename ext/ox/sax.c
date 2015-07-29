@@ -54,7 +54,7 @@ static char		read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml,
 static char		read_name_token(SaxDrive dr);
 static char		read_quoted_value(SaxDrive dr);
 
-static void		end_element_cb(SaxDrive dr, VALUE name, int line, int col);
+static void		end_element_cb(SaxDrive dr, VALUE name, int pos, int line, int col);
 
 static void		hint_clear_empty(SaxDrive dr);
 static Nv		hint_try_close(SaxDrive dr, const char *name);
@@ -156,6 +156,7 @@ ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
     printf("    has_start_element = %s\n", dr.has.start_element ? "true" : "false");
     printf("    has_end_element = %s\n", dr.has.end_element ? "true" : "false");
     printf("    has_error = %s\n", dr.has.error ? "true" : "false");
+    printf("    has_pos = %s\n", dr.has.pos ? "true" : "false");
     printf("    has_line = %s\n", dr.has.line ? "true" : "false");
     printf("    has_column = %s\n", dr.has.column ? "true" : "false");
 #endif
@@ -218,13 +219,19 @@ ox_sax_drive_cleanup(SaxDrive dr) {
 }
 
 static void
-ox_sax_drive_error_at(SaxDrive dr, const char *msg, int line, int col) {
+ox_sax_drive_error_at(SaxDrive dr, const char *msg, int pos, int line, int col) {
     if (dr->has.error) {
         VALUE   args[3];
 
         args[0] = rb_str_new2(msg);
         args[1] = LONG2NUM(line);
         args[2] = LONG2NUM(col);
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, args[1]);
 	}
@@ -237,7 +244,7 @@ ox_sax_drive_error_at(SaxDrive dr, const char *msg, int line, int col) {
 
 void
 ox_sax_drive_error(SaxDrive dr, const char *msg) {
-    ox_sax_drive_error_at(dr, msg, dr->buf.line, dr->buf.col);
+    ox_sax_drive_error_at(dr, msg, dr->buf.pos, dr->buf.line, dr->buf.col);
 }
 
 static char
@@ -293,8 +300,9 @@ parse(SaxDrive dr) {
 		} else {
 		    int	i;
 		    int	spaced = 0;
+		    int	pos = dr->buf.pos + 1;
 		    int	line = dr->buf.line;
-		    int	col = dr->buf.col;
+		    int	col = dr->buf.col + 1;
 
 		    if (is_white(c)) {
 			spaced = 1;
@@ -306,7 +314,7 @@ parse(SaxDrive dr) {
 		    }
 		    if (0 == strncmp("DOCTYPE", dr->buf.str, 7)) {
 			if (spaced) {
-			    ox_sax_drive_error_at(dr, WRONG_CHAR "<!DOCTYPE can not included spaces", line, col);
+			    ox_sax_drive_error_at(dr, WRONG_CHAR "<!DOCTYPE can not included spaces", pos, line, col);
 			}
 			if (START_STATE != state) {
 			    ox_sax_drive_error(dr, OUT_OF_ORDER "DOCTYPE can not come after an element");
@@ -320,7 +328,7 @@ parse(SaxDrive dr) {
 			c = read_doctype(dr);
 		    } else if (0 == strncmp("[CDATA[", dr->buf.str, 7)) {
 			if (spaced) {
-			    ox_sax_drive_error_at(dr, WRONG_CHAR "<![CDATA[ can not included spaces", line, col);
+			    ox_sax_drive_error_at(dr, WRONG_CHAR "<![CDATA[ can not included spaces", pos, line, col);
 			}
 			c = read_cdata(dr);
 		    } else if (0 == strncasecmp("[CDATA[", dr->buf.str, 7)) {
@@ -332,7 +340,7 @@ parse(SaxDrive dr) {
 			if (0 != parent) {
 			    parent->childCnt++;
 			}
-			ox_sax_drive_error_at(dr, WRONG_CHAR "DOCTYPE, CDATA, or comment expected", line, col);
+			ox_sax_drive_error_at(dr, WRONG_CHAR "DOCTYPE, CDATA, or comment expected", pos, line, col);
 			c = read_name_token(dr);
 			if ('>' == c) {
 			    c = buf_get(&dr->buf);
@@ -344,6 +352,7 @@ parse(SaxDrive dr) {
 		parent = stack_peek(&dr->stack);
 		if (0 != parent && 0 == parent->childCnt && dr->has.text) {
 		    VALUE	args[1];
+		    int		pos = dr->buf.pos;
 		    int		line = dr->buf.line;
 		    int		col = dr->buf.col - 1;
 
@@ -357,6 +366,9 @@ parse(SaxDrive dr) {
 			rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
 		    }
 #endif
+		    if (dr->has.pos) {
+			rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+		    }
 		    if (dr->has.line) {
 			rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 		    }
@@ -394,6 +406,9 @@ parse(SaxDrive dr) {
 	char	msg[256];
 	Nv	sp;
 
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(dr->buf.pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(dr->buf.line));
 	}
@@ -402,7 +417,7 @@ parse(SaxDrive dr) {
 	}
 	for (sp = dr->stack.tail - 1; dr->stack.head <= sp; sp--) {
 	    snprintf(msg, sizeof(msg) - 1, "%selement '%s' not closed", EL_MISMATCH, sp->name);
-	    ox_sax_drive_error_at(dr, msg, dr->buf.line, dr->buf.col);
+	    ox_sax_drive_error_at(dr, msg, dr->buf.pos, dr->buf.line, dr->buf.col);
 	    if (dr->has.end_element) {
 		VALUE       args[1];
 
@@ -449,6 +464,7 @@ read_instruction(SaxDrive dr) {
     char	*cend;
     VALUE	target = Qnil;
     int		is_xml;
+    int		pos = dr->buf.pos - 1;
     int		line = dr->buf.line;
     int		col = dr->buf.col - 1;
 
@@ -463,6 +479,9 @@ read_instruction(SaxDrive dr) {
     if (dr->has.instruct) {
         VALUE       args[1];
 
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	}
@@ -473,6 +492,7 @@ read_instruction(SaxDrive dr) {
         rb_funcall2(dr->handler, ox_instruct_id, 1, args);
     }
     buf_protect(&dr->buf);
+    pos = dr->buf.pos;
     line = dr->buf.line;
     col = dr->buf.col;
     read_content(dr, content, sizeof(content) - 1);
@@ -488,7 +508,7 @@ read_instruction(SaxDrive dr) {
 	    VALUE   args[1];
 
 	    if (dr->options.convert_special) {
-		ox_sax_collapse_special(dr, content, line, col);
+		ox_sax_collapse_special(dr, content, pos, line, col);
 	    }
 	    args[0] = rb_str_new2(content);
 #if HAS_ENCODING_SUPPORT
@@ -503,6 +523,9 @@ read_instruction(SaxDrive dr) {
 	    if (dr->has.line) {
 		rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	    }
+	    if (dr->has.pos) {
+		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	    }
 	    if (dr->has.column) {
 		rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
 	    }
@@ -511,13 +534,14 @@ read_instruction(SaxDrive dr) {
 	dr->buf.tail = cend;
 	c = buf_get(&dr->buf);
     } else {
+	pos = dr->buf.pos;
 	line = dr->buf.line;
 	col = dr->buf.col;
 	c = buf_next_non_white(&dr->buf);
 	if ('>' == c) {
 	    c = buf_get(&dr->buf);
 	} else {
-	    ox_sax_drive_error_at(dr, NO_TERM "instruction not terminated", line, col);
+	    ox_sax_drive_error_at(dr, NO_TERM "instruction not terminated", pos, line, col);
 	    if ('>' == c) {
 		c = buf_get(&dr->buf);
 	    }
@@ -526,6 +550,9 @@ read_instruction(SaxDrive dr) {
     if (dr->has.end_instruct) {
         VALUE       args[1];
 
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	}
@@ -581,16 +608,17 @@ read_delimited(SaxDrive dr, char end) {
     return c;
 }
 
-/* Entered after the "<!DOCTYPE" sequence. Ready to read the rest.
+/* Entered after the "<!DOCTYPE " sequence. Ready to read the rest.
  */
 static char
 read_doctype(SaxDrive dr) {
+    int		pos = dr->buf.pos - 9;
     int		line = dr->buf.line;
-    int		col = dr->buf.col - 10;
+    int		col = dr->buf.col - 9;
     char	*s;
     Nv		parent = stack_peek(&dr->stack);
 
-    buf_backup(&dr->buf); /* back up to the start in case the cdata is empty */
+    buf_backup(&dr->buf); /* back up to the start in case the doctype is empty */
     buf_protect(&dr->buf);
     read_delimited(dr, '>');
     if (dr->options.smart && 0 == dr->hints) {
@@ -606,6 +634,9 @@ read_doctype(SaxDrive dr) {
     if (dr->has.doctype) {
         VALUE       args[1];
 
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	}
@@ -627,8 +658,9 @@ read_cdata(SaxDrive dr) {
     char        	c;
     char        	zero = '\0';
     int         	end = 0;
+    int			pos = dr->buf.pos - 9;
     int			line = dr->buf.line;
-    int			col = dr->buf.col - 10;
+    int			col = dr->buf.col - 9;
     struct _CheckPt	cp = CHECK_PT_INIT;
     Nv			parent = stack_peek(&dr->stack);
 
@@ -692,6 +724,9 @@ read_cdata(SaxDrive dr) {
 	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
         }
 #endif
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	}
@@ -715,6 +750,7 @@ read_comment(SaxDrive dr) {
     char        	c;
     char        	zero = '\0';
     int         	end = 0;
+    int			pos = dr->buf.pos - 4;
     int			line = dr->buf.line;
     int			col = dr->buf.col - 4;
     struct _CheckPt	cp = CHECK_PT_INIT;
@@ -776,6 +812,9 @@ read_comment(SaxDrive dr) {
 	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
         }
 #endif
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	}
@@ -801,12 +840,12 @@ read_element_start(SaxDrive dr) {
     volatile VALUE	name = Qnil;
     char        	c;
     int			closed;
+    int			pos = dr->buf.pos;
     int			line = dr->buf.line;
-    int			col = dr->buf.col - 1;
+    int			col = dr->buf.col;
     Hint		h = 0;
     int			stackless = 0;
     Nv			parent = stack_peek(&dr->stack);
-
 
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
@@ -839,7 +878,7 @@ read_element_start(SaxDrive dr) {
 			     INV_ELEMENT, dr->buf.str, dr->hints->name);
 		    ox_sax_drive_error(dr, msg);
 		    stack_pop(&dr->stack);
-		    end_element_cb(dr, top_nv->val, line, col);
+		    end_element_cb(dr, top_nv->val, pos, line, col);
 		    top_nv = stack_peek(&dr->stack);
 		}
 		if (0 != h->parents) {
@@ -865,6 +904,9 @@ read_element_start(SaxDrive dr) {
     if (dr->has.start_element) {
         VALUE       args[1];
 
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	}
@@ -891,11 +933,12 @@ read_element_start(SaxDrive dr) {
     }
     if (closed) {
 	c = buf_next_non_white(&dr->buf);
+	pos = dr->buf.pos;
 	line = dr->buf.line;
-	col = dr->buf.col - 1;
-	end_element_cb(dr, name, line, col);
+	col = dr->buf.col;
+	end_element_cb(dr, name, pos, line, col);
     } else if (stackless) {
-	end_element_cb(dr, name, line, col);
+	end_element_cb(dr, name, pos, line, col);
     } else if (0 != h && h->jump) {
 	stack_push(&dr->stack, ename, name, h);
 	if ('>' != c) {
@@ -932,8 +975,9 @@ static char
 read_element_end(SaxDrive dr) {
     VALUE       name = Qnil;
     char        c;
+    int		pos = dr->buf.pos - 1;
     int		line = dr->buf.line;
-    int		col = dr->buf.col - 2;
+    int		col = dr->buf.col - 1;
     Nv		nv;
 
     if ('\0' == (c = read_name_token(dr))) {
@@ -961,15 +1005,18 @@ read_element_end(SaxDrive dr) {
 		// Just close normally
 		name = str2sym(dr, dr->buf.str, 0);
 		snprintf(msg, sizeof(msg) - 1, "%selement '%s' should not have a separate close element", EL_MISMATCH, dr->buf.str);
-		ox_sax_drive_error_at(dr, msg, line, col);
+		ox_sax_drive_error_at(dr, msg, pos, line, col);
 		return c;
 	    } else {
 		snprintf(msg, sizeof(msg) - 1, "%selement '%s' closed but not opened", EL_MISMATCH, dr->buf.str);
-		ox_sax_drive_error_at(dr, msg, line, col);
+		ox_sax_drive_error_at(dr, msg, pos, line, col);
 		name = str2sym(dr, dr->buf.str, 0);
 		if (dr->has.start_element) {
 		    VALUE       args[1];
 
+		    if (dr->has.pos) {
+			rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+		    }
 		    if (dr->has.line) {
 			rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 		    }
@@ -988,7 +1035,10 @@ read_element_end(SaxDrive dr) {
 		name = n2->val;
 	    } else {
 		snprintf(msg, sizeof(msg) - 1, "%selement '%s' close does not match '%s' open", EL_MISMATCH, dr->buf.str, nv->name);
-		ox_sax_drive_error_at(dr, msg, line, col);
+		ox_sax_drive_error_at(dr, msg, pos, line, col);
+		if (dr->has.pos) {
+		    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+		}
 		if (dr->has.line) {
 		    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 		}
@@ -1004,7 +1054,7 @@ read_element_end(SaxDrive dr) {
 	    }
 	}
     }
-    end_element_cb(dr, name, line, col);
+    end_element_cb(dr, name, pos, line, col);
 
     return c;
 }
@@ -1013,6 +1063,7 @@ static char
 read_text(SaxDrive dr) {
     VALUE	args[1];
     char        c;
+    int		pos = dr->buf.pos;
     int		line = dr->buf.line;
     int		col = dr->buf.col - 1;
     Nv		parent = stack_peek(&dr->stack);
@@ -1056,6 +1107,9 @@ read_text(SaxDrive dr) {
 	parent->childCnt++;
     }
     if (dr->has.value) {
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	}
@@ -1066,7 +1120,7 @@ read_text(SaxDrive dr) {
         rb_funcall2(dr->handler, ox_value_id, 1, args);
     } else if (dr->has.text) {
         if (dr->options.convert_special) {
-            ox_sax_collapse_special(dr, dr->buf.str, line, col);
+            ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
         }
 	switch (dr->options.skip) {
 	case CrSkip:
@@ -1088,6 +1142,9 @@ read_text(SaxDrive dr) {
 	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
         }
 #endif
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	}
@@ -1128,6 +1185,7 @@ static char
 read_jump(SaxDrive dr, const char *pat) {
     VALUE	args[1];
     char        c;
+    int		pos = dr->buf.pos;
     int		line = dr->buf.line;
     int		col = dr->buf.col - 1;
     Nv		parent = stack_peek(&dr->stack);
@@ -1168,6 +1226,9 @@ read_jump(SaxDrive dr, const char *pat) {
 	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
         }
 #endif
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	}
@@ -1187,6 +1248,7 @@ static char
 read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) {
     VALUE       name = Qnil;
     int         is_encoding = 0;
+    int		pos;
     int		line;
     int		col;
     char	*attr_value;
@@ -1202,8 +1264,9 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
 	    ox_sax_drive_error(dr, NO_TERM "attributes not terminated");
 	    return '\0';
         }
+	pos = dr->buf.pos + 1;
 	line = dr->buf.line;
-	col = dr->buf.col;
+	col = dr->buf.col + 1;
         if ('\0' == (c = read_name_token(dr))) {
 	    ox_sax_drive_error(dr, NO_TERM "error reading token");
 	    return '\0';
@@ -1226,8 +1289,9 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
 		attr_value = (char*)"";
 	    }
         } else {
+	    pos = dr->buf.pos + 1;
 	    line = dr->buf.line;
-	    col = dr->buf.col;
+	    col = dr->buf.col + 1;
 	    c = read_quoted_value(dr);
 	    attr_value = dr->buf.str;
 	    if (is_encoding) {
@@ -1244,6 +1308,9 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
         if (dr->has.attr_value) {
             VALUE       args[2];
 
+	    if (dr->has.pos) {
+		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	    }
 	    if (dr->has.line) {
 		rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	    }
@@ -1257,7 +1324,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
             VALUE       args[2];
 
             args[0] = name;
-            ox_sax_collapse_special(dr, dr->buf.str, line, col);
+            ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
             args[1] = rb_str_new2(attr_value);
 #if HAS_ENCODING_SUPPORT
             if (0 != dr->encoding) {
@@ -1268,6 +1335,9 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
 		rb_funcall(args[1], ox_force_encoding_id, 1, dr->encoding);
 	    }
 #endif
+	    if (dr->has.pos) {
+		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	    }
 	    if (dr->has.line) {
 		rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	    }
@@ -1413,7 +1483,7 @@ read_10_uint64(char *b, uint64_t *up) {
 }
 
 int
-ox_sax_collapse_special(SaxDrive dr, char *str, int line, int col) {
+ox_sax_collapse_special(SaxDrive dr, char *str, int pos, int line, int col) {
     char        *s = str;
     char        *b = str;
 
@@ -1501,7 +1571,7 @@ ox_sax_collapse_special(SaxDrive dr, char *str, int line, int col) {
                 c = '\'';
                 s += 5;
             } else {
-		ox_sax_drive_error_at(dr, NO_TERM "special character does not end with a semicolon", line, col);
+		ox_sax_drive_error_at(dr, NO_TERM "special character does not end with a semicolon", pos, line, col);
 		c = '&';
             }
             *b++ = (char)c;
@@ -1529,7 +1599,7 @@ hint_clear_empty(SaxDrive dr) {
 	    break;
 	}
 	if (nv->hint->empty) {
-	    end_element_cb(dr, nv->val, dr->buf.line, dr->buf.col);
+	    end_element_cb(dr, nv->val, dr->buf.pos, dr->buf.line, dr->buf.col);
 	    stack_pop(&dr->stack);
 	} else {
 	    break;
@@ -1554,7 +1624,7 @@ hint_try_close(SaxDrive dr, const char *name) {
 	    break;
 	}
 	if (nv->hint->empty) {
-	    end_element_cb(dr, nv->val, dr->buf.line, dr->buf.col);
+	    end_element_cb(dr, nv->val, dr->buf.pos, dr->buf.line, dr->buf.col);
 	    dr->stack.tail = nv;
 	} else {
 	    break;
@@ -1564,8 +1634,11 @@ hint_try_close(SaxDrive dr, const char *name) {
 }
 
 static void
-end_element_cb(SaxDrive dr, VALUE name, int line, int col) {
+end_element_cb(SaxDrive dr, VALUE name, int pos, int line, int col) {
     if (dr->has.end_element) {
+	if (dr->has.pos) {
+	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	}
 	if (dr->has.line) {
 	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
 	}

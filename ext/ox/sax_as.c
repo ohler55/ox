@@ -119,7 +119,7 @@ sax_value_as_s(VALUE self) {
 	return Qnil;
     }
     if (dr->options.convert_special) {
-	ox_sax_collapse_special(dr, dr->buf.str, dr->buf.line, dr->buf.col);
+	ox_sax_collapse_special(dr, dr->buf.str, dr->buf.pos, dr->buf.line, dr->buf.col);
     }
     switch (dr->options.skip) {
     case CrSkip:
