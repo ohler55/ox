@@ -1,6 +1,6 @@
 
 module Ox
-  # Coments represent XML comments in an XML document. A comment as value
+  # Comments represent XML comments in an XML document. A comment has a value
   # attribute only.
   class Comment < Node
     # Creates a new Comment with the specified value.
