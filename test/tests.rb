@@ -878,6 +878,12 @@ class Func < ::Minitest::Test
     }
   end
 
+  def test_arbitrary_raw_xml
+    root = Ox::Element.new('root')
+    root << Ox::Raw.new('<foo>bar</bar>')
+    assert_equal "\n<root>\n  <foo>bar</bar>\n</root>\n", Ox.dump(root)
+  end
+
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)
     puts xml if trace

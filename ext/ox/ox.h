@@ -239,6 +239,7 @@ extern VALUE	ox_element_clas;
 extern VALUE	ox_instruct_clas;
 extern VALUE	ox_bag_clas;
 extern VALUE	ox_comment_clas;
+extern VALUE	ox_raw_clas;
 extern VALUE	ox_doctype_clas;
 extern VALUE	ox_cdata_clas;
 
