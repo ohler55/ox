@@ -1,7 +1,7 @@
 
 module Ox
   # Raw elements are used to inject existing XML strings into a document
-  # WARNING: Use of this feature can result in invalid XML, since `vaule` is
+  # WARNING: Use of this feature can result in invalid XML, since `value` is
   # injected as-is
   class Raw < Node
     # Creates a new Raw element with the specified value.
