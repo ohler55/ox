@@ -370,6 +370,17 @@ encoding = "UTF-8" ?>},
                   ], AllSax, :convert_special => true)
   end
 
+  def test_sax_bad_special
+    parse_compare(%{<top name="&example;">&example;</top>},
+                  [[:start_element, :top],
+                   [:error, "Invalid Format: Invalid special character sequence", 1, 11],
+                   [:attr, :name, '&example;'],
+                   [:error, "Invalid Format: Invalid special character sequence", 1, 22],
+                   [:text, "&example;"],
+                   [:end_element, :top]
+                  ], AllSax, :convert_special => true)
+  end
+
   def test_sax_not_special
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [[:start_element, :top],

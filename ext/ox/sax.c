@@ -288,6 +288,7 @@ parse(SaxDrive dr) {
 		c = buf_get(&dr->buf);
 		if ('\0' == c) {
 		    ox_sax_drive_error(dr, NO_TERM "DOCTYPE or comment not terminated");
+
 		    goto DONE;
 		} else if ('-' == c) {
 		    c = buf_get(&dr->buf); /* skip first - and get next character */
@@ -1571,7 +1572,7 @@ ox_sax_collapse_special(SaxDrive dr, char *str, int pos, int line, int col) {
                 c = '\'';
                 s += 5;
             } else {
-		ox_sax_drive_error_at(dr, NO_TERM "special character does not end with a semicolon", pos, line, col);
+		ox_sax_drive_error_at(dr, INVALID_FORMAT "Invalid special character sequence", pos, line, col);
 		c = '&';
             }
             *b++ = (char)c;

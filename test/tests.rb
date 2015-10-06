@@ -309,6 +309,17 @@ class Func < ::Minitest::Test
     assert_equal(xml, dumped_xml)
   end
 
+  def test_escape_bad
+    xml = %{<top name="&example;">&example;</top>}
+    begin
+      doc = Ox.parse(xml)
+    rescue Exception => e
+      assert_equal('Invalid format, invalid special character sequence at line 1, column 22 ', e.message.split('[')[0])
+      return
+    end
+    assert(false)
+  end
+
   def test_escape_hex_value
     xml = %{\n<top name="&lt;&#x40;test&gt;"/>\n}
     doc = Ox.parse(xml)
@@ -542,7 +553,9 @@ class Func < ::Minitest::Test
       Ox.dump(h)
     rescue Exception
       assert(true)
+      return
     end
+    assert(false)
   end
 
   def test_raw
@@ -564,7 +577,9 @@ class Func < ::Minitest::Test
       o = Ox.load(xml, :mode => :object)
       xml2 = Ox.dump(o, :effort => :tolerant)
       assert_equal(xml, xml2)
+      return
     end
+    assert(false)
   end
   
   def test_mutex

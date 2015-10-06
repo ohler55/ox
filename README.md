@@ -34,6 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Future Release 2.2.2
+
+ - Fixed problem with detecting invalid special character sequences.
+
 ### Current Release 2.2.1
 
  - Added support to handle script elements in html.

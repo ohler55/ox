@@ -486,9 +486,8 @@ read_element(PInfo pi) {
 		return 0;
 	    }
 	    if (0 != strchr(attr_value, '&')) {
-		if (0 != collapse_special(pi, (char*)attr_value)) {
+		if (0 != collapse_special(pi, (char*)attr_value) || err_has(&pi->err)) {
 		    attr_stack_cleanup(&attrs);
-		    set_error(&pi->err, "invalid format, special character does not end with a semicolon", pi->str, pi->s);
 		    return 0;
 		}
 	    }
@@ -1079,10 +1078,13 @@ collapse_special(PInfo pi, char *str) {
 		    c = '?';
 		    while (';' != *s++) {
 			if ('\0' == *s) {
+			    set_error(&pi->err, "Invalid format, special character does not end with a semicolon", pi->str, pi->s);
 			    return EDOM;
 			}
 		    }
 		    s++;
+		    set_error(&pi->err, "Invalid format, invalid special character sequence", pi->str, pi->s);
+		    return 0;
 		}
 		*b++ = (char)c;
 	    }
