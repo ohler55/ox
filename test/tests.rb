@@ -227,6 +227,16 @@ class Func < ::Minitest::Test
     }
   end
 
+  def test_empty_element
+    xml = %{<?xml version="1.0"?>
+<top>
+  <>
+</top>}
+    assert_raise(Ox::ParseError) {
+      Ox.load(xml, :mode => :object, :trace => 0)
+    }
+  end
+
   def test_xml_instruction_format
     xml = %{<?xml version="1.0" ?>
 <s>Test</s>
