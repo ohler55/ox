@@ -851,6 +851,14 @@ read_element_start(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
     }
+    if ('\0' == *dr->buf.str) {
+	char	msg[256];
+
+	snprintf(msg, sizeof(msg) - 1, "%sempty element", INVALID_FORMAT);
+	ox_sax_drive_error_at(dr, msg, pos, line, col);
+
+	return '\0';
+    }
     if (0 != parent) {
 	parent->childCnt++;
     }

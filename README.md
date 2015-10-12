@@ -38,6 +38,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Fixed problem with detecting invalid special character sequences.
 
+ - Fixed bug that caused a crash when an <> was encountered with the SAX parser.
+
 ### Current Release 2.2.1
 
  - Added support to handle script elements in html.

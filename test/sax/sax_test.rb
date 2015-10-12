@@ -353,6 +353,21 @@ encoding = "UTF-8" ?>},
                   ], AllSax, { :skip => :skip_white })
   end
 
+  def test_sax_empty_element_name
+    parse_compare(%{<?xml version="1.0"?>
+<top>
+  <>
+</top>},
+                  [[:instruct, 'xml'],
+                   [:attr, :version, "1.0"],
+                   [:end_instruct, "xml"],
+                   [:start_element, :top],
+                   [:error, "Invalid Format: empty element", 3, 3],
+                   [:error, "Start End Mismatch: element 'top' not closed", 3, 4],
+                   [:end_element, :top],
+                  ])
+  end
+
   def test_sax_empty_element_noskip
     parse_compare(%{  <top>  </top>},
                   [[:start_element, :top],
