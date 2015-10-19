@@ -34,25 +34,17 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
-### Future Release 2.2.2
+### Release 2.2.2
 
  - Fixed problem with detecting invalid special character sequences.
 
  - Fixed bug that caused a crash when an <> was encountered with the SAX parser.
 
-### Current Release 2.2.1
+### Release 2.2.1
 
  - Added support to handle script elements in html.
 
  - Added support for position from start for the sax parser.
-
-### Release 2.2.0
-
- - Added the SAX convert_special option to the default options.
-
- - Added the SAX smart option to the default options.
-
- - Other SAX options are now taken from the defaults if not specified.
 
 ## Description
 
