@@ -396,10 +396,19 @@ encoding = "UTF-8" ?>},
                   ], AllSax, :convert_special => true)
   end
 
+  def test_sax_ignore_special
+    parse_compare(%{<top name="&example;">&example;</top>},
+                  [[:start_element, :top],
+                   [:attr, :name, '&example;'],
+                   [:text, "&example;"],
+                   [:end_element, :top]
+                  ], AllSax, :convert_special => false)
+  end
+
   def test_sax_not_special
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [[:start_element, :top],
-                   [:attr, :name, 'A&Z'],
+                   [:attr, :name, 'A&amp;Z'],
                    [:text, "This is &lt;some&gt; text."],
                    [:end_element, :top]
                   ], AllSax, :convert_special => false)
@@ -422,7 +431,7 @@ encoding = "UTF-8" ?>},
     Ox::default_options = { :convert_special => false }
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [[:start_element, :top],
-                   [:attr, :name, 'A&Z'],
+                   [:attr, :name, 'A&amp;Z'],
                    [:text, "This is &lt;some&gt; text."],
                    [:end_element, :top]
                   ], AllSax)
@@ -922,7 +931,6 @@ this is not part of the xml document
                    [:attr, :garbage, "trash"],
                    [:error, "Invalid Element: bad is not a valid element type for a HTML document type.", 4, 9],
                    [:start_element, :bad],
-                   [:error, "Not Terminated: special character does not end with a semicolon", 4, 29],
                    [:attr, :attr, "some&#xthing"],
                    [:error, "Invalid Element: bad is not a valid element type for a HTML document type.", 5, 9],
                    [:start_element, :bad],

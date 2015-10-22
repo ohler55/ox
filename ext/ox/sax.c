@@ -1333,7 +1333,9 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
             VALUE       args[2];
 
             args[0] = name;
-            ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
+	    if (dr->options.convert_special) {
+		ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
+	    }
             args[1] = rb_str_new2(attr_value);
 #if HAS_ENCODING_SUPPORT
             if (0 != dr->encoding) {

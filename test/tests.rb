@@ -330,6 +330,12 @@ class Func < ::Minitest::Test
     assert(false)
   end
 
+  def test_escape_ignore
+    xml = %{<top name="&example;">&example;</top>}
+    doc = Ox.load(xml, :convert_special => false)
+    puts doc
+  end
+
   def test_escape_hex_value
     xml = %{\n<top name="&lt;&#x40;test&gt;"/>\n}
     doc = Ox.parse(xml)
