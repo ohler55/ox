@@ -148,7 +148,7 @@ struct _Options	 ox_default_options = {
     Yes,		/* sym_keys */
     NoSkip,		/* skip */
     No,			/* smart */
-    No,			/* convert_special */
+    1,			/* convert_special */
 #if HAS_PRIVATE_ENCODING
     Qnil		/* rb_enc */
 #else
@@ -249,7 +249,7 @@ get_def_opts(VALUE self) {
     rb_hash_aset(opts, xsd_date_sym, (Yes == ox_default_options.xsd_date) ? Qtrue : ((No == ox_default_options.xsd_date) ? Qfalse : Qnil));
     rb_hash_aset(opts, symbolize_keys_sym, (Yes == ox_default_options.sym_keys) ? Qtrue : ((No == ox_default_options.sym_keys) ? Qfalse : Qnil));
     rb_hash_aset(opts, smart_sym, (Yes == ox_default_options.smart) ? Qtrue : ((No == ox_default_options.smart) ? Qfalse : Qnil));
-    rb_hash_aset(opts, convert_special_sym, (Yes == ox_default_options.convert_special) ? Qtrue : ((No == ox_default_options.convert_special) ? Qfalse : Qnil));
+    rb_hash_aset(opts, convert_special_sym, (ox_default_options.convert_special) ? Qtrue : Qfalse);
     switch (ox_default_options.mode) {
     case ObjMode:	rb_hash_aset(opts, mode_sym, object_sym);	break;
     case GenMode:	rb_hash_aset(opts, mode_sym, generic_sym);	break;
@@ -301,7 +301,6 @@ set_def_opts(VALUE self, VALUE opts) {
 	{ circular_sym, &ox_default_options.circular },
 	{ symbolize_keys_sym, &ox_default_options.sym_keys },
 	{ smart_sym, &ox_default_options.smart },
-	{ convert_special_sym, &ox_default_options.convert_special },
 	{ Qnil, 0 }
     };
     YesNoOpt	o;
@@ -372,6 +371,17 @@ set_def_opts(VALUE self, VALUE opts) {
 	ox_default_options.skip = SpcSkip;
     } else {
 	rb_raise(ox_parse_error_class, ":skip must be :skip_none, :skip_return, :skip_white, or nil.\n");
+    }
+
+    v = rb_hash_lookup(opts, convert_special_sym);
+    if (Qnil == v) {
+	// no change
+    } else if (Qtrue == v) {
+	ox_default_options.convert_special = 1;
+    } else if (Qfalse == v) {
+	ox_default_options.convert_special = 0;
+    } else {
+	rb_raise(ox_parse_error_class, ":convert_special must be true or false.\n");
     }
 
     for (o = ynos; 0 != o->attr; o++) {
@@ -522,6 +532,9 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 	}
 	if (Qnil != (v = rb_hash_lookup(h, symbolize_keys_sym))) {
 	    options.sym_keys = (Qfalse == v) ? No : Yes;
+	}
+	if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
+	    options.convert_special = (Qfalse != v);
 	}
     }
 #if HAS_ENCODING_SUPPORT
@@ -706,7 +719,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
     struct _SaxOptions	options;
 
     options.symbolize = (No != ox_default_options.sym_keys);
-    options.convert_special = (Yes == ox_default_options.convert_special);
+    options.convert_special = ox_default_options.convert_special;
     options.smart = (Yes == ox_default_options.smart);
     options.skip = ox_default_options.skip;
 

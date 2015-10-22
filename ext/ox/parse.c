@@ -485,7 +485,7 @@ read_element(PInfo pi) {
 	    if (0 == (attr_value = read_quoted_value(pi))) {
 		return 0;
 	    }
-	    if (0 != strchr(attr_value, '&')) {
+	    if (pi->options->convert_special && 0 != strchr(attr_value, '&')) {
 		if (0 != collapse_special(pi, (char*)attr_value) || err_has(&pi->err)) {
 		    attr_stack_cleanup(&attrs);
 		    return 0;

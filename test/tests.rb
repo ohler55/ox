@@ -49,7 +49,7 @@ class Func < ::Minitest::Test
                    :symbolize_keys=>true,
                    :skip=>:skip_none,
                    :smart=>false,
-                   :convert_special=>false,
+                   :convert_special=>true,
                    :effort=>:strict})
   end
 
@@ -68,7 +68,7 @@ class Func < ::Minitest::Test
       :symbolize_keys=>true,
       :skip=>:skip_return,
       :smart=>true,
-      :convert_special=>true,
+      :convert_special=>false,
       :effort=>:tolerant }
     o3 = { :xsd_date=>false }
     Ox.default_options = o2
@@ -333,7 +333,8 @@ class Func < ::Minitest::Test
   def test_escape_ignore
     xml = %{<top name="&example;">&example;</top>}
     doc = Ox.load(xml, :convert_special => false)
-    puts doc
+    assert_equal('&example;', doc.attributes[:name])
+    assert_equal('&example;', doc.nodes[0])
   end
 
   def test_escape_hex_value

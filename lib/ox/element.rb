@@ -159,6 +159,7 @@ module Ox
       id_str = id.to_s
       id_sym = id.to_sym
       nodes.each do |n|
+        next if n.is_a?(String)
         return true if n.value == id_str || n.value == id_sym
       end
       if instance_variable_defined?(:@attributes) && !@attributes.nil?
