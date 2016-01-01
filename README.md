@@ -42,6 +42,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
  - The convert_special option now applies to the regualr parser as well as the
    SAX parser.
 
+ - Updated to work correctly with Ruby 2.3.0.
+
 ### Release 2.2.2
 
  - Fixed problem with detecting invalid special character sequences.

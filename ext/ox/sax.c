@@ -174,7 +174,11 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
     dr->buf.dr = dr;
     stack_init(&dr->stack);
     dr->handler = handler;
+#if HAS_DATA_OBJECT_WRAP
+    dr->value_obj = rb_data_object_wrap(ox_sax_value_class, dr, 0, 0);
+#else
     dr->value_obj = rb_data_object_alloc(ox_sax_value_class, dr, 0, 0);
+#endif
     rb_gc_register_address(&dr->value_obj);
     dr->options = *options;
     dr->hints = 0;

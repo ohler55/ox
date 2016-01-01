@@ -540,10 +540,15 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
     }
     out->obj = obj;
     if (0 == aid) {
-	/*e.attr.str = 0; */
+	e.attr.str = 0;
 	e.attr.len = 0;
     } else {
 	e.attr.str = rb_id2name(aid);
+	// Ruby 2.3 started to return NULL for some IDs so check for
+	// NULL. Ignore is NULL aid.
+	if (NULL == e.attr.str) {
+	    return;
+	}
 	e.attr.len = strlen(e.attr.str);
     }
     e.closed = 0;

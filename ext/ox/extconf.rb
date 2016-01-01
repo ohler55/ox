@@ -35,6 +35,7 @@ dflags = {
   'HAS_BIGDECIMAL' => ('jruby' != type) ? 1 : 0,
   'HAS_TOP_LEVEL_ST_H' => ('ree' == type || ('ruby' == type &&  '1' == version[0] && '8' == version[1])) ? 1 : 0,
   'NEEDS_UIO' => (RUBY_PLATFORM =~ /(win|w)32$/) ? 0 : 1,
+  'HAS_DATA_OBJECT_WRAP' => ('ruby' == type && '2' == version[0] && '3' <= version[1]) ? 1 : 0,
 }
 
 if RUBY_PLATFORM =~ /(win|w)32$/ || RUBY_PLATFORM =~ /solaris2\.10/
