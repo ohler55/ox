@@ -24,8 +24,8 @@ typedef struct _Buf {
     union {
         int     	fd;
         VALUE   	io;
-	const char	*in_str;
-    };
+	const char	*str;
+    } in;
     struct _SaxDrive	*dr;
 } *Buf;
 

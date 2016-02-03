@@ -37,16 +37,16 @@ ox_sax_buf_init(Buf buf, VALUE io) {
 	VALUE	s = rb_funcall2(io, ox_string_id, 0, 0);
 
 	buf->read_func = read_from_str;
-	buf->in_str = StringValuePtr(s);
+	buf->in.str = StringValuePtr(s);
     } else if (rb_cFile == io_class && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
 	buf->read_func = read_from_fd;
-	buf->fd = FIX2INT(rfd);
+	buf->in.fd = FIX2INT(rfd);
     } else if (rb_respond_to(io, ox_readpartial_id)) {
 	buf->read_func = read_from_io_partial;
-	buf->io = io;
+	buf->in.io = io;
     } else if (rb_respond_to(io, ox_read_id)) {
 	buf->read_func = read_from_io;
-	buf->io = io;
+	buf->in.io = io;
     } else {
         rb_raise(ox_arg_error_class, "sax_parser io argument must respond to readpartial() or read().\n");
     }
@@ -137,7 +137,7 @@ partial_io_cb(VALUE rbuf) {
     size_t	cnt;
 
     args[0] = ULONG2NUM(buf->end - buf->tail);
-    rstr = rb_funcall2(buf->io, ox_readpartial_id, 1, args);
+    rstr = rb_funcall2(buf->in.io, ox_readpartial_id, 1, args);
     str = StringValuePtr(rstr);
     cnt = strlen(str);
     //printf("*** read partial %lu bytes, str: '%s'\n", cnt, str);
@@ -156,7 +156,7 @@ io_cb(VALUE rbuf) {
     size_t	cnt;
 
     args[0] = ULONG2NUM(buf->end - buf->tail);
-    rstr = rb_funcall2(buf->io, ox_read_id, 1, args);
+    rstr = rb_funcall2(buf->in.io, ox_read_id, 1, args);
     str = StringValuePtr(rstr);
     cnt = strlen(str);
     //printf("*** read %lu bytes, str: '%s'\n", cnt, str);
@@ -181,7 +181,7 @@ read_from_fd(Buf buf) {
     ssize_t     cnt;
     size_t      max = buf->end - buf->tail;
 
-    cnt = read(buf->fd, buf->tail, max);
+    cnt = read(buf->in.fd, buf->tail, max);
     if (cnt < 0) {
         ox_sax_drive_error(buf->dr, "failed to read from file");
         return -1;
@@ -210,14 +210,14 @@ read_from_str(Buf buf) {
     char	*s;
     long	cnt;
 
-    if ('\0' == *buf->in_str) {
+    if ('\0' == *buf->in.str) {
 	/* done */
 	return -1;
     }
-    s = ox_stpncpy(buf->tail, buf->in_str, max);
+    s = ox_stpncpy(buf->tail, buf->in.str, max);
     *s = '\0';
     cnt = s - buf->tail;
-    buf->in_str += cnt;
+    buf->in.str += cnt;
     buf->read_end = buf->tail + cnt;
 
     return 0;
