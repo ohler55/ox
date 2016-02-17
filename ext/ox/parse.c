@@ -567,9 +567,32 @@ read_element(PInfo pi) {
 			return 0;
 		    }
 		    if (first && start != slash - 1) {
-			/* some white space between start and here so add as text */
+			// Some white space between start and here so add as
+			// text after checking skip.
 			*(slash - 1) = '\0';
-			pi->pcb->add_text(pi, start, 1);
+			switch (pi->options->skip) {
+			case CrSkip: {
+			    char	*s = start;
+			    char	*e = start;
+			
+			    for (; '\0' != *e; e++) {
+				if ('\r' != *e) {
+				    *s++ = *e;
+				}
+			    }
+			    *s = '\0';
+			    break;
+			}
+			case SpcSkip:
+			    *start = '\0';
+			    break;
+			case NoSkip:
+			default:
+			    break;
+			}
+			if ('\0' != *start) {
+			    pi->pcb->add_text(pi, start, 1);
+			}
 		    }
 		    pi->s++;
 		    pi->pcb->end_element(pi, ename);

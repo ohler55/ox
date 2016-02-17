@@ -28,6 +28,42 @@ opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
+{:encoding=>nil, :indent=>2, :trace=>0, :with_dtd=>false, :with_xml=>false, :with_instructions=>false, :circular=>false, :xsd_date=>false, :symbolize_keys=>true, :smart=>false, :convert_special=>true, :mode=>nil, :effort=>:strict, :skip=>:skip_none}
+
+$oj_object_options = {
+  :encoding=>nil,
+  :indent=>2,
+  :trace=>0,
+  :with_dtd=>false,
+  :with_xml=>false,
+  :with_instructions=>false,
+  :circular=>false,
+  :xsd_date=>false,
+  :mode=>:object,
+  :symbolize_keys=>true,
+  :skip=>:skip_white,
+  :smart=>false,
+  :convert_special=>true,
+  :effort=>:strict
+}
+
+$oj_generic_options = {
+  :encoding=>nil,
+  :indent=>2,
+  :trace=>0,
+  :with_dtd=>false,
+  :with_xml=>false,
+  :with_instructions=>false,
+  :circular=>false,
+  :xsd_date=>false,
+  :mode=>:generic,
+  :symbolize_keys=>true,
+  :skip=>:skip_white,
+  :smart=>false,
+  :convert_special=>true,
+  :effort=>:strict
+}
+
 class Func < ::Minitest::Test
 
   unless respond_to?(:assert_raise)
@@ -35,22 +71,9 @@ class Func < ::Minitest::Test
   end
 
   def test_get_options
+    Ox::default_options = $oj_object_options
     opts = Ox.default_options()
-    assert_equal(opts, {
-                   :encoding=>nil,
-                   :indent=>2,
-                   :trace=>0,
-                   :with_dtd=>false,
-                   :with_xml=>false,
-                   :with_instructions=>false,
-                   :circular=>false,
-                   :xsd_date=>false,
-                   :mode=>nil,
-                   :symbolize_keys=>true,
-                   :skip=>:skip_none,
-                   :smart=>false,
-                   :convert_special=>true,
-                   :effort=>:strict})
+    assert_equal(opts, $oj_object_options)
   end
 
   def test_set_options
@@ -79,24 +102,29 @@ class Func < ::Minitest::Test
   end
 
   def test_nil
+    Ox::default_options = $oj_object_options
     dump_and_load(nil, false)
   end
 
   def test_true
+    Ox::default_options = $oj_object_options
     dump_and_load(true, false)
   end
 
   def test_false
+    Ox::default_options = $oj_object_options
     dump_and_load(false, false)
   end
 
   def test_fixnum
+    Ox::default_options = $oj_object_options
     dump_and_load(7, false)
     dump_and_load(-19, false)
     dump_and_load(0, false)
   end
 
   def test_float
+    Ox::default_options = $oj_object_options
     dump_and_load(7.7, false)
     dump_and_load(-1.9, false)
     dump_and_load(0.0, false)
@@ -105,39 +133,47 @@ class Func < ::Minitest::Test
   end
 
   def test_string
+    Ox::default_options = $oj_object_options
     dump_and_load('a string', false)
     dump_and_load('', false)
   end
 
   def test_symbol
+    Ox::default_options = $oj_object_options
     dump_and_load(:a_symbol, false)
     dump_and_load(:<=, false)
   end
 
   def test_base64
+    Ox::default_options = $oj_object_options
     dump_and_load('a & x', false)
   end
 
   def test_time
+    Ox::default_options = $oj_object_options
     t = Time.local(2012, 1, 5, 23, 58, 7)
     dump_and_load(t, false)
   end
 
   def test_date
+    Ox::default_options = $oj_object_options
     dump_and_load(Date.new(2011, 1, 5), false)
   end
 
   def test_array
+    Ox::default_options = $oj_object_options
     dump_and_load([], false)
     dump_and_load([1, 'a'], false)
   end
 
   def test_hash
+    Ox::default_options = $oj_object_options
     dump_and_load({ }, false)
     dump_and_load({ 'a' => 1, 2 => 'b' }, false)
   end
 
   def test_range
+    Ox::default_options = $oj_object_options
     if RUBY_VERSION.start_with?('1.8')
       assert(true)
     else
@@ -151,6 +187,7 @@ class Func < ::Minitest::Test
   end
 
   def test_regex
+    Ox::default_options = $oj_object_options
     if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
@@ -160,16 +197,19 @@ class Func < ::Minitest::Test
   end
 
   def test_bignum
+    Ox::default_options = $oj_object_options
     dump_and_load(7 ** 55, false)
     dump_and_load(-7 ** 55, false)
   end
 
   def test_bigdecimal
+    Ox::default_options = $oj_object_options
     bd = BigDecimal.new('7.123456789')
     dump_and_load(bd, false)
   end
 
   def test_complex_number
+    Ox::default_options = $oj_object_options
     if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
@@ -179,6 +219,7 @@ class Func < ::Minitest::Test
   end
 
   def test_rational
+    Ox::default_options = $oj_object_options
     if RUBY_VERSION.start_with?('1.8')
       assert(true)
     else
@@ -188,11 +229,13 @@ class Func < ::Minitest::Test
   end
 
   def test_object
+    Ox::default_options = $oj_object_options
     dump_and_load(Bag.new({ }), false)
     dump_and_load(Bag.new(:@x => 3), false)
   end
   
   def test_bad_object
+    Ox::default_options = $oj_object_options
     xml = %{<?xml version="1.0"?>
 <o c="Bad::Boy">
   <i a="@x">3</i>
@@ -217,6 +260,7 @@ class Func < ::Minitest::Test
   end
 
   def test_bad_class
+    Ox::default_options = $oj_object_options
     xml = %{<?xml version="1.0"?>
 <o c="Bad:Boy">
   <i a="@x">3</i>
@@ -228,6 +272,7 @@ class Func < ::Minitest::Test
   end
 
   def test_empty_element
+    Ox::default_options = $oj_object_options
     xml = %{<?xml version="1.0"?>
 <top>
   <>
@@ -238,6 +283,7 @@ class Func < ::Minitest::Test
   end
 
   def test_xml_instruction_format
+    Ox::default_options = $oj_object_options
     xml = %{<?xml version="1.0" ?>
 <s>Test</s>
 }
@@ -246,6 +292,7 @@ class Func < ::Minitest::Test
   end
 
   def test_xml_instruction
+    Ox::default_options = $oj_object_options
     xml = Ox.dump("test", :mode => :object, :with_xml => false)
     assert_equal("<s>test</s>\n", xml)
     xml = Ox.dump("test", :mode => :object, :with_xml => true)
@@ -255,6 +302,7 @@ class Func < ::Minitest::Test
   end
 
   def test_ox_instruction
+    Ox::default_options = $oj_object_options
     xml = Ox.dump("test", :mode => :object, :with_xml => true, :with_instructions => true)
     assert_equal("<?xml version=\"1.0\"?>\n<?ox version=\"1.0\" mode=\"object\" circular=\"no\" xsd_date=\"no\"?>\n<s>test</s>\n", xml)
     xml = Ox.dump("test", :mode => :object, :with_instructions => true)
@@ -266,6 +314,7 @@ class Func < ::Minitest::Test
   end
 
   def test_embedded_instruction
+    Ox::default_options = $oj_object_options
     xml = %{<?xml version="1.0"?><?pro cat="quick"?>
 <top>
   <str>This is a <?attrs dog="big"?> string.</str><?content dog is big?>
@@ -289,29 +338,34 @@ class Func < ::Minitest::Test
   end
 
   def test_dtd
+    Ox::default_options = $oj_object_options
     xml = Ox.dump("test", :mode => :object, :with_dtd => true)
     assert_equal("<!DOCTYPE s SYSTEM \"ox.dtd\">\n<s>test</s>\n", xml)
   end
 
   def test_lone_dtd
+    Ox::default_options = $oj_object_options
     xml = "<!DOCTYPE html>" # not really a valid xml but should pass anyway
     doc = Ox.parse(xml)
     assert_equal('html', doc.nodes[0].value)
   end
 
   def test_big_dtd
+    Ox::default_options = $oj_object_options
     xml = %{<!DOCTYPE Objects [<!ELEMENT Objects (RentObjects)><!ENTITY euml "&#235;"><!ENTITY Atilde "&#195;">]>}
     doc = Ox.parse(xml)
     assert_equal(%{Objects [<!ELEMENT Objects (RentObjects)><!ENTITY euml "&#235;"><!ENTITY Atilde "&#195;">]}, doc.nodes[0].value)
   end
 
   def test_quote_value
+    Ox::default_options = $oj_object_options
     xml = %{<top name="Pete"/>}
     doc = Ox.parse(xml)
     assert_equal('Pete', doc.attributes[:name])
   end
 
   def test_escape_value
+    Ox::default_options = $oj_object_options
     xml = %{\n<top name="&lt;&amp;test&gt;"/>\n}
     doc = Ox.parse(xml)
     assert_equal('<&test>', doc.attributes[:name])
@@ -320,6 +374,7 @@ class Func < ::Minitest::Test
   end
 
   def test_escape_bad
+    Ox::default_options = $oj_object_options
     xml = %{<top name="&example;">&example;</top>}
     begin
       doc = Ox.parse(xml)
@@ -331,6 +386,7 @@ class Func < ::Minitest::Test
   end
 
   def test_escape_ignore
+    Ox::default_options = $oj_generic_options
     xml = %{<top name="&example;">&example;</top>}
     doc = Ox.load(xml, :convert_special => false)
     assert_equal('&example;', doc.attributes[:name])
@@ -338,12 +394,14 @@ class Func < ::Minitest::Test
   end
 
   def test_escape_hex_value
+    Ox::default_options = $oj_object_options
     xml = %{\n<top name="&lt;&#x40;test&gt;"/>\n}
     doc = Ox.parse(xml)
     assert_equal('<@test>', doc.attributes[:name])
   end
 
   def test_escape_utf8_value
+    Ox::default_options = $oj_object_options
     xml = %{<?xml encoding="UTF-8"?>\n<top name="&#x30d4;&#12540;&#xE382BFE383BC;">&#xe38394; test &#64;</top>\n}
     doc = Ox.parse(xml).root()
     assert_equal('ピ test @', doc.nodes[0])
@@ -351,6 +409,7 @@ class Func < ::Minitest::Test
   end
 
   def test_escape_utf8_nil_encoding
+    Ox::default_options = $oj_object_options
     xml = %{<?xml?>\n<top name="&#x30d4;&#12540;&#xE382BFE383BC;">&#x30D4; test &#64;</top>\n}
     doc = Ox.parse(xml).root()
     assert_equal('ピ test @', doc.nodes[0])
@@ -358,6 +417,7 @@ class Func < ::Minitest::Test
   end
 
   def test_escape_bom_utf8_encoding
+    Ox::default_options = $oj_object_options
     xml = %{\xEF\xBB\xBF<?xml?>\n<top name="bom"></top>\n}
     doc = Ox.parse(xml).root()
     assert_equal('bom', doc.attributes[:name])
@@ -367,6 +427,7 @@ class Func < ::Minitest::Test
   end
 
   def test_escape_bom_bad_encoding
+    Ox::default_options = $oj_object_options
     xml = %{\xEF\xBB<?xml?>\n<top name="bom"></top>\n}
     assert_raise(Ox::ParseError) {
       Ox.parse(xml).root()
@@ -374,24 +435,28 @@ class Func < ::Minitest::Test
   end
 
   def test_attr_as_string
+    Ox::default_options = $oj_object_options
     xml = %{<top name="Pete"/>}
     doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false)
     assert_equal(['name'], doc.attributes.keys)
   end
 
   def test_single_quote
+    Ox::default_options = $oj_generic_options
     xml = %{<top name='Pete'/>}
     doc = Ox.load(xml, :effort => :tolerant)
     assert_equal('Pete', doc.attributes[:name])
   end
 
   def test_no_quote
+    Ox::default_options = $oj_generic_options
     xml = %{<top name=Pete />}
     doc = Ox.load(xml, :effort => :tolerant)
     assert_equal('Pete', doc.attributes[:name])
   end
 
   def test_skip_none
+    Ox::default_options = $oj_object_options
     xml = %{<top>  Pete\r\n  Ohler</top>}
     doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_none)
     x2 = Ox.dump(doc, :indent => 0)
@@ -399,6 +464,7 @@ class Func < ::Minitest::Test
   end
 
   def test_skip_return
+    Ox::default_options = $oj_object_options
     xml = %{<top>  Pete\r\n  Ohler</top>}
     doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_return)
     x2 = Ox.dump(doc)
@@ -406,6 +472,7 @@ class Func < ::Minitest::Test
   end
 
   def test_skip_space
+    Ox::default_options = $oj_object_options
     xml = %{<top>  Pete\r\n  Ohler</top>}
     doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_white)
     x2 = Ox.dump(doc)
@@ -413,6 +480,8 @@ class Func < ::Minitest::Test
   end
 
   def test_tolerant
+    Ox::default_options = $oj_generic_options
+    Ox::default_options = { :skip => :skip_return }
     xml = %{<!doctype HTML>
 <html lang=en>
   <head garbage='trash'>
@@ -446,10 +515,12 @@ class Func < ::Minitest::Test
   end
 
   def test_class
+    Ox::default_options = $oj_object_options
     dump_and_load(Bag, false)
   end
 
   def test_exception
+    Ox::default_options = $oj_object_options
     if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
@@ -461,6 +532,7 @@ class Func < ::Minitest::Test
   end
 
   def test_exception_bag
+    Ox::default_options = $oj_object_options
     if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
@@ -480,6 +552,7 @@ class Func < ::Minitest::Test
   end
 
   def test_struct
+    Ox::default_options = $oj_object_options
     if 'ruby' == $ruby || 'ree' == $ruby
       s = Struct.new('Box', :x, :y, :w, :h)
       dump_and_load(s.new(2, 4, 10, 20), false)
@@ -489,6 +562,7 @@ class Func < ::Minitest::Test
   end
 
   def test_bad_format
+    Ox::default_options = $oj_object_options
     xml = "<?xml version=\"1.0\"?>\n<tag>test</tagz>\n"
     assert_raise(Ox::ParseError) {
       Ox.load(xml, :mode => :generic, :trace => 0)
@@ -496,6 +570,7 @@ class Func < ::Minitest::Test
   end
 
   def test_array_multi
+    Ox::default_options = $oj_object_options
     t = Time.local(2012, 1, 5, 23, 58, 7)
     if RUBY_VERSION.start_with?('1.8')
       dump_and_load([nil, true, false, 3, 'z', 7.9, 'a&b', :xyz, t], false)
@@ -505,6 +580,7 @@ class Func < ::Minitest::Test
   end
 
   def test_hash_multi
+    Ox::default_options = $oj_object_options
     t = Time.local(2012, 1, 5, 23, 58, 7)
     if RUBY_VERSION.start_with?('1.8')
       dump_and_load({ nil => nil, true => true, false => false, 3 => 3, 'z' => 'z', 7.9 => 7.9, 'a&b' => 'a&b', :xyz => :xyz, t => t }, false)
@@ -514,6 +590,7 @@ class Func < ::Minitest::Test
   end
 
   def test_object_multi
+    Ox::default_options = $oj_object_options
     t = Time.local(2012, 1, 5, 23, 58, 7)
     if RUBY_VERSION.start_with?('1.8')
       dump_and_load(Bag.new(:@a => nil, :@b => true, :@c => false, :@d => 3, :@e => 'z', :@f => 7.9, :@g => 'a&b', :@h => :xyz, :@i => t), false)
@@ -523,6 +600,7 @@ class Func < ::Minitest::Test
   end
 
   def test_complex
+    Ox::default_options = $oj_object_options
     dump_and_load(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, {:b => 3, :a => [5], :c => Bag.new(:@x => 7)}]), false)
   end
 
@@ -532,6 +610,7 @@ class Func < ::Minitest::Test
   # change. Perform the operation on both the object before and the loaded so
   # the equal() method can be used.
   def test_circular
+    Ox::default_options = $oj_object_options
     if RUBY_VERSION.start_with?('1.8')
       # In 1.8.7 the eql? method behaves differently but the results are
       # correct when viewed by eye.
@@ -564,6 +643,7 @@ class Func < ::Minitest::Test
 
   # verify that an exception is raised if a circular ref object is created.
   def test_circular_limit
+    Ox::default_options = $oj_object_options
     h = {}
     h[:h] = h
     begin
@@ -576,6 +656,7 @@ class Func < ::Minitest::Test
   end
 
   def test_raw
+    Ox::default_options = $oj_object_options
     raw = Ox::Element.new('raw')
     su = Ox::Element.new('sushi')
     su[:kind] = 'fish'
@@ -587,6 +668,7 @@ class Func < ::Minitest::Test
   end
 
   def test_nameerror
+    Ox::default_options = $oj_object_options
     begin
       "x".foo
     rescue Exception => e
@@ -600,6 +682,7 @@ class Func < ::Minitest::Test
   end
   
   def test_mutex
+    Ox::default_options = $oj_object_options
     if defined?(Mutex) && 'rubinius' != $ruby
       # Mutex can not be serialize but it should not raise an exception.
       xml = Ox.dump(Mutex.new, :indent => 2, :effort => :tolerant)
@@ -616,6 +699,7 @@ class Func < ::Minitest::Test
   end
 
   def test_encoding
+    Ox::default_options = $oj_object_options
     if RUBY_VERSION.start_with?('1.8')# || 'rubinius' == $ruby
       assert(true)
     else
@@ -630,6 +714,7 @@ class Func < ::Minitest::Test
   end
 
   def test_full_encoding
+    Ox::default_options = $oj_generic_options
     if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
@@ -644,6 +729,7 @@ class Func < ::Minitest::Test
   end
 
   def test_obj_encoding
+    Ox::default_options = $oj_object_options
     if RUBY_VERSION.start_with?('1.8')
       # jruby supports in a non standard way and does not allow utf-8 encoded object attribute names
       assert(true)
@@ -664,6 +750,7 @@ class Func < ::Minitest::Test
   end
 
   def test_instructions
+    Ox::default_options = $oj_object_options
     xml = Ox.dump("test", :with_instructions => true)
     #puts xml
     obj = Ox.load(xml) # should convert it to an object
@@ -671,6 +758,7 @@ class Func < ::Minitest::Test
   end
 
   def test_generic_string
+    Ox::default_options = $oj_object_options
     xml = %{<?xml?>
 <Str>A &lt;boo&gt;</Str>
 }
@@ -680,14 +768,16 @@ class Func < ::Minitest::Test
   end
 
   def test_generic_white_string
+    Ox::default_options = $oj_generic_options
     xml = %{<?xml?>
 <Str> </Str>
 }
-    doc = Ox.load(xml, :mode => :generic)
+    doc = Ox.load(xml, :skip => :skip_none)
     assert_equal(' ', doc.root.nodes[0])
   end
 
   def test_generic_encoding
+    Ox::default_options = $oj_object_options
     if RUBY_VERSION.start_with?('1.8')
       assert(true)
     else
@@ -701,6 +791,7 @@ class Func < ::Minitest::Test
   end
 
   def test_IO
+    Ox::default_options = $oj_object_options
     f = File.open(__FILE__, "r")
     assert_raise(NotImplementedError) {
       Ox.dump(f, :effort => :strict)
@@ -723,24 +814,28 @@ class Func < ::Minitest::Test
   end
   
   def test_locate_self
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate(nil)
     assert_equal(doc, nodes[0])
   end
 
   def test_locate_top
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family')
     assert_equal([doc.nodes[0]], nodes)
   end
 
   def test_locate_top_wild
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('?')
     assert_equal(doc.nodes[0], nodes[0])
   end
 
   def test_locate_child
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
 
     nodes = doc.locate('Family/?')
@@ -757,6 +852,7 @@ class Func < ::Minitest::Test
   end
 
   def test_locate_comment
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
 
     nodes = doc.locate('^Comment')
@@ -764,30 +860,35 @@ class Func < ::Minitest::Test
   end
 
   def test_locate_child_wild_wild
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/?/?')
     assert_equal(['Kid1', 'Nicole', 'Kid2', 'Pamela'], nodes.map { |n| n.value })
   end
 
   def test_locate_child_wild
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?')
     assert_equal(['Kid1', 'Nicole', 'Kid2', 'Pamela'], nodes.map { |n| n.value })
   end
 
   def test_locate_child_wild_missing
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Makie/?')
     assert_equal([], nodes.map { |n| n.name })
   end
 
   def test_locate_child_comments
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/?/^Comment')
     assert_equal(['Nicole', 'Pamela'], nodes.map { |n| n.value })
   end
 
   def test_locate_attribute
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
 
     nodes = doc.locate('Family/@?')
@@ -824,6 +925,7 @@ class Func < ::Minitest::Test
   end
 
   def test_locate_qual_index
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[0]')
     assert_equal(['Kid1'], nodes.map { |e| e.value } )
@@ -834,24 +936,28 @@ class Func < ::Minitest::Test
   end
 
   def test_locate_qual_less
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[<1]')
     assert_equal(['Kid1'], nodes.map { |e| e.value } )
   end
 
   def test_locate_qual_great
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[>1]')
     assert_equal(['Kid2', 'Pamela'], nodes.map { |e| e.value } )
   end
 
   def test_locate_qual_last
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[-1]')
     assert_equal(['Pamela'], nodes.map { |e| e.value } )
   end
 
   def test_locate_qual_last_attr
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[-2]/@age')
     assert_equal(['31'], nodes )
@@ -869,12 +975,14 @@ class Func < ::Minitest::Test
   end
   
   def test_easy_attribute
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(easy_xml)
     assert_equal('false', doc.Family.real)
     assert_equal('58', doc.Family.Pete.age)
   end
 
   def test_easy_attribute_missing
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(easy_xml)
     assert_raise(NoMethodError) {
       doc.Family.fake
@@ -882,6 +990,7 @@ class Func < ::Minitest::Test
   end
 
   def test_easy_element
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(easy_xml)
     assert_equal(::Ox::Element, doc.Family.Pete.class)
     assert_equal('Pete', doc.Family.Pete.name)
@@ -890,6 +999,7 @@ class Func < ::Minitest::Test
   end
 
   def test_easy_respond_to
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(easy_xml)
     assert_equal(true, doc.respond_to?(:Family))
     assert_equal(true, doc.Family.respond_to?('Pete'))
@@ -898,12 +1008,22 @@ class Func < ::Minitest::Test
     assert_equal(false, doc.Family.Pete.respond_to?('email'))
   end
 
+  def test_easy_replace_text
+    Ox::default_options = $oj_object_options
+    doc = Ox.parse(easy_xml)
+    k1 = doc.Family.Pete.Kid(1)
+    k1.replace_text('Spam')
+    assert_equal('Spam', doc.Family.Pete.Kid(1).text)
+  end
+  
   def test_easy_element_index
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(easy_xml)
     assert_equal('Pamela', doc.Family.Pete.Kid(1).text)
   end
 
   def test_easy_element_missing
+    Ox::default_options = $oj_object_options
     doc = Ox.parse(easy_xml)
     assert_raise(NoMethodError) {
       doc.Family.Bob
@@ -911,6 +1031,7 @@ class Func < ::Minitest::Test
   end
 
   def test_arbitrary_raw_xml
+    Ox::default_options = $oj_object_options
     root = Ox::Element.new('root')
     root << Ox::Raw.new('<foo>bar</bar>')
     assert_equal "\n<root>\n  <foo>bar</bar>\n</root>\n", Ox.dump(root)
@@ -919,7 +1040,7 @@ class Func < ::Minitest::Test
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)
     puts xml if trace
-    loaded = Ox.load(xml, :mode => :object, :trace => (trace ? 2 : 0))
+    loaded = Ox.load(xml, :trace => (trace ? 2 : 0))
     assert_equal(obj, loaded)
     loaded
   end

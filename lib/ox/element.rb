@@ -40,8 +40,8 @@ module Ox
     # @param [String] name name of the Element
     def initialize(name)
       super
-      @attributes = nil
-      @nodes = nil
+      @attributes = {}
+      @nodes = []
     end
     alias name value
     
@@ -49,7 +49,7 @@ module Ox
     # Element.
     # @return [Array] all child Nodes.
     def nodes
-      return [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
+      @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       @nodes
     end
 
@@ -81,6 +81,12 @@ module Ox
     def text()
       nodes.each { |n| return n if n.is_a?(String) }
       nil
+    end
+
+    # Clears any child nodes of an element and replaces those with a single Text
+    # (String) node.
+    def replace_text(txt)
+      @nodes = [ txt ]
     end
 
     # Returns an array of Nodes or Strings that correspond to the locations

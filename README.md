@@ -34,20 +34,18 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Future Release 2.3.0
+
+ - Added Oj::Element.replace_text() method.
+
+ - Oj::Element nodes variable is now always initialized to an empty Array.
+
+ - Oj::Element attributes variable is now always initialized to an empty Hash.
+
 ### Release 2.2.4
 
  - Changed the code to allow compilation on older compilers. No change in
    functionality otherwise.
-
-### Release 2.2.3
-
- - The convert_special option now applies to attributes as well as elements in
-   the SAX parser.
-
- - The convert_special option now applies to the regualr parser as well as the
-   SAX parser.
-
- - Updated to work correctly with Ruby 2.3.0.
 
 ## Description
 
