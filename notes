@@ -6,12 +6,24 @@
 - todo
 
  - add :invalid_replace
+  - get/set default options
+  - load options
+  - dump options
+  + parse
+  - docs
+   - load/parse
+   - dump
+
+ - make sure load converts unicode correctly
+ 
   - string
   - nil - leave as is
  - effort: :strict should raise on invalid
   - update docs to mention dump and not just load
  - change dump tables
-  - 0 for invalid chars
+  - 0 for invalid chars below 0x20
+ - for FFFE and FFFF and 0xD800 to 0xDFFF
+  - let ruby handle
 
  - unicode
   - should be fine as is
@@ -26,14 +38,6 @@
 
   - https://www.w3.org/TR/REC-xml/#Unicode. Section 2.2.
    - Char ::= #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF] /* any Unicode character, excluding the surrogate blocks, FFFE, and FFFF. */
-   - discouraged
-    [#x7F-#x84], [#x86-#x9F], [#xFDD0-#xFDEF],
-[#x1FFFE-#x1FFFF], [#x2FFFE-#x2FFFF], [#x3FFFE-#x3FFFF],
-[#x4FFFE-#x4FFFF], [#x5FFFE-#x5FFFF], [#x6FFFE-#x6FFFF],
-[#x7FFFE-#x7FFFF], [#x8FFFE-#x8FFFF], [#x9FFFE-#x9FFFF],
-[#xAFFFE-#xAFFFF], [#xBFFFE-#xBFFFF], [#xCFFFE-#xCFFFF],
-[#xDFFFE-#xDFFFF], [#xEFFFE-#xEFFFF], [#xFFFFE-#xFFFFF],
-[#x10FFFE-#x10FFFF]
 
  - future - Unicode when UTF-8
 

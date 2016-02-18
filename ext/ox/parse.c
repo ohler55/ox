@@ -43,6 +43,8 @@ static int	collapse_special(PInfo pi, char *str);
  * all cases to parse the string.
  */
 
+static char	xml_valid_lower_chars[34] = "xxxxxxxxxooxxoxxxxxxxxxxxxxxxxxxo";
+
 inline static int
 is_white(char c) {
     switch (c) {
@@ -690,27 +692,35 @@ read_text(PInfo pi) {
 		    return;
 		}
 	    } else {
-		switch (pi->options->skip) {
-		case CrSkip:
-		    if (buf != b && '\n' == c && '\r' == *(b - 1)) {
-			*(b - 1) = '\n';
-		    } else {
-			*b++ = c;
+		if (0 <= c && c <= 0x20) {
+		    if (StrictEffort == pi->options->effort && 'x' == xml_valid_lower_chars[(unsigned char)c]) {
+			set_error(&pi->err, "invalid character", pi->str, pi->s);
+			return;
 		    }
-		    break;
-		case SpcSkip:
-		    if (is_white(c)) {
-			if (buf == b || ' ' != *(b - 1)) {
-			    *b++ = ' ';
+		    switch (pi->options->skip) {
+		    case CrSkip:
+			if (buf != b && '\n' == c && '\r' == *(b - 1)) {
+			    *(b - 1) = '\n';
+			} else {
+			    *b++ = c;
 			}
-		    } else {
+			break;
+		    case SpcSkip:
+			if (is_white(c)) {
+			    if (buf == b || ' ' != *(b - 1)) {
+				*b++ = ' ';
+			    }
+			} else {
+			    *b++ = c;
+			}			
+			break;
+		    case NoSkip:
+		    default:
 			*b++ = c;
-		    }			
-		    break;
-		case NoSkip:
-		default:
+			break;
+		    }
+		} else {
 		    *b++ = c;
-		    break;
 		}
 	    }
 	    break;

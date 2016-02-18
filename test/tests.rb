@@ -44,7 +44,8 @@ $oj_object_options = {
   :skip=>:skip_white,
   :smart=>false,
   :convert_special=>true,
-  :effort=>:strict
+  :effort=>:strict,
+  :invalid_replace=>''
 }
 
 $oj_generic_options = {
@@ -61,7 +62,8 @@ $oj_generic_options = {
   :skip=>:skip_white,
   :smart=>false,
   :convert_special=>true,
-  :effort=>:strict
+  :effort=>:strict,
+  :invalid_replace=>''
 }
 
 class Func < ::Minitest::Test
@@ -77,7 +79,7 @@ class Func < ::Minitest::Test
   end
 
   def test_set_options
-    orig = Ox.default_options()
+    Ox::default_options = $oj_object_options
     o2 = {
       :encoding=>"UTF-8",
       :indent=>4,
@@ -92,13 +94,15 @@ class Func < ::Minitest::Test
       :skip=>:skip_return,
       :smart=>true,
       :convert_special=>false,
-      :effort=>:tolerant }
+      :effort=>:tolerant,
+      :invalid_replace=>'*'
+    }
     o3 = { :xsd_date=>false }
     Ox.default_options = o2
     opts = Ox.default_options()
     assert_equal(o2, opts);
     Ox.default_options = o3 # see if it throws an exception
-    Ox.default_options = orig # return to original
+    Ox::default_options = $oj_object_options
   end
 
   def test_nil
@@ -398,6 +402,52 @@ class Func < ::Minitest::Test
     xml = %{\n<top name="&lt;&#x40;test&gt;"/>\n}
     doc = Ox.parse(xml)
     assert_equal('<@test>', doc.attributes[:name])
+  end
+
+  def test_escape_dump_tolerant
+    Ox::default_options = $oj_object_options
+    dumped_xml = Ox.dump("tab\tamp&backspace\b.", :effort => :tolerant)
+    assert_equal("<s>tab\tamp&amp;backspace.</s>\n", dumped_xml)
+  end
+
+  def test_escape_dump_strict
+    Ox::default_options = $oj_object_options
+    begin
+      Ox.dump("tab\tamp&backspace\b.", :effort => :strict)
+    rescue Exception => e
+      assert_equal("'\\#x08' is not a valid XML character.", e.message)
+      return
+    end
+    assert(false)
+  end
+
+  def test_escape_dump_replace
+    Ox::default_options = $oj_object_options
+    dumped_xml = Ox.dump("tab\tamp&backspace\b.", :effort => :tolerant, :invalid_replace => '#')
+    assert_equal("<s>tab\tamp&amp;backspace#.</s>\n", dumped_xml)
+  end
+
+  def test_escape_dump_no_replace
+    Ox::default_options = $oj_object_options
+    dumped_xml = Ox.dump("tab\tamp&backspace\b.", :effort => :tolerant, :invalid_replace => nil)
+    assert_equal("<s>tab\tamp&amp;backspace&#x0008;.</s>\n", dumped_xml)
+  end
+
+  def test_escape_load_tolerant
+    Ox::default_options = $oj_object_options
+    obj = Ox.load("<s>tab\tamp&amp;backspace\b.</s>", :effort => :tolerant, :skip => :skip_none)
+    assert_equal("tab\tamp&backspace\b.", obj)
+  end
+
+  def test_escape_load_strict
+    Ox::default_options = $oj_object_options
+    begin
+      Ox.load("<s>tab\tamp&amp;backspace\b.</s>", :effort => :strict)
+    rescue Exception => e
+      assert_equal("invalid character at line 1, column 26 ", e.message.split('[')[0])
+      return
+    end
+    assert(false)
   end
 
   def test_escape_utf8_value

@@ -78,8 +78,10 @@ static int	is_xml_friendly(const uchar *str, int len);
 
 static const char	hex_chars[17] = "0123456789abcdef";
 
+// The : character is equivalent to 10. Used for replacement characters up to 10
+// characters long such as '&#x10FFFF;'.
 static char	xml_friendly_chars[257] = "\
-88888888811881888888888888888888\
+:::::::::11::1::::::::::::::::::\
 11611156111111111111111111114141\
 11111111111111111111111111111111\
 11111111111111111111111111111111\
@@ -315,7 +317,7 @@ dump_value(Out out, const char *value, size_t size) {
 inline static void
 dump_str_value(Out out, const char *value, size_t size) {
     size_t	xsize = xml_str_len((const uchar*)value, size);
-
+    
     if (out->end - out->cur <= (long)xsize) {
 	grow(out, xsize);
     }
@@ -323,42 +325,63 @@ dump_str_value(Out out, const char *value, size_t size) {
 	if ('1' == xml_friendly_chars[(uchar)*value]) {
 	    *out->cur++ = *value;
 	} else {
-	    *out->cur++ = '&';
 	    switch (*value) {
 	    case '"':
+		*out->cur++ = '&';
 		*out->cur++ = 'q';
 		*out->cur++ = 'u';
 		*out->cur++ = 'o';
 		*out->cur++ = 't';
+		*out->cur++ = ';';
 		break;
 	    case '&':
+		*out->cur++ = '&';
 		*out->cur++ = 'a';
 		*out->cur++ = 'm';
 		*out->cur++ = 'p';
+		*out->cur++ = ';';
 		break;
 	    case '\'':
+		*out->cur++ = '&';
 		*out->cur++ = 'a';
 		*out->cur++ = 'p';
 		*out->cur++ = 'o';
 		*out->cur++ = 's';
+		*out->cur++ = ';';
 		break;
 	    case '<':
+		*out->cur++ = '&';
 		*out->cur++ = 'l';
 		*out->cur++ = 't';
+		*out->cur++ = ';';
 		break;
 	    case '>':
+		*out->cur++ = '&';
 		*out->cur++ = 'g';
 		*out->cur++ = 't';
+		*out->cur++ = ';';
 		break;
 	    default:
-		*out->cur++ = '#';
-		*out->cur++ = 'x';
-		*out->cur++ = '0';
-		*out->cur++ = '0';
-		dump_hex(*value, out);
+		// Must be one of the invalid characters.
+		if (StrictEffort == out->opts->effort) {
+		    rb_raise(rb_eSyntaxError, "'\\#x%02x' is not a valid XML character.", *value);
+		}
+		if (Yes == out->opts->allow_invalid) {
+		    *out->cur++ = '&';
+		    *out->cur++ = '#';
+		    *out->cur++ = 'x';
+		    *out->cur++ = '0';
+		    *out->cur++ = '0';
+		    dump_hex(*value, out);
+		    *out->cur++ = ';';
+		} else if ('\0' != *out->opts->inv_repl) {
+		    // If the empty string then ignore. The first character of
+		    // the replacement is the length.
+		    memcpy(out->cur, out->opts->inv_repl + 1, (size_t)*out->opts->inv_repl);
+		    out->cur += *out->opts->inv_repl;
+		}
 		break;
 	    }
-	    *out->cur++ = ';';
 	}
     }
     *out->cur = '\0';
@@ -1199,6 +1222,7 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
 	ox_cache8_new(&out->circ_cache);
     }
     out->indent = copts->indent;
+
     if (ox_document_clas == clas) {
 	dump_gen_doc(obj, -1, out);
     } else if (ox_element_clas == clas) {

@@ -133,6 +133,8 @@ typedef struct _Options {
     char	skip;		/* skip mode */
     char	smart;		/* YesNo sax smart mode */
     char	convert_special;/* boolean true or false */
+    char	allow_invalid;	/* YesNo */
+    char	inv_repl[12];	/* max 10 valid characters, first character is the length */
 #if HAS_ENCODING_SUPPORT
     rb_encoding	*rb_enc;
 #elif HAS_PRIVATE_ENCODING

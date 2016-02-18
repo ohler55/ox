@@ -106,6 +106,7 @@ static VALUE	convert_special_sym;
 static VALUE	effort_sym;
 static VALUE	generic_sym;
 static VALUE	indent_sym;
+static VALUE	invalid_replace_sym;
 static VALUE	limited_sym;
 static VALUE	mode_sym;
 static VALUE	object_sym;
@@ -125,6 +126,9 @@ static VALUE	with_dtd_sym;
 static VALUE	with_instruct_sym;
 static VALUE	with_xml_sym;
 static VALUE	xsd_date_sym;
+
+static ID	encoding_id;
+static ID	has_key_id;
 
 #if HAS_ENCODING_SUPPORT
 rb_encoding	*ox_utf8_encoding = 0;
@@ -149,6 +153,8 @@ struct _Options	 ox_default_options = {
     NoSkip,		/* skip */
     No,			/* smart */
     1,			/* convert_special */
+    No,			/* allow_invalid */
+    { '\0' },		/* inv_repl */
 #if HAS_PRIVATE_ENCODING
     Qnil		/* rb_enc */
 #else
@@ -229,6 +235,7 @@ defuse_bom(char *xml, Options options) {
  * - skip: [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
  * - smart: [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  * - convert_special: [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
+ * - invalid_replace: [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  * @return [Hash] all current option settings.
  *
  * Note that an indent of less than zero will result in a tight one line output
@@ -270,6 +277,11 @@ get_def_opts(VALUE self) {
     case SpcSkip:		rb_hash_aset(opts, skip_sym, skip_white_sym);		break;
     default:			rb_hash_aset(opts, skip_sym, Qnil);			break;
     }
+    if (Yes == ox_default_options.allow_invalid) {
+	rb_hash_aset(opts, invalid_replace_sym, Qnil);
+    } else {
+	rb_hash_aset(opts, invalid_replace_sym, rb_str_new(ox_default_options.inv_repl + 1, (int)*ox_default_options.inv_repl));
+    }
     return opts;
 }
 
@@ -289,6 +301,7 @@ get_def_opts(VALUE self) {
  * @param [:strict|:tolerant|:auto_define] :effort set the tolerance level for loading
  * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
  * @param [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
+ * @param [nil|String] :invalid_replace replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  * @return [nil]
  */
 static VALUE
@@ -382,6 +395,24 @@ set_def_opts(VALUE self, VALUE opts) {
 	ox_default_options.convert_special = 0;
     } else {
 	rb_raise(ox_parse_error_class, ":convert_special must be true or false.\n");
+    }
+
+    v = rb_hash_aref(opts, invalid_replace_sym);
+    if (Qnil == v) {
+	ox_default_options.allow_invalid = Yes;
+    } else {
+	long	slen;
+
+	Check_Type(v, T_STRING);
+	slen = RSTRING_LEN(v);
+	if (sizeof(ox_default_options.inv_repl) - 2 < slen) {
+	    rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %ld characters.",
+		     sizeof(ox_default_options.inv_repl) - 2);
+	}
+	strncpy(ox_default_options.inv_repl + 1, StringValuePtr(v), sizeof(ox_default_options.inv_repl) - 1);
+	ox_default_options.inv_repl[sizeof(ox_default_options.inv_repl) - 1] = '\0';
+	*ox_default_options.inv_repl = (char)slen;
+	ox_default_options.allow_invalid = No;
     }
 
     for (o = ynos; 0 != o->attr; o++) {
@@ -536,6 +567,26 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 	if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
 	    options.convert_special = (Qfalse != v);
 	}
+
+	v = rb_hash_lookup(h, invalid_replace_sym);
+	if (Qnil == v) {
+	    if (Qtrue == rb_funcall(h, has_key_id, 1, invalid_replace_sym)) {
+		options.allow_invalid = Yes;
+	    }
+	} else {
+	    long	slen;
+
+	    Check_Type(v, T_STRING);
+	    slen = RSTRING_LEN(v);
+	    if (sizeof(options.inv_repl) - 2 < slen) {
+		rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %ld characters.",
+			 sizeof(options.inv_repl) - 2);
+	    }
+	    strncpy(options.inv_repl + 1, StringValuePtr(v), sizeof(options.inv_repl) - 1);
+	    options.inv_repl[sizeof(options.inv_repl) - 1] = '\0';
+	    *options.inv_repl = (char)slen;
+	    options.allow_invalid = No;
+	}
     }
 #if HAS_ENCODING_SUPPORT
     if ('\0' == *options.encoding) {
@@ -604,6 +655,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
  *  - *:auto_define* - auto define missing classes and modules
  * @param [Fixnum] :trace trace level as a Fixnum, default: 0 (silent)
  * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
+ * @param [nil|String] :invalid_replace replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  */
 static VALUE
 load_str(int argc, VALUE *argv, VALUE self) {
@@ -624,12 +676,12 @@ load_str(int argc, VALUE *argv, VALUE self) {
     }
 #if HAS_ENCODING_SUPPORT
 #ifdef MACRUBY_RUBY
-    encoding = rb_funcall(*argv, rb_intern("encoding"), 0);
+    encoding = rb_funcall(*argv, encoding_id, 0);
 #else
     encoding = rb_obj_encoding(*argv);
 #endif
 #elif HAS_PRIVATE_ENCODING
-    encoding = rb_funcall(*argv, rb_intern("encoding"), 0);
+    encoding = rb_funcall(*argv, encoding_id, 0);
 #else
     encoding = Qnil;
 #endif
@@ -661,6 +713,7 @@ load_str(int argc, VALUE *argv, VALUE self) {
  *  - *:auto_define* - auto define missing classes and modules
  * @param [Fixnum] :trace trace level as a Fixnum, default: 0 (silent)
  * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
+ * @param [nil|String] :invalid_replace replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  */
 static VALUE
 load_file(int argc, VALUE *argv, VALUE self) {
@@ -746,6 +799,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
 		options.skip = SpcSkip;
 	    }
 	}
+	// TBD check invalid_replace
     }
     ox_sax_parse(argv[0], argv[1], &options);
 
@@ -796,6 +850,26 @@ parse_dump_options(VALUE ropts, Options copts) {
 		rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
 	    }
 	}
+	v = rb_hash_lookup(ropts, invalid_replace_sym);
+	if (Qnil == v) {
+	    if (Qtrue == rb_funcall(ropts, has_key_id, 1, invalid_replace_sym)) {
+		copts->allow_invalid = Yes;
+	    }
+	} else {
+	    long	slen;
+
+	    Check_Type(v, T_STRING);
+	    slen = RSTRING_LEN(v);
+	    if (sizeof(copts->inv_repl) - 2 < slen) {
+		rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %ld characters.",
+			 sizeof(copts->inv_repl) - 2);
+	    }
+	    strncpy(copts->inv_repl + 1, StringValuePtr(v), sizeof(copts->inv_repl) - 1);
+	    copts->inv_repl[sizeof(copts->inv_repl) - 1] = '\0';
+	    *copts->inv_repl = (char)slen;
+	    copts->allow_invalid = No;
+	}
+	
 	for (o = ynos; 0 != o->attr; o++) {
 	    if (Qnil != (v = rb_hash_lookup(ropts, o->sym))) {
 		VALUE	    c = rb_obj_class(v);
@@ -810,7 +884,7 @@ parse_dump_options(VALUE ropts, Options copts) {
 	    }
 	}
     }
- }
+}
 
 /* call-seq: dump(obj, options) => xml-string
  *
@@ -969,6 +1043,9 @@ void Init_ox() {
     ox_tv_usec_id = rb_intern("tv_usec");
     ox_value_id = rb_intern("value");
 
+    encoding_id = rb_intern("encoding");
+    has_key_id = rb_intern("has_key?");
+
     rb_require("ox/version");
     rb_require("ox/error");
     rb_require("ox/hasattrs");
@@ -997,6 +1074,7 @@ void Init_ox() {
     effort_sym = ID2SYM(rb_intern("effort"));			rb_gc_register_address(&effort_sym);
     generic_sym = ID2SYM(rb_intern("generic"));			rb_gc_register_address(&generic_sym);
     indent_sym = ID2SYM(rb_intern("indent"));			rb_gc_register_address(&indent_sym);
+    invalid_replace_sym = ID2SYM(rb_intern("invalid_replace"));	rb_gc_register_address(&invalid_replace_sym);
     limited_sym = ID2SYM(rb_intern("limited"));			rb_gc_register_address(&limited_sym);
     mode_sym = ID2SYM(rb_intern("mode"));			rb_gc_register_address(&mode_sym);
     object_sym = ID2SYM(rb_intern("object"));			rb_gc_register_address(&object_sym);
