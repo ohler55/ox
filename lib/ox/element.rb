@@ -85,8 +85,11 @@ module Ox
 
     # Clears any child nodes of an element and replaces those with a single Text
     # (String) node.
+    # @param [String] txt to become the only element of the nodes array
     def replace_text(txt)
-      @nodes = [ txt ]
+      raise "the argument to replace_text() must be a String" unless txt.is_a?(String)
+      @nodes.clear()
+      @nodes << txt
     end
 
     # Returns an array of Nodes or Strings that correspond to the locations

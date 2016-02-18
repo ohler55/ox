@@ -5,6 +5,20 @@
 
 - todo
 
+ - add :invalid_replace
+  - string
+  - nil - leave as is
+ - effort: :strict should raise on invalid
+  - update docs to mention dump and not just load
+ - change dump tables
+  - 0 for invalid chars
+
+ - unicode
+  - should be fine as is
+  - possibly check unicode for out of range in strict mode in utf-8
+
+
+
  - dump should respect legal chars
   - option for replace-invalid-char
    - '' or string or nil (use &#xxxx)
@@ -23,11 +37,6 @@
 
  - future - Unicode when UTF-8
 
- - shortcut to element nodes
-  - init @nodes with []
-  - same with attrs {}
-  - element.replace_text or replace_with_text
-   - clear nodes and create text node
 
 
  - doctype

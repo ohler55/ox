@@ -42,6 +42,13 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Oj::Element attributes variable is now always initialized to an empty Hash.
 
+ - TBD A invalid_replace option has been added. It will replace invalid XML
+   character with a provided string. Strict effort now raises an exception if an
+   invalid character is encountered on dump or load.
+
+ - TBD Oj.load and Oj.parse now allow for a callback block to handle multiple
+   top level entities in the input.
+
 ### Release 2.2.4
 
  - Changed the code to allow compilation on older compilers. No change in
