@@ -97,6 +97,7 @@ VALUE
 ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err) {
     struct _PInfo	pi;
     int			body_read = 0;
+    int			block_given = rb_block_given_p();
 
     if (0 == xml) {
 	set_error(err, "Invalid arg, xml string can not be null", xml, 0);
@@ -172,6 +173,9 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err) {
 	    *err = pi.err;
 	    helper_stack_cleanup(&pi.helpers);
 	    return Qnil;
+	}
+	if (block_given && Qnil != pi.obj && Qundef != pi.obj) {
+	    rb_yield(pi.obj);
 	}
     }
     helper_stack_cleanup(&pi.helpers);

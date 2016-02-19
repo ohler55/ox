@@ -46,8 +46,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
    character with a provided string. Strict effort now raises an exception if an
    invalid character is encountered on dump or load.
 
- - TBD Oj.load and Oj.parse now allow for a callback block to handle multiple
-   top level entities in the input.
+ - Oj.load and Oj.parse now allow for a callback block to handle multiple top
+   level entities in the input.
 
 ### Release 2.2.4
 

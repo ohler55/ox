@@ -1084,7 +1084,16 @@ class Func < ::Minitest::Test
     Ox::default_options = $oj_object_options
     root = Ox::Element.new('root')
     root << Ox::Raw.new('<foo>bar</bar>')
-    assert_equal "\n<root>\n  <foo>bar</bar>\n</root>\n", Ox.dump(root)
+    assert_equal("\n<root>\n  <foo>bar</bar>\n</root>\n", Ox.dump(root))
+  end
+
+  def test_block
+    Ox::default_options = $oj_generic_options
+    results = []
+    Ox.load('<one>first</one><two>second</two><!--three-->') do |x|
+      results << Ox.dump(x)
+    end
+    assert_equal("\n<one>first</one>\n\n<two>second</two>\n\n<!-- three -->\n", results.join())
   end
 
   def dump_and_load(obj, trace=false, circular=false)

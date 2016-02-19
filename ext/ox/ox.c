@@ -641,8 +641,11 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 /* call-seq: load(xml, options) => Ox::Document or Ox::Element or Object
  *
  * Parses and XML document String into an Ox::Document, or Ox::Element, or
- * Object depending on the options.  Raises an exception if the XML is
- * malformed or the classes specified are not valid.
+ * Object depending on the options.  Raises an exception if the XML is malformed
+ * or the classes specified are not valid. If a block is given it will be called
+ * on the completion of each complete top level entity with that entity as it's
+ * only argument.
+ *
  * @param [String] xml XML String
  * @param [Hash] options load options
  * @param [:object|:generic|:limited] :mode format expected
