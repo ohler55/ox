@@ -17,6 +17,7 @@ typedef struct _SaxOptions {
     int			convert_special;
     int			smart;
     SkipMode		skip;
+    char		strip_ns[64];
 } *SaxOptions;
 
 typedef struct _SaxDrive {

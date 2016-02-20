@@ -1401,6 +1401,15 @@ read_name_token(SaxDrive dr) {
             /* documents never terminate after a name token */
             ox_sax_drive_error(dr, NO_TERM "document not terminated");
             return '\0';
+	case ':':
+	    if ('\0' == *dr->options.strip_ns) {
+		break;
+	    } else if ('*' == *dr->options.strip_ns && '\0' == dr->options.strip_ns[1]) {
+		dr->buf.str = dr->buf.tail;
+	    } else if (0 == strncmp(dr->options.strip_ns, dr->buf.str, dr->buf.tail - dr->buf.str - 1)) {
+		dr->buf.str = dr->buf.tail;
+	    }
+	    break;
 	default:
 	    break;
 	}

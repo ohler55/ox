@@ -217,7 +217,6 @@ read_instruction(PInfo pi) {
     char		*cend;
     int			attrs_ok = 1;
 
-
     *content = '\0';
     attr_stack_init(&attrs);
     if (0 == (target = read_name_token(pi))) {
@@ -832,6 +831,15 @@ read_name_token(PInfo pi) {
 	    set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
 	    return 0;
 	    break; /* to avoid warnings */
+	case ':':
+	    if ('\0' == *pi->options->strip_ns) {
+		break;
+	    } else if ('*' == *pi->options->strip_ns && '\0' == pi->options->strip_ns[1]) {
+		start = pi->s + 1;
+	    } else if (0 == strncmp(pi->options->strip_ns, start, pi->s - start)) {
+		start = pi->s + 1;
+	    }
+	    break;
 	default:
 	    break;
 	}

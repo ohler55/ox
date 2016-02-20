@@ -118,6 +118,7 @@ static VALUE	skip_sym;
 static VALUE	skip_white_sym;
 static VALUE	smart_sym;
 static VALUE	strict_sym;
+static VALUE	strip_namespace_sym;
 static VALUE	symbolize_keys_sym;
 static VALUE	symbolize_sym;
 static VALUE	tolerant_sym;
@@ -155,6 +156,7 @@ struct _Options	 ox_default_options = {
     1,			/* convert_special */
     No,			/* allow_invalid */
     { '\0' },		/* inv_repl */
+    { '\0' },		/* strip_ns */
 #if HAS_PRIVATE_ENCODING
     Qnil		/* rb_enc */
 #else
@@ -236,6 +238,7 @@ defuse_bom(char *xml, Options options) {
  * - smart: [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  * - convert_special: [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
  * - invalid_replace: [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ * - strip_namespace: [String|true|false] false or "" results in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  * @return [Hash] all current option settings.
  *
  * Note that an indent of less than zero will result in a tight one line output
@@ -282,6 +285,13 @@ get_def_opts(VALUE self) {
     } else {
 	rb_hash_aset(opts, invalid_replace_sym, rb_str_new(ox_default_options.inv_repl + 1, (int)*ox_default_options.inv_repl));
     }
+    if ('\0' == *ox_default_options.strip_ns) {
+	rb_hash_aset(opts, strip_namespace_sym, Qfalse);
+    } else if ('*' == *ox_default_options.strip_ns && '\0' == ox_default_options.strip_ns[1]) {
+	rb_hash_aset(opts, strip_namespace_sym, Qtrue);
+    } else {
+	rb_hash_aset(opts, strip_namespace_sym, rb_str_new(ox_default_options.strip_ns, strlen(ox_default_options.strip_ns)));
+    }
     return opts;
 }
 
@@ -302,6 +312,7 @@ get_def_opts(VALUE self) {
  * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
  * @param [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
  * @param [nil|String] :invalid_replace replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ * @param [nil|String|true|false] :strip_namespace "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  * @return [nil]
  */
 static VALUE
@@ -413,6 +424,25 @@ set_def_opts(VALUE self, VALUE opts) {
 	ox_default_options.inv_repl[sizeof(ox_default_options.inv_repl) - 1] = '\0';
 	*ox_default_options.inv_repl = (char)slen;
 	ox_default_options.allow_invalid = No;
+    }
+
+    v = rb_hash_aref(opts, strip_namespace_sym);
+    if (Qfalse == v) {
+	*ox_default_options.strip_ns = '\0';
+    } else if (Qtrue == v) {
+	*ox_default_options.strip_ns = '*';
+	ox_default_options.strip_ns[1] = '\0';
+    } else if (Qnil != v) {
+	long	slen;
+
+	Check_Type(v, T_STRING);
+	slen = RSTRING_LEN(v);
+	if (sizeof(ox_default_options.strip_ns) - 1 < slen) {
+	    rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %ld characters.",
+		     sizeof(ox_default_options.strip_ns) - 1);
+	}
+	strncpy(ox_default_options.strip_ns, StringValuePtr(v), sizeof(ox_default_options.strip_ns) - 1);
+	ox_default_options.strip_ns[sizeof(ox_default_options.strip_ns) - 1] = '\0';
     }
 
     for (o = ynos; 0 != o->attr; o++) {
@@ -587,6 +617,24 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 	    *options.inv_repl = (char)slen;
 	    options.allow_invalid = No;
 	}
+	v = rb_hash_lookup(h, strip_namespace_sym);
+	if (Qfalse == v) {
+	    *options.strip_ns = '\0';
+	} else if (Qtrue == v) {
+	    *options.strip_ns = '*';
+	    options.strip_ns[1] = '\0';
+	} else if (Qnil != v) {
+	    long	slen;
+
+	    Check_Type(v, T_STRING);
+	    slen = RSTRING_LEN(v);
+	    if (sizeof(options.strip_ns) - 1 < slen) {
+		rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %ld characters.",
+			 sizeof(options.strip_ns) - 1);
+	    }
+	    strncpy(options.strip_ns, StringValuePtr(v), sizeof(options.strip_ns) - 1);
+	    options.strip_ns[sizeof(options.strip_ns) - 1] = '\0';
+	}
     }
 #if HAS_ENCODING_SUPPORT
     if ('\0' == *options.encoding) {
@@ -659,6 +707,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
  * @param [Fixnum] :trace trace level as a Fixnum, default: 0 (silent)
  * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
  * @param [nil|String] :invalid_replace replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ * @param [String|true|false] :strip_namespace "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
 load_str(int argc, VALUE *argv, VALUE self) {
@@ -717,6 +766,7 @@ load_str(int argc, VALUE *argv, VALUE self) {
  * @param [Fixnum] :trace trace level as a Fixnum, default: 0 (silent)
  * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
  * @param [nil|String] :invalid_replace replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ * @param [String|true|false] :strip_namespace "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
 load_file(int argc, VALUE *argv, VALUE self) {
@@ -769,6 +819,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
  * @param [true|false] :symbolize flag indicating the parser symbolize element and attribute names
  * @param [true|false] :smart flag indicating the parser uses hints if available (use with html)
  * @param [:skip_return|:skip_white] :skip flag indicating the parser skips \r or collpase white space into a single space. Default (skip nothing)
+ * @param [nil|String|true|false] :strip_namespace "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
 sax_parse(int argc, VALUE *argv, VALUE self) {
@@ -778,7 +829,8 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
     options.convert_special = ox_default_options.convert_special;
     options.smart = (Yes == ox_default_options.smart);
     options.skip = ox_default_options.skip;
-
+    strcpy(options.strip_ns, ox_default_options.strip_ns);
+    
     if (argc < 2) {
 	rb_raise(ox_parse_error_class, "Wrong number of arguments to sax_parse.\n");
     }
@@ -800,9 +852,29 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
 		options.skip = CrSkip;
 	    } else if (skip_white_sym == v) {
 		options.skip = SpcSkip;
+	    } else if (skip_none_sym == v) {
+		options.skip = NoSkip;
 	    }
 	}
-	// TBD check invalid_replace
+	if (Qnil != (v = rb_hash_lookup(h, strip_namespace_sym))) {
+	    if (Qfalse == v) {
+		*options.strip_ns = '\0';
+	    } else if (Qtrue == v) {
+		*options.strip_ns = '*';
+		options.strip_ns[1] = '\0';
+	    } else {
+		long	slen;
+
+		Check_Type(v, T_STRING);
+		slen = RSTRING_LEN(v);
+		if (sizeof(options.strip_ns) - 1 < slen) {
+		    rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %ld characters.",
+			     sizeof(options.strip_ns) - 1);
+		}
+		strncpy(options.strip_ns, StringValuePtr(v), sizeof(options.strip_ns) - 1);
+		options.strip_ns[sizeof(options.strip_ns) - 1] = '\0';
+	    }
+	}
     }
     ox_sax_parse(argv[0], argv[1], &options);
 
@@ -1087,6 +1159,7 @@ void Init_ox() {
     skip_none_sym = ID2SYM(rb_intern("skip_none"));		rb_gc_register_address(&skip_none_sym);
     skip_return_sym = ID2SYM(rb_intern("skip_return"));		rb_gc_register_address(&skip_return_sym);
     skip_sym = ID2SYM(rb_intern("skip"));			rb_gc_register_address(&skip_sym);
+    strip_namespace_sym = ID2SYM(rb_intern("strip_namespace"));	rb_gc_register_address(&strip_namespace_sym);
     skip_white_sym = ID2SYM(rb_intern("skip_white"));		rb_gc_register_address(&skip_white_sym);
     smart_sym = ID2SYM(rb_intern("smart"));			rb_gc_register_address(&smart_sym);
     strict_sym = ID2SYM(rb_intern("strict"));			rb_gc_register_address(&strict_sym);

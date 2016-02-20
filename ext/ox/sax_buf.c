@@ -30,11 +30,14 @@ static int		read_from_str(Buf buf);
 
 void
 ox_sax_buf_init(Buf buf, VALUE io) {
-    VALUE	io_class = rb_obj_class(io);
-    VALUE	rfd;
+    volatile VALUE	io_class = rb_obj_class(io);
+    VALUE		rfd;
 
-    if (ox_stringio_class == io_class && 0 == FIX2INT(rb_funcall2(io, ox_pos_id, 0, 0))) {
-	VALUE	s = rb_funcall2(io, ox_string_id, 0, 0);
+    if (rb_cString == io_class) {
+	buf->read_func = read_from_str;
+	buf->in.str = StringValuePtr(io);
+    } else if (ox_stringio_class == io_class && 0 == FIX2INT(rb_funcall2(io, ox_pos_id, 0, 0))) {
+	volatile VALUE	s = rb_funcall2(io, ox_string_id, 0, 0);
 
 	buf->read_func = read_from_str;
 	buf->in.str = StringValuePtr(s);

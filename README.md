@@ -49,6 +49,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
  - Oj.load and Oj.parse now allow for a callback block to handle multiple top
    level entities in the input.
 
+ - The Oj SAX parser now supports strings as input directly without and IO wrapper.
+
 ### Release 2.2.4
 
  - Changed the code to allow compilation on older compilers. No change in
