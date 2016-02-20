@@ -5,9 +5,6 @@
 
 - todo
 
- - callback on parser
-
-
  - doctype
   - !ELEMENT
   - !ATTRLIST

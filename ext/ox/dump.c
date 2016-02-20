@@ -1039,7 +1039,7 @@ dump_gen_element(VALUE obj, int depth, Out out) {
     if (Qnil != attrs) {
 	rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
     }
-    if (Qnil != nodes) {
+    if (Qnil != nodes && 0 < RARRAY_LEN(nodes)) {
 	int	do_indent;
 	
 	*out->cur++ = '>';

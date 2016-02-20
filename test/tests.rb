@@ -549,8 +549,7 @@ class Func < ::Minitest::Test
 <html lang="en">
   <head garbage="trash">
     <bad attr="some&amp;#xthing">
-      <bad alone="">
-      </bad>
+      <bad alone=""/>
     </bad>
   </head>
   <body>
