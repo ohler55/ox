@@ -34,7 +34,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
-### Future Release 2.3.0
+### Release 2.3.0
 
  - Added Oj::Element.replace_text() method.
 

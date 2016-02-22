@@ -5,13 +5,6 @@
 
 - todo
 
-- :skip_namespace (both DOM and SAX parsers)
- - options.skip_ns[256]
-  - '\0' for no nothing
-  - '*' for any
-  - other string, compare start to pi->s against skip_ns
-
-Values for the option would be nil or false to do nothing. That would be the default. If a string was provided then any namespace with that string on the element or attribute names would be stripped. If '*' or true was given then all namespaces would be stripped. 
 
  - doctype
   - !ELEMENT
