@@ -36,20 +36,20 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ### Release 2.3.0
 
- - Added Oj::Element.replace_text() method.
+ - Added Ox::Element.replace_text() method.
 
- - Oj::Element nodes variable is now always initialized to an empty Array.
+ - Ox::Element nodes variable is now always initialized to an empty Array.
 
- - Oj::Element attributes variable is now always initialized to an empty Hash.
+ - Ox::Element attributes variable is now always initialized to an empty Hash.
 
  - A invalid_replace option has been added. It will replace invalid XML
    character with a provided string. Strict effort now raises an exception if an
    invalid character is encountered on dump or load.
 
- - Oj.load and Oj.parse now allow for a callback block to handle multiple top
+ - Ox.load and Ox.parse now allow for a callback block to handle multiple top
    level entities in the input.
 
- - The Oj SAX parser now supports strings as input directly without and IO wrapper.
+ - The Ox SAX parser now supports strings as input directly without and IO wrapper.
 
 ### Release 2.2.4
 
