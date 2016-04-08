@@ -5,6 +5,72 @@
 
 - todo
 
+- builder
+ - push and pop
+  - push_element or just element()
+ - with proc, same
+ - with method as the element name
+  - using method_missing
+   - more expensive
+
+The Ox::Builder supports 4 approaches to building. Each example produces the
+following XML.
+
+<?xml version="1.1" encoding="UTF-8"?>
+<top first="Pete" last="Ohler">
+  <say>Hello</say>
+</top>
+
+1. Create and Pop - create nodes and pop to close.
+
+xb = Ox::Builder.new(:indent => 2)
+
+# instruct does not need a pop to close
+xb.instruct(:xml, :version => "1.1", :encoding => "UTF-8")
+
+# arguments are the element name followed by attributes. Element name and keys
+# can be strings or symbols
+xb.element(:top, :first => "Pete", :last => "Ohler")
+xb.element("say")
+xb.text("Hello")
+xm.pop() # pops :say
+xm.pop() # pops :top
+xm.to_s
+
+2. Proc approach
+
+xb = Ox::Builder.new(:indent => 2)
+xb.instruct(:xml, :version => "1.1", :encoding => "UTF-8")
+xb.element(:top, :first => "Pete", :last => "Ohler") do
+  xb.element("say") do
+    xm.text("Hello")
+  end
+end
+xm.to_s
+
+3. Named element with pop approach
+
+xb = Ox::Builder.new(:indent => 2)
+xb.xml(:version => "1.1", :encoding => "UTF-8")
+xb.top(nil, :first => "Pete", :last => "Ohler")
+xb.say("Hello")
+xm.pop() # pops say
+xm.pop() # pops top
+xm.to_s
+
+4. Named element proc approach
+
+xb = Ox::Builder.new(:indent => 2)
+xb.xml(:version => "1.1", :encoding => "UTF-8")
+xb.top(:first => "Pete", :last => "Ohler") do
+  xb.say("Hello") do
+  end
+end
+xm.to_s
+
+
+
+
 
  - doctype
   - !ELEMENT

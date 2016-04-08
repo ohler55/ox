@@ -250,6 +250,8 @@ extern Cache	ox_symbol_cache;
 extern Cache	ox_class_cache;
 extern Cache	ox_attr_cache;
 
+extern void	ox_init_builder(VALUE ox);
+
 #if defined(__cplusplus)
 #if 0
 { /* satisfy cc-mode */

@@ -225,6 +225,10 @@ sax_value_empty(VALUE self) {
 
 void
 ox_sax_define() {
+#if 0
+    ox = rb_define_module("Ox");
+    sax_module = rb_define_class_under(ox, "Sax", rb_cObject);
+#endif
     VALUE	sax_module = rb_const_get_at(Ox, rb_intern("Sax"));
 
     ox_sax_value_class = rb_define_class_under(sax_module, "Value", rb_cObject);

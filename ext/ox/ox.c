@@ -1065,6 +1065,8 @@ void Init_ox() {
     rb_define_module_function(Ox, "load_file", load_file, -1);
     rb_define_module_function(Ox, "to_file", to_file, -1);
 
+    ox_init_builder(Ox);
+    
     rb_require("time");
     rb_require("date");
     rb_require("bigdecimal");
