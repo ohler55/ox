@@ -74,6 +74,9 @@ ID	ox_tv_usec_id;
 ID	ox_value_id;
 
 VALUE	ox_encoding_sym;
+VALUE	ox_version_sym;
+VALUE	ox_standalone_sym;
+VALUE	ox_indent_sym;
 
 VALUE	ox_empty_string;
 VALUE	ox_zero_fixnum;
@@ -105,7 +108,6 @@ static VALUE	circular_sym;
 static VALUE	convert_special_sym;
 static VALUE	effort_sym;
 static VALUE	generic_sym;
-static VALUE	indent_sym;
 static VALUE	invalid_replace_sym;
 static VALUE	limited_sym;
 static VALUE	mode_sym;
@@ -250,7 +252,7 @@ get_def_opts(VALUE self) {
     int		elen = (int)strlen(ox_default_options.encoding);
 
     rb_hash_aset(opts, ox_encoding_sym, (0 == elen) ? Qnil : rb_str_new(ox_default_options.encoding, elen));
-    rb_hash_aset(opts, indent_sym, INT2FIX(ox_default_options.indent));
+    rb_hash_aset(opts, ox_indent_sym, INT2FIX(ox_default_options.indent));
     rb_hash_aset(opts, trace_sym, INT2FIX(ox_default_options.trace));
     rb_hash_aset(opts, with_dtd_sym, (Yes == ox_default_options.with_dtd) ? Qtrue : ((No == ox_default_options.with_dtd) ? Qfalse : Qnil));
     rb_hash_aset(opts, with_xml_sym, (Yes == ox_default_options.with_xml) ? Qtrue : ((No == ox_default_options.with_xml) ? Qfalse : Qnil));
@@ -346,7 +348,7 @@ set_def_opts(VALUE self, VALUE opts) {
 #endif
     }
 
-    v = rb_hash_aref(opts, indent_sym);
+    v = rb_hash_aref(opts, ox_indent_sym);
     if (Qnil != v) {
 	Check_Type(v, T_FIXNUM);
 	ox_default_options.indent = FIX2INT(v);
@@ -896,7 +898,7 @@ parse_dump_options(VALUE ropts, Options copts) {
     if (rb_cHash == rb_obj_class(ropts)) {
 	VALUE	v;
 	
-	if (Qnil != (v = rb_hash_lookup(ropts, indent_sym))) {
+	if (Qnil != (v = rb_hash_lookup(ropts, ox_indent_sym))) {
 	    if (rb_cFixnum != rb_obj_class(v)) {
 		rb_raise(ox_parse_error_class, ":indent must be a Fixnum.\n");
 	    }
@@ -1150,7 +1152,7 @@ void Init_ox() {
     convert_special_sym = ID2SYM(rb_intern("convert_special")); rb_gc_register_address(&convert_special_sym);
     effort_sym = ID2SYM(rb_intern("effort"));			rb_gc_register_address(&effort_sym);
     generic_sym = ID2SYM(rb_intern("generic"));			rb_gc_register_address(&generic_sym);
-    indent_sym = ID2SYM(rb_intern("indent"));			rb_gc_register_address(&indent_sym);
+    ox_indent_sym = ID2SYM(rb_intern("indent"));		rb_gc_register_address(&ox_indent_sym);
     invalid_replace_sym = ID2SYM(rb_intern("invalid_replace"));	rb_gc_register_address(&invalid_replace_sym);
     limited_sym = ID2SYM(rb_intern("limited"));			rb_gc_register_address(&limited_sym);
     mode_sym = ID2SYM(rb_intern("mode"));			rb_gc_register_address(&mode_sym);
@@ -1158,6 +1160,8 @@ void Init_ox() {
     opt_format_sym = ID2SYM(rb_intern("opt_format"));		rb_gc_register_address(&opt_format_sym);
     optimized_sym = ID2SYM(rb_intern("optimized"));		rb_gc_register_address(&optimized_sym);
     ox_encoding_sym = ID2SYM(rb_intern("encoding"));		rb_gc_register_address(&ox_encoding_sym);
+    ox_version_sym = ID2SYM(rb_intern("version"));		rb_gc_register_address(&ox_version_sym);
+    ox_standalone_sym = ID2SYM(rb_intern("standalone"));	rb_gc_register_address(&ox_standalone_sym);
     skip_none_sym = ID2SYM(rb_intern("skip_none"));		rb_gc_register_address(&skip_none_sym);
     skip_return_sym = ID2SYM(rb_intern("skip_return"));		rb_gc_register_address(&skip_return_sym);
     skip_sym = ID2SYM(rb_intern("skip"));			rb_gc_register_address(&skip_sym);

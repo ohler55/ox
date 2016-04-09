@@ -1130,6 +1130,13 @@ class Func < ::Minitest::Test
 |, Ox.dump(doc))
   end
 
+  def test_builder_instruct
+    b = Ox::Builder.new
+    b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+    xml = b.to_s
+    assert_equal("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n", xml)
+  end
+
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)
     puts xml if trace

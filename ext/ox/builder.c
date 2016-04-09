@@ -7,37 +7,86 @@
 //#include <errno.h>
 //#include <stdint.h>
 #include <stdio.h>
-//#include <string.h>
+#include <string.h>
 
 #include "ox.h"
-//#include "sax.h"
+#include "buf.h"
+#include "err.h"
+
+typedef struct _Element {
+    char	*name;
+    char	buf[64];
+} *Element;
 
 typedef struct _Builder {
-    char	*buf;
-    char	*end;
-    char	*cur;
-    int		indent;
+    struct _Buf		buf;
+    int			indent;
+    char		encoding[64];
+    int			depth;
+    struct _Element	stack[128];
 } *Builder;
 
-static VALUE	builder_class = Qundef;
+static VALUE		builder_class = Qundef;
+static const char	indent_spaces[] = "\n                                                                                                                                "; // 128 spaces
+
+static void
+append_indent(Builder b) {
+    if (0 == b->indent) {
+	return;
+    }
+    if (b->buf.head < b->buf.tail) {
+	// TBD \n and indent, keep in bounds of indent_spaces
+	buf_append_string(&b->buf, indent_spaces, 1);
+    }
+}
+
+static void
+append_sym_str(Buf b, VALUE v) {
+    const char	*s;
+    int		len;
+    
+    switch (rb_type(v)) {
+    case T_STRING:
+	s = StringValuePtr(v);
+	len = RSTRING_LEN(v);
+	break;
+    case T_SYMBOL:
+	s = rb_id2name(SYM2ID(v));
+	len = strlen(s);
+	break;
+    default:
+	rb_raise(ox_arg_error_class, "expected a Symbol or String");
+	break;
+    }
+    buf_append_string(b, s, len);
+}
 
 static void
 builder_init(Builder b) {
-    b->buf = ALLOC_N(char, 65536);
-    b->end = b->buf + 65536;
-    b->cur = b->buf;
-    b->indent = 0;
+    buf_init(&b->buf, 0);
+    b->indent = ox_default_options.indent;
+    *b->encoding = '\0';
+    b->depth = 0;
+    b->stack->name = NULL;
+    *b->stack->buf = '\0';
 }
 
 static void
 builder_free(void *ptr) {
     Builder	b;
-
+    Element	e;
+    int		d;
+    
     if (0 == ptr) {
 	return;
     }
     b = (Builder)ptr;
-    xfree(b->buf);
+    buf_cleanup(&b->buf);
+    for (e = b->stack, d = b->depth; 0 < d; d--, e++) {
+	if (e->name != e->buf) {
+	    free(e->name);
+	}
+    }
     xfree(ptr);
 }
 
@@ -52,9 +101,14 @@ builder_new(int argc, VALUE *argv, VALUE self) {
     
     builder_init(b);
     if (1 == argc) {
-	//oj_parse_options(argv[0], &sw->opts);
-	// TBD get indent
-	b->indent = 2;
+	volatile VALUE	v;
+	
+	if (Qnil != (v = rb_hash_lookup(argv[1], ox_indent_sym))) {
+	    if (rb_cFixnum != rb_obj_class(v)) {
+		rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
+	    }
+	    b->indent = NUM2INT(v);
+	}
     }
     return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
 }
@@ -69,8 +123,44 @@ static VALUE
 builder_instruct(int argc, VALUE *argv, VALUE self) {
     Builder	b = (Builder)DATA_PTR(self);
 
-    printf("*** b: %p\n", b);
-    // TBD
+    append_indent(b);
+    if (0 == argc) {
+	buf_append_string(&b->buf, "<?xml?>", 7);
+    } else {
+	volatile VALUE	v;
+	
+	buf_append_string(&b->buf, "<?", 2);
+	append_sym_str(&b->buf, *argv);
+	if (1 < argc && rb_cHash == rb_obj_class(argv[1])) {
+	    if (Qnil != (v = rb_hash_lookup(argv[1], ox_version_sym))) {
+		if (rb_cString != rb_obj_class(v)) {
+		    rb_raise(ox_parse_error_class, ":version must be a Symbol.\n");
+		}
+		buf_append_string(&b->buf, " version=\"", 10);
+		buf_append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
+		buf_append(&b->buf, '"');
+	    }
+	    if (Qnil != (v = rb_hash_lookup(argv[1], ox_encoding_sym))) {
+		if (rb_cString != rb_obj_class(v)) {
+		    rb_raise(ox_parse_error_class, ":encoding must be a Symbol.\n");
+		}
+		buf_append_string(&b->buf, " encoding=\"", 11);
+		buf_append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
+		buf_append(&b->buf, '"');
+		strncmp(b->encoding, StringValuePtr(v), sizeof(b->encoding));
+		b->encoding[sizeof(b->encoding) - 1] = '\0';
+	    }
+	    if (Qnil != (v = rb_hash_lookup(argv[1], ox_standalone_sym))) {
+		if (rb_cString != rb_obj_class(v)) {
+		    rb_raise(ox_parse_error_class, ":standalone must be a Symbol.\n");
+		}
+		buf_append_string(&b->buf, " standalone=\"", 13);
+		buf_append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
+		buf_append(&b->buf, '"');
+	    }
+	}
+	buf_append_string(&b->buf, "?>", 2);
+    }
     return Qnil;
 }
 
@@ -96,8 +186,12 @@ builder_element(int argc, VALUE *argv, VALUE self) {
 static VALUE
 builder_comment(VALUE self, VALUE text) {
     Builder	b = (Builder)DATA_PTR(self);
-    // TBD
-    printf("*** b: %p\n", b);
+
+    append_indent(b);
+    buf_append_string(&b->buf, "<!-- ", 5);
+    buf_append_string(&b->buf, StringValuePtr(text), RSTRING_LEN(text));
+    buf_append_string(&b->buf, " --/> ", 5);
+
     return Qnil;
 }
 
@@ -109,21 +203,27 @@ builder_comment(VALUE self, VALUE text) {
 static VALUE
 builder_doctype(VALUE self, VALUE text) {
     Builder	b = (Builder)DATA_PTR(self);
-    // TBD
-    printf("*** b: %p\n", b);
+
+    append_indent(b);
+    buf_append_string(&b->buf, "<!DOCTYPE ", 10);
+    buf_append_string(&b->buf, StringValuePtr(text), RSTRING_LEN(text));
+    buf_append(&b->buf, '>');
+
     return Qnil;
 }
 
 /* call-seq: text(txt)
  *
  * Adds a text element to the XML string being formed.
- * @param [String] txt contents of the text field
+ * @param [String] text contents of the text field
  */
 static VALUE
-builder_text(VALUE self, VALUE txt) {
+builder_text(VALUE self, VALUE text) {
     Builder	b = (Builder)DATA_PTR(self);
-    // TBD
-    printf("*** b: %p\n", b);
+
+    // TBD encode special
+    buf_append_string(&b->buf, StringValuePtr(text), RSTRING_LEN(text));
+
     return Qnil;
 }
 
@@ -135,8 +235,12 @@ builder_text(VALUE self, VALUE txt) {
 static VALUE
 builder_cdata(VALUE self, VALUE raw) {
     Builder	b = (Builder)DATA_PTR(self);
-    // TBD
-    printf("*** b: %p\n", b);
+
+    append_indent(b);
+    buf_append_string(&b->buf, "<![CDATA[", 9);
+    buf_append_string(&b->buf, StringValuePtr(raw), RSTRING_LEN(raw));
+    buf_append_string(&b->buf, "]]>", 3);
+
     return Qnil;
 }
 
@@ -148,8 +252,9 @@ builder_cdata(VALUE self, VALUE raw) {
 static VALUE
 builder_raw(VALUE self, VALUE raw) {
     Builder	b = (Builder)DATA_PTR(self);
-    // TBD
-    printf("*** b: %p\n", b);
+
+    buf_append_string(&b->buf, StringValuePtr(raw), RSTRING_LEN(raw));
+
     return Qnil;
 }
 
@@ -187,9 +292,16 @@ builder_close(VALUE self) {
  * Returns the JSON document string in what ever state the construction is at.
  */
 extern VALUE builder_to_s(VALUE self) {
-    Builder	b = (Builder)DATA_PTR(self);
-    VALUE	rstr = rb_str_new(b->buf, b->cur - b->buf);
+    Builder		b = (Builder)DATA_PTR(self);
+    volatile VALUE	rstr;
 
+    if ('\n' != *(b->buf.tail - 1)) {
+	buf_append(&b->buf, '\n');
+    }
+    *b->buf.tail = '\0'; // for debugging
+    rstr = rb_str_new(b->buf.head, buf_len(&b->buf));
+
+    // TBD encode
     //return oj_encode(rstr);
     return rstr;
 }

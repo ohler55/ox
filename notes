@@ -6,12 +6,15 @@
 - todo
 
 - builder
+ - unit test and start with instruct
+
  - push and pop
   - push_element or just element()
  - with proc, same
  - with method as the element name
   - using method_missing
    - more expensive
+
 
 The Ox::Builder supports 4 approaches to building. Each example produces the
 following XML.
