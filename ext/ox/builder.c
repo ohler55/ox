@@ -13,9 +13,14 @@
 #include "buf.h"
 #include "err.h"
 
+#define MAX_DEPTH	128
+
 typedef struct _Element {
     char	*name;
     char	buf[64];
+    int		len;
+    bool	has_child;
+    bool	non_text_child;
 } *Element;
 
 typedef struct _Builder {
@@ -23,7 +28,7 @@ typedef struct _Builder {
     int			indent;
     char		encoding[64];
     int			depth;
-    struct _Element	stack[128];
+    struct _Element	stack[MAX_DEPTH];
 } *Builder;
 
 static VALUE		builder_class = Qundef;
@@ -35,8 +40,12 @@ append_indent(Builder b) {
 	return;
     }
     if (b->buf.head < b->buf.tail) {
-	// TBD \n and indent, keep in bounds of indent_spaces
-	buf_append_string(&b->buf, indent_spaces, 1);
+	int	cnt = (b->indent * (b->depth + 1)) + 1;
+
+	if (sizeof(indent_spaces) <= cnt) {
+	    cnt = sizeof(indent_spaces) - 1;
+	}
+	buf_append_string(&b->buf, indent_spaces, cnt);
     }
 }
 
@@ -62,13 +71,39 @@ append_sym_str(Buf b, VALUE v) {
 }
 
 static void
+i_am_a_child(Builder b, bool is_text) {
+    if (0 <= b->depth) {
+	Element	e = &b->stack[b->depth];
+	
+	if (!e->has_child) {
+	    e->has_child = true;
+	    buf_append(&b->buf, '>');
+	}
+	if (!is_text) {
+	    e->non_text_child = true;
+	}
+    }
+}
+
+static int
+append_attr(VALUE key, VALUE value, Builder b) {
+    buf_append(&b->buf, ' ');
+    append_sym_str(&b->buf, key);
+    buf_append_string(&b->buf, "=\"", 2);
+    Check_Type(value, T_STRING);
+    buf_append_string(&b->buf, StringValuePtr(value), RSTRING_LEN(value));
+    buf_append(&b->buf, '"');
+    
+    return ST_CONTINUE;
+}
+
+
+static void
 builder_init(Builder b) {
     buf_init(&b->buf, 0);
     b->indent = ox_default_options.indent;
     *b->encoding = '\0';
-    b->depth = 0;
-    b->stack->name = NULL;
-    *b->stack->buf = '\0';
+    b->depth = -1;
 }
 
 static void
@@ -102,8 +137,9 @@ builder_new(int argc, VALUE *argv, VALUE self) {
     builder_init(b);
     if (1 == argc) {
 	volatile VALUE	v;
-	
-	if (Qnil != (v = rb_hash_lookup(argv[1], ox_indent_sym))) {
+
+	rb_check_type(*argv, T_HASH);
+	if (Qnil != (v = rb_hash_lookup(*argv, ox_indent_sym))) {
 	    if (rb_cFixnum != rb_obj_class(v)) {
 		rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
 	    }
@@ -123,6 +159,7 @@ static VALUE
 builder_instruct(int argc, VALUE *argv, VALUE self) {
     Builder	b = (Builder)DATA_PTR(self);
 
+    i_am_a_child(b, false);
     append_indent(b);
     if (0 == argc) {
 	buf_append_string(&b->buf, "<?xml?>", 7);
@@ -172,9 +209,52 @@ builder_instruct(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE
 builder_element(int argc, VALUE *argv, VALUE self) {
-    Builder	b = (Builder)DATA_PTR(self);
-    // TBD
-    printf("*** b: %p\n", b);
+    Builder		b = (Builder)DATA_PTR(self);
+    Element		e;
+    const char		*name;
+    int			len;
+
+    if (1 > argc) {
+	rb_raise(ox_arg_error_class, "missing element name");
+    }
+    i_am_a_child(b, false);
+    append_indent(b);
+    b->depth++;
+    if (MAX_DEPTH <= b->depth) {
+	rb_raise(ox_arg_error_class, "XML too deeply nested");
+    }
+    switch (rb_type(*argv)) {
+    case T_STRING:
+	name = StringValuePtr(*argv);
+	len = RSTRING_LEN(*argv);
+	break;
+    case T_SYMBOL:
+	name = rb_id2name(SYM2ID(*argv));
+	len = strlen(name);
+	break;
+    default:
+	rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name");
+	break;
+    }
+    e = &b->stack[b->depth];
+    if (sizeof(e->buf) <= len) {
+	e->name = strdup(name);
+	*e->buf = '\0';
+    } else {
+	strcpy(e->buf, name);
+	e->name = e->buf;
+    }
+    e->len = len;
+    e->has_child = false;
+    e->non_text_child = false;
+
+    buf_append(&b->buf, '<');
+    buf_append_string(&b->buf, e->name, len);
+    if (1 < argc) {
+	rb_hash_foreach(argv[1], append_attr, (VALUE)b);
+    }
+    // Do not close with > or /> yet. That is done with i_am_a_child() or pop().
+
     return Qnil;
 }
 
@@ -187,6 +267,7 @@ static VALUE
 builder_comment(VALUE self, VALUE text) {
     Builder	b = (Builder)DATA_PTR(self);
 
+    i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<!-- ", 5);
     buf_append_string(&b->buf, StringValuePtr(text), RSTRING_LEN(text));
@@ -204,6 +285,7 @@ static VALUE
 builder_doctype(VALUE self, VALUE text) {
     Builder	b = (Builder)DATA_PTR(self);
 
+    i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<!DOCTYPE ", 10);
     buf_append_string(&b->buf, StringValuePtr(text), RSTRING_LEN(text));
@@ -221,7 +303,8 @@ static VALUE
 builder_text(VALUE self, VALUE text) {
     Builder	b = (Builder)DATA_PTR(self);
 
-    // TBD encode special
+    i_am_a_child(b, true);
+    // TBD encode special characters
     buf_append_string(&b->buf, StringValuePtr(text), RSTRING_LEN(text));
 
     return Qnil;
@@ -236,6 +319,7 @@ static VALUE
 builder_cdata(VALUE self, VALUE raw) {
     Builder	b = (Builder)DATA_PTR(self);
 
+    i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<![CDATA[", 9);
     buf_append_string(&b->buf, StringValuePtr(raw), RSTRING_LEN(raw));
@@ -253,6 +337,7 @@ static VALUE
 builder_raw(VALUE self, VALUE raw) {
     Builder	b = (Builder)DATA_PTR(self);
 
+    i_am_a_child(b, true);
     buf_append_string(&b->buf, StringValuePtr(raw), RSTRING_LEN(raw));
 
     return Qnil;
@@ -262,11 +347,35 @@ builder_raw(VALUE self, VALUE raw) {
  *
  * Closes the current element.
  */
+static void
+pop(Builder b) {
+    Element	e;
+
+    if (0 > b->depth) {
+	rb_raise(ox_arg_error_class, "closed to many element");
+    }
+    e = &b->stack[b->depth];
+    b->depth--;
+    if (e->has_child) {
+	if (e->non_text_child) {
+	    append_indent(b);
+	}
+	buf_append_string(&b->buf, "</", 2);
+	buf_append_string(&b->buf, e->name, e->len);
+	buf_append(&b->buf, '>');
+	if (e->buf != e->name) {
+	    free(e->name);
+	    e->name = 0;
+	}
+    } else {
+	buf_append_string(&b->buf, "/>", 2);
+    }
+}
+
 static VALUE
 builder_pop(VALUE self) {
-    Builder	b = (Builder)DATA_PTR(self);
-    // TBD
-    printf("*** b: %p\n", b);
+    pop((Builder)DATA_PTR(self));
+
     return Qnil;
 }
 
@@ -277,8 +386,10 @@ builder_pop(VALUE self) {
 static VALUE
 builder_close(VALUE self) {
     Builder	b = (Builder)DATA_PTR(self);
-    // TBD
-    printf("*** b: %p\n", b);
+
+    while (0 <= b->depth) {
+	pop(b);
+    }
     return Qnil;
 }
 

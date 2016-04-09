@@ -1131,10 +1131,31 @@ class Func < ::Minitest::Test
   end
 
   def test_builder_instruct
-    b = Ox::Builder.new
+    b = Ox::Builder.new(:indent => 2)
     b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
     xml = b.to_s
     assert_equal("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n", xml)
+  end
+
+  def test_builder_element
+    b = Ox::Builder.new(:indent => 2)
+    b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+    b.element('one', :a => "ack", 'b' => 'back')
+    b.element('two')
+    b.pop()
+    b.comment('just a comment')
+    b.element('three')
+    b.text("something here")
+    b.pop()
+    b.pop()
+    xml = b.to_s
+    assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
+<one a="ack" b="back">
+  <two/>
+  <!-- just a comment --/>
+  <three>something here</three>
+</one>
+|, xml)
   end
 
   def dump_and_load(obj, trace=false, circular=false)

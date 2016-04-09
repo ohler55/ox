@@ -34,6 +34,11 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Release 2.4.0
+
+ - Added Ox::Builder that constructs an XML string or writes XML to a stream
+   using builder methods.
+
 ### Release 2.3.0
 
  - Added Oj::Element.replace_text() method.
