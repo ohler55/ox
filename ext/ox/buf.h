@@ -39,28 +39,21 @@ typedef struct _Buf {
     char	*end;
     char	*tail;
     int		fd;
-    bool	realloc_ok;
     bool	err;
-    char	base[65536];
+    char	base[16384];
 } *Buf;
 
 inline static void
-buf_init(Buf buf, int fd) {
-    buf->head = buf->base;
-    buf->end = buf->base + sizeof(buf->base) - 1;
+buf_init(Buf buf, int fd, long initial_size) {
+    if (sizeof(buf->base) < initial_size) {
+	buf->head = ALLOC_N(char, initial_size);
+	buf->end = buf->head + initial_size - 1;
+    } else {
+	buf->head = buf->base;
+	buf->end = buf->base + sizeof(buf->base) - 1;
+    }
     buf->tail = buf->head;
     buf->fd = fd;
-    buf->realloc_ok = (0 == fd);
-    buf->err = false;
-}
-
-inline static void
-buf_finit(Buf buf, char *str, size_t slen) {
-    buf->head = str;
-    buf->end = str + slen;
-    buf->tail = buf->head;
-    buf->fd = 0;
-    buf->realloc_ok = false;
     buf->err = false;
 }
 
@@ -72,7 +65,7 @@ buf_reset(Buf buf) {
 
 inline static void
 buf_cleanup(Buf buf) {
-    if (buf->base != buf->head && !buf->realloc_ok) {
+    if (buf->base != buf->head) {
         free(buf->head);
     }
 }
@@ -95,23 +88,19 @@ buf_append_string(Buf buf, const char *s, size_t slen) {
 		buf->err = true;
 	    }
 	    buf->tail = buf->head;
-	} else if (buf->realloc_ok) {
+	} else {
 	    size_t	len = buf->end - buf->head;
 	    size_t	toff = buf->tail - buf->head;
 	    size_t	new_len = len + slen + len / 2;
 
 	    if (buf->base == buf->head) {
-		buf->head = (char*)malloc(new_len);
+		buf->head = ALLOC_N(char, new_len);
 		memcpy(buf->head, buf->base, len);
 	    } else {
-		buf->head = (char*)realloc(buf->head, new_len);
+		REALLOC_N(buf->head, char, new_len);
 	    }
 	    buf->tail = buf->head + toff;
 	    buf->end = buf->head + new_len - 2;
-	} else {
-	    slen = buf->end - buf->tail - 1;
-	    buf->err = true;
-	    return;
 	}
     }
     if (0 < slen) {
@@ -133,22 +122,19 @@ buf_append(Buf buf, char c) {
 		buf->err = true;
 	    }
 	    buf->tail = buf->head;
-	} else if (buf->realloc_ok) {
+	} else {
 	    size_t	len = buf->end - buf->head;
 	    size_t	toff = buf->tail - buf->head;
 	    size_t	new_len = len + len / 2;
 
 	    if (buf->base == buf->head) {
-		buf->head = (char*)malloc(new_len);
+		buf->head = ALLOC_N(char, new_len);
 		memcpy(buf->head, buf->base, len);
 	    } else {
-		buf->head = (char*)realloc(buf->head, new_len);
+		REALLOC_N(buf->head, char, new_len);
 	    }
 	    buf->tail = buf->head + toff;
 	    buf->end = buf->head + new_len - 2;
-	} else {
-	    buf->err = true;
-	    return;
 	}
     }
     *buf->tail++ = c;

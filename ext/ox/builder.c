@@ -4,8 +4,6 @@
  */
 
 #include <stdlib.h>
-//#include <errno.h>
-//#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -99,9 +97,9 @@ append_attr(VALUE key, VALUE value, Builder b) {
 
 
 static void
-builder_init(Builder b) {
-    buf_init(&b->buf, 0);
-    b->indent = ox_default_options.indent;
+init(Builder b, int indent, long initial_size) {
+    buf_init(&b->buf, 0, initial_size);
+    b->indent = indent;
     *b->encoding = '\0';
     b->depth = -1;
 }
@@ -127,14 +125,19 @@ builder_free(void *ptr) {
 
 /* call-seq: new(options)
  *
- * Creates a new Builder.
- * @param [Hash] options formating options
+ * Creates a new Builder that will write to a string that can be retrieved with
+ * the to_s() method.
+ *
+ * @param [Hash] options formating options.
+ *  - *:indent* [Fixnum] indentaion level
+ *  - *:size* [Fixnum] the initial size of the string buffer
  */
 static VALUE
 builder_new(int argc, VALUE *argv, VALUE self) {
     Builder	b = ALLOC(struct _Builder);
+    int		indent = ox_default_options.indent;
+    long	buf_size = 0;
     
-    builder_init(b);
     if (1 == argc) {
 	volatile VALUE	v;
 
@@ -143,9 +146,17 @@ builder_new(int argc, VALUE *argv, VALUE self) {
 	    if (rb_cFixnum != rb_obj_class(v)) {
 		rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
 	    }
-	    b->indent = NUM2INT(v);
+	    indent = NUM2INT(v);
+	}
+	if (Qnil != (v = rb_hash_lookup(*argv, ox_size_sym))) {
+	    if (rb_cFixnum != rb_obj_class(v)) {
+		rb_raise(ox_parse_error_class, ":size must be a fixnum.\n");
+	    }
+	    buf_size = NUM2LONG(v);
 	}
     }
+    init(b, indent, buf_size);
+
     return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
 }
 
@@ -294,7 +305,7 @@ builder_doctype(VALUE self, VALUE text) {
     return Qnil;
 }
 
-/* call-seq: text(txt)
+/* call-seq: text(text)
  *
  * Adds a text element to the XML string being formed.
  * @param [String] text contents of the text field
@@ -310,7 +321,7 @@ builder_text(VALUE self, VALUE text) {
     return Qnil;
 }
 
-/* call-seq: cdata(data)
+/* call-seq: cdata(raw)
  *
  * Adds a CDATA element to the XML string being formed.
  * @param [String] data contents of the CDATA element
@@ -328,25 +339,22 @@ builder_cdata(VALUE self, VALUE raw) {
     return Qnil;
 }
 
-/* call-seq: raw(data)
+/* call-seq: raw(text)
  *
  * Adds the provided string directly to the XML without formatting or modifications.
- * @param [String] data contents to be added
+ *
+ * @param [String] text contents to be added
  */
 static VALUE
-builder_raw(VALUE self, VALUE raw) {
+builder_raw(VALUE self, VALUE text) {
     Builder	b = (Builder)DATA_PTR(self);
 
     i_am_a_child(b, true);
-    buf_append_string(&b->buf, StringValuePtr(raw), RSTRING_LEN(raw));
+    buf_append_string(&b->buf, StringValuePtr(text), RSTRING_LEN(text));
 
     return Qnil;
 }
 
-/* call-seq: pop()
- *
- * Closes the current element.
- */
 static void
 pop(Builder b) {
     Element	e;
@@ -372,6 +380,10 @@ pop(Builder b) {
     }
 }
 
+/* call-seq: pop()
+ *
+ * Closes the current element.
+ */
 static VALUE
 builder_pop(VALUE self) {
     pop((Builder)DATA_PTR(self));
@@ -406,6 +418,9 @@ extern VALUE builder_to_s(VALUE self) {
     Builder		b = (Builder)DATA_PTR(self);
     volatile VALUE	rstr;
 
+    if (0 != b->buf.fd) {
+	rb_raise(ox_arg_error_class, "can not create a String with a stream or file builder.");
+    }
     if ('\n' != *(b->buf.tail - 1)) {
 	buf_append(&b->buf, '\n');
     }
@@ -428,6 +443,9 @@ void ox_init_builder(VALUE ox) {
 #endif
     builder_class = rb_define_class_under(ox, "Builder", rb_cObject);
     rb_define_module_function(builder_class, "new", builder_new, -1);
+    // TBD
+    //rb_define_module_function(builder_class, "file", builder_file, -1);
+    //rb_define_module_function(builder_class, "stream", builder_stream, -1);
     rb_define_method(builder_class, "instruct", builder_instruct, -1);
     rb_define_method(builder_class, "comment", builder_comment, 1);
     rb_define_method(builder_class, "doctype", builder_doctype, 1);

@@ -1,6 +1,7 @@
 
 module Ox
 
+  # Base error class for Ox errors.
   class Error < StandardError
   end # Error
 

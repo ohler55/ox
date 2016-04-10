@@ -11,12 +11,12 @@ module Ox
   #   require 'ox/xmlrpc_adapter'
   #   client = XMLRPC::Client.new2('http://some_server/rpc')
   #   client.set_parser(Ox::StreamParser.new)
-  #
   class StreamParser < XMLRPC::XMLParser::AbstractStreamParser
     def initialize
       @parser_class = OxParser
     end
 
+    # The SAX wrapper.
     class OxParser < Ox::Sax
       include XMLRPC::XMLParser::StreamParserMixin
 
@@ -24,6 +24,7 @@ module Ox
       alias :end_element :endElement
       alias :start_element :startElement
 
+      # Initiates the sax parser.
       def parse(str)
         Ox.sax_parse(self, StringIO.new(str), :symbolize => false, :convert_special => true)
       end

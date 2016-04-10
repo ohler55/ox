@@ -110,6 +110,10 @@ parse_xsd_time(const char *text) {
 #endif
 }
 
+/* call-seq: as_s()
+ *
+ * @return value as an String.
+ */
 static VALUE
 sax_value_as_s(VALUE self) {
     SaxDrive	dr = DATA_PTR(self);
@@ -144,6 +148,10 @@ sax_value_as_s(VALUE self) {
     return rs;
 }
 
+/* call-seq: as_sym()
+ *
+ * @return value as an Symbol.
+ */
 static VALUE
 sax_value_as_sym(VALUE self) {
     SaxDrive	dr = DATA_PTR(self);
@@ -154,6 +162,10 @@ sax_value_as_sym(VALUE self) {
     return str2sym(dr, dr->buf.str, 0);
 }
 
+/* call-seq: as_f()
+ *
+ * @return value as an Float.
+ */
 static VALUE
 sax_value_as_f(VALUE self) {
     SaxDrive	dr = DATA_PTR(self);
@@ -164,6 +176,10 @@ sax_value_as_f(VALUE self) {
     return rb_float_new(strtod(dr->buf.str, 0));
 }
 
+/* call-seq: as_i()
+ *
+ * @return value as an Fixnum.
+ */
 static VALUE
 sax_value_as_i(VALUE self) {
     SaxDrive	dr = DATA_PTR(self);
@@ -193,6 +209,10 @@ sax_value_as_i(VALUE self) {
     return LONG2NUM(n);
 }
 
+/* call-seq: as_time()
+ *
+ * @return value as an Time.
+ */
 static VALUE
 sax_value_as_time(VALUE self) {
     SaxDrive	dr = DATA_PTR(self);
@@ -213,16 +233,29 @@ sax_value_as_time(VALUE self) {
     return t;
 }
 
+/* call-seq: as_bool()
+ *
+ * @return value as an boolean.
+ */
 static VALUE
 sax_value_as_bool(VALUE self) {
     return (0 == strcasecmp("true", ((SaxDrive)DATA_PTR(self))->buf.str)) ? Qtrue : Qfalse;
 }
 
+/* call-seq: empty()
+ *
+ * @return true if the value is empty.
+ */
 static VALUE
 sax_value_empty(VALUE self) {
     return ('\0' == *((SaxDrive)DATA_PTR(self))->buf.str) ? Qtrue : Qfalse;
 }
 
+/* Document-class: Ox::Sax::Value
+ *
+ * Values in the SAX callbacks. They can be converted to various different
+ * types. with the _as_x()_ methods.
+ */
 void
 ox_sax_define() {
 #if 0

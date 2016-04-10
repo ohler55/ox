@@ -14,7 +14,8 @@
 #include "sax.h"
 
 /* maximum to allocate on the stack, arbitrary limit */
-#define SMALL_XML	4096
+#define SMALL_XML		4096
+#define WITH_CACHE_TESTS	0
 
 typedef struct _YesNoOpt {
     VALUE	sym;
@@ -77,6 +78,7 @@ VALUE	ox_encoding_sym;
 VALUE	ox_version_sym;
 VALUE	ox_standalone_sym;
 VALUE	ox_indent_sym;
+VALUE	ox_size_sym;
 
 VALUE	ox_empty_string;
 VALUE	ox_zero_fixnum;
@@ -301,20 +303,20 @@ get_def_opts(VALUE self) {
  *
  * Sets the default options for load and dump.
  * @param [Hash] opts options to change
- * @param [Fixnum] :indent number of spaces to indent each element in an XML document
- * @param [Fixnum] :trace trace level where 0 is silent
- * @param [String] :encoding character encoding for the XML file
- * @param [true|false|nil] :with_dtd include DTD in the dump
- * @param [true|false|nil] :with_instruct include instructions in the dump
- * @param [true|false|nil] :with_xml include XML prolog in the dump
- * @param [true|false|nil] :circular support circular references while dumping
- * @param [true|false|nil] :xsd_date use XSD date format instead of decimal format
- * @param [:object|:generic|:limited|nil] :mode load method to use for XML
- * @param [:strict|:tolerant|:auto_define] :effort set the tolerance level for loading
- * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
- * @param [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
- * @param [nil|String] :invalid_replace replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
- * @param [nil|String|true|false] :strip_namespace "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ *  - *:indent* [Fixnum] number of spaces to indent each element in an XML document
+ *  - *:trace* [Fixnum] trace level where 0 is silent
+ *  - *:encoding* [String] character encoding for the XML file
+ *  - *:with_dtd* [true|false|nil] include DTD in the dump
+ *  - *:with_instruct* [true|false|nil] include instructions in the dump
+ *  - *:with_xml* [true|false|nil] include XML prolog in the dump
+ *  - *:circular* [true|false|nil] support circular references while dumping
+ *  - *:xsd_date* [true|false|nil] use XSD date format instead of decimal format
+ *  - *:object|:generic|:limited|nil]* [ :mode load method to use for XML
+ *  - *:strict|:tolerant|:auto_define]* [ :effort set the tolerance level for loading
+ *  - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
+ *  - *:skip_none|:skip_return|:skip_white]* [ determines how to handle white space in text
+ *  - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ *  - *:strip_namespace* [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  * @return [nil]
  */
 static VALUE
@@ -698,18 +700,18 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
  *
  * @param [String] xml XML String
  * @param [Hash] options load options
- * @param [:object|:generic|:limited] :mode format expected
- *  - *:object* - object format
- *  - *:generic* - read as a generic XML file
- *  - *:limited* - read as a generic XML file but with callbacks on text and elements events only
- * @param [:strict|:tolerant|:auto_define] :effort effort to use when an undefined class is encountered, default: :strict
- *  - *:strict* - raise an NameError for missing classes and modules
- *  - *:tolerant* - return nil for missing classes and modules
- *  - *:auto_define* - auto define missing classes and modules
- * @param [Fixnum] :trace trace level as a Fixnum, default: 0 (silent)
- * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
- * @param [nil|String] :invalid_replace replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
- * @param [String|true|false] :strip_namespace "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ *  - *:mode* [:object|:generic|:limited] format expected
+ *    - _:object_ - object format
+ *    - _:generic_ - read as a generic XML file
+ *    - _:limited_ - read as a generic XML file but with callbacks on text and elements events only
+ *  - *:effort* [:strict|:tolerant|:auto_define] effort to use when an undefined class is encountered, default: :strict
+ *    - _:strict_ - raise an NameError for missing classes and modules
+ *    - _:tolerant_ - return nil for missing classes and modules
+ *    - _:auto_define_ - auto define missing classes and modules
+ *  - *:trace* [Fixnum] trace level as a Fixnum, default: 0 (silent)
+ *  - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
+ *  - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ *  - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
 load_str(int argc, VALUE *argv, VALUE self) {
@@ -757,18 +759,18 @@ load_str(int argc, VALUE *argv, VALUE self) {
  * malformed or the classes specified are not valid.
  * @param [String] file_path file path to read the XML document from
  * @param [Hash] options load options
- * @param [:object|:generic|:limited] :mode format expected
- *  - *:object* - object format
- *  - *:generic* - read as a generic XML file
- *  - *:limited* - read as a generic XML file but with callbacks on text and elements events only
- * @param [:strict|:tolerant|:auto_define] :effort effort to use when an undefined class is encountered, default: :strict
- *  - *:strict* - raise an NameError for missing classes and modules
- *  - *:tolerant* - return nil for missing classes and modules
- *  - *:auto_define* - auto define missing classes and modules
- * @param [Fixnum] :trace trace level as a Fixnum, default: 0 (silent)
- * @param [true|false|nil] :symbolize_keys symbolize element attribute keys or leave as Strings
- * @param [nil|String] :invalid_replace replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
- * @param [String|true|false] :strip_namespace "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ *  - *:mode* [:object|:generic|:limited] format expected
+ *    - _:object_ - object format
+ *    - _:generic_ - read as a generic XML file
+ *    - _:limited_ - read as a generic XML file but with callbacks on text and elements events only
+ *  - *:effort* [:strict|:tolerant|:auto_define] effort to use when an undefined class is encountered, default: :strict
+ *    - _:strict_ - raise an NameError for missing classes and modules
+ *    - _:tolerant_ - return nil for missing classes and modules
+ *    - _:auto_define_ - auto define missing classes and modules
+ *  - *:trace* [Fixnum] trace level as a Fixnum, default: 0 (silent)
+ *  - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
+ *  - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ *  - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
 load_file(int argc, VALUE *argv, VALUE self) {
@@ -817,11 +819,11 @@ load_file(int argc, VALUE *argv, VALUE self) {
  * @param [Ox::Sax] handler SAX (responds to OX::Sax methods) like handler
  * @param [IO|String] io IO Object to read from
  * @param [Hash] options parse options
- * @param [true|false] :convert_special flag indicating special characters like &lt; are converted
- * @param [true|false] :symbolize flag indicating the parser symbolize element and attribute names
- * @param [true|false] :smart flag indicating the parser uses hints if available (use with html)
- * @param [:skip_return|:skip_white] :skip flag indicating the parser skips \r or collpase white space into a single space. Default (skip nothing)
- * @param [nil|String|true|false] :strip_namespace "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ *  - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
+ *  - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
+ *  - *:smart* [true|false] flag indicating the parser uses hints if available (use with html)
+ *  - *:skip* [:skip_return|:skip_white] flag indicating the parser skips \r or collpase white space into a single space. Default (skip nothing)
+ *  - *:strip_namespace* [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
 sax_parse(int argc, VALUE *argv, VALUE self) {
@@ -968,12 +970,12 @@ parse_dump_options(VALUE ropts, Options copts) {
  * Dumps an Object (obj) to a string.
  * @param [Object] obj Object to serialize as an XML document String
  * @param [Hash] options formating options
- * @param [Fixnum] :indent format expected
- * @param [true|false] :xsd_date use XSD date format if true, default: false
- * @param [true|false] :circular allow circular references, default: false
- * @param [:strict|:tolerant] :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
- *  - *:strict* - raise an NotImplementedError if an undumpable object is encountered
- *  - *:tolerant* - replaces undumplable objects with nil
+ *  - *:indent* [Fixnum] format expected
+ *  - *:xsd_date* [true|false] use XSD date format if true, default: false
+ *  - *:circular* [true|false] allow circular references, default: false
+ *  - *:strict|:tolerant]* [ :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
+ *    - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
+ *    - _:tolerant_ - replaces undumplable objects with nil
  *
  * Note that an indent of less than zero will result in a tight one line output
  * unless the text in the XML fields contain new line characters.
@@ -1011,12 +1013,12 @@ dump(int argc, VALUE *argv, VALUE self) {
  * @param [String] file_path file path to write the XML document to
  * @param [Object] obj Object to serialize as an XML document String
  * @param [Hash] options formating options
- * @param [Fixnum] :indent format expected
- * @param [true|false] :xsd_date use XSD date format if true, default: false
- * @param [true|false] :circular allow circular references, default: false
- * @param [:strict|:tolerant] :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
- *  - *:strict* - raise an NotImplementedError if an undumpable object is encountered
- *  - *:tolerant* - replaces undumplable objects with nil
+ *  - *:indent* [Fixnum] format expected
+ *  - *:xsd_date* [true|false] use XSD date format if true, default: false
+ *  - *:circular* [true|false] allow circular references, default: false
+ *  - *:strict|:tolerant]* [ :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
+ *    - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
+ *    - _:tolerant_ - replaces undumplable objects with nil
  *
  * Note that an indent of less than zero will result in a tight one line output
  * unless the text in the XML fields contain new line characters.
@@ -1034,6 +1036,7 @@ to_file(int argc, VALUE *argv, VALUE self) {
     return Qnil;
 }
 
+#if WITH_CACHE_TESTS
 extern void	ox_cache_test(void);
 
 static VALUE
@@ -1049,6 +1052,7 @@ cache8_test(VALUE self) {
     ox_cache8_test();
     return Qnil;
 }
+#endif
 
 void Init_ox() {
     Ox = rb_define_module("Ox");
@@ -1153,6 +1157,7 @@ void Init_ox() {
     effort_sym = ID2SYM(rb_intern("effort"));			rb_gc_register_address(&effort_sym);
     generic_sym = ID2SYM(rb_intern("generic"));			rb_gc_register_address(&generic_sym);
     ox_indent_sym = ID2SYM(rb_intern("indent"));		rb_gc_register_address(&ox_indent_sym);
+    ox_size_sym = ID2SYM(rb_intern("size"));			rb_gc_register_address(&ox_size_sym);
     invalid_replace_sym = ID2SYM(rb_intern("invalid_replace"));	rb_gc_register_address(&invalid_replace_sym);
     limited_sym = ID2SYM(rb_intern("limited"));			rb_gc_register_address(&limited_sym);
     mode_sym = ID2SYM(rb_intern("mode"));			rb_gc_register_address(&mode_sym);
@@ -1197,12 +1202,17 @@ void Init_ox() {
 
     ox_sax_define();
 
-    rb_define_module_function(Ox, "cache_test", cache_test, 0);
-    rb_define_module_function(Ox, "cache8_test", cache8_test, 0);
+#if WITH_CACHE_TESTS
+    // space added to stop yardoc from trying to document
+    rb_define _module_function(Ox, "cache_test", cache_test, 0);
+    rb_define _module_function(Ox, "cache8_test", cache8_test, 0);
+#endif
+    
 #if HAS_ENCODING_SUPPORT
     ox_utf8_encoding = rb_enc_find("UTF-8");
 #elif HAS_PRIVATE_ENCODING
-    ox_utf8_encoding = rb_str_new2("UTF-8");			rb_gc_register_address(&ox_utf8_encoding);
+    ox_utf8_encoding = rb_str_new2("UTF-8");
+    rb_gc_register_address(&ox_utf8_encoding);
 #endif
 }
 
