@@ -4,7 +4,7 @@ module Ox
   class DocType < Node
     # Creates a DOCTYPE elements with the content as a string specified in the
     # value parameter.
-    # @param value [String] string value for the element
+    # - +value+ [String] string value for the element
     def initialize(value)
       super
     end

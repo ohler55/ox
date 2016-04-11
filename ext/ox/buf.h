@@ -152,6 +152,7 @@ buf_finish(Buf buf) {
 	if (0 < len && len != (size_t)write(buf->fd, buf->head, len)) {
 	    buf->err = true;
 	}
+	fsync(buf->fd);
 	buf->tail = buf->head;
     }
 }

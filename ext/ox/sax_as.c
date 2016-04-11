@@ -112,7 +112,7 @@ parse_xsd_time(const char *text) {
 
 /* call-seq: as_s()
  *
- * @return value as an String.
+ * *return* value as an String.
  */
 static VALUE
 sax_value_as_s(VALUE self) {
@@ -150,7 +150,7 @@ sax_value_as_s(VALUE self) {
 
 /* call-seq: as_sym()
  *
- * @return value as an Symbol.
+ * *return* value as an Symbol.
  */
 static VALUE
 sax_value_as_sym(VALUE self) {
@@ -164,7 +164,7 @@ sax_value_as_sym(VALUE self) {
 
 /* call-seq: as_f()
  *
- * @return value as an Float.
+ * *return* value as an Float.
  */
 static VALUE
 sax_value_as_f(VALUE self) {
@@ -178,7 +178,7 @@ sax_value_as_f(VALUE self) {
 
 /* call-seq: as_i()
  *
- * @return value as an Fixnum.
+ * *return* value as an Fixnum.
  */
 static VALUE
 sax_value_as_i(VALUE self) {
@@ -211,7 +211,7 @@ sax_value_as_i(VALUE self) {
 
 /* call-seq: as_time()
  *
- * @return value as an Time.
+ * *return* value as an Time.
  */
 static VALUE
 sax_value_as_time(VALUE self) {
@@ -235,7 +235,7 @@ sax_value_as_time(VALUE self) {
 
 /* call-seq: as_bool()
  *
- * @return value as an boolean.
+ * *return* value as an boolean.
  */
 static VALUE
 sax_value_as_bool(VALUE self) {
@@ -244,7 +244,7 @@ sax_value_as_bool(VALUE self) {
 
 /* call-seq: empty()
  *
- * @return true if the value is empty.
+ * *return* true if the value is empty.
  */
 static VALUE
 sax_value_empty(VALUE self) {

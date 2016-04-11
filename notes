@@ -3,18 +3,14 @@
 ^c^d hide subtree
 ^c^s show subtree
 
+- rdoc
+ - --coverage-report for coverage (does not generate docs)
+ - rdoc --main README.md --title Ox --exclude extconf.rb lib ext/ox README.md
+ 
 - todo
 
 - builder
- - update test for all type
- - implement encoding
-  - test
- - special characters
-  - test
  - other method aliases (with !)
- - file and stream
- - test file and stream
- 
 
 The Ox::Builder supports 4 approaches to building. Each example produces the
 following XML.

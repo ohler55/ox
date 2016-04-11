@@ -1130,14 +1130,7 @@ class Func < ::Minitest::Test
 |, Ox.dump(doc))
   end
 
-  def test_builder_instruct
-    b = Ox::Builder.new(:indent => 2)
-    b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
-    xml = b.to_s
-    assert_equal("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n", xml)
-  end
-
-  def test_builder_element
+  def test_builder
     b = Ox::Builder.new(:indent => 2)
     b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
     b.element('one', :a => "ack", 'b' => 'back')
@@ -1145,19 +1138,77 @@ class Func < ::Minitest::Test
     b.pop()
     b.comment('just a comment')
     b.element('three')
-    b.text("something here")
+    b.text("my name is \"ピーター\"")
     b.pop()
-    b.pop()
+    b.close()
     xml = b.to_s
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
 <one a="ack" b="back">
   <two/>
   <!-- just a comment --/>
-  <three>something here</three>
+  <three>my name is &quot;ピーター&quot;</three>
 </one>
 |, xml)
   end
 
+  def test_builder_file
+    filename = File.join(File.dirname(__FILE__), 'create_file_test.xml')
+    b = Ox::Builder.file(filename, :indent => 2)
+    b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+    b.element('one', :a => "ack", 'b' => 'back')
+    b.element('two')
+    b.pop()
+    b.comment('just a comment')
+    b.element('three')
+    b.text("my name is \"ピーター\"")
+    b.pop()
+    b.pop()
+    b.close()
+    
+    xml = File.read(filename)
+    xml.force_encoding('UTF-8')
+    assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
+<one a="ack" b="back">
+  <two/>
+  <!-- just a comment --/>
+  <three>my name is &quot;ピーター&quot;</three>
+</one>
+|, xml)
+  end
+
+  def test_builder_io
+    IO.pipe do |r,w|
+      if fork
+        w.close
+        xml = r.read(1000)
+        xml.force_encoding('UTF-8')
+        r.close
+        assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
+<one a="ack" b="back">
+  <two/>
+  <!-- just a comment --/>
+  <three>my name is &quot;ピーター&quot;</three>
+</one>
+|, xml)
+      else
+        r.close
+        b = Ox::Builder.io(w, :indent => 2)
+        b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+        b.element('one', :a => "ack", 'b' => 'back')
+        b.element('two')
+        b.pop()
+        b.comment('just a comment')
+        b.element('three')
+        b.text("my name is \"ピーター\"")
+        b.pop()
+        b.pop()
+        b.close()
+        w.close
+        Process.exit(0)
+      end
+    end
+  end
+  
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)
     puts xml if trace

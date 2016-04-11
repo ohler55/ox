@@ -6,14 +6,14 @@ module Ox
     attr_accessor :value
     
     # Creates a new Node with the specified String value.
-    # @param [String] value string value for the Node
+    # - +value+ [String] string value for the Node
     def initialize(value)
       @value = value.to_s
     end
 
     # Returns true if this Object and other are of the same type and have the
     # equivalent value otherwise false is returned.
-    # @param [Object] other Object to compare _self_ to.
+    # - +other+ [Object] Object to compare _self_ to.
     def eql?(other)
       return false if (other.nil? or self.class != other.class)
       other.value == self.value

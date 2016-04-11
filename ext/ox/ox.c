@@ -227,23 +227,23 @@ defuse_bom(char *xml, Options options) {
 /* call-seq: ox_default_options() => Hash
  *
  * Returns the default load and dump options as a Hash. The options are
- * - indent: [Fixnum] number of spaces to indent each element in an XML document
- * - trace: [Fixnum] trace level where 0 is silent
- * - encoding: [String] character encoding for the XML file
- * - with_dtd: [true|false|nil] include DTD in the dump
- * - with_instruct: [true|false|nil] include instructions in the dump
- * - with_xml: [true|false|nil] include XML prolog in the dump
- * - circular: [true|false|nil] support circular references while dumping
- * - xsd_date: [true|false|nil] use XSD date format instead of decimal format
- * - mode: [:object|:generic|:limited|nil] load method to use for XML
- * - effort: [:strict|:tolerant|:auto_define] set the tolerance level for loading
- * - symbolize_keys: [true|false|nil] symbolize element attribute keys or leave as Strings
- * - skip: [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
- * - smart: [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
- * - convert_special: [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
- * - invalid_replace: [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
- * - strip_namespace: [String|true|false] false or "" results in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
- * @return [Hash] all current option settings.
+ * - _:indent_ [Fixnum] number of spaces to indent each element in an XML document
+ * - _:trace_ [Fixnum] trace level where 0 is silent
+ * - _:encoding_ [String] character encoding for the XML file
+ * - _:with_dtd_ [true|false|nil] include DTD in the dump
+ * - _:with_instruct_ [true|false|nil] include instructions in the dump
+ * - _:with_xml_ [true|false|nil] include XML prolog in the dump
+ * - _:circular_ [true|false|nil] support circular references while dumping
+ * - _:xsd_date_ [true|false|nil] use XSD date format instead of decimal format
+ * - _:mode_ [:object|:generic|:limited|nil] load method to use for XML
+ * - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
+ * - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
+ * - _:skip_ [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
+ * - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
+ * - _:convert_special_ [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
+ * - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ * - _:strip_namespace_ [String|true|false] false or "" results in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ * *return* [Hash] all current option settings.
  *
  * Note that an indent of less than zero will result in a tight one line output
  * unless the text in the XML fields contain new line characters.
@@ -302,22 +302,22 @@ get_def_opts(VALUE self) {
 /* call-seq: ox_default_options=(opts)
  *
  * Sets the default options for load and dump.
- * @param [Hash] opts options to change
- *  - *:indent* [Fixnum] number of spaces to indent each element in an XML document
- *  - *:trace* [Fixnum] trace level where 0 is silent
- *  - *:encoding* [String] character encoding for the XML file
- *  - *:with_dtd* [true|false|nil] include DTD in the dump
- *  - *:with_instruct* [true|false|nil] include instructions in the dump
- *  - *:with_xml* [true|false|nil] include XML prolog in the dump
- *  - *:circular* [true|false|nil] support circular references while dumping
- *  - *:xsd_date* [true|false|nil] use XSD date format instead of decimal format
- *  - *:object|:generic|:limited|nil]* [ :mode load method to use for XML
- *  - *:strict|:tolerant|:auto_define]* [ :effort set the tolerance level for loading
- *  - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
- *  - *:skip_none|:skip_return|:skip_white]* [ determines how to handle white space in text
- *  - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
- *  - *:strip_namespace* [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
- * @return [nil]
+ * - +opts+ [Hash] opts options to change
+ *   - _:indent_ [Fixnum] number of spaces to indent each element in an XML document
+ *   - _:trace_ [Fixnum] trace level where 0 is silent
+ *   - _:encoding_ [String] character encoding for the XML file
+ *   - _:with_dtd_ [true|false|nil] include DTD in the dump
+ *   - _:with_instruct_ [true|false|nil] include instructions in the dump
+ *   - _:with_xml_ [true|false|nil] include XML prolog in the dump
+ *   - _:circular_ [true|false|nil] support circular references while dumping
+ *   - _:xsd_date_ [true|false|nil] use XSD date format instead of decimal format
+ *   - _:mode_ [:object|:generic|:limited|nil] load method to use for XML
+ *   - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
+ *   - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
+ *   - _skip_ [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
+ *   - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ *   - _:strip_namespace_ [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ * *return* [nil]
  */
 static VALUE
 set_def_opts(VALUE self, VALUE opts) {
@@ -471,8 +471,8 @@ set_def_opts(VALUE self, VALUE opts) {
  * optimized XML formated String. For other formats use the more generic
  * Ox.load() method.  Raises an exception if the XML is malformed or the
  * classes specified in the file are not valid.
- * @param [String] xml XML String in optimized Object format.
- * @return [Object] deserialized Object.
+ * - +xml+ [String] XML String in optimized Object format.
+ * *return* [Object] deserialized Object.
  */
 static VALUE
 to_obj(VALUE self, VALUE ruby_xml) {
@@ -513,9 +513,10 @@ to_obj(VALUE self, VALUE ruby_xml) {
 /* call-seq: parse(xml) => Ox::Document or Ox::Element
  *
  * Parses and XML document String into an Ox::Document or Ox::Element.
- * @param [String] xml XML String
- * @return [Ox::Document or Ox::Element] parsed XML document.
- * @raise [Exception] if the XML is malformed.
+ * - +xml+ [String] xml XML String
+ * *return* [Ox::Document or Ox::Element] parsed XML document.
+ *
+ * _raise_ [Exception] if the XML is malformed.
  */
 static VALUE
 to_gen(VALUE self, VALUE ruby_xml) {
@@ -698,20 +699,20 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
  * on the completion of each complete top level entity with that entity as it's
  * only argument.
  *
- * @param [String] xml XML String
- * @param [Hash] options load options
- *  - *:mode* [:object|:generic|:limited] format expected
- *    - _:object_ - object format
- *    - _:generic_ - read as a generic XML file
- *    - _:limited_ - read as a generic XML file but with callbacks on text and elements events only
- *  - *:effort* [:strict|:tolerant|:auto_define] effort to use when an undefined class is encountered, default: :strict
- *    - _:strict_ - raise an NameError for missing classes and modules
- *    - _:tolerant_ - return nil for missing classes and modules
- *    - _:auto_define_ - auto define missing classes and modules
- *  - *:trace* [Fixnum] trace level as a Fixnum, default: 0 (silent)
- *  - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
- *  - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
- *  - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ * - +xml+ [String] XML String
+ * - +options+ [Hash] load options
+ *   - *:mode* [:object|:generic|:limited] format expected
+ *     - _:object_ - object format
+ *     - _:generic_ - read as a generic XML file
+ *     - _:limited_ - read as a generic XML file but with callbacks on text and elements events only
+ *   - *:effort* [:strict|:tolerant|:auto_define] effort to use when an undefined class is encountered, default: :strict
+ *     - _:strict_ - raise an NameError for missing classes and modules
+ *     - _:tolerant_ - return nil for missing classes and modules
+ *     - _:auto_define_ - auto define missing classes and modules
+ *   - *:trace* [Fixnum] trace level as a Fixnum, default: 0 (silent)
+ *   - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
+ *   - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ *   - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
 load_str(int argc, VALUE *argv, VALUE self) {
@@ -757,20 +758,20 @@ load_str(int argc, VALUE *argv, VALUE self) {
  * Parses and XML document from a file into an Ox::Document, or Ox::Element,
  * or Object depending on the options.	Raises an exception if the XML is
  * malformed or the classes specified are not valid.
- * @param [String] file_path file path to read the XML document from
- * @param [Hash] options load options
- *  - *:mode* [:object|:generic|:limited] format expected
- *    - _:object_ - object format
- *    - _:generic_ - read as a generic XML file
- *    - _:limited_ - read as a generic XML file but with callbacks on text and elements events only
- *  - *:effort* [:strict|:tolerant|:auto_define] effort to use when an undefined class is encountered, default: :strict
- *    - _:strict_ - raise an NameError for missing classes and modules
- *    - _:tolerant_ - return nil for missing classes and modules
- *    - _:auto_define_ - auto define missing classes and modules
- *  - *:trace* [Fixnum] trace level as a Fixnum, default: 0 (silent)
- *  - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
- *  - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
- *  - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ * - +file_path+ [String] file path to read the XML document from
+ * - +options+ [Hash] load options
+ *   - *:mode* [:object|:generic|:limited] format expected
+ *     - _:object_ - object format
+ *     - _:generic_ - read as a generic XML file
+ *     - _:limited_ - read as a generic XML file but with callbacks on text and elements events only
+ *   - *:effort* [:strict|:tolerant|:auto_define] effort to use when an undefined class is encountered, default: :strict
+ *     - _:strict_ - raise an NameError for missing classes and modules
+ *     - _:tolerant_ - return nil for missing classes and modules
+ *     - _:auto_define_ - auto define missing classes and modules
+ *   - *:trace* [Fixnum] trace level as a Fixnum, default: 0 (silent)
+ *   - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
+ *   - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ *   - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
 load_file(int argc, VALUE *argv, VALUE self) {
@@ -816,14 +817,14 @@ load_file(int argc, VALUE *argv, VALUE self) {
  *
  * Parses an IO stream or file containing an XML document. Raises an exception
  * if the XML is malformed or the classes specified are not valid.
- * @param [Ox::Sax] handler SAX (responds to OX::Sax methods) like handler
- * @param [IO|String] io IO Object to read from
- * @param [Hash] options parse options
- *  - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
- *  - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
- *  - *:smart* [true|false] flag indicating the parser uses hints if available (use with html)
- *  - *:skip* [:skip_return|:skip_white] flag indicating the parser skips \r or collpase white space into a single space. Default (skip nothing)
- *  - *:strip_namespace* [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ * - +handler+ [Ox::Sax] SAX (responds to OX::Sax methods) like handler
+ * - +io+ [IO|String] IO Object to read from
+ * - +options+ [Hash] options parse options
+ *   - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
+ *   - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
+ *   - *:smart* [true|false] flag indicating the parser uses hints if available (use with html)
+ *   - *:skip* [:skip_return|:skip_white] flag indicating the parser skips \r or collpase white space into a single space. Default (skip nothing)
+ *   - *:strip_namespace* [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
 sax_parse(int argc, VALUE *argv, VALUE self) {
@@ -968,14 +969,14 @@ parse_dump_options(VALUE ropts, Options copts) {
 /* call-seq: dump(obj, options) => xml-string
  *
  * Dumps an Object (obj) to a string.
- * @param [Object] obj Object to serialize as an XML document String
- * @param [Hash] options formating options
- *  - *:indent* [Fixnum] format expected
- *  - *:xsd_date* [true|false] use XSD date format if true, default: false
- *  - *:circular* [true|false] allow circular references, default: false
- *  - *:strict|:tolerant]* [ :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
- *    - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
- *    - _:tolerant_ - replaces undumplable objects with nil
+ * - +obj+ [Object] Object to serialize as an XML document String
+ * - +options+ [Hash] formating options
+ *   - *:indent* [Fixnum] format expected
+ *   - *:xsd_date* [true|false] use XSD date format if true, default: false
+ *   - *:circular* [true|false] allow circular references, default: false
+ *   - *:strict|:tolerant]* [ :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
+ *     - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
+ *     - _:tolerant_ - replaces undumplable objects with nil
  *
  * Note that an indent of less than zero will result in a tight one line output
  * unless the text in the XML fields contain new line characters.
@@ -1010,15 +1011,15 @@ dump(int argc, VALUE *argv, VALUE self) {
 /* call-seq: to_file(file_path, obj, options)
  *
  * Dumps an Object to the specified file.
- * @param [String] file_path file path to write the XML document to
- * @param [Object] obj Object to serialize as an XML document String
- * @param [Hash] options formating options
- *  - *:indent* [Fixnum] format expected
- *  - *:xsd_date* [true|false] use XSD date format if true, default: false
- *  - *:circular* [true|false] allow circular references, default: false
- *  - *:strict|:tolerant]* [ :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
- *    - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
- *    - _:tolerant_ - replaces undumplable objects with nil
+ * - +file_path+ [String] file path to write the XML document to
+ * - +obj+ [Object] Object to serialize as an XML document String
+ * - +options+ [Hash] formating options
+ *   - *:indent* [Fixnum] format expected
+ *   - *:xsd_date* [true|false] use XSD date format if true, default: false
+ *   - *:circular* [true|false] allow circular references, default: false
+ *   - *:strict|:tolerant]* [ :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
+ *     - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
+ *     - _:tolerant_ - replaces undumplable objects with nil
  *
  * Note that an indent of less than zero will result in a tight one line output
  * unless the text in the XML fields contain new line characters.

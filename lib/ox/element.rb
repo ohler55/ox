@@ -1,3 +1,4 @@
+
 module Ox
 
   # An Element represents a element of an XML document. It has a name,
@@ -32,12 +33,11 @@ module Ox
   #   => "Makie"
   #   doc.People.Person.age
   #   => "58"
-
   class Element < Node
     include HasAttrs
     
     # Creates a new Element with the specified name.
-    # @param [String] name name of the Element
+    # - +name+ [String] name of the Element
     def initialize(name)
       super
       @attributes = {}
@@ -47,7 +47,7 @@ module Ox
     
     # Returns the Element's nodes array. These are the sub-elements of this
     # Element.
-    # @return [Array] all child Nodes.
+    # *return* [Array] all child Nodes.
     def nodes
       @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       @nodes
@@ -55,7 +55,7 @@ module Ox
 
     # Appends a Node to the Element's nodes array. Returns the element itself
     # so multiple appends can be chained together.
-    # @param [Node] node Node to append to the nodes array
+    # - +node+ [Node] Node to append to the nodes array
     def <<(node)
       raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
       @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
@@ -65,8 +65,8 @@ module Ox
 
     # Returns true if this Object and other are of the same type and have the
     # equivalent value and the equivalent elements otherwise false is returned.
-    # @param [Object] other Object compare _self_ to.
-    # @return [Boolean] true if both Objects are equivalent, otherwise false.
+    # - +other+ [Object] Object compare _self_ to.
+    # *return* [Boolean] true if both Objects are equivalent, otherwise false.
     def eql?(other)
       return false if (other.nil? or self.class != other.class)
       return false unless super(other)
@@ -85,7 +85,7 @@ module Ox
 
     # Clears any child nodes of an element and replaces those with a single Text
     # (String) node. Note the existing nodes array is modified and not replaced.
-    # @param [String] txt to become the only element of the nodes array
+    # - +txt+ [String] to become the only element of the nodes array
     def replace_text(txt)
       raise "the argument to replace_text() must be a String" unless txt.is_a?(String)
       @nodes.clear()
@@ -127,7 +127,7 @@ module Ox
     # * <code>element.locate("Family/*/@type")</code> returns the type attribute value for decendents of the Family.
     # * <code>element.locate("Family/^Comment")</code> returns any comments that are a child of Family.
     #
-    # @param [String] path path to the Nodes to locate
+    # - +path+ [String] path to the Nodes to locate
     def locate(path)
       return [self] if path.nil?
       found = []
@@ -138,9 +138,10 @@ module Ox
     
     # Handles the 'easy' API that allows navigating a simple XML by
     # referencing elements and attributes by name.
-    # @param [Symbol] id element or attribute name
-    # @return [Element|Node|String|nil] the element, attribute value, or Node identifed by the name
-    # @raise [NoMethodError] if no match is found
+    # - +id+ [Symbol] element or attribute name
+    # *return* [Element|Node|String|nil] the element, attribute value, or Node identifed by the name
+    #
+    # _raise_ [NoMethodError] if no match is found
     def method_missing(id, *args, &block)
       has_some = false
       ids = id.to_s
@@ -160,9 +161,9 @@ module Ox
       raise NoMethodError.new("#{ids} not found", name)
     end
 
-    # @param [String|Symbol] id identifer of the attribute or method
-    # @param inc_all [Boolean] ignored
-    # @return true if the element has a member that matches the provided name.
+    # - +id+ [String|Symbol] identifer of the attribute or method
+    # - +ignored+ inc_all [Boolean]
+    # *return* true if the element has a member that matches the provided name.
     def respond_to?(id, inc_all=false)
       return true if super
       id_str = id.to_s
@@ -178,8 +179,8 @@ module Ox
       false
     end
 
-    # @param [Array] path array of steps in a path
-    # @param [Array] found matching nodes
+    # - +path+ [Array] array of steps in a path
+    # - +found+ [Array] matching nodes
     def alocate(path, found)
       step = path[0]
       if step.start_with?('@') # attribute

@@ -1,9 +1,11 @@
+
 module Ox
   # A SAX style parse handler. The Ox::Sax handler class should be subclasses
   # and then used with the Ox.sax_parse() method. The Sax methods will then be
   # called as the file is parsed. This is best suited for very large files or
   # IO streams.<p/>
-  # @example
+  #
+  # *Example*
   # 
   #  require 'ox'
   #

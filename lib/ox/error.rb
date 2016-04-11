@@ -15,6 +15,7 @@ module Ox
 
   # An Exception raised if a path is not valid.
   class InvalidPath < Error
+    # Create a new instance with the +path+ specified.
     def initialize(path)
       super("#{path.join('/')} is not a valid location.")
     end

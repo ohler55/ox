@@ -27,7 +27,7 @@ serialization. }
 
   s.has_rdoc = true
   s.extra_rdoc_files = ['README.md']
-  s.rdoc_options = ['--main', 'README.md']
+  s.rdoc_options = ['--main', 'README.md', '--title', 'Ox Documentation', '--exclude', 'extconf.rb']
   
   s.rubyforge_project = 'ox'
 end

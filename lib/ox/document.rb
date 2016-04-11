@@ -4,10 +4,10 @@ module Ox
   # the XML prolog. A Document includes Elements.
   class Document < Element
     # Create a new Document.
-    # @param [Hash] prolog prolog attributes
-    # @option prolog [String] :version version, typically '1.0' or '1.1'
-    # @option prolog [String] :encoding encoding for the document, currently included but ignored
-    # @option prolog [String] :standalone indicates the document is standalone
+    # - +prolog+ [Hash] prolog attributes
+    #   - _:version_ [String] version, typically '1.0' or '1.1'
+    #   - _:encoding_ [String] encoding for the document, currently included but ignored
+    #   - _:standalone_ [String] indicates the document is standalone
     def initialize(prolog={})
       super(nil)
       @attributes = { }
