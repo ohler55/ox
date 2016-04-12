@@ -173,7 +173,6 @@ append_attr(VALUE key, VALUE value, Builder b) {
     return ST_CONTINUE;
 }
 
-
 static void
 init(Builder b, int fd, int indent, long initial_size) {
     buf_init(&b->buf, fd, initial_size);
@@ -201,10 +200,69 @@ builder_free(void *ptr) {
     xfree(ptr);
 }
 
+static void
+pop(Builder b) {
+    Element	e;
+
+    if (0 > b->depth) {
+	rb_raise(ox_arg_error_class, "closed to many element");
+    }
+    e = &b->stack[b->depth];
+    b->depth--;
+    if (e->has_child) {
+	if (e->non_text_child) {
+	    append_indent(b);
+	}
+	buf_append_string(&b->buf, "</", 2);
+	buf_append_string(&b->buf, e->name, e->len);
+	buf_append(&b->buf, '>');
+	if (e->buf != e->name) {
+	    free(e->name);
+	    e->name = 0;
+	}
+    } else {
+	buf_append_string(&b->buf, "/>", 2);
+    }
+}
+
+static void
+bclose(Builder b) {
+    while (0 <= b->depth) {
+	pop(b);
+    }
+    buf_append(&b->buf, '\n');
+    buf_finish(&b->buf);
+    if (NULL != b->file) {
+	fclose(b->file);
+    }
+}
+
+static VALUE
+to_s(Builder b) {
+    volatile VALUE	rstr;
+
+    if (0 != b->buf.fd) {
+	rb_raise(ox_arg_error_class, "can not create a String with a stream or file builder.");
+    }
+    if ('\n' != *(b->buf.tail - 1)) {
+	buf_append(&b->buf, '\n');
+    }
+    *b->buf.tail = '\0'; // for debugging
+    rstr = rb_str_new(b->buf.head, buf_len(&b->buf));
+
+    if ('\0' != *b->encoding) {
+#if HAS_ENCODING_SUPPORT
+	rb_enc_associate(rstr, rb_enc_find(b->encoding));
+#endif
+    }
+    return rstr;
+}
+
 /* call-seq: new(options)
  *
  * Creates a new Builder that will write to a string that can be retrieved with
- * the to_s() method.
+ * the to_s() method. If a block is given it is executed with a single parameter
+ * which is the builder instance. The return value is then the generated string.
  *
  * - +options+ - (Hash) formating options
  *   - +:indent+ (Fixnum) indentaion level
@@ -236,7 +294,15 @@ builder_new(int argc, VALUE *argv, VALUE self) {
     b->file = NULL;
     init(b, 0, indent, buf_size);
 
-    return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+    if (rb_block_given_p()) {
+	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+	rb_yield(rb);
+	bclose(b);
+
+	return to_s(b);
+    } else {
+	return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+    }
 }
 
 /* call-seq: file(filename, options)
@@ -283,7 +349,14 @@ builder_file(int argc, VALUE *argv, VALUE self) {
     b->file = f;
     init(b, fileno(f), indent, buf_size);
 
-    return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+    if (rb_block_given_p()) {
+	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+	rb_yield(rb);
+	bclose(b);
+	return Qnil;
+    } else {
+	return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+    }
 }
 
 /* call-seq: io(io, options)
@@ -331,7 +404,14 @@ builder_io(int argc, VALUE *argv, VALUE self) {
     b->file = NULL;
     init(b, fd, indent, buf_size);
 
-    return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+    if (rb_block_given_p()) {
+	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+	rb_yield(rb);
+	bclose(b);
+	return Qnil;
+    } else {
+	return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+    }
 }
 
 /* call-seq: instruct(decl,options)
@@ -389,7 +469,9 @@ builder_instruct(int argc, VALUE *argv, VALUE self) {
 
 /* call-seq: element(name,attributes)
  *
- * Adds an element with the name and attributes provided.
+ * Adds an element with the name and attributes provided. If a block is given
+ * then on closing of the block a pop() done at the close of the block.
+ *
  * - +name+ - (String) name of the element
  * - +attributes+ - (Hash) of the element
  */
@@ -440,7 +522,10 @@ builder_element(int argc, VALUE *argv, VALUE self) {
 	rb_hash_foreach(argv[1], append_attr, (VALUE)b);
     }
     // Do not close with > or /> yet. That is done with i_am_a_child() or pop().
-
+    if (rb_block_given_p()) {
+	rb_yield(self);
+	pop(b);
+    }
     return Qnil;
 }
 
@@ -529,29 +614,13 @@ builder_raw(VALUE self, VALUE text) {
     return Qnil;
 }
 
-static void
-pop(Builder b) {
-    Element	e;
-
-    if (0 > b->depth) {
-	rb_raise(ox_arg_error_class, "closed to many element");
-    }
-    e = &b->stack[b->depth];
-    b->depth--;
-    if (e->has_child) {
-	if (e->non_text_child) {
-	    append_indent(b);
-	}
-	buf_append_string(&b->buf, "</", 2);
-	buf_append_string(&b->buf, e->name, e->len);
-	buf_append(&b->buf, '>');
-	if (e->buf != e->name) {
-	    free(e->name);
-	    e->name = 0;
-	}
-    } else {
-	buf_append_string(&b->buf, "/>", 2);
-    }
+/* call-seq: to_s()
+ *
+ * Returns the JSON document string in what ever state the construction is at.
+ */
+static VALUE
+builder_to_s(VALUE self) {
+    return to_s((Builder)DATA_PTR(self));
 }
 
 /* call-seq: pop()
@@ -571,47 +640,9 @@ builder_pop(VALUE self) {
  */
 static VALUE
 builder_close(VALUE self) {
-    Builder	b = (Builder)DATA_PTR(self);
+    bclose((Builder)DATA_PTR(self));
 
-    while (0 <= b->depth) {
-	pop(b);
-    }
-    buf_append(&b->buf, '\n');
-    buf_finish(&b->buf);
-    if (NULL != b->file) {
-	fclose(b->file);
-    }
     return Qnil;
-}
-
-/* call-seq: to_s()
- *
- * Returns the JSON document string in what ever state the construction is at.
- */
-
-/* Document-method: Ox::Builder#to_s
- *
- * Returns the JSON document string in what ever state the construction is at.
- */
-extern VALUE builder_to_s(VALUE self) {
-    Builder		b = (Builder)DATA_PTR(self);
-    volatile VALUE	rstr;
-
-    if (0 != b->buf.fd) {
-	rb_raise(ox_arg_error_class, "can not create a String with a stream or file builder.");
-    }
-    if ('\n' != *(b->buf.tail - 1)) {
-	buf_append(&b->buf, '\n');
-    }
-    *b->buf.tail = '\0'; // for debugging
-    rstr = rb_str_new(b->buf.head, buf_len(&b->buf));
-
-    if ('\0' != *b->encoding) {
-#if HAS_ENCODING_SUPPORT
-	rb_enc_associate(rstr, rb_enc_find(b->encoding));
-#endif
-    }
-    return rstr;
 }
 
 /*

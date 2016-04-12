@@ -1209,6 +1209,81 @@ class Func < ::Minitest::Test
     end
   end
   
+  def test_builder_block
+    xml = Ox::Builder.new(:indent => 2) { |b|
+      b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+      b.element('one', :a => "ack", 'b' => 'back') {
+        b.element('two') {}
+        b.comment('just a comment')
+        b.element('three') {
+          b.text("my name is \"ピーター\"")
+        }
+      }
+    }
+    assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
+<one a="ack" b="back">
+  <two/>
+  <!-- just a comment --/>
+  <three>my name is &quot;ピーター&quot;</three>
+</one>
+|, xml)
+  end
+
+  def test_builder_block_file
+    filename = File.join(File.dirname(__FILE__), 'create_file_test.xml')
+    Ox::Builder.file(filename, :indent => 2) { |b|
+      b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+      b.element('one', :a => "ack", 'b' => 'back') {
+        b.element('two') {}
+        b.comment('just a comment')
+        b.element('three') {
+          b.text("my name is \"ピーター\"")
+        }
+      }
+    }    
+    xml = File.read(filename)
+    xml.force_encoding('UTF-8')
+    assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
+<one a="ack" b="back">
+  <two/>
+  <!-- just a comment --/>
+  <three>my name is &quot;ピーター&quot;</three>
+</one>
+|, xml)
+  end
+
+  def test_builder_block_io
+    IO.pipe do |r,w|
+      if fork
+        w.close
+        xml = r.read(1000)
+        xml.force_encoding('UTF-8')
+        r.close
+        assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
+<one a="ack" b="back">
+  <two/>
+  <!-- just a comment --/>
+  <three>my name is &quot;ピーター&quot;</three>
+</one>
+|, xml)
+      else
+        r.close
+        Ox::Builder.io(w, :indent => 2) { |b|
+          b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+          b.element('one', :a => "ack", 'b' => 'back') {
+            b.element('two') {}
+            b.comment('just a comment')
+            b.element('three') {
+              b.text("my name is \"ピーター\"")
+            }
+          }
+        }
+        w.close
+        Process.exit(0)
+      end
+    end
+  end
+  
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)
     puts xml if trace
