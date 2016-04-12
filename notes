@@ -10,6 +10,8 @@
 - todo
 
 - builder
+ - if not string then convert to string
+ 
  - other method aliases (with !)
 
 The Ox::Builder supports 4 approaches to building. Each example produces the

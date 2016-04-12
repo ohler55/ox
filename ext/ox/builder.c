@@ -538,6 +538,7 @@ static VALUE
 builder_comment(VALUE self, VALUE text) {
     Builder	b = (Builder)DATA_PTR(self);
 
+    rb_check_type(text, T_STRING);
     i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<!-- ", 5);
@@ -556,6 +557,7 @@ static VALUE
 builder_doctype(VALUE self, VALUE text) {
     Builder	b = (Builder)DATA_PTR(self);
 
+    rb_check_type(text, T_STRING);
     i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<!DOCTYPE ", 10);
@@ -572,10 +574,14 @@ builder_doctype(VALUE self, VALUE text) {
  */
 static VALUE
 builder_text(VALUE self, VALUE text) {
-    Builder	b = (Builder)DATA_PTR(self);
+    Builder		b = (Builder)DATA_PTR(self);
+    volatile VALUE	v = text;
 
+    if (T_STRING != rb_type(v)) {
+	v = rb_funcall(v, ox_to_s_id, 0);
+    }
     i_am_a_child(b, true);
-    append_string(&b->buf, StringValuePtr(text), RSTRING_LEN(text));
+    append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
 
     return Qnil;
 }
@@ -587,12 +593,16 @@ builder_text(VALUE self, VALUE text) {
  */
 static VALUE
 builder_cdata(VALUE self, VALUE data) {
-    Builder	b = (Builder)DATA_PTR(self);
+    Builder		b = (Builder)DATA_PTR(self);
+    volatile VALUE	v = data;
 
+    if (T_STRING != rb_type(v)) {
+	v = rb_funcall(v, ox_to_s_id, 0);
+    }
     i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<![CDATA[", 9);
-    buf_append_string(&b->buf, StringValuePtr(data), RSTRING_LEN(data));
+    buf_append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
     buf_append_string(&b->buf, "]]>", 3);
 
     return Qnil;
@@ -606,10 +616,14 @@ builder_cdata(VALUE self, VALUE data) {
  */
 static VALUE
 builder_raw(VALUE self, VALUE text) {
-    Builder	b = (Builder)DATA_PTR(self);
+    Builder		b = (Builder)DATA_PTR(self);
+    volatile VALUE	v = text;
 
+    if (T_STRING != rb_type(v)) {
+	v = rb_funcall(v, ox_to_s_id, 0);
+    }
     i_am_a_child(b, true);
-    buf_append_string(&b->buf, StringValuePtr(text), RSTRING_LEN(text));
+    buf_append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
 
     return Qnil;
 }
