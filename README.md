@@ -56,11 +56,6 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - The Ox SAX parser now supports strings as input directly without and IO wrapper.
 
-### Release 2.2.4
-
- - Changed the code to allow compilation on older compilers. No change in
-   functionality otherwise.
-
 ## Description
 
 Optimized XML (Ox), as the name implies was written to provide speed optimized
