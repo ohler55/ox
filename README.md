@@ -154,6 +154,19 @@ puts "Same? #{doc == doc2}"
 # true
 ```
 
+### HTML Parsing:
+
+Ox can be used to parse HTML with a few options changes. HTML is often loose in
+regard to conformance. For HTML parsing try these options.
+
+```ruby
+Ox.default_options = {
+    mode:   :generic,
+    effort: :tolerant,
+    smart:  true
+}
+```
+
 ### SAX XML Parsing:
 
 ```ruby
