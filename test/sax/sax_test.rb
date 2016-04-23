@@ -25,7 +25,7 @@ require 'optparse'
 require 'ox'
 
 require 'helpers'
-#require 'smart_test'
+require 'smart_test'
 
 opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
@@ -196,7 +196,8 @@ encoding = "UTF-8" ?>},
                    [:attr, :x, "57"],
                    [:attr, :y, "42"],
                    [:error, "Unexpected Character: attribute value not in quotes", 1, 22],
-                   [:attr, :z, "33"],
+                   [:attr, :z, "33/"],
+                   [:error, "Start End Mismatch: element 'top' not closed", 1, 25],
                    [:end_element, :top]])
   end
   def test_sax_element_start_end

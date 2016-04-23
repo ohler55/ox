@@ -224,7 +224,7 @@ defuse_bom(char *xml, Options options) {
     return xml;
 }
 
-/* call-seq: ox_default_options() => Hash
+/* call-seq: default_options() => Hash
  *
  * Returns the default load and dump options as a Hash. The options are
  * - _:indent_ [Fixnum] number of spaces to indent each element in an XML document
@@ -299,7 +299,7 @@ get_def_opts(VALUE self) {
     return opts;
 }
 
-/* call-seq: ox_default_options=(opts)
+/* call-seq: default_options=(opts)
  *
  * Sets the default options for load and dump.
  * - +opts+ [Hash] opts options to change
@@ -314,7 +314,8 @@ get_def_opts(VALUE self) {
  *   - _:mode_ [:object|:generic|:limited|nil] load method to use for XML
  *   - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
  *   - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
- *   - _skip_ [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
+ *   - _:skip_ [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
+ *   - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  *   - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  *   - _:strip_namespace_ [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  * *return* [nil]

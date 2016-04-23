@@ -1450,7 +1450,7 @@ read_quoted_value(SaxDrive dr) {
     while ('\0' != (c = buf_get(&dr->buf))) {
 	switch (c) {
 	case ' ':
-	case '/':
+	    //case '/':
 	case '>':
 	case '?': // for instructions
 	case '\t':
