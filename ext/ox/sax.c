@@ -54,7 +54,7 @@ static char		read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml,
 static char		read_name_token(SaxDrive dr);
 static char		read_quoted_value(SaxDrive dr);
 
-static void		end_element_cb(SaxDrive dr, VALUE name, int pos, int line, int col);
+static void		end_element_cb(SaxDrive dr, VALUE name, int pos, int line, int col, Hint h);
 
 static void		hint_clear_empty(SaxDrive dr);
 static Nv		hint_try_close(SaxDrive dr, const char *name);
@@ -181,7 +181,6 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
 #endif
     rb_gc_register_address(&dr->value_obj);
     dr->options = *options;
-    dr->hints = 0;
     dr->err = 0;
     has_init(&dr->has, handler);
 #if HAS_ENCODING_SUPPORT
@@ -423,7 +422,7 @@ parse(SaxDrive dr) {
 	for (sp = dr->stack.tail - 1; dr->stack.head <= sp; sp--) {
 	    snprintf(msg, sizeof(msg) - 1, "%selement '%s' not closed", EL_MISMATCH, sp->name);
 	    ox_sax_drive_error_at(dr, msg, dr->buf.pos, dr->buf.line, dr->buf.col);
-	    if (dr->has.end_element) {
+	    if (dr->has.end_element && (NULL == sp->hint || sp->hint->active)) {
 		VALUE       args[1];
 
 		args[0] = sp->val;
@@ -626,10 +625,10 @@ read_doctype(SaxDrive dr) {
     buf_backup(&dr->buf); /* back up to the start in case the doctype is empty */
     buf_protect(&dr->buf);
     read_delimited(dr, '>');
-    if (dr->options.smart && 0 == dr->hints) {
+    if (dr->options.smart && 0 == dr->options.hints) {
 	for (s = dr->buf.str; is_white(*s); s++) { }
 	if (0 == strncasecmp("HTML", s, 4)) {
-	    dr->hints = ox_hints_html();
+	    dr->options.hints = ox_hints_html();
 	}
     }
     *(dr->buf.tail - 1) = '\0';
@@ -848,7 +847,7 @@ read_element_start(SaxDrive dr) {
     int			pos = dr->buf.pos;
     int			line = dr->buf.line;
     int			col = dr->buf.col;
-    Hint		h = 0;
+    Hint		h = NULL;
     int			stackless = 0;
     Nv			parent = stack_peek(&dr->stack);
 
@@ -866,16 +865,16 @@ read_element_start(SaxDrive dr) {
     if (0 != parent) {
 	parent->childCnt++;
     }
-    if (dr->options.smart && 0 == dr->hints && stack_empty(&dr->stack) && 0 == strcasecmp("html", dr->buf.str)) {
-	dr->hints = ox_hints_html();
+    if (dr->options.smart && 0 == dr->options.hints && stack_empty(&dr->stack) && 0 == strcasecmp("html", dr->buf.str)) {
+	dr->options.hints = ox_hints_html();
     }
-    if (0 != dr->hints) {
+    if (NULL != dr->options.hints) {
 	hint_clear_empty(dr);
-	h = ox_hint_find(dr->hints, dr->buf.str);
-	if (0 == h) {
+	h = ox_hint_find(dr->options.hints, dr->buf.str);
+	if (NULL == h) {
 	    char	msg[256];
 
-	    snprintf(msg, sizeof(msg), "%s%s is not a valid element type for a %s document type.", INV_ELEMENT, dr->buf.str, dr->hints->name);
+	    snprintf(msg, sizeof(msg), "%s%s is not a valid element type for a %s document type.", INV_ELEMENT, dr->buf.str, dr->options.hints->name);
 	    ox_sax_drive_error(dr, msg);
 	} else {
 	    Nv	top_nv = stack_peek(&dr->stack);
@@ -885,13 +884,13 @@ read_element_start(SaxDrive dr) {
 	    }
 	    if (0 != top_nv) {
 		char	msg[256];
-
+	
 		if (!h->nest && 0 == strcasecmp(top_nv->name, h->name)) {
 		    snprintf(msg, sizeof(msg) - 1, "%s%s can not be nested in a %s document, closing previous.",
-			     INV_ELEMENT, dr->buf.str, dr->hints->name);
+			     INV_ELEMENT, dr->buf.str, dr->options.hints->name);
 		    ox_sax_drive_error(dr, msg);
 		    stack_pop(&dr->stack);
-		    end_element_cb(dr, top_nv->val, pos, line, col);
+		    end_element_cb(dr, top_nv->val, pos, line, col, top_nv->hint);
 		    top_nv = stack_peek(&dr->stack);
 		}
 		if (0 != h->parents) {
@@ -906,7 +905,7 @@ read_element_start(SaxDrive dr) {
 		    }
 		    if (!ok) {
 			snprintf(msg, sizeof(msg) - 1, "%s%s can not be a child of a %s in a %s document.",
-				 INV_ELEMENT, h->name, top_nv->name, dr->hints->name);
+				 INV_ELEMENT, h->name, top_nv->name, dr->options.hints->name);
 			ox_sax_drive_error(dr, msg);
 		    }
 		}
@@ -914,7 +913,7 @@ read_element_start(SaxDrive dr) {
 	}
     }
     name = str2sym(dr, dr->buf.str, &ename);
-    if (dr->has.start_element) {
+    if (dr->has.start_element && (NULL == h || h->active)) {
         VALUE       args[1];
 
 	if (dr->has.pos) {
@@ -941,7 +940,7 @@ read_element_start(SaxDrive dr) {
 	}
 	closed = ('/' == c);
     }
-    if (dr->has.attrs_done) {
+    if (dr->has.attrs_done && (NULL == h || h->active)) {
 	rb_funcall(dr->handler, ox_attrs_done_id, 0);
     }
     if (closed) {
@@ -949,9 +948,9 @@ read_element_start(SaxDrive dr) {
 	pos = dr->buf.pos;
 	line = dr->buf.line;
 	col = dr->buf.col;
-	end_element_cb(dr, name, pos, line, col);
+	end_element_cb(dr, name, pos, line, col, h);
     } else if (stackless) {
-	end_element_cb(dr, name, pos, line, col);
+	end_element_cb(dr, name, pos, line, col, h);
     } else if (0 != h && h->jump) {
 	stack_push(&dr->stack, ename, name, h);
 	if ('>' != c) {
@@ -992,7 +991,8 @@ read_element_end(SaxDrive dr) {
     int		line = dr->buf.line;
     int		col = dr->buf.col - 1;
     Nv		nv;
-
+    Hint	h = NULL;
+    
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
     }
@@ -1004,6 +1004,7 @@ read_element_end(SaxDrive dr) {
     nv = stack_peek(&dr->stack);
     if (0 != nv && 0 == strcmp(dr->buf.str, nv->name)) {
 	name = nv->val;
+	h = nv->hint;
 	stack_pop(&dr->stack);
     } else {
 	// Mismatched start and end
@@ -1012,9 +1013,8 @@ read_element_end(SaxDrive dr) {
 
 	if (0 == match) {
 	    // Not found so open and close element.
-	    Hint	h = ox_hint_find(dr->hints, dr->buf.str);
-
-	    if (0 != h && h->empty) {
+	    h = ox_hint_find(dr->options.hints, dr->buf.str);
+	    if (NULL != h && h->empty) {
 		// Just close normally
 		name = str2sym(dr, dr->buf.str, 0);
 		snprintf(msg, sizeof(msg) - 1, "%selement '%s' should not have a separate close element", EL_MISMATCH, dr->buf.str);
@@ -1024,7 +1024,7 @@ read_element_end(SaxDrive dr) {
 		snprintf(msg, sizeof(msg) - 1, "%selement '%s' closed but not opened", EL_MISMATCH, dr->buf.str);
 		ox_sax_drive_error_at(dr, msg, pos, line, col);
 		name = str2sym(dr, dr->buf.str, 0);
-		if (dr->has.start_element) {
+		if (dr->has.start_element && (NULL == h || h->active)) {
 		    VALUE       args[1];
 
 		    if (dr->has.pos) {
@@ -1046,6 +1046,7 @@ read_element_end(SaxDrive dr) {
 
 	    if (0 != (n2 = hint_try_close(dr, dr->buf.str))) {
 		name = n2->val;
+		h = n2->hint;
 	    } else {
 		snprintf(msg, sizeof(msg) - 1, "%selement '%s' close does not match '%s' open", EL_MISMATCH, dr->buf.str, nv->name);
 		ox_sax_drive_error_at(dr, msg, pos, line, col);
@@ -1059,15 +1060,16 @@ read_element_end(SaxDrive dr) {
 		    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
 		}
 		for (nv = stack_pop(&dr->stack); match < nv; nv = stack_pop(&dr->stack)) {
-		    if (dr->has.end_element) {
+		    if (dr->has.end_element && (NULL == nv->hint || nv->hint->active)) {
 			rb_funcall(dr->handler, ox_end_element_id, 1, nv->val);
 		    }
 		}
 		name = nv->val;
+		h = nv->hint;
 	    }
 	}
     }
-    end_element_cb(dr, name, pos, line, col);
+    end_element_cb(dr, name, pos, line, col, h);
 
     return c;
 }
@@ -1623,7 +1625,7 @@ hint_clear_empty(SaxDrive dr) {
 	    break;
 	}
 	if (nv->hint->empty) {
-	    end_element_cb(dr, nv->val, dr->buf.pos, dr->buf.line, dr->buf.col);
+	    end_element_cb(dr, nv->val, dr->buf.pos, dr->buf.line, dr->buf.col, nv->hint);
 	    stack_pop(&dr->stack);
 	} else {
 	    break;
@@ -1633,7 +1635,7 @@ hint_clear_empty(SaxDrive dr) {
 
 static Nv
 hint_try_close(SaxDrive dr, const char *name) {
-    Hint	h = ox_hint_find(dr->hints, name);
+    Hint	h = ox_hint_find(dr->options.hints, name);
     Nv		nv;
 
     if (0 == h) {
@@ -1648,7 +1650,7 @@ hint_try_close(SaxDrive dr, const char *name) {
 	    break;
 	}
 	if (nv->hint->empty) {
-	    end_element_cb(dr, nv->val, dr->buf.pos, dr->buf.line, dr->buf.col);
+	    end_element_cb(dr, nv->val, dr->buf.pos, dr->buf.line, dr->buf.col, nv->hint);
 	    dr->stack.tail = nv;
 	} else {
 	    break;
@@ -1658,8 +1660,8 @@ hint_try_close(SaxDrive dr, const char *name) {
 }
 
 static void
-end_element_cb(SaxDrive dr, VALUE name, int pos, int line, int col) {
-    if (dr->has.end_element) {
+end_element_cb(SaxDrive dr, VALUE name, int pos, int line, int col, Hint h) {
+    if (dr->has.end_element && (NULL == h || h->active)) {
 	if (dr->has.pos) {
 	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
 	}

@@ -18,6 +18,7 @@ typedef struct _SaxOptions {
     int			smart;
     SkipMode		skip;
     char		strip_ns[64];
+    Hints		hints;
 } *SaxOptions;
 
 typedef struct _SaxDrive {
@@ -28,7 +29,6 @@ typedef struct _SaxDrive {
     struct _SaxOptions	options;
     int			err;
     struct _Has		has;
-    Hints		hints;
 #if HAS_ENCODING_SUPPORT
     rb_encoding *encoding;
 #elif HAS_PRIVATE_ENCODING

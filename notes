@@ -8,9 +8,17 @@
  - rdoc --main README.md --title Ox --exclude extconf.rb lib ext/ox README.md
  
 - todo
- - buffer bug
- 
- - skip or ignore element option
+ - add call for parse_html
+  - inactive and active option for that
+   - copy and set names
+
+ - active and inactive option
+  - add only_active flag to SaxOptions
+  - inactive
+   - create hints from list
+   - when html detected, create new hint and merge
+    - free at end if allocated (not html_hints)
+    
   - pass in array of element names
   - build new hints from html hints, copy and modify skip flags
    - how about non-html?

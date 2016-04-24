@@ -5,6 +5,9 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdbool.h>
+
+#include <ruby.h>
 
 #include "sax_hint.h"
 
@@ -26,127 +29,127 @@ static const char	*table_0[] = { "table", 0 };
 static const char	*tr_0[] = { "tr", 0 };
 
 static struct _Hint	html_hint_array[] = {
-    { "a", 0, 0, 0, 0 },
-    { "abbr", 0, 0, 0, 0 },
-    { "acronym", 0, 0, 0, 0 },
-    { "address", 0, 0, 0, 0 },
-    { "applet", 0, 0, 0, 0 },
-    { "area", 1, 0, 0, map_0 },
-    { "article", 0, 0, 0, 0 },
-    { "aside", 0, 0, 0, 0 },
-    { "audio", 0, 0, 0, 0 },
-    { "b", 0, 0, 0, 0 },
-    { "base", 1, 0, 0, head_0 },
-    { "basefont", 1, 0, 0, head_0 },
-    { "bdi", 0, 0, 0, 0 },
-    { "bdo", 0, 1, 0, 0 },
-    { "big", 0, 0, 0, 0 },
-    { "blockquote", 0, 0, 0, 0 },
-    { "body", 0, 0, 0, html_0 },
-    { "br", 1, 0, 0, 0 },
-    { "button", 0, 0, 0, 0 },
-    { "canvas", 0, 0, 0, 0 },
-    { "caption", 0, 0, 0, table_0 },
-    { "center", 0, 0, 0, 0 },
-    { "cite", 0, 0, 0, 0 },
-    { "code", 0, 0, 0, 0 },
-    { "col", 1, 0, 0, colgroup_0 },
-    { "colgroup", 0, 0, 0, 0 },
-    { "command", 1, 0, 0, 0 },
-    { "datalist", 0, 0, 0, 0 },
-    { "dd", 0, 0, 0, dl_0 },
-    { "del", 0, 0, 0, 0 },
-    { "details", 0, 0, 0, 0 },
-    { "dfn", 0, 0, 0, 0 },
-    { "dialog", 0, 0, 0, dt_th_0 },
-    { "dir", 0, 0, 0, 0 },
-    { "div", 0, 1, 0, 0 },
-    { "dl", 0, 0, 0, 0 },
-    { "dt", 0, 1, 0, dl_0 },
-    { "em", 0, 0, 0, 0 },
-    { "embed", 1, 0, 0, 0 },
-    { "fieldset", 0, 0, 0, 0 },
-    { "figcaption", 0, 0, 0, figure_0 },
-    { "figure", 0, 0, 0, 0 },
-    { "font", 0, 1, 0, 0 },
-    { "footer", 0, 0, 0, 0 },
-    { "form", 0, 0, 0, 0 },
-    { "frame", 1, 0, 0, frameset_0 },
-    { "frameset", 0, 0, 0, 0 },
-    { "h1", 0, 0, 0, 0 },
-    { "h2", 0, 0, 0, 0 },
-    { "h3", 0, 0, 0, 0 },
-    { "h4", 0, 0, 0, 0 },
-    { "h5", 0, 0, 0, 0 },
-    { "h6", 0, 0, 0, 0 },
-    { "head", 0, 0, 0, html_0 },
-    { "header", 0, 0, 0, 0 },
-    { "hgroup", 0, 0, 0, 0 },
-    { "hr", 1, 0, 0, 0 },
-    { "html", 0, 0, 0, 0 },
-    { "i", 0, 0, 0, 0 },
-    { "iframe", 1, 0, 0, 0 },
-    { "img", 1, 0, 0, 0 },
-    { "input", 1, 0, 0, 0 }, // somewhere under a form_0
-    { "ins", 0, 0, 0, 0 },
-    { "kbd", 0, 0, 0, 0 },
-    { "keygen", 1, 0, 0, 0 },
-    { "label", 0, 0, 0, 0 }, // somewhere under a form_0
-    { "legend", 0, 0, 0, fieldset_0 },
-    { "li", 0, 0, 0, ol_ul_menu_0 },
-    { "link", 1, 0, 0, head_0 },
-    { "map", 0, 0, 0, 0 },
-    { "mark", 0, 0, 0, 0 },
-    { "menu", 0, 0, 0, 0 },
-    { "meta", 1, 0, 0, head_0 },
-    { "meter", 0, 0, 0, 0 },
-    { "nav", 0, 0, 0, 0 },
-    { "noframes", 0, 0, 0, 0 },
-    { "noscript", 0, 0, 0, 0 },
-    { "object", 0, 0, 0, 0 },
-    { "ol", 0, 1, 0, 0 },
-    { "optgroup", 0, 0, 0, 0 },
-    { "option", 0, 0, 0, optgroup_select_datalist_0 },
-    { "output", 0, 0, 0, 0 },
-    { "p", 0, 0, 0, 0 },
-    { "param", 1, 0, 0, 0 },
-    { "pre", 0, 0, 0, 0 },
-    { "progress", 0, 0, 0, 0 },
-    { "q", 0, 0, 0, 0 },
-    { "rp", 0, 0, 0, ruby_0 },
-    { "rt", 0, 0, 0, ruby_0 },
-    { "ruby", 0, 0, 0, 0 },
-    { "s", 0, 0, 0, 0 },
-    { "samp", 0, 0, 0, 0 },
-    { "script", 0, 0, 1, 0 },
-    { "section", 0, 1, 0, 0 },
-    { "select", 0, 0, 0, 0 },
-    { "small", 0, 0, 0, 0 },
-    { "source", 0, 0, 0, audio_video_0 },
-    { "span", 0, 1, 0, 0 },
-    { "strike", 0, 0, 0, 0 },
-    { "strong", 0, 0, 0, 0 },
-    { "style", 0, 0, 0, 0 },
-    { "sub", 0, 0, 0, 0 },
-    { "summary", 0, 0, 0, details_0 },
-    { "sup", 0, 0, 0, 0 },
-    { "table", 0, 0, 0, 0 },
-    { "tbody", 0, 0, 0, table_0 },
-    { "td", 0, 0, 0, tr_0 },
-    { "textarea", 0, 0, 0, 0 },
-    { "tfoot", 0, 0, 0, table_0 },
-    { "th", 0, 0, 0, tr_0 },
-    { "thead", 0, 0, 0, table_0 },
-    { "time", 0, 0, 0, 0 },
-    { "title", 0, 0, 0, head_0 },
-    { "tr", 0, 0, 0, table_0 },
-    { "track", 1, 0, 0, audio_video_0 },
-    { "tt", 0, 0, 0, 0 },
-    { "u", 0, 0, 0, 0 },
-    { "ul", 0, 0, 0, 0 },
-    { "var", 0, 0, 0, 0 },
-    { "video", 0, 0, 0, 0 },
-    { "wbr", 1, 0, 0, 0 },
+    { "a", false, false, false, true, NULL },
+    { "abbr", false, false, false, true, NULL },
+    { "acronym", false, false, false, true, NULL },
+    { "address", false, false, false, true, NULL },
+    { "applet", false, false, false, true, NULL },
+    { "area", true, false, false, true, map_0 },
+    { "article", false, false, false, true, NULL },
+    { "aside", false, false, false, true, NULL },
+    { "audio", false, false, false, true, NULL },
+    { "b", false, false, false, true, NULL },
+    { "base", true, false, false, true, head_0 },
+    { "basefont", true, false, false, true, head_0 },
+    { "bdi", false, false, false, true, NULL },
+    { "bdo", false, true, false, true, NULL },
+    { "big", false, false, false, true, NULL },
+    { "blockquote", false, false, false, true, NULL },
+    { "body", false, false, false, true, html_0 },
+    { "br", true, false, false, true, NULL },
+    { "button", false, false, false, true, NULL },
+    { "canvas", false, false, false, true, NULL },
+    { "caption", false, false, false, true, table_0 },
+    { "center", false, false, false, true, NULL },
+    { "cite", false, false, false, true, NULL },
+    { "code", false, false, false, true, NULL },
+    { "col", true, false, false, true, colgroup_0 },
+    { "colgroup", false, false, false, true, NULL },
+    { "command", true, false, false, true, NULL },
+    { "datalist", false, false, false, true, NULL },
+    { "dd", false, false, false, true, dl_0 },
+    { "del", false, false, false, true, NULL },
+    { "details", false, false, false, true, NULL },
+    { "dfn", false, false, false, true, NULL },
+    { "dialog", false, false, false, true, dt_th_0 },
+    { "dir", false, false, false, true, NULL },
+    { "div", false, true, false, true, NULL },
+    { "dl", false, false, false, true, NULL },
+    { "dt", false, true, false, true, dl_0 },
+    { "em", false, false, false, true, NULL },
+    { "embed", true, false, false, true, NULL },
+    { "fieldset", false, false, false, true, NULL },
+    { "figcaption", false, false, false, true, figure_0 },
+    { "figure", false, false, false, true, NULL },
+    { "font", false, true, false, true, NULL },
+    { "footer", false, false, false, true, NULL },
+    { "form", false, false, false, true, NULL },
+    { "frame", true, false, false, true, frameset_0 },
+    { "frameset", false, false, false, true, NULL },
+    { "h1", false, false, false, true, NULL },
+    { "h2", false, false, false, true, NULL },
+    { "h3", false, false, false, true, NULL },
+    { "h4", false, false, false, true, NULL },
+    { "h5", false, false, false, true, NULL },
+    { "h6", false, false, false, true, NULL },
+    { "head", false, false, false, true, html_0 },
+    { "header", false, false, false, true, NULL },
+    { "hgroup", false, false, false, true, NULL },
+    { "hr", true, false, false, true, NULL },
+    { "html", false, false, false, true, NULL },
+    { "i", false, false, false, true, NULL },
+    { "iframe", true, false, false, true, NULL },
+    { "img", true, false, false, true, NULL },
+    { "input", true, false, false, true, NULL }, // somewhere under a form_0
+    { "ins", false, false, false, true, NULL },
+    { "kbd", false, false, false, true, NULL },
+    { "keygen", true, false, false, true, NULL },
+    { "label", false, false, false, true, NULL }, // somewhere under a form_0
+    { "legend", false, false, false, true, fieldset_0 },
+    { "li", false, false, false, true, ol_ul_menu_0 },
+    { "link", true, false, false, true, head_0 },
+    { "map", false, false, false, true, NULL },
+    { "mark", false, false, false, true, NULL },
+    { "menu", false, false, false, true, NULL },
+    { "meta", true, false, false, true, head_0 },
+    { "meter", false, false, false, true, NULL },
+    { "nav", false, false, false, true, NULL },
+    { "noframes", false, false, false, true, NULL },
+    { "noscript", false, false, false, true, NULL },
+    { "object", false, false, false, true, NULL },
+    { "ol", false, true, false, true, NULL },
+    { "optgroup", false, false, false, true, NULL },
+    { "option", false, false, false, true, optgroup_select_datalist_0 },
+    { "output", false, false, false, true, NULL },
+    { "p", false, false, false, true, NULL },
+    { "param", true, false, false, true, NULL },
+    { "pre", false, false, false, true, NULL },
+    { "progress", false, false, false, true, NULL },
+    { "q", false, false, false, true, NULL },
+    { "rp", false, false, false, true, ruby_0 },
+    { "rt", false, false, false, true, ruby_0 },
+    { "ruby", false, false, false, true, NULL },
+    { "s", false, false, false, true, NULL },
+    { "samp", false, false, false, true, NULL },
+    { "script", false, false, true, true, NULL },
+    { "section", false, true, false, true, NULL },
+    { "select", false, false, false, true, NULL },
+    { "small", false, false, false, true, NULL },
+    { "source", false, false, false, true, audio_video_0 },
+    { "span", false, true, false, true, NULL },
+    { "strike", false, false, false, true, NULL },
+    { "strong", false, false, false, true, NULL },
+    { "style", false, false, false, true, NULL },
+    { "sub", false, false, false, true, NULL },
+    { "summary", false, false, false, true, details_0 },
+    { "sup", false, false, false, true, NULL },
+    { "table", false, false, false, true, NULL },
+    { "tbody", false, false, false, true, table_0 },
+    { "td", false, false, false, true, tr_0 },
+    { "textarea", false, false, false, true, NULL },
+    { "tfoot", false, false, false, true, table_0 },
+    { "th", false, false, false, true, tr_0 },
+    { "thead", false, false, false, true, table_0 },
+    { "time", false, false, false, true, NULL },
+    { "title", false, false, false, true, head_0 },
+    { "tr", false, false, false, true, table_0 },
+    { "track", true, false, false, true, audio_video_0 },
+    { "tt", false, false, false, true, NULL },
+    { "u", false, false, false, true, NULL },
+    { "ul", false, false, false, true, NULL },
+    { "var", false, false, false, true, NULL },
+    { "video", false, false, false, true, NULL },
+    { "wbr", true, false, false, true, NULL },
 };
 static struct _Hints	html_hints = {
     "HTML",
@@ -157,6 +160,26 @@ static struct _Hints	html_hints = {
 Hints
 ox_hints_html() {
     return &html_hints;
+}
+
+Hints
+ox_hints_dup(Hints h) {
+    Hints	nh = ALLOC(struct _Hints);
+
+    nh->hints = ALLOC_N(struct _Hint, h->size);
+    memcpy(nh->hints, h->hints, sizeof(struct _Hint) * h->size);
+    nh->size = h->size;
+    nh->name = h->name;
+    
+    return nh;
+}
+
+void
+ox_hints_destroy(Hints h) {
+    if (NULL != h && &html_hints != h) {
+	xfree(h->hints);
+	xfree(h);
+    }
 }
 
 Hint
@@ -189,4 +212,14 @@ ox_hint_find(Hints hints, const char *name) {
 	}
     }
     return 0;
+}
+
+void
+ox_hint_set_active(Hints hints, bool active) {
+    int		i;
+    Hint	h;
+
+    for (i = hints->size, h = hints->hints; 0 < i; i--, h++) {
+	h->active = active;
+    }
 }

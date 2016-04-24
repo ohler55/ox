@@ -1148,5 +1148,31 @@ this is not part of the xml document
                   [:end_element, :two],
                   [:end_element, :one]], handler.calls)
   end
+  
+  def test_sax_html_inactive
+    Ox::default_options = $ox_sax_options
+    handler = AllSax.new()
+    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :inactive => ["hr"])
+    assert_equal([[:start_element, :html],
+                  [:start_element, :h1],
+                  [:text, "title"],
+                  [:end_element, :h1],
+                  [:start_element, :p],
+                  [:text, "Hello"],
+                  [:end_element, :p],
+                  [:end_element, :html]], handler.calls)
+  end
+
+  def test_sax_html_active
+    Ox::default_options = $ox_sax_options
+    handler = AllSax.new()
+    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :active => ["h1","p"])
+    assert_equal([[:start_element, :h1],
+                  [:text, "title"],
+                  [:end_element, :h1],
+                  [:start_element, :p],
+                  [:text, "Hello"],
+                  [:end_element, :p]], handler.calls)
+  end
 
 end

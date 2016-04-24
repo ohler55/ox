@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -106,10 +107,12 @@ Cache	ox_attr_cache = 0;
 
 static VALUE	auto_define_sym;
 static VALUE	auto_sym;
+static VALUE	active_sym;
 static VALUE	circular_sym;
 static VALUE	convert_special_sym;
 static VALUE	effort_sym;
 static VALUE	generic_sym;
+static VALUE	inactive_sym;
 static VALUE	invalid_replace_sym;
 static VALUE	limited_sym;
 static VALUE	mode_sym;
@@ -161,6 +164,8 @@ struct _Options	 ox_default_options = {
     No,			/* allow_invalid */
     { '\0' },		/* inv_repl */
     { '\0' },		/* strip_ns */
+    NULL,		/* active */
+    NULL,		/* inactive */
 #if HAS_PRIVATE_ENCODING
     Qnil		/* rb_enc */
 #else
@@ -243,6 +248,7 @@ defuse_bom(char *xml, Options options) {
  * - _:convert_special_ [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
  * - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  * - _:strip_namespace_ [String|true|false] false or "" results in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ * 
  * *return* [Hash] all current option settings.
  *
  * Note that an indent of less than zero will result in a tight one line output
@@ -835,6 +841,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
     options.convert_special = ox_default_options.convert_special;
     options.smart = (Yes == ox_default_options.smart);
     options.skip = ox_default_options.skip;
+    options.hints = NULL;
     strcpy(options.strip_ns, ox_default_options.strip_ns);
     
     if (argc < 2) {
@@ -884,6 +891,104 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
     }
     ox_sax_parse(argv[0], argv[1], &options);
 
+    return Qnil;
+}
+
+/* call-seq: sax_html(handler, io, options)
+ *
+ * Parses an IO stream or file containing an XML document. Raises an exception
+ * if the XML is malformed or the classes specified are not valid.
+ * - +handler+ [Ox::Sax] SAX (responds to OX::Sax methods) like handler
+ * - +io+ [IO|String] IO Object to read from
+ * - +options+ [Hash] options parse options
+ *   - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
+ *   - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
+ *   - *:skip* [:skip_return|:skip_white] flag indicating the parser skips \r or collapse white space into a single space. Default (skip nothing)
+ *   - *:active* [Array] an array of strings that identify elements that are active and should trigger a callback. Not this overrides anything in the *:inactive* option.
+ *   -*:inactive* [Array] an array of strings that identify the elements that are inactive and should not trigger a callback.
+ */
+static VALUE
+sax_html(int argc, VALUE *argv, VALUE self) {
+    struct _SaxOptions	options;
+    bool		free_hints = false;
+    
+    options.symbolize = (No != ox_default_options.sym_keys);
+    options.convert_special = ox_default_options.convert_special;
+    options.smart = true;
+    options.skip = ox_default_options.skip;
+    options.hints = ox_hints_html();
+    *options.strip_ns = '\0';
+    
+    if (argc < 2) {
+	rb_raise(ox_parse_error_class, "Wrong number of arguments to sax_html.\n");
+    }
+    if (3 <= argc && rb_cHash == rb_obj_class(argv[2])) {
+	volatile VALUE	h = argv[2];
+	volatile VALUE	v;
+	
+	if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
+	    options.convert_special = (Qtrue == v);
+	}
+	if (Qnil != (v = rb_hash_lookup(h, symbolize_sym))) {
+	    options.symbolize = (Qtrue == v);
+	}
+	if (Qnil != (v = rb_hash_lookup(h, skip_sym))) {
+	    if (skip_return_sym == v) {
+		options.skip = CrSkip;
+	    } else if (skip_white_sym == v) {
+		options.skip = SpcSkip;
+	    } else if (skip_none_sym == v) {
+		options.skip = NoSkip;
+	    }
+	}
+	if (Qnil != (v = rb_hash_lookup(h, inactive_sym))) {
+	    int	cnt;
+	    
+	    Check_Type(v, T_ARRAY);
+	    cnt = (int)RARRAY_LEN(v);
+	    if (0 < cnt) {
+		volatile VALUE	*np = RARRAY_PTR(v);
+		int		i;
+		Hint		hint;
+
+		if (!free_hints) {
+		    options.hints = ox_hints_dup(options.hints);
+		    free_hints = true;
+		}
+		for (i = cnt; 0 < i; i--, np++) {
+		    if (NULL != (hint = ox_hint_find(options.hints, StringValuePtr(*np)))) {
+			hint->active = false;
+		    }
+		}
+	    }
+	}
+	if (Qnil != (v = rb_hash_lookup(h, active_sym))) {
+	    int	cnt;
+	    
+	    Check_Type(v, T_ARRAY);
+	    cnt = (int)RARRAY_LEN(v);
+	    if (0 < cnt) {
+		volatile VALUE	*np = RARRAY_PTR(v);
+		int		i;
+		Hint		hint;
+
+		if (!free_hints) {
+		    options.hints = ox_hints_dup(options.hints);
+		    free_hints = true;
+		}
+		ox_hint_set_active(options.hints, false);
+		for (i = cnt; 0 < i; i--, np++) {
+		    if (NULL != (hint = ox_hint_find(options.hints, StringValuePtr(*np)))) {
+			hint->active = true;
+		    }
+		}
+	    }
+	}
+    }
+    ox_sax_parse(argv[0], argv[1], &options);
+    if (free_hints) {
+	ox_hints_destroy(options.hints);
+    }
     return Qnil;
 }
 
@@ -1066,6 +1171,7 @@ void Init_ox() {
     rb_define_module_function(Ox, "parse", to_gen, 1);
     rb_define_module_function(Ox, "load", load_str, -1);
     rb_define_module_function(Ox, "sax_parse", sax_parse, -1);
+    rb_define_module_function(Ox, "sax_html", sax_html, -1);
 
     rb_define_module_function(Ox, "to_xml", dump, -1);
     rb_define_module_function(Ox, "dump", dump, -1);
@@ -1163,6 +1269,8 @@ void Init_ox() {
     invalid_replace_sym = ID2SYM(rb_intern("invalid_replace"));	rb_gc_register_address(&invalid_replace_sym);
     limited_sym = ID2SYM(rb_intern("limited"));			rb_gc_register_address(&limited_sym);
     mode_sym = ID2SYM(rb_intern("mode"));			rb_gc_register_address(&mode_sym);
+    active_sym = ID2SYM(rb_intern("active"));			rb_gc_register_address(&active_sym);
+    inactive_sym = ID2SYM(rb_intern("inactive"));		rb_gc_register_address(&inactive_sym);
     object_sym = ID2SYM(rb_intern("object"));			rb_gc_register_address(&object_sym);
     opt_format_sym = ID2SYM(rb_intern("opt_format"));		rb_gc_register_address(&opt_format_sym);
     optimized_sym = ID2SYM(rb_intern("optimized"));		rb_gc_register_address(&optimized_sym);

@@ -136,6 +136,8 @@ typedef struct _Options {
     char	allow_invalid;	/* YesNo */
     char	inv_repl[12];	/* max 10 valid characters, first character is the length */
     char	strip_ns[64];	/* namespace to strip, \0 is no-strip, \* is all, else only matches */
+    char	**active;	/* null terminated char* array */
+    char	**inactive;	/* null terminated char* array */
 #if HAS_ENCODING_SUPPORT
     rb_encoding	*rb_enc;
 #elif HAS_PRIVATE_ENCODING
