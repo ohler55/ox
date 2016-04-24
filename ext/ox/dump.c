@@ -533,19 +533,19 @@ dump_first_obj(VALUE obj, Out out) {
 	if ('\0' == *copts->encoding) {
 	    dump_value(out, "<?xml version=\"1.0\"?>", 21);
 	} else {
-	    cnt = sprintf(buf, "<?xml version=\"1.0\" encoding=\"%s\"?>", copts->encoding);
+	    cnt = snprintf(buf, sizeof(buf), "<?xml version=\"1.0\" encoding=\"%s\"?>", copts->encoding);
 	    dump_value(out, buf, cnt);
 	}
     }
     if (Yes == copts->with_instruct) {
-	cnt = sprintf(buf, "%s<?ox version=\"1.0\" mode=\"object\"%s%s?>",
+	cnt = snprintf(buf, sizeof(buf), "%s<?ox version=\"1.0\" mode=\"object\"%s%s?>",
 		      (out->buf < out->cur) ? "\n" : "",
 		      (Yes == copts->circular) ? " circular=\"yes\"" : ((No == copts->circular) ? " circular=\"no\"" : ""),
 		      (Yes == copts->xsd_date) ? " xsd_date=\"yes\"" : ((No == copts->xsd_date) ? " xsd_date=\"no\"" : ""));
 	dump_value(out, buf, cnt);
     }
     if (Yes == copts->with_dtd) {
-	cnt = sprintf(buf, "%s<!DOCTYPE %c SYSTEM \"ox.dtd\">", (out->buf < out->cur) ? "\n" : "", obj_class_code(obj));
+	cnt = snprintf(buf, sizeof(buf), "%s<!DOCTYPE %c SYSTEM \"ox.dtd\">", (out->buf < out->cur) ? "\n" : "", obj_class_code(obj));
 	dump_value(out, buf, cnt);
     }
     dump_obj(0, obj, 0, out);
@@ -648,7 +648,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	break;
     case T_FLOAT:
 	e.type = FloatCode;
-	cnt = sprintf(value_buf, "%0.16g", rb_num2dbl(obj)); /* used sprintf due to bug in snprintf */
+	cnt = snprintf(value_buf, sizeof(value_buf), "%0.16g", rb_num2dbl(obj));
 	out->w_start(out, &e);
 	dump_value(out, value_buf, cnt);
 	e.indent = -1;

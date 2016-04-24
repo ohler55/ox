@@ -873,9 +873,9 @@ read_element_start(SaxDrive dr) {
 	hint_clear_empty(dr);
 	h = ox_hint_find(dr->hints, dr->buf.str);
 	if (0 == h) {
-	    char	msg[100];
+	    char	msg[256];
 
-	    sprintf(msg, "%s%s is not a valid element type for a %s document type.", INV_ELEMENT, dr->buf.str, dr->hints->name);
+	    snprintf(msg, sizeof(msg), "%s%s is not a valid element type for a %s document type.", INV_ELEMENT, dr->buf.str, dr->hints->name);
 	    ox_sax_drive_error(dr, msg);
 	} else {
 	    Nv	top_nv = stack_peek(&dr->stack);

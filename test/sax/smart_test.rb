@@ -152,7 +152,6 @@ class SaxSmartTest < test_case
 
 end
 
-
 class ErrorsOnParentNormalElementTest < SaxSmartTest
 
   attr_reader :w
@@ -187,7 +186,6 @@ class ErrorsOnParentNormalElementTest < SaxSmartTest
 
 end
 
-
 class ErrorsOnParentVoidElementTest < SaxSmartTest
 
   def construct_html(el)
@@ -205,7 +203,6 @@ class ErrorsOnParentVoidElementTest < SaxSmartTest
   end
 
 end
-
 
 ##
 # A class that groups tests concerning DOCTYPE of an html document.
@@ -259,10 +256,7 @@ class SaxSmartDoctypeTest < SaxSmartTest
                   [[:error, "Case Error: expected DOCTYPE all in caps", 1, 10],
                    [:doctype, " HTML"]])
   end
-
 end
-
-
 
 ##
 # A class that groups tests concerning the normal elements of an html document.
@@ -424,8 +418,6 @@ Word
   end
 end
 
-
-
 ##
 # A class that groups tests concerning the so called void elements of an html document.
 # More info: http://www.w3.org/TR/html5/syntax.html#void-elements
@@ -502,7 +494,6 @@ class SaxSmartVoidTagTest < SaxSmartTest
 
 end
 =end
-
 
 ##
 # A class that groups tests concerning the table element. Because this element

@@ -39,6 +39,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
  - Made SAX smarter a little smarter or rather let it handle unquoted string
    with a / at the end.
 
+ - Fixed bug with reporting errors of element names that are too long.
+
 ### Release 2.4.0
 
  - Added Ox::Builder that constructs an XML string or writes XML to a stream
