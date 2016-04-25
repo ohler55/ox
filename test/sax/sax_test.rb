@@ -1166,7 +1166,7 @@ this is not part of the xml document
   def test_sax_html_active
     Ox::default_options = $ox_sax_options
     handler = AllSax.new()
-    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :active => ["h1","p"])
+    Ox.sax_html(handler, '<html class="fuzzy"><h1>title</h1><hr/><p>Hello</p></html>', :active => ["h1","p"])
     assert_equal([[:start_element, :h1],
                   [:text, "title"],
                   [:end_element, :h1],

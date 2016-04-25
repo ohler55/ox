@@ -50,7 +50,7 @@ static char		read_element_start(SaxDrive dr);
 static char		read_element_end(SaxDrive dr);
 static char		read_text(SaxDrive dr);
 static char		read_jump(SaxDrive dr, const char *pat);
-static char		read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req);
+static char		read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req, Hint h);
 static char		read_name_token(SaxDrive dr);
 static char		read_quoted_value(SaxDrive dr);
 
@@ -503,7 +503,7 @@ read_instruction(SaxDrive dr) {
     cend = dr->buf.tail;
     buf_reset(&dr->buf);
     dr->err = 0;
-    c = read_attrs(dr, c, '?', '?', is_xml, 1);
+    c = read_attrs(dr, c, '?', '?', is_xml, 1, NULL);
     if (dr->has.attrs_done) {
 	rb_funcall(dr->handler, ox_attrs_done_id, 0);
     }
@@ -934,7 +934,7 @@ read_element_start(SaxDrive dr) {
         closed = 0;
     } else {
 	buf_protect(&dr->buf);
-        c = read_attrs(dr, c, '/', '>', 0, 0);
+        c = read_attrs(dr, c, '/', '>', 0, 0, h);
 	if (is_white(c)) {
 	    c = buf_next_non_white(&dr->buf);
 	}
@@ -1260,7 +1260,7 @@ read_jump(SaxDrive dr, const char *pat) {
 }
 
 static char
-read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) {
+read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req, Hint h) {
     VALUE       name = Qnil;
     int         is_encoding = 0;
     int		pos;
@@ -1320,49 +1320,51 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req) 
 		is_encoding = 0;
 	    }
 	}
-        if (dr->has.attr_value) {
-            VALUE       args[2];
+	if (NULL == h || h->active) {
+	    if (dr->has.attr_value) {
+		VALUE       args[2];
 
-	    if (dr->has.pos) {
-		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-	    }
-	    if (dr->has.line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-	    }
-	    if (dr->has.column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-	    }
-            args[0] = name;
-            args[1] = dr->value_obj;
-            rb_funcall2(dr->handler, ox_attr_value_id, 2, args);
-	} else if (dr->has.attr) {
-            VALUE       args[2];
+		if (dr->has.pos) {
+		    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+		}
+		if (dr->has.line) {
+		    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
+		}
+		if (dr->has.column) {
+		    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
+		}
+		args[0] = name;
+		args[1] = dr->value_obj;
+		rb_funcall2(dr->handler, ox_attr_value_id, 2, args);
+	    } else if (dr->has.attr) {
+		VALUE       args[2];
 
-            args[0] = name;
-	    if (dr->options.convert_special) {
-		ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
-	    }
-            args[1] = rb_str_new2(attr_value);
+		args[0] = name;
+		if (dr->options.convert_special) {
+		    ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
+		}
+		args[1] = rb_str_new2(attr_value);
 #if HAS_ENCODING_SUPPORT
-            if (0 != dr->encoding) {
-                rb_enc_associate(args[1], dr->encoding);
-            }
+		if (0 != dr->encoding) {
+		    rb_enc_associate(args[1], dr->encoding);
+		}
 #elif HAS_PRIVATE_ENCODING
-	    if (Qnil != dr->encoding) {
-		rb_funcall(args[1], ox_force_encoding_id, 1, dr->encoding);
-	    }
+		if (Qnil != dr->encoding) {
+		    rb_funcall(args[1], ox_force_encoding_id, 1, dr->encoding);
+		}
 #endif
-	    if (dr->has.pos) {
-		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+		if (dr->has.pos) {
+		    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+		}
+		if (dr->has.line) {
+		    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
+		}
+		if (dr->has.column) {
+		    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
+		}
+		rb_funcall2(dr->handler, ox_attr_id, 2, args);
 	    }
-	    if (dr->has.line) {
-		rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-	    }
-	    if (dr->has.column) {
-		rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-	    }
-            rb_funcall2(dr->handler, ox_attr_id, 2, args);
-        }
+	}
 	if (is_white(c)) {
 	    c = buf_next_non_white(&dr->buf);
 	}
