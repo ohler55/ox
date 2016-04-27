@@ -119,31 +119,30 @@ typedef struct _CircArray {
 } *CircArray;
 
 typedef struct _Options {
-    char	encoding[64];	/* encoding, stored in the option to avoid GC invalidation in default values */
-    int		indent;		/* indention for dump, default 2 */
-    int		trace;		/* trace level */
-    char	with_dtd;	/* YesNo */
-    char	with_xml;	/* YesNo */
-    char	with_instruct;	/* YesNo */
-    char	circular;	/* YesNo */
-    char	xsd_date;	/* YesNo */
-    char	mode;		/* LoadMode */
-    char	effort;		/* Effort */
-    char	sym_keys;	/* symbolize keys */
-    char	skip;		/* skip mode */
-    char	smart;		/* YesNo sax smart mode */
-    char	convert_special;/* boolean true or false */
-    char	allow_invalid;	/* YesNo */
-    char	inv_repl[12];	/* max 10 valid characters, first character is the length */
-    char	strip_ns[64];	/* namespace to strip, \0 is no-strip, \* is all, else only matches */
-    char	**active;	/* null terminated char* array */
-    char	**inactive;	/* null terminated char* array */
+    char		encoding[64];	/* encoding, stored in the option to avoid GC invalidation in default values */
+    int			indent;		/* indention for dump, default 2 */
+    int			trace;		/* trace level */
+    char		with_dtd;	/* YesNo */
+    char		with_xml;	/* YesNo */
+    char		with_instruct;	/* YesNo */
+    char		circular;	/* YesNo */
+    char		xsd_date;	/* YesNo */
+    char		mode;		/* LoadMode */
+    char		effort;		/* Effort */
+    char		sym_keys;	/* symbolize keys */
+    char		skip;		/* skip mode */
+    char		smart;		/* YesNo sax smart mode */
+    char		convert_special;/* boolean true or false */
+    char		allow_invalid;	/* YesNo */
+    char		inv_repl[12];	/* max 10 valid characters, first character is the length */
+    char		strip_ns[64];	/* namespace to strip, \0 is no-strip, \* is all, else only matches */
+    struct _Hints	*html_hints;	/* html hints */
 #if HAS_ENCODING_SUPPORT
-    rb_encoding	*rb_enc;
+    rb_encoding		*rb_enc;
 #elif HAS_PRIVATE_ENCODING
-    VALUE	rb_enc;
+    VALUE		rb_enc;
 #else
-    void	*rb_enc;
+    void		*rb_enc;
 #endif
 } *Options;
 

@@ -182,6 +182,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
     rb_gc_register_address(&dr->value_obj);
     dr->options = *options;
     dr->err = 0;
+    dr->blocked = 0;
     has_init(&dr->has, handler);
 #if HAS_ENCODING_SUPPORT
     if ('\0' == *ox_default_options.encoding) {
@@ -422,11 +423,14 @@ parse(SaxDrive dr) {
 	for (sp = dr->stack.tail - 1; dr->stack.head <= sp; sp--) {
 	    snprintf(msg, sizeof(msg) - 1, "%selement '%s' not closed", EL_MISMATCH, sp->name);
 	    ox_sax_drive_error_at(dr, msg, dr->buf.pos, dr->buf.line, dr->buf.col);
-	    if (dr->has.end_element && (NULL == sp->hint || sp->hint->active)) {
+	    if (dr->has.end_element && 0 >= dr->blocked && (NULL == sp->hint || ActiveOverlay == sp->hint->overlay)) {
 		VALUE       args[1];
 
 		args[0] = sp->val;
 		rb_funcall2(dr->handler, ox_end_element_id, 1, args);
+	    }
+	    if (dr->blocked && NULL != sp->hint && BlockOverlay == sp->hint->overlay) {
+		dr->blocked--;
 	    }
         }
     }
@@ -668,6 +672,7 @@ read_cdata(SaxDrive dr) {
     struct _CheckPt	cp = CHECK_PT_INIT;
     Nv			parent = stack_peek(&dr->stack);
 
+    // TBD check parent overlay
     if (0 != parent) {
 	parent->childCnt++;
     }
@@ -759,6 +764,7 @@ read_comment(SaxDrive dr) {
     int			col = dr->buf.col - 4;
     struct _CheckPt	cp = CHECK_PT_INIT;
 
+    // TBD check parent overlay
     buf_backup(&dr->buf); /* back up to the start in case the cdata is empty */
     buf_protect(&dr->buf);
     while (1) {
@@ -879,6 +885,12 @@ read_element_start(SaxDrive dr) {
 	} else {
 	    Nv	top_nv = stack_peek(&dr->stack);
 
+	    if (AbortOverlay == h->overlay) {
+		return '\0';
+	    }
+	    if (BlockOverlay == h->overlay) {
+		dr->blocked++;
+	    }
 	    if (h->empty) {
 		stackless = 1;
 	    }
@@ -913,7 +925,7 @@ read_element_start(SaxDrive dr) {
 	}
     }
     name = str2sym(dr, dr->buf.str, &ename);
-    if (dr->has.start_element && (NULL == h || h->active)) {
+    if (dr->has.start_element && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay)) {
         VALUE       args[1];
 
 	if (dr->has.pos) {
@@ -940,7 +952,7 @@ read_element_start(SaxDrive dr) {
 	}
 	closed = ('/' == c);
     }
-    if (dr->has.attrs_done && (NULL == h || h->active)) {
+    if (dr->has.attrs_done && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay)) {
 	rb_funcall(dr->handler, ox_attrs_done_id, 0);
     }
     if (closed) {
@@ -1024,7 +1036,7 @@ read_element_end(SaxDrive dr) {
 		snprintf(msg, sizeof(msg) - 1, "%selement '%s' closed but not opened", EL_MISMATCH, dr->buf.str);
 		ox_sax_drive_error_at(dr, msg, pos, line, col);
 		name = str2sym(dr, dr->buf.str, 0);
-		if (dr->has.start_element && (NULL == h || h->active)) {
+		if (dr->has.start_element && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay)) {
 		    VALUE       args[1];
 
 		    if (dr->has.pos) {
@@ -1038,6 +1050,9 @@ read_element_end(SaxDrive dr) {
 		    }
 		    args[0] = name;
 		    rb_funcall2(dr->handler, ox_start_element_id, 1, args);
+		}
+		if (NULL != h && BlockOverlay == h->overlay && 0 < dr->blocked) {
+		    dr->blocked--;
 		}
 	    }
 	} else {
@@ -1060,8 +1075,11 @@ read_element_end(SaxDrive dr) {
 		    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
 		}
 		for (nv = stack_pop(&dr->stack); match < nv; nv = stack_pop(&dr->stack)) {
-		    if (dr->has.end_element && (NULL == nv->hint || nv->hint->active)) {
+		    if (dr->has.end_element && 0 >= dr->blocked && (NULL == nv->hint || ActiveOverlay == nv->hint->overlay)) {
 			rb_funcall(dr->handler, ox_end_element_id, 1, nv->val);
+		    }
+		    if (NULL != nv->hint && BlockOverlay == nv->hint->overlay && 0 < dr->blocked) {
+			dr->blocked--;
 		    }
 		}
 		name = nv->val;
@@ -1084,6 +1102,7 @@ read_text(SaxDrive dr) {
     Nv		parent = stack_peek(&dr->stack);
     int		allWhite = 1;
 
+    // TBD check parent overlay
     buf_backup(&dr->buf);
     buf_protect(&dr->buf);
     while ('<' != (c = buf_get(&dr->buf))) {
@@ -1230,6 +1249,7 @@ read_jump(SaxDrive dr, const char *pat) {
     if (0 != parent) {
 	parent->childCnt++;
     }
+    // TBD check parent overlay
     if (dr->has.text) {
         args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
@@ -1320,7 +1340,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req, 
 		is_encoding = 0;
 	    }
 	}
-	if (NULL == h || h->active) {
+	if (0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay)) {
 	    if (dr->has.attr_value) {
 		VALUE       args[2];
 
@@ -1663,7 +1683,7 @@ hint_try_close(SaxDrive dr, const char *name) {
 
 static void
 end_element_cb(SaxDrive dr, VALUE name, int pos, int line, int col, Hint h) {
-    if (dr->has.end_element && (NULL == h || h->active)) {
+    if (dr->has.end_element && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay)) {
 	if (dr->has.pos) {
 	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
 	}
@@ -1674,5 +1694,8 @@ end_element_cb(SaxDrive dr, VALUE name, int pos, int line, int col, Hint h) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
 	}
 	rb_funcall(dr->handler, ox_end_element_id, 1, name);
+    }
+    if (NULL != h && BlockOverlay == h->overlay && 0 < dr->blocked) {
+	dr->blocked--;
     }
 }

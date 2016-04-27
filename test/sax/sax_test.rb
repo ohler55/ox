@@ -1152,7 +1152,24 @@ this is not part of the xml document
   def test_sax_html_inactive
     Ox::default_options = $ox_sax_options
     handler = AllSax.new()
-    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :inactive => ["hr"])
+    
+    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => {'hr'=>:inactive})
+    assert_equal([[:start_element, :html],
+                  [:start_element, :h1],
+                  [:text, "title"],
+                  [:end_element, :h1],
+                  [:start_element, :p],
+                  [:text, "Hello"],
+                  [:end_element, :p],
+                  [:end_element, :html]], handler.calls)
+  end
+
+  def test_sax_html_overlay_mod
+    Ox::default_options = $ox_sax_options
+    handler = AllSax.new()
+    overlay = Ox.sax_html_overlay()
+    overlay['hr'] = :inactive
+    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => overlay)
     assert_equal([[:start_element, :html],
                   [:start_element, :h1],
                   [:text, "title"],
@@ -1166,7 +1183,12 @@ this is not part of the xml document
   def test_sax_html_active
     Ox::default_options = $ox_sax_options
     handler = AllSax.new()
-    Ox.sax_html(handler, '<html class="fuzzy"><h1>title</h1><hr/><p>Hello</p></html>', :active => ["h1","p"])
+    overlay = Ox.sax_html_overlay()
+    overlay.each_key { |k| overlay[k] = :inactive }
+    overlay['h1'] = :active
+    overlay['p'] = :active
+
+    Ox.sax_html(handler, '<html class="fuzzy"><h1>title</h1><hr/><p>Hello</p></html>', :overlay => overlay)
     assert_equal([[:start_element, :h1],
                   [:text, "title"],
                   [:end_element, :h1],
@@ -1175,4 +1197,6 @@ this is not part of the xml document
                   [:end_element, :p]], handler.calls)
   end
 
+  # TBD other overlay values
+  # TBD default_options overlays
 end

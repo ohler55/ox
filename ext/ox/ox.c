@@ -105,9 +105,11 @@ Cache	ox_symbol_cache = 0;
 Cache	ox_class_cache = 0;
 Cache	ox_attr_cache = 0;
 
+static VALUE	abort_sym;
+static VALUE	active_sym;
 static VALUE	auto_define_sym;
 static VALUE	auto_sym;
-static VALUE	active_sym;
+static VALUE	block_sym;
 static VALUE	circular_sym;
 static VALUE	convert_special_sym;
 static VALUE	effort_sym;
@@ -117,8 +119,10 @@ static VALUE	invalid_replace_sym;
 static VALUE	limited_sym;
 static VALUE	mode_sym;
 static VALUE	object_sym;
+static VALUE	off_sym;
 static VALUE	opt_format_sym;
 static VALUE	optimized_sym;
+static VALUE	overlay_sym;
 static VALUE	skip_none_sym;
 static VALUE	skip_return_sym;
 static VALUE	skip_sym;
@@ -164,8 +168,7 @@ struct _Options	 ox_default_options = {
     No,			/* allow_invalid */
     { '\0' },		/* inv_repl */
     { '\0' },		/* strip_ns */
-    NULL,		/* active */
-    NULL,		/* inactive */
+    NULL,		/* html_hints */
 #if HAS_PRIVATE_ENCODING
     Qnil		/* rb_enc */
 #else
@@ -229,6 +232,27 @@ defuse_bom(char *xml, Options options) {
     return xml;
 }
 
+static VALUE
+hints_to_overlay(Hints hints) {
+    volatile VALUE	overlay = rb_hash_new();
+    Hint		h;
+    int			i;
+    VALUE		ov;
+    
+    for (i = hints->size, h = hints->hints; 0 < i; i--, h++) {
+	switch (h->overlay) {
+	case InactiveOverlay:	ov = inactive_sym;	break;
+	case BlockOverlay:	ov = block_sym;		break;
+	case OffOverlay:	ov = off_sym;		break;
+	case AbortOverlay:	ov = abort_sym;		break;
+	case ActiveOverlay:
+	default:		ov = active_sym;	break;
+	}
+	rb_hash_aset(overlay, rb_str_new2(h->name), ov);
+    }    
+    return overlay;
+}
+
 /* call-seq: default_options() => Hash
  *
  * Returns the default load and dump options as a Hash. The options are
@@ -248,6 +272,12 @@ defuse_bom(char *xml, Options options) {
  * - _:convert_special_ [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
  * - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  * - _:strip_namespace_ [String|true|false] false or "" results in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ * - _:overlay_ [Hash] a Hash of keys that match html element names and values that are one of
+ *   - _:active_ - make the normal callback for the element
+ *   - _:inactive_ - do not make the element start, end, or attribute callbacks for this element only
+ *   - _:block_ - block this and all children callbacks
+ *   - _:off_ - block this element and it's children unless the child element is active
+ *   - _:abort_ - abort the html processing and return
  * 
  * *return* [Hash] all current option settings.
  *
@@ -302,7 +332,50 @@ get_def_opts(VALUE self) {
     } else {
 	rb_hash_aset(opts, strip_namespace_sym, rb_str_new(ox_default_options.strip_ns, strlen(ox_default_options.strip_ns)));
     }
+    if (NULL == ox_default_options.html_hints) {
+	rb_hash_aset(opts, overlay_sym, hints_to_overlay(ox_hints_html()));
+    } else {
+	rb_hash_aset(opts, overlay_sym, hints_to_overlay(ox_default_options.html_hints));
+    }
     return opts;
+}
+
+static int
+set_overlay(VALUE key, VALUE value, VALUE ctx) {
+    Hints	hints = (Hints)ctx;
+    Hint	hint;
+    
+    if (NULL != (hint = ox_hint_find(hints, StringValuePtr(key)))) {
+	if (active_sym == value) {
+	    hint->overlay = ActiveOverlay;
+	} else if (inactive_sym == value) {
+	    hint->overlay = InactiveOverlay;
+	} else if (block_sym == value) {
+	    hint->overlay = BlockOverlay;
+	} else if (off_sym == value) {
+	    hint->overlay = OffOverlay;
+	} else if (abort_sym == value) {
+	    hint->overlay = AbortOverlay;
+	}
+    }
+    return ST_CONTINUE;
+}
+
+/* call-seq: sax_html_overlay() => Hash
+ *
+ * Returns an overlay hash that can be modified and used as an overlay in the
+ * default options or in the sax_html() function call. Values for the keys are:
+ *   - _:active_ - make the normal callback for the element
+ *   - _:inactive_ - do not make the element start, end, or attribute callbacks for this element only
+ *   - _:block_ - block this and all children callbacks
+ *   - _:off_ - block this element and it's children unless the child element is active
+ *   - _:abort_ - abort the html processing and return
+ *
+ * *return* [Hash] default SAX HTML settings
+ */
+static VALUE
+sax_html_overlay(VALUE self) {
+    return hints_to_overlay(ox_hints_html());
 }
 
 /* call-seq: default_options=(opts)
@@ -324,6 +397,13 @@ get_def_opts(VALUE self) {
  *   - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  *   - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  *   - _:strip_namespace_ [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ * - _:overlay_ [Hash] a Hash of keys that match html element names and values that are one of
+ *   - _:active_ - make the normal callback for the element
+ *   - _:inactive_ - do not make the element start, end, or attribute callbacks for this element only
+ *   - _:block_ - block this and all children callbacks
+ *   - _:off_ - block this element and it's children unless the child element is active
+ *   - _:abort_ - abort the html processing and return
+ *
  * *return* [nil]
  */
 static VALUE
@@ -466,6 +546,24 @@ set_def_opts(VALUE self, VALUE opts) {
 	    *o->attr = No;
 	} else {
 	    rb_raise(ox_parse_error_class, "%s must be true or false.\n", rb_id2name(SYM2ID(o->sym)));
+	}
+    }
+    v = rb_hash_aref(opts, overlay_sym);
+    if (Qnil == v) {
+	ox_hints_destroy(ox_default_options.html_hints);
+	ox_default_options.html_hints = NULL;
+    } else {
+	int	cnt;
+
+	Check_Type(v, T_HASH);
+	cnt = (int)RHASH_SIZE(v);
+	if (0 == cnt) {
+	    ox_hints_destroy(ox_default_options.html_hints);
+	    ox_default_options.html_hints = NULL;
+	} else {
+	    ox_hints_destroy(ox_default_options.html_hints);
+	    ox_default_options.html_hints = ox_hints_dup(ox_hints_html());
+	    rb_hash_foreach(v, set_overlay, (VALUE)ox_default_options.html_hints);
 	}
     }
     return Qnil;
@@ -904,8 +1002,12 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
  *   - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
  *   - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
  *   - *:skip* [:skip_return|:skip_white] flag indicating the parser skips \r or collapse white space into a single space. Default (skip nothing)
- *   - *:active* [Array] an array of strings that identify elements that are active and should trigger a callback. Not this overrides anything in the *:inactive* option.
- *   -*:inactive* [Array] an array of strings that identify the elements that are inactive and should not trigger a callback.
+ *   - *:overlay* [Hash] a Hash of keys that match html element names and values that are one of
+ *     - _:active_ - make the normal callback for the element
+ *     - _:inactive_ - do not make the element start, end, or attribute callbacks for this element only
+ *     - _:block_ - block this and all children callbacks
+ *     - _:off_ - block this element and it's children unless the child element is active
+ *     - _:abort_ - abort the html processing and return
  */
 static VALUE
 sax_html(int argc, VALUE *argv, VALUE self) {
@@ -916,7 +1018,10 @@ sax_html(int argc, VALUE *argv, VALUE self) {
     options.convert_special = ox_default_options.convert_special;
     options.smart = true;
     options.skip = ox_default_options.skip;
-    options.hints = ox_hints_html();
+    options.hints = ox_default_options.html_hints;
+    if (NULL == options.hints) {
+	options.hints = ox_hints_html();
+    }
     *options.strip_ns = '\0';
     
     if (argc < 2) {
@@ -941,47 +1046,17 @@ sax_html(int argc, VALUE *argv, VALUE self) {
 		options.skip = NoSkip;
 	    }
 	}
-	if (Qnil != (v = rb_hash_lookup(h, inactive_sym))) {
+	if (Qnil != (v = rb_hash_lookup(h, overlay_sym))) {
 	    int	cnt;
 	    
-	    Check_Type(v, T_ARRAY);
-	    cnt = (int)RARRAY_LEN(v);
-	    if (0 < cnt) {
-		volatile VALUE	*np = RARRAY_PTR(v);
-		int		i;
-		Hint		hint;
-
-		if (!free_hints) {
-		    options.hints = ox_hints_dup(options.hints);
-		    free_hints = true;
-		}
-		for (i = cnt; 0 < i; i--, np++) {
-		    if (NULL != (hint = ox_hint_find(options.hints, StringValuePtr(*np)))) {
-			hint->active = false;
-		    }
-		}
-	    }
-	}
-	if (Qnil != (v = rb_hash_lookup(h, active_sym))) {
-	    int	cnt;
-	    
-	    Check_Type(v, T_ARRAY);
-	    cnt = (int)RARRAY_LEN(v);
-	    if (0 < cnt) {
-		volatile VALUE	*np = RARRAY_PTR(v);
-		int		i;
-		Hint		hint;
-
-		if (!free_hints) {
-		    options.hints = ox_hints_dup(options.hints);
-		    free_hints = true;
-		}
-		ox_hint_set_active(options.hints, false);
-		for (i = cnt; 0 < i; i--, np++) {
-		    if (NULL != (hint = ox_hint_find(options.hints, StringValuePtr(*np)))) {
-			hint->active = true;
-		    }
-		}
+	    Check_Type(v, T_HASH);
+	    cnt = (int)RHASH_SIZE(v);
+	    if (0 == cnt) {
+		options.hints = ox_hints_html();
+	    } else {
+		options.hints = ox_hints_dup(options.hints);
+		free_hints = true;
+		rb_hash_foreach(v, set_overlay, (VALUE)options.hints);
 	    }
 	}
     }
@@ -1179,6 +1254,8 @@ void Init_ox() {
     rb_define_module_function(Ox, "load_file", load_file, -1);
     rb_define_module_function(Ox, "to_file", to_file, -1);
 
+    rb_define_module_function(Ox, "sax_html_overlay", sax_html_overlay, 0);
+    
     ox_init_builder(Ox);
     
     rb_require("time");
@@ -1258,32 +1335,36 @@ void Init_ox() {
     ox_stringio_class = rb_const_get(rb_cObject, rb_intern("StringIO"));
     ox_bigdecimal_class = rb_const_get(rb_cObject, rb_intern("BigDecimal"));
 
+    abort_sym = ID2SYM(rb_intern("abort"));			rb_gc_register_address(&abort_sym);
+    active_sym = ID2SYM(rb_intern("active"));			rb_gc_register_address(&active_sym);
     auto_define_sym = ID2SYM(rb_intern("auto_define"));		rb_gc_register_address(&auto_define_sym);
     auto_sym = ID2SYM(rb_intern("auto"));			rb_gc_register_address(&auto_sym);
+    block_sym = ID2SYM(rb_intern("block"));			rb_gc_register_address(&block_sym);
     circular_sym = ID2SYM(rb_intern("circular"));		rb_gc_register_address(&circular_sym);
     convert_special_sym = ID2SYM(rb_intern("convert_special")); rb_gc_register_address(&convert_special_sym);
     effort_sym = ID2SYM(rb_intern("effort"));			rb_gc_register_address(&effort_sym);
     generic_sym = ID2SYM(rb_intern("generic"));			rb_gc_register_address(&generic_sym);
-    ox_indent_sym = ID2SYM(rb_intern("indent"));		rb_gc_register_address(&ox_indent_sym);
-    ox_size_sym = ID2SYM(rb_intern("size"));			rb_gc_register_address(&ox_size_sym);
+    inactive_sym = ID2SYM(rb_intern("inactive"));		rb_gc_register_address(&inactive_sym);
     invalid_replace_sym = ID2SYM(rb_intern("invalid_replace"));	rb_gc_register_address(&invalid_replace_sym);
     limited_sym = ID2SYM(rb_intern("limited"));			rb_gc_register_address(&limited_sym);
     mode_sym = ID2SYM(rb_intern("mode"));			rb_gc_register_address(&mode_sym);
-    active_sym = ID2SYM(rb_intern("active"));			rb_gc_register_address(&active_sym);
-    inactive_sym = ID2SYM(rb_intern("inactive"));		rb_gc_register_address(&inactive_sym);
     object_sym = ID2SYM(rb_intern("object"));			rb_gc_register_address(&object_sym);
+    off_sym = ID2SYM(rb_intern("off"));				rb_gc_register_address(&off_sym);
     opt_format_sym = ID2SYM(rb_intern("opt_format"));		rb_gc_register_address(&opt_format_sym);
     optimized_sym = ID2SYM(rb_intern("optimized"));		rb_gc_register_address(&optimized_sym);
+    overlay_sym = ID2SYM(rb_intern("overlay"));			rb_gc_register_address(&overlay_sym);
     ox_encoding_sym = ID2SYM(rb_intern("encoding"));		rb_gc_register_address(&ox_encoding_sym);
-    ox_version_sym = ID2SYM(rb_intern("version"));		rb_gc_register_address(&ox_version_sym);
+    ox_indent_sym = ID2SYM(rb_intern("indent"));		rb_gc_register_address(&ox_indent_sym);
+    ox_size_sym = ID2SYM(rb_intern("size"));			rb_gc_register_address(&ox_size_sym);
     ox_standalone_sym = ID2SYM(rb_intern("standalone"));	rb_gc_register_address(&ox_standalone_sym);
+    ox_version_sym = ID2SYM(rb_intern("version"));		rb_gc_register_address(&ox_version_sym);
     skip_none_sym = ID2SYM(rb_intern("skip_none"));		rb_gc_register_address(&skip_none_sym);
     skip_return_sym = ID2SYM(rb_intern("skip_return"));		rb_gc_register_address(&skip_return_sym);
     skip_sym = ID2SYM(rb_intern("skip"));			rb_gc_register_address(&skip_sym);
-    strip_namespace_sym = ID2SYM(rb_intern("strip_namespace"));	rb_gc_register_address(&strip_namespace_sym);
     skip_white_sym = ID2SYM(rb_intern("skip_white"));		rb_gc_register_address(&skip_white_sym);
     smart_sym = ID2SYM(rb_intern("smart"));			rb_gc_register_address(&smart_sym);
     strict_sym = ID2SYM(rb_intern("strict"));			rb_gc_register_address(&strict_sym);
+    strip_namespace_sym = ID2SYM(rb_intern("strip_namespace"));	rb_gc_register_address(&strip_namespace_sym);
     symbolize_keys_sym = ID2SYM(rb_intern("symbolize_keys"));	rb_gc_register_address(&symbolize_keys_sym);
     symbolize_sym = ID2SYM(rb_intern("symbolize"));		rb_gc_register_address(&symbolize_sym);
     tolerant_sym = ID2SYM(rb_intern("tolerant"));		rb_gc_register_address(&tolerant_sym);

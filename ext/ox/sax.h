@@ -28,6 +28,7 @@ typedef struct _SaxDrive {
     VALUE		value_obj;
     struct _SaxOptions	options;
     int			err;
+    int			blocked;
     struct _Has		has;
 #if HAS_ENCODING_SUPPORT
     rb_encoding *encoding;
