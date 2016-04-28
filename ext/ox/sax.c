@@ -183,6 +183,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
     dr->options = *options;
     dr->err = 0;
     dr->blocked = 0;
+    dr->abort = false;
     has_init(&dr->has, handler);
 #if HAS_ENCODING_SUPPORT
     if ('\0' == *ox_default_options.encoding) {
@@ -355,7 +356,7 @@ parse(SaxDrive dr) {
 		break;
 	    case '/': /* element end */
 		parent = stack_peek(&dr->stack);
-		if (0 != parent && 0 == parent->childCnt && dr->has.text) {
+		if (0 != parent && 0 == parent->childCnt && dr->has.text && !dr->blocked) {
 		    VALUE	args[1];
 		    int		pos = dr->buf.pos;
 		    int		line = dr->buf.line;
@@ -407,6 +408,9 @@ parse(SaxDrive dr) {
 	}
     }
  DONE:
+    if (dr->abort) {
+	return;
+    }
     if (dr->stack.head < dr->stack.tail) {
 	char	msg[256];
 	Nv	sp;
@@ -720,29 +724,31 @@ read_cdata(SaxDrive dr) {
 	}
     }
  CB:
-    if (dr->has.cdata) {
-        VALUE       args[1];
+    if (!dr->blocked && (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay)) {
+	if (dr->has.cdata) {
+	    VALUE       args[1];
 
-        args[0] = rb_str_new2(dr->buf.str);
+	    args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
-        if (0 != dr->encoding) {
-            rb_enc_associate(args[0], dr->encoding);
-        }
+	    if (0 != dr->encoding) {
+		rb_enc_associate(args[0], dr->encoding);
+	    }
 #elif HAS_PRIVATE_ENCODING
-        if (Qnil != dr->encoding) {
-	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
-        }
+	    if (Qnil != dr->encoding) {
+		rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
+	    }
 #endif
-	if (dr->has.pos) {
-	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	    if (dr->has.pos) {
+		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	    }
+	    if (dr->has.line) {
+		rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
+	    }
+	    if (dr->has.column) {
+		rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
+	    }
+	    rb_funcall2(dr->handler, ox_cdata_id, 1, args);
 	}
-	if (dr->has.line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-	}
-	if (dr->has.column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-	}
-        rb_funcall2(dr->handler, ox_cdata_id, 1, args);
     }
     if ('\0' != zero) {
 	*(dr->buf.tail - 1) = zero;
@@ -764,7 +770,6 @@ read_comment(SaxDrive dr) {
     int			col = dr->buf.col - 4;
     struct _CheckPt	cp = CHECK_PT_INIT;
 
-    // TBD check parent overlay
     buf_backup(&dr->buf); /* back up to the start in case the cdata is empty */
     buf_protect(&dr->buf);
     while (1) {
@@ -809,29 +814,33 @@ read_comment(SaxDrive dr) {
 	}
     }
  CB:
-    if (dr->has.comment) {
-        VALUE       args[1];
+    // TBD check parent overlay
+    if (dr->has.comment && !dr->blocked) {
+        VALUE	args[1];
+	Nv	parent = stack_peek(&dr->stack);
 
-        args[0] = rb_str_new2(dr->buf.str);
+	if (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay) {
+	    args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
-        if (0 != dr->encoding) {
-            rb_enc_associate(args[0], dr->encoding);
-        }
+	    if (0 != dr->encoding) {
+		rb_enc_associate(args[0], dr->encoding);
+	    }
 #elif HAS_PRIVATE_ENCODING
-        if (Qnil != dr->encoding) {
-	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
-        }
+	    if (Qnil != dr->encoding) {
+		rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
+	    }
 #endif
-	if (dr->has.pos) {
-	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	    if (dr->has.pos) {
+		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	    }
+	    if (dr->has.line) {
+		rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
+	    }
+	    if (dr->has.column) {
+		rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
+	    }
+	    rb_funcall2(dr->handler, ox_comment_id, 1, args);
 	}
-	if (dr->has.line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-	}
-	if (dr->has.column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-	}
-        rb_funcall2(dr->handler, ox_comment_id, 1, args);
     }
     if ('\0' != zero) {
 	*(dr->buf.tail - 1) = zero;
@@ -886,6 +895,7 @@ read_element_start(SaxDrive dr) {
 	    Nv	top_nv = stack_peek(&dr->stack);
 
 	    if (AbortOverlay == h->overlay) {
+		dr->abort = true;
 		return '\0';
 	    }
 	    if (BlockOverlay == h->overlay) {
@@ -1102,7 +1112,6 @@ read_text(SaxDrive dr) {
     Nv		parent = stack_peek(&dr->stack);
     int		allWhite = 1;
 
-    // TBD check parent overlay
     buf_backup(&dr->buf);
     buf_protect(&dr->buf);
     while ('<' != (c = buf_get(&dr->buf))) {
@@ -1140,52 +1149,54 @@ read_text(SaxDrive dr) {
     if (0 != parent) {
 	parent->childCnt++;
     }
-    if (dr->has.value) {
-	if (dr->has.pos) {
-	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-	}
-	if (dr->has.line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-	}
-	if (dr->has.column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-	}
-	*args = dr->value_obj;
-        rb_funcall2(dr->handler, ox_value_id, 1, args);
-    } else if (dr->has.text) {
-        if (dr->options.convert_special) {
-            ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
-        }
-	switch (dr->options.skip) {
-	case CrSkip:
-	    buf_collapse_return(dr->buf.str);
-	    break;
-	case SpcSkip:
-	    buf_collapse_white(dr->buf.str);
-	    break;
-	default:
-	    break;
-	}
-        args[0] = rb_str_new2(dr->buf.str);
+    if (!dr->blocked && (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay)) {
+	if (dr->has.value) {
+	    if (dr->has.pos) {
+		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	    }
+	    if (dr->has.line) {
+		rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
+	    }
+	    if (dr->has.column) {
+		rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
+	    }
+	    *args = dr->value_obj;
+	    rb_funcall2(dr->handler, ox_value_id, 1, args);
+	} else if (dr->has.text) {
+	    if (dr->options.convert_special) {
+		ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
+	    }
+	    switch (dr->options.skip) {
+	    case CrSkip:
+		buf_collapse_return(dr->buf.str);
+		break;
+	    case SpcSkip:
+		buf_collapse_white(dr->buf.str);
+		break;
+	    default:
+		break;
+	    }
+	    args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
-        if (0 != dr->encoding) {
-            rb_enc_associate(args[0], dr->encoding);
-        }
+	    if (0 != dr->encoding) {
+		rb_enc_associate(args[0], dr->encoding);
+	    }
 #elif HAS_PRIVATE_ENCODING
-        if (Qnil != dr->encoding) {
-	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
-        }
+	    if (Qnil != dr->encoding) {
+		rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
+	    }
 #endif
-	if (dr->has.pos) {
-	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	    if (dr->has.pos) {
+		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	    }
+	    if (dr->has.line) {
+		rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
+	    }
+	    if (dr->has.column) {
+		rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
+	    }
+	    rb_funcall2(dr->handler, ox_text_id, 1, args);
 	}
-	if (dr->has.line) {
-	    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-	}
-	if (dr->has.column) {
-	    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-	}
-        rb_funcall2(dr->handler, ox_text_id, 1, args);
     }
     dr->buf.str = 0;
 
@@ -1250,7 +1261,7 @@ read_jump(SaxDrive dr, const char *pat) {
 	parent->childCnt++;
     }
     // TBD check parent overlay
-    if (dr->has.text) {
+    if (dr->has.text && !dr->blocked) {
         args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
         if (0 != dr->encoding) {

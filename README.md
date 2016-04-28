@@ -41,6 +41,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Fixed bug with reporting errors of element names that are too long.
 
+ - Added overlay feature to give control over which elements generate callbacks
+   with the SAX parser.
+
 ### Release 2.4.0
 
  - Added Ox::Builder that constructs an XML string or writes XML to a stream

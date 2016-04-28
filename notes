@@ -8,10 +8,8 @@
  - rdoc --main README.md --title Ox --exclude extconf.rb lib ext/ox README.md
  
 - todo
- - Ox.sax_html_overlay ()
  - sax.c
   - handle off and inactive correctly
- - add to defaults
 
 Ox.sax_html_overlay - copy of basic
 

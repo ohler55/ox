@@ -6,6 +6,8 @@
 #ifndef __OX_SAX_H__
 #define __OX_SAX_H__
 
+#include <stdbool.h>
+
 #include "sax_buf.h"
 #include "sax_has.h"
 #include "sax_stack.h"
@@ -29,6 +31,7 @@ typedef struct _SaxDrive {
     struct _SaxOptions	options;
     int			err;
     int			blocked;
+    bool		abort;
     struct _Has		has;
 #if HAS_ENCODING_SUPPORT
     rb_encoding *encoding;
