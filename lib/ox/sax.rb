@@ -46,6 +46,7 @@ module Ox
   #    def value(value); end
   #    def start_element(name); end
   #    def end_element(name); end
+  #    def abort(name); end
   #
   # Initializing _line_ attribute in the initializer will cause that variable to
   # be updated before each callback with the XML line number. The same is true
@@ -102,6 +103,9 @@ module Ox
     end
     
     def error(message, line, column)
+    end
+
+    def abort(name)
     end
     
   end # Sax

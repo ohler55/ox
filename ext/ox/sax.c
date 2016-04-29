@@ -895,6 +895,12 @@ read_element_start(SaxDrive dr) {
 	    Nv	top_nv = stack_peek(&dr->stack);
 
 	    if (AbortOverlay == h->overlay) {
+		if (rb_respond_to(dr->handler, ox_abort_id)) {
+		    VALUE	args[1];
+
+		    args[0] = str2sym(dr, dr->buf.str, NULL);
+		    rb_funcall2(dr->handler, ox_abort_id, 1, args);
+		}
 		dr->abort = true;
 		return '\0';
 	    }

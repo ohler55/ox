@@ -1247,7 +1247,7 @@ this is not part of the xml document
                   [:end_element, :html]], handler.calls)
   end
 
-    def test_sax_html_inactive_full_map
+  def test_sax_html_inactive_full_map
     Ox::default_options = $ox_sax_options
     handler = AllSax.new()
     overlay = Ox.sax_html_overlay()
@@ -1265,8 +1265,9 @@ this is not part of the xml document
                   [:end_element, :tr],
                   [:end_element, :html]], handler.calls)
   end
+  
 
-    def test_sax_html_abort
+  def test_sax_html_abort
     Ox::default_options = $ox_sax_options
     handler = AllSax.new()
     overlay = Ox.sax_html_overlay()
@@ -1276,7 +1277,9 @@ this is not part of the xml document
     assert_equal([[:start_element, :html],
                   [:start_element, :h1],
                   [:text, "title"],
-                  [:end_element, :h1]], handler.calls)
+                  [:end_element, :h1],
+                  [:abort, :table],
+                 ], handler.calls)
   end
 
 end

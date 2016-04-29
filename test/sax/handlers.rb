@@ -52,6 +52,10 @@ class AllSax < StartSax
   def error(message, line, column)
     @calls << [:error, message, line, column]
   end
+
+  def abort(name)
+    @calls << [:abort, name]
+  end
 end
 
 class LineColSax < StartSax

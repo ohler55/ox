@@ -27,6 +27,7 @@ void Init_ox();
 
 VALUE	 Ox = Qnil;
 
+ID	ox_abort_id;
 ID	ox_at_column_id;
 ID	ox_at_content_id;
 ID	ox_at_id;
@@ -1263,6 +1264,7 @@ void Init_ox() {
     rb_require("bigdecimal");
     rb_require("stringio");
 
+    ox_abort_id = rb_intern("abort");
     ox_at_column_id = rb_intern("@column");
     ox_at_content_id = rb_intern("@content");
     ox_at_id = rb_intern("at");

@@ -172,6 +172,7 @@ extern struct _Options	ox_default_options;
 
 extern VALUE	Ox;
 
+extern ID	ox_abort_id;
 extern ID	ox_at_column_id;
 extern ID	ox_at_content_id;
 extern ID	ox_at_id;
