@@ -8,10 +8,8 @@
  - rdoc --main README.md --title Ox --exclude extconf.rb lib ext/ox README.md
  
 - todo
- - sax.c
- - element locate wild include self
  
- - add hints to parse.c
+ - add hints and overaly to parse.c
 
  - continuous sax parser
   - parse input stream and continue waiting for next one
