@@ -132,7 +132,14 @@ module Ox
       return [self] if path.nil?
       found = []
       pa = path.split('/')
-      alocate(pa, found)
+      if '*' == path[0]
+        # a bit of a hack but it allows self to be checked as well
+        e = Element.new('')
+        e << self
+        e.alocate(pa, found)
+      else
+        alocate(pa, found)
+      end
       found
     end
     

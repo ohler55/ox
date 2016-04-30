@@ -334,7 +334,8 @@ get_def_opts(VALUE self) {
 	rb_hash_aset(opts, strip_namespace_sym, rb_str_new(ox_default_options.strip_ns, strlen(ox_default_options.strip_ns)));
     }
     if (NULL == ox_default_options.html_hints) {
-	rb_hash_aset(opts, overlay_sym, hints_to_overlay(ox_hints_html()));
+	//rb_hash_aset(opts, overlay_sym, hints_to_overlay(ox_hints_html()));
+	rb_hash_aset(opts, overlay_sym, Qnil);
     } else {
 	rb_hash_aset(opts, overlay_sym, hints_to_overlay(ox_default_options.html_hints));
     }

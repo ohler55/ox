@@ -44,6 +44,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
  - Added overlay feature to give control over which elements generate callbacks
    with the SAX parser.
 
+ - Element.locate now includes self if the path is relative and starts with a wildcard.
+
 ### Release 2.4.0
 
  - Added Ox::Builder that constructs an XML string or writes XML to a stream

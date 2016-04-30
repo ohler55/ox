@@ -44,7 +44,8 @@ $ox_object_options = {
   :convert_special=>true,
   :effort=>:strict,
   :invalid_replace=>'',
-  :strip_namespace=>false
+  :strip_namespace=>false,
+  :overlay=>nil,
 }
 
 $ox_generic_options = {
@@ -63,7 +64,8 @@ $ox_generic_options = {
   :convert_special=>true,
   :effort=>:strict,
   :invalid_replace=>'',
-  :strip_namespace=>false
+  :strip_namespace=>false,
+  :overlay=>nil,
 }
 
 class Func < ::Minitest::Test
@@ -96,7 +98,8 @@ class Func < ::Minitest::Test
       :convert_special=>false,
       :effort=>:tolerant,
       :invalid_replace=>'*',
-      :strip_namespace=>'spaced'
+      :strip_namespace=>'spaced',
+      :overlay=>nil,
     }
     o3 = { :xsd_date=>false }
     Ox.default_options = o2
@@ -964,6 +967,10 @@ class Func < ::Minitest::Test
 
     nodes = doc.locate('*/@?')
     assert_equal(['31', '32', '57', 'false', 'male'], nodes.sort)
+
+    pete = doc.locate('Family/Pete')[0]
+    nodes = pete.locate('*/@age')
+    assert_equal(['31', '32', '57'], nodes.sort)
 
     assert_raise(::Ox::InvalidPath) {
       nodes = doc.locate('Family/@age/?')

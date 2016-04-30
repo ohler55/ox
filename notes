@@ -9,42 +9,9 @@
  
 - todo
  - sax.c
-  - handle off and inactive correctly
-
-Ox.sax_html_overlay - copy of basic
-
-overlay = Ox.default_options[:overlay]
-
-overlay[‘div’] = :block # 3) block immediate children unless over-ridden
-overlay[‘p’] = :ignore # 2) continue to process
-overlay[‘table’] = :block_hard
-overlay[‘footer’] = :abort
-
-Ox.default_options = { :overlay => overlay }
-Ox.sax_html(html)
-
-
-
- - add call for parse_html
-  - inactive and active option for that
-   - copy and set names
-
- - active and inactive option
-  - add only_active flag to SaxOptions
-  - inactive
-   - create hints from list
-   - when html detected, create new hint and merge
-    - free at end if allocated (not html_hints)
-    
-  - pass in array of element names
-  - build new hints from html hints, copy and modify skip flags
-   - how about non-html?
-   - keep separate?
-   - create new hints if ignores provided
-    - if html, merge together
-
+ - element locate wild include self
+ 
  - add hints to parse.c
-
 
  - continuous sax parser
   - parse input stream and continue waiting for next one
