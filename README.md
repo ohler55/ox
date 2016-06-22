@@ -34,6 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Release 2.4.2
+
+ - Added methods to Ox::Builder to provide output position information.
+
 ### Release 2.4.1
 
  - Made SAX smarter a little smarter or rather let it handle unquoted string
@@ -50,23 +54,6 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
  - Added Ox::Builder that constructs an XML string or writes XML to a stream
    using builder methods.
-
-### Release 2.3.0
-
- - Added Ox::Element.replace_text() method.
-
- - Ox::Element nodes variable is now always initialized to an empty Array.
-
- - Ox::Element attributes variable is now always initialized to an empty Hash.
-
- - A invalid_replace option has been added. It will replace invalid XML
-   character with a provided string. Strict effort now raises an exception if an
-   invalid character is encountered on dump or load.
-
- - Ox.load and Ox.parse now allow for a callback block to handle multiple top
-   level entities in the input.
-
- - The Ox SAX parser now supports strings as input directly without and IO wrapper.
 
 ## Description
 

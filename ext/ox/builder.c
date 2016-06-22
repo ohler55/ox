@@ -29,6 +29,9 @@ typedef struct _Builder {
     int			depth;
     FILE		*file;
     struct _Element	stack[MAX_DEPTH];
+    long		line;
+    long		col;
+    long		pos;
 } *Builder;
 
 static VALUE		builder_class = Qundef;
@@ -68,48 +71,70 @@ append_indent(Builder b) {
 	    cnt = sizeof(indent_spaces) - 1;
 	}
 	buf_append_string(&b->buf, indent_spaces, cnt);
+	b->line++;
+	b->col = cnt - 1;
+	b->pos += cnt;
     }
 }
 
 static void
-append_string(Buf b, const char *str, size_t size) {
+append_string(Builder b, const char *str, size_t size) {
     size_t	xsize = xml_str_len((const unsigned char*)str, size);
 
     if (size == xsize) {
-	buf_append_string(b, str, size);
+	const char	*s = str;
+	const char	*end = str + size;
+	
+	buf_append_string(&b->buf, str, size);
+	b->col += size;
+	while (NULL != (s = index(s, '\n'))) {
+	    b->line++;
+	    b->col = end - s;
+	}
+	b->pos += size;
     } else {
 	char	buf[256];
 	char	*end = buf + sizeof(buf) - 1;
 	char	*bp = buf;
 	int	i = size;
+	int	fcnt;
 	
 	for (; '\0' != *str && 0 < i; i--, str++) {
-	    if ('1' == xml_friendly_chars[(unsigned char)*str]) {
+	    if ('1' == (fcnt = xml_friendly_chars[(unsigned char)*str])) {
 		if (end <= bp) {
-		    buf_append_string(b, buf, bp - buf);
+		    buf_append_string(&b->buf, buf, bp - buf);
 		    bp = buf;
 		}
+		if ('\n' == *str) {
+		    b->line++;
+		    b->col = 1;
+		} else {
+		    b->col++;
+		}
+		b->pos++;
 		*bp++ = *str;
 	    } else {
+		b->pos += fcnt;
+		b->col += fcnt;
 		if (buf < bp) {
-		    buf_append_string(b, buf, bp - buf);
+		    buf_append_string(&b->buf, buf, bp - buf);
 		    bp = buf;
 		}
 		switch (*str) {
 		case '"':
-		    buf_append_string(b, "&quot;", 6);
+		    buf_append_string(&b->buf, "&quot;", 6);
 		    break;
 		case '&':
-		    buf_append_string(b, "&amp;", 5);
+		    buf_append_string(&b->buf, "&amp;", 5);
 		    break;
 		case '\'':
-		    buf_append_string(b, "&apos;", 6);
+		    buf_append_string(&b->buf, "&apos;", 6);
 		    break;
 		case '<':
-		    buf_append_string(b, "&lt;", 4);
+		    buf_append_string(&b->buf, "&lt;", 4);
 		    break;
 		case '>':
-		    buf_append_string(b, "&gt;", 4);
+		    buf_append_string(&b->buf, "&gt;", 4);
 		    break;
 		default:
 		    // Must be one of the invalid characters.
@@ -119,14 +144,14 @@ append_string(Buf b, const char *str, size_t size) {
 	    }
 	}
 	if (buf < bp) {
-	    buf_append_string(b, buf, bp - buf);
+	    buf_append_string(&b->buf, buf, bp - buf);
 	    bp = buf;
 	}
     }
 }
 
 static void
-append_sym_str(Buf b, VALUE v) {
+append_sym_str(Builder b, VALUE v) {
     const char	*s;
     int		len;
     
@@ -154,6 +179,8 @@ i_am_a_child(Builder b, bool is_text) {
 	if (!e->has_child) {
 	    e->has_child = true;
 	    buf_append(&b->buf, '>');
+	    b->col++;
+	    b->pos++;
 	}
 	if (!is_text) {
 	    e->non_text_child = true;
@@ -163,12 +190,19 @@ i_am_a_child(Builder b, bool is_text) {
 
 static int
 append_attr(VALUE key, VALUE value, Builder b) {
+    int	len;
+    
     buf_append(&b->buf, ' ');
-    append_sym_str(&b->buf, key);
+    b->col++;
+    b->pos++;
+    append_sym_str(b, key);
     buf_append_string(&b->buf, "=\"", 2);
     Check_Type(value, T_STRING);
-    buf_append_string(&b->buf, StringValuePtr(value), RSTRING_LEN(value));
+    len = (int)RSTRING_LEN(value);
+    buf_append_string(&b->buf, StringValuePtr(value), len);
     buf_append(&b->buf, '"');
+    b->col += len + 3;
+    b->pos += len + 3;
     
     return ST_CONTINUE;
 }
@@ -179,6 +213,9 @@ init(Builder b, int fd, int indent, long initial_size) {
     b->indent = indent;
     *b->encoding = '\0';
     b->depth = -1;
+    b->line = 1;
+    b->col = 1;
+    b->pos = 0;
 }
 
 static void
@@ -216,12 +253,16 @@ pop(Builder b) {
 	buf_append_string(&b->buf, "</", 2);
 	buf_append_string(&b->buf, e->name, e->len);
 	buf_append(&b->buf, '>');
+	b->col += e->len + 3;
+	b->pos += e->len + 3;
 	if (e->buf != e->name) {
 	    free(e->name);
 	    e->name = 0;
 	}
     } else {
 	buf_append_string(&b->buf, "/>", 2);
+	b->col += 2;
+	b->pos += 2;
     }
 }
 
@@ -231,6 +272,9 @@ bclose(Builder b) {
 	pop(b);
     }
     buf_append(&b->buf, '\n');
+    b->line++;
+    b->col = 1;
+    b->pos++;
     buf_finish(&b->buf);
     if (NULL != b->file) {
 	fclose(b->file);
@@ -246,6 +290,9 @@ to_s(Builder b) {
     }
     if ('\n' != *(b->buf.tail - 1)) {
 	buf_append(&b->buf, '\n');
+	b->line++;
+	b->col = 1;
+	b->pos++;
     }
     *b->buf.tail = '\0'; // for debugging
     rstr = rb_str_new(b->buf.head, buf_len(&b->buf));
@@ -296,6 +343,7 @@ builder_new(int argc, VALUE *argv, VALUE self) {
 
     if (rb_block_given_p()) {
 	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+	
 	rb_yield(rb);
 	bclose(b);
 
@@ -429,27 +477,39 @@ builder_instruct(int argc, VALUE *argv, VALUE self) {
     append_indent(b);
     if (0 == argc) {
 	buf_append_string(&b->buf, "<?xml?>", 7);
+	b->col += 7;
+	b->pos += 7;
     } else {
 	volatile VALUE	v;
 	
 	buf_append_string(&b->buf, "<?", 2);
-	append_sym_str(&b->buf, *argv);
+	b->col += 2;
+	b->pos += 2;
+	append_sym_str(b, *argv);
 	if (1 < argc && rb_cHash == rb_obj_class(argv[1])) {
+	    int	len;
+		
 	    if (Qnil != (v = rb_hash_lookup(argv[1], ox_version_sym))) {
 		if (rb_cString != rb_obj_class(v)) {
 		    rb_raise(ox_parse_error_class, ":version must be a Symbol.\n");
 		}
+		len = (int)RSTRING_LEN(v);
 		buf_append_string(&b->buf, " version=\"", 10);
-		buf_append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
+		buf_append_string(&b->buf, StringValuePtr(v), len);
 		buf_append(&b->buf, '"');
+		b->col += len + 11;
+		b->pos += len + 11;
 	    }
 	    if (Qnil != (v = rb_hash_lookup(argv[1], ox_encoding_sym))) {
 		if (rb_cString != rb_obj_class(v)) {
 		    rb_raise(ox_parse_error_class, ":encoding must be a Symbol.\n");
 		}
+		len = (int)RSTRING_LEN(v);
 		buf_append_string(&b->buf, " encoding=\"", 11);
-		buf_append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
+		buf_append_string(&b->buf, StringValuePtr(v), len);
 		buf_append(&b->buf, '"');
+		b->col += len + 12;
+		b->pos += len + 12;
 		strncpy(b->encoding, StringValuePtr(v), sizeof(b->encoding));
 		b->encoding[sizeof(b->encoding) - 1] = '\0';
 	    }
@@ -457,12 +517,17 @@ builder_instruct(int argc, VALUE *argv, VALUE self) {
 		if (rb_cString != rb_obj_class(v)) {
 		    rb_raise(ox_parse_error_class, ":standalone must be a Symbol.\n");
 		}
+		len = (int)RSTRING_LEN(v);
 		buf_append_string(&b->buf, " standalone=\"", 13);
-		buf_append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
+		buf_append_string(&b->buf, StringValuePtr(v), len);
 		buf_append(&b->buf, '"');
+		b->col += len + 14;
+		b->pos += len + 14;
 	    }
 	}
 	buf_append_string(&b->buf, "?>", 2);
+	b->col += 2;
+	b->pos += 2;
     }
     return Qnil;
 }
@@ -517,7 +582,9 @@ builder_element(int argc, VALUE *argv, VALUE self) {
     e->non_text_child = false;
 
     buf_append(&b->buf, '<');
-    buf_append_string(&b->buf, e->name, len);
+    b->col++;
+    b->pos++;
+    append_string(b, e->name, len);
     if (1 < argc) {
 	rb_hash_foreach(argv[1], append_attr, (VALUE)b);
     }
@@ -537,14 +604,18 @@ builder_element(int argc, VALUE *argv, VALUE self) {
 static VALUE
 builder_comment(VALUE self, VALUE text) {
     Builder	b = (Builder)DATA_PTR(self);
-
+    
     rb_check_type(text, T_STRING);
     i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<!-- ", 5);
-    buf_append_string(&b->buf, StringValuePtr(text), RSTRING_LEN(text));
+    b->col += 5;
+    b->pos += 5;
+    append_string(b, StringValuePtr(text), RSTRING_LEN(text));
     buf_append_string(&b->buf, " --/> ", 5);
-
+    b->col += 5;
+    b->pos += 5;
+	
     return Qnil;
 }
 
@@ -561,8 +632,12 @@ builder_doctype(VALUE self, VALUE text) {
     i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<!DOCTYPE ", 10);
-    buf_append_string(&b->buf, StringValuePtr(text), RSTRING_LEN(text));
+    b->col += 10;
+    b->pos += 10;
+    append_string(b, StringValuePtr(text), RSTRING_LEN(text));
     buf_append(&b->buf, '>');
+    b->col++;
+    b->pos++;
 
     return Qnil;
 }
@@ -581,7 +656,7 @@ builder_text(VALUE self, VALUE text) {
 	v = rb_funcall(v, ox_to_s_id, 0);
     }
     i_am_a_child(b, true);
-    append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
+    append_string(b, StringValuePtr(v), RSTRING_LEN(v));
 
     return Qnil;
 }
@@ -595,15 +670,33 @@ static VALUE
 builder_cdata(VALUE self, VALUE data) {
     Builder		b = (Builder)DATA_PTR(self);
     volatile VALUE	v = data;
+    const char		*str;
+    const char		*s;
+    const char		*end;
+    int			len;
 
     if (T_STRING != rb_type(v)) {
 	v = rb_funcall(v, ox_to_s_id, 0);
     }
+    str = StringValuePtr(v);
+    len = (int)RSTRING_LEN(v);
+    s = str;
+    end = str + len;
     i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<![CDATA[", 9);
-    buf_append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
+    b->col += 9;
+    b->pos += 9;
+    buf_append_string(&b->buf, str, len);
+    b->col += len;
+    while (NULL != (s = index(s, '\n'))) {
+	b->line++;
+	b->col = end - s;
+    }
+    b->pos += len;
     buf_append_string(&b->buf, "]]>", 3);
+    b->col += 3;
+    b->pos += 3;
 
     return Qnil;
 }
@@ -618,12 +711,26 @@ static VALUE
 builder_raw(VALUE self, VALUE text) {
     Builder		b = (Builder)DATA_PTR(self);
     volatile VALUE	v = text;
+    const char		*str;
+    const char		*s;
+    const char		*end;
+    int			len;
 
     if (T_STRING != rb_type(v)) {
 	v = rb_funcall(v, ox_to_s_id, 0);
     }
+    str = StringValuePtr(v);
+    len = (int)RSTRING_LEN(v);
+    s = str;
+    end = str + len;
     i_am_a_child(b, true);
-    buf_append_string(&b->buf, StringValuePtr(v), RSTRING_LEN(v));
+    buf_append_string(&b->buf, str, len);
+    b->col += len;
+    while (NULL != (s = index(s, '\n'))) {
+	b->line++;
+	b->col = end - s;
+    }
+    b->pos += len;
 
     return Qnil;
 }
@@ -635,6 +742,34 @@ builder_raw(VALUE self, VALUE text) {
 static VALUE
 builder_to_s(VALUE self) {
     return to_s((Builder)DATA_PTR(self));
+}
+
+/* call-seq: line()
+ *
+ * Returns the current line in the output. The first line is line 1.
+ */
+static VALUE
+builder_line(VALUE self) {
+    return LONG2NUM(((Builder)DATA_PTR(self))->line);
+}
+
+/* call-seq: column()
+ *
+ * Returns the current column in the output. The first character in a line is at
+ * column 1.
+ */
+static VALUE
+builder_column(VALUE self) {
+    return LONG2NUM(((Builder)DATA_PTR(self))->col);
+}
+
+/* call-seq: pos()
+ *
+ * Returns the number of bytes written.
+ */
+static VALUE
+builder_pos(VALUE self) {
+    return LONG2NUM(((Builder)DATA_PTR(self))->pos);
 }
 
 /* call-seq: pop()
@@ -682,4 +817,7 @@ void ox_init_builder(VALUE ox) {
     rb_define_method(builder_class, "pop", builder_pop, 0);
     rb_define_method(builder_class, "close", builder_close, 0);
     rb_define_method(builder_class, "to_s", builder_to_s, 0);
+    rb_define_method(builder_class, "line", builder_line, 0);
+    rb_define_method(builder_class, "column", builder_column, 0);
+    rb_define_method(builder_class, "pos", builder_pos, 0);
 }

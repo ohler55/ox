@@ -1139,9 +1139,18 @@ class Func < ::Minitest::Test
 
   def test_builder
     b = Ox::Builder.new(:indent => 2)
+    assert_equal(1, b.line())
+    assert_equal(1, b.column())
+    assert_equal(0, b.pos())
     b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+    assert_equal(1, b.line())
+    assert_equal(39, b.column())
+    assert_equal(38, b.pos())
     b.element('one', :a => "ack", 'b' => 'back')
     b.element('two')
+    assert_equal(3, b.line())
+    assert_equal(6, b.column())
+    assert_equal(68, b.pos())
     b.pop()
     b.comment('just a comment')
     b.element('three')
