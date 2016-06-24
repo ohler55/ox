@@ -1,12 +1,14 @@
 #!/bin/sh
 
+# 1.8.7-p374\
+
 for ruby in \
- 1.8.7-p374\
  rbx-2.2.6\
  1.9.3-p547\
  2.1.5\
  2.2.2\
- 2.3.0
+ 2.3.1\
+ 2.4.0-preview1
 do
     echo "\n********************************************************************************"
     echo "Building $ruby\n"
@@ -46,10 +48,10 @@ cd ..
 echo "resetting to 2.3.0\n"
 
 cd ext/ox
-rbenv local 2.3.0
+rbenv local 2.3.1
 cd ../../test
-rbenv local 2.3.0
+rbenv local 2.3.1
 cd sax
-rbenv local 2.3.0
+rbenv local 2.3.1
 cd ../..
 echo "\n"

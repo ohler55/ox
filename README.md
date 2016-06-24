@@ -34,6 +34,12 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Release 2.4.3
+
+ - Fixed compiler warnings and errors.
+
+ - Updated for Ruby 2.4.0.
+
 ### Release 2.4.2
 
  - Added methods to Ox::Builder to provide output position information.
