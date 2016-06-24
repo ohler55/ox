@@ -509,7 +509,7 @@ set_def_opts(VALUE self, VALUE opts) {
 
 	Check_Type(v, T_STRING);
 	slen = RSTRING_LEN(v);
-	if (sizeof(ox_default_options.inv_repl) - 2 < slen) {
+	if (sizeof(ox_default_options.inv_repl) - 2 <  (size_t)slen) {
 	    rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %ld characters.",
 		     sizeof(ox_default_options.inv_repl) - 2);
 	}
@@ -530,7 +530,7 @@ set_def_opts(VALUE self, VALUE opts) {
 
 	Check_Type(v, T_STRING);
 	slen = RSTRING_LEN(v);
-	if (sizeof(ox_default_options.strip_ns) - 1 < slen) {
+	if (sizeof(ox_default_options.strip_ns) - 1 <  (size_t)slen) {
 	    rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %ld characters.",
 		     sizeof(ox_default_options.strip_ns) - 1);
 	}
@@ -720,7 +720,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 
 	    Check_Type(v, T_STRING);
 	    slen = RSTRING_LEN(v);
-	    if (sizeof(options.inv_repl) - 2 < slen) {
+	    if (sizeof(options.inv_repl) - 2 <  (size_t)slen) {
 		rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %ld characters.",
 			 sizeof(options.inv_repl) - 2);
 	    }
@@ -740,7 +740,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 
 	    Check_Type(v, T_STRING);
 	    slen = RSTRING_LEN(v);
-	    if (sizeof(options.strip_ns) - 1 < slen) {
+	    if (sizeof(options.strip_ns) - 1 <  (size_t)slen) {
 		rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %ld characters.",
 			 sizeof(options.strip_ns) - 1);
 	    }
@@ -980,7 +980,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
 
 		Check_Type(v, T_STRING);
 		slen = RSTRING_LEN(v);
-		if (sizeof(options.strip_ns) - 1 < slen) {
+		if (sizeof(options.strip_ns) - 1 <  (size_t)slen) {
 		    rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %ld characters.",
 			     sizeof(options.strip_ns) - 1);
 		}
@@ -1123,7 +1123,7 @@ parse_dump_options(VALUE ropts, Options copts) {
 
 	    Check_Type(v, T_STRING);
 	    slen = RSTRING_LEN(v);
-	    if (sizeof(copts->inv_repl) - 2 < slen) {
+	    if (sizeof(copts->inv_repl) - 2 <  (size_t)slen) {
 		rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %ld characters.",
 			 sizeof(copts->inv_repl) - 2);
 	    }

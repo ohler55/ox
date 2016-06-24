@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 
 #include "ox.h"
 #include "buf.h"
@@ -67,7 +68,7 @@ append_indent(Builder b) {
     if (b->buf.head < b->buf.tail) {
 	int	cnt = (b->indent * (b->depth + 1)) + 1;
 
-	if (sizeof(indent_spaces) <= cnt) {
+	if (sizeof(indent_spaces) <=  (size_t)cnt) {
 	    cnt = sizeof(indent_spaces) - 1;
 	}
 	buf_append_string(&b->buf, indent_spaces, cnt);
@@ -570,7 +571,7 @@ builder_element(int argc, VALUE *argv, VALUE self) {
 	break;
     }
     e = &b->stack[b->depth];
-    if (sizeof(e->buf) <= len) {
+    if (sizeof(e->buf) <= (size_t)len) {
 	e->name = strdup(name);
 	*e->buf = '\0';
     } else {

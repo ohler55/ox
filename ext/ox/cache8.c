@@ -27,7 +27,7 @@ struct _Cache8 {
 };
 
 static void	cache8_delete(Cache8 cache, int depth);
-static void	slot_print(Cache8 cache, sid_t key, unsigned int depth);
+//static void	slot_print(Cache8 cache, sid_t key, unsigned int depth);
 
 void
 ox_cache8_new(Cache8 *cache) {
@@ -80,9 +80,10 @@ ox_cache8_get(Cache8 cache, sid_t key, slot_t **slot) {
     return **slot;
 }
 
+#if 0
 void
 ox_cache8_print(Cache8 cache) {
-    /*printf("-------------------------------------------\n"); */
+    //printf("-------------------------------------------\n");
     slot_print(cache, 0, 0);
 }
 
@@ -96,7 +97,7 @@ slot_print(Cache8 c, sid_t key, unsigned int depth) {
     for (i = 0, b = c->buckets; i < SLOT_CNT; i++, b++) {
 	if (0 != b->child) {
 	    k = (k8 << BITS) | i;
-	    /*printf("*** key: 0x%016llx  depth: %u  i: %u\n", k, depth, i); */
+	    //printf("*** key: 0x%016llx  depth: %u  i: %u\n", k, depth, i);
 	    if (DEPTH - 1 == depth) {
 		printf("0x%016llx: %4llu\n", (unsigned long long)k, (unsigned long long)b->value);
 	    } else {
@@ -105,3 +106,4 @@ slot_print(Cache8 c, sid_t key, unsigned int depth) {
 	}
     }
 }
+#endif

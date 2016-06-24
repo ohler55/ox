@@ -18,6 +18,6 @@ extern void	ox_cache8_delete(Cache8 cache);
 
 extern slot_t	ox_cache8_get(Cache8 cache, sid_t key, slot_t **slot);
 
-extern void	ox_cache8_print(Cache8 cache);
+//extern void	ox_cache8_print(Cache8 cache);
 
 #endif /* __OX_CACHE8_H__ */

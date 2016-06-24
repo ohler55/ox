@@ -19,10 +19,10 @@ class QuietSax < Ox::Sax
     @column = nil
   end
   def start_element(name)
-    #puts "Start #{name} @ #{@line}:#{@column}"
+    puts "Start #{name} @ #{@column}"
   end
   def end_element(name)
-    #puts "End #{name} @ #{@line}:#{@column}"
+    puts "End #{name} @ #{@line}:#{@column}"
   end
   def attr(name, value); end
   def instruct(target); end
@@ -30,7 +30,9 @@ class QuietSax < Ox::Sax
   def doctype(value); end
   def comment(value); end
   def cdata(value); end
-  def text(value); end
+  def text(value)
+    puts "text #{value.length} @ #{@line}:#{@column}"
+  end
   def error(message, line, column)
     puts "Error: #{message} @ #{line}:#{column}"
   end

@@ -45,7 +45,7 @@ typedef struct _Buf {
 
 inline static void
 buf_init(Buf buf, int fd, long initial_size) {
-    if (sizeof(buf->base) < initial_size) {
+    if (sizeof(buf->base) < (size_t)initial_size) {
 	buf->head = ALLOC_N(char, initial_size);
 	buf->end = buf->head + initial_size - 1;
     } else {
