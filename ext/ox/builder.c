@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 
 #include "ox.h"
 #include "buf.h"
@@ -88,7 +87,7 @@ append_string(Builder b, const char *str, size_t size) {
 	
 	buf_append_string(&b->buf, str, size);
 	b->col += size;
-	while (NULL != (s = index(s, '\n'))) {
+	while (NULL != (s = strchr(s, '\n'))) {
 	    b->line++;
 	    b->col = end - s;
 	}
