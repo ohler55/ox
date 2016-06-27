@@ -713,7 +713,7 @@ builder_cdata(VALUE self, VALUE data) {
     b->pos += 9;
     buf_append_string(&b->buf, str, len);
     b->col += len;
-    while (NULL != (s = index(s, '\n'))) {
+    while (NULL != (s = strchr(s, '\n'))) {
 	b->line++;
 	b->col = end - s;
     }
@@ -750,7 +750,7 @@ builder_raw(VALUE self, VALUE text) {
     i_am_a_child(b, true);
     buf_append_string(&b->buf, str, len);
     b->col += len;
-    while (NULL != (s = index(s, '\n'))) {
+    while (NULL != (s = strchr(s, '\n'))) {
 	b->line++;
 	b->col = end - s;
     }
