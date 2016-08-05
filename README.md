@@ -34,32 +34,19 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Release 2.4.4
+
+- Builder element attributes with special characters are now encoded correctly.
+
+- A newline at end of an XML string is now controlled by the indent value. A
+  value of -1 indicates no terminating newline character and an indentation of
+  zero.
+
 ### Release 2.4.3
 
  - Fixed compiler warnings and errors.
 
  - Updated for Ruby 2.4.0.
-
-### Release 2.4.2
-
- - Added methods to Ox::Builder to provide output position information.
-
-### Release 2.4.1
-
- - Made SAX smarter a little smarter or rather let it handle unquoted string
-   with a / at the end.
-
- - Fixed bug with reporting errors of element names that are too long.
-
- - Added overlay feature to give control over which elements generate callbacks
-   with the SAX parser.
-
- - Element.locate now includes self if the path is relative and starts with a wildcard.
-
-### Release 2.4.0
-
- - Added Ox::Builder that constructs an XML string or writes XML to a stream
-   using builder methods.
 
 ## Description
 

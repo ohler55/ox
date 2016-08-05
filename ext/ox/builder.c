@@ -61,7 +61,7 @@ xml_str_len(const unsigned char *str, size_t len) {
 
 static void
 append_indent(Builder b) {
-    if (0 == b->indent) {
+    if (0 >= b->indent) {
 	return;
     }
     if (b->buf.head < b->buf.tail) {
@@ -190,19 +190,18 @@ i_am_a_child(Builder b, bool is_text) {
 
 static int
 append_attr(VALUE key, VALUE value, Builder b) {
-    int	len;
-    
     buf_append(&b->buf, ' ');
     b->col++;
     b->pos++;
     append_sym_str(b, key);
     buf_append_string(&b->buf, "=\"", 2);
+    b->col += 2;
+    b->pos += 2;
     Check_Type(value, T_STRING);
-    len = (int)RSTRING_LEN(value);
-    buf_append_string(&b->buf, StringValuePtr(value), len);
+    append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value));
     buf_append(&b->buf, '"');
-    b->col += len + 3;
-    b->pos += len + 3;
+    b->col++;
+    b->pos++;
     
     return ST_CONTINUE;
 }
@@ -271,7 +270,9 @@ bclose(Builder b) {
     while (0 <= b->depth) {
 	pop(b);
     }
-    buf_append(&b->buf, '\n');
+    if (0 <= b->indent) {
+	buf_append(&b->buf, '\n');
+    }
     b->line++;
     b->col = 1;
     b->pos++;
@@ -288,7 +289,7 @@ to_s(Builder b) {
     if (0 != b->buf.fd) {
 	rb_raise(ox_arg_error_class, "can not create a String with a stream or file builder.");
     }
-    if ('\n' != *(b->buf.tail - 1)) {
+    if (0 <= b->indent && '\n' != *(b->buf.tail - 1)) {
 	buf_append(&b->buf, '\n');
 	b->line++;
 	b->col = 1;
@@ -312,7 +313,7 @@ to_s(Builder b) {
  * which is the builder instance. The return value is then the generated string.
  *
  * - +options+ - (Hash) formating options
- *   - +:indent+ (Fixnum) indentaion level
+ *   - +:indent+ (Fixnum) indentaion level, negative leaves of terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
  */
 static VALUE
