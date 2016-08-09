@@ -313,7 +313,7 @@ to_s(Builder b) {
  * which is the builder instance. The return value is then the generated string.
  *
  * - +options+ - (Hash) formating options
- *   - +:indent+ (Fixnum) indentaion level, negative leaves of terminating newline
+ *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
  */
 static VALUE
@@ -368,7 +368,7 @@ builder_new(int argc, VALUE *argv, VALUE self) {
  *
  * - +filename+ (String) filename to write to
  * - +options+ - (Hash) formating options
- *   - +:indent+ (Fixnum) indentaion level
+ *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
  */
 static VALUE
@@ -430,7 +430,7 @@ builder_file(int argc, VALUE *argv, VALUE self) {
  *
  * - +io+ (String) IO to write to
  * - +options+ - (Hash) formating options
- *   - +:indent+ (Fixnum) indentaion level
+ *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
  */
 static VALUE
