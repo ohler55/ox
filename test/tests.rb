@@ -1156,6 +1156,9 @@ class Func < ::Minitest::Test
     b.element('three')
     b.text("my name is \"ピーター\"")
     b.pop()
+    b.cdata("multi\nline\ncdata")
+    b.raw("<multi></multi>\n<line></line>\n<raw></raw>")
+    b.comment("Multi\nline\ncomment")
     b.close()
     xml = b.to_s
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
@@ -1163,6 +1166,14 @@ class Func < ::Minitest::Test
   <two/>
   <!-- just a comment --/>
   <three>my name is &quot;ピーター&quot;</three>
+  <![CDATA[multi
+line
+cdata]]><multi></multi>
+<line></line>
+<raw></raw>
+  <!-- Multi
+line
+comment --/>
 </one>
 |, xml)
   end

@@ -87,10 +87,12 @@ append_string(Builder b, const char *str, size_t size) {
 	
 	buf_append_string(&b->buf, str, size);
 	b->col += size;
-	while (NULL != (s = strchr(s, '\n'))) {
-	    b->line++;
-	    b->col = end - s;
-	}
+        s = strchr(s, '\n');
+        while (NULL != s) {
+            b->line++;
+            b->col = end - s;
+            s = strchr(s + 1, '\n');
+        }
 	b->pos += size;
     } else {
 	char	buf[256];
@@ -714,9 +716,11 @@ builder_cdata(VALUE self, VALUE data) {
     b->pos += 9;
     buf_append_string(&b->buf, str, len);
     b->col += len;
-    while (NULL != (s = strchr(s, '\n'))) {
-	b->line++;
-	b->col = end - s;
+    s = strchr(s, '\n');
+    while (NULL != s) {
+        b->line++;
+        b->col = end - s;
+        s = strchr(s + 1, '\n');
     }
     b->pos += len;
     buf_append_string(&b->buf, "]]>", 3);
@@ -751,9 +755,11 @@ builder_raw(VALUE self, VALUE text) {
     i_am_a_child(b, true);
     buf_append_string(&b->buf, str, len);
     b->col += len;
-    while (NULL != (s = strchr(s, '\n'))) {
-	b->line++;
-	b->col = end - s;
+    s = strchr(s, '\n');
+    while (NULL != s) {
+        b->line++;
+        b->col = end - s;
+        s = strchr(s + 1, '\n');
     }
     b->pos += len;
 
