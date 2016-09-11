@@ -34,6 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Release 2.4.5
+
+- Thanks to GUI for fixing an infinite loop in Ox::Builder.
+
 ### Release 2.4.4
 
 - Builder element attributes with special characters are now encoded correctly.
@@ -41,12 +45,6 @@ A fast XML parser and Object marshaller as a Ruby gem.
 - A newline at end of an XML string is now controlled by the indent value. A
   value of -1 indicates no terminating newline character and an indentation of
   zero.
-
-### Release 2.4.3
-
- - Fixed compiler warnings and errors.
-
- - Updated for Ruby 2.4.0.
 
 ## Description
 

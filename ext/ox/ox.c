@@ -695,7 +695,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 	    } else if (skip_white_sym == v) {
 		options.skip = SpcSkip;
 	    } else {
-		rb_raise(ox_parse_error_class, ":effort must be :skip_none, :skip_return, or :skip_white.\n");
+		rb_raise(ox_parse_error_class, ":skip must be :skip_none, :skip_return, or :skip_white.\n");
 	    }
 	}
 
