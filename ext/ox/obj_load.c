@@ -756,11 +756,11 @@ end_element(PInfo pi, const char *ename) {
 	    case RangeCode:
 #if HAS_RSTRUCT
 		if (ox_beg_id == h->var) {
-		    RSTRUCT_PTR(ph->obj)[0] = h->obj;
+		    RSTRUCT_SET(ph->obj, 0, h->obj);
 		} else if (ox_end_id == h->var) {
-		    RSTRUCT_PTR(ph->obj)[1] = h->obj;
+		    RSTRUCT_SET(ph->obj, 1, h->obj);
 		} else if (ox_excl_id == h->var) {
-		    RSTRUCT_PTR(ph->obj)[2] = h->obj;
+		    RSTRUCT_SET(ph->obj, 2, h->obj);
 		} else {
 		    set_error(&pi->err, "Invalid range attribute", pi->str, pi->s);
 		    return;

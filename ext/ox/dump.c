@@ -772,9 +772,9 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	}
 	clas = rb_obj_class(obj);
 	if (rb_cRange == clas) {
-	    VALUE	beg = RSTRUCT_PTR(obj)[0];
-	    VALUE	end = RSTRUCT_PTR(obj)[1];
-	    VALUE	excl = RSTRUCT_PTR(obj)[2];
+	    VALUE	beg  = RSTRUCT_GET(obj, 0);
+	    VALUE	end  = RSTRUCT_GET(obj, 1);
+	    VALUE	excl = RSTRUCT_GET(obj, 2);
 	    int		d2 = depth + 1;
 
 	    e.type = RangeCode;	 e.clas.len = 5;  e.clas.str = "Range";
