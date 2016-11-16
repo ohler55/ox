@@ -772,9 +772,9 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	}
 	clas = rb_obj_class(obj);
 	if (rb_cRange == clas) {
-	    VALUE	beg = RSTRUCT_PTR(obj)[0];
-	    VALUE	end = RSTRUCT_PTR(obj)[1];
-	    VALUE	excl = RSTRUCT_PTR(obj)[2];
+	    VALUE	beg  = RSTRUCT_GET(obj, 0);
+	    VALUE	end  = RSTRUCT_GET(obj, 1);
+	    VALUE	excl = RSTRUCT_GET(obj, 2);
 	    int		d2 = depth + 1;
 
 	    e.type = RangeCode;	 e.clas.len = 5;  e.clas.str = "Range";
@@ -785,17 +785,23 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	    out->w_end(out, &e);
 	} else {
 	    char	num_buf[16];
-	    VALUE	*vp;
-	    int		i;
 	    int		d2 = depth + 1;
+#if UNIFY_FIXNUM_AND_BIGNUM
+		long i;
+		long cnt = NUM2LONG(RSTRUCT_LEN(obj));
+#else // UNIFY_FIXNUM_AND_INTEGER
+		int   i;
+		int   cnt = (int)RSTRUCT_LEN(obj);
+#endif // UNIFY_FIXNUM_AND_INTEGER
 	    
 	    e.type = StructCode;
 	    e.clas.str = rb_class2name(clas);
 	    e.clas.len = strlen(e.clas.str);
 	    out->w_start(out, &e);
-	    cnt = (int)RSTRUCT_LEN(obj);
-	    for (i = 0, vp = RSTRUCT_PTR(obj); i < cnt; i++, vp++) {
-		dump_obj(rb_intern(ulong2str(i, num_buf + sizeof(num_buf) - 1)), *vp, d2, out);
+
+	    for (i = 0; i < cnt; i++) {
+	        VALUE v = RSTRUCT_GET(obj, i);
+	        dump_obj(rb_intern(ulong2str(i, num_buf + sizeof(num_buf) - 1)), v, d2, out);
 	    }
 	    out->w_end(out, &e);
 	}
