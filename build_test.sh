@@ -7,7 +7,7 @@ for ruby in \
  1.9.3-p547\
  2.1.5\
  2.2.2\
- 2.3.1\
+ 2.3.3\
  2.4.0-preview3
 do
     echo "\n********************************************************************************"
@@ -48,10 +48,10 @@ cd ..
 echo "resetting to 2.3.0\n"
 
 cd ext/ox
-rbenv local 2.3.1
+rbenv local 2.3.3
 cd ../../test
-rbenv local 2.3.1
+rbenv local 2.3.3
 cd sax
-rbenv local 2.3.1
+rbenv local 2.3.3
 cd ../..
 echo "\n"

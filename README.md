@@ -34,6 +34,12 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Release 2.4.6
+
+ - Ready for Ruby 2.4 thanks to SHIBATA Hiroshi, hsbt.
+
+ - TBD added margin option to dump
+
 ### Release 2.4.5
 
 - Thanks to GUI for fixing an infinite loop in Ox::Builder.
