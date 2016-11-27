@@ -118,6 +118,7 @@ static VALUE	generic_sym;
 static VALUE	inactive_sym;
 static VALUE	invalid_replace_sym;
 static VALUE	limited_sym;
+static VALUE	margin_sym;
 static VALUE	mode_sym;
 static VALUE	object_sym;
 static VALUE	off_sym;
@@ -153,8 +154,10 @@ void		*ox_utf8_encoding = 0;
 
 struct _Options	 ox_default_options = {
     { '\0' },		/* encoding */
+    { '\0' },		/* margin */
     2,			/* indent */
     0,			/* trace */
+    0,			/* margin_len */
     No,			/* with_dtd */
     No,			/* with_xml */
     No,			/* with_instruct */
@@ -257,6 +260,7 @@ hints_to_overlay(Hints hints) {
 /* call-seq: default_options() => Hash
  *
  * Returns the default load and dump options as a Hash. The options are
+ * - _:margin_ [String] left margin to inset when dumping
  * - _:indent_ [Fixnum] number of spaces to indent each element in an XML document
  * - _:trace_ [Fixnum] trace level where 0 is silent
  * - _:encoding_ [String] character encoding for the XML file
@@ -291,6 +295,7 @@ get_def_opts(VALUE self) {
     int		elen = (int)strlen(ox_default_options.encoding);
 
     rb_hash_aset(opts, ox_encoding_sym, (0 == elen) ? Qnil : rb_str_new(ox_default_options.encoding, elen));
+    rb_hash_aset(opts, margin_sym, rb_str_new(ox_default_options.margin, ox_default_options.margin_len));
     rb_hash_aset(opts, ox_indent_sym, INT2FIX(ox_default_options.indent));
     rb_hash_aset(opts, trace_sym, INT2FIX(ox_default_options.trace));
     rb_hash_aset(opts, with_dtd_sym, (Yes == ox_default_options.with_dtd) ? Qtrue : ((No == ox_default_options.with_dtd) ? Qfalse : Qnil));
@@ -384,6 +389,7 @@ sax_html_overlay(VALUE self) {
  *
  * Sets the default options for load and dump.
  * - +opts+ [Hash] opts options to change
+ *   - _:margin_ [String] left margin to inset when dumping
  *   - _:indent_ [Fixnum] number of spaces to indent each element in an XML document
  *   - _:trace_ [Fixnum] trace level where 0 is silent
  *   - _:encoding_ [String] character encoding for the XML file
@@ -509,7 +515,7 @@ set_def_opts(VALUE self, VALUE opts) {
 
 	Check_Type(v, T_STRING);
 	slen = RSTRING_LEN(v);
-	if (sizeof(ox_default_options.inv_repl) - 2 <  (size_t)slen) {
+	if (sizeof(ox_default_options.inv_repl) - 2 < (size_t)slen) {
 	    rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %ld characters.",
 		     sizeof(ox_default_options.inv_repl) - 2);
 	}
@@ -530,12 +536,27 @@ set_def_opts(VALUE self, VALUE opts) {
 
 	Check_Type(v, T_STRING);
 	slen = RSTRING_LEN(v);
-	if (sizeof(ox_default_options.strip_ns) - 1 <  (size_t)slen) {
+	if (sizeof(ox_default_options.strip_ns) - 1 < (size_t)slen) {
 	    rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %ld characters.",
 		     sizeof(ox_default_options.strip_ns) - 1);
 	}
 	strncpy(ox_default_options.strip_ns, StringValuePtr(v), sizeof(ox_default_options.strip_ns) - 1);
 	ox_default_options.strip_ns[sizeof(ox_default_options.strip_ns) - 1] = '\0';
+    }
+
+    v = rb_hash_aref(opts, margin_sym);
+    if (Qnil != v) {
+	long	slen;
+
+	Check_Type(v, T_STRING);
+	slen = RSTRING_LEN(v);
+	if (sizeof(ox_default_options.margin) - 1 < (size_t)slen) {
+	    rb_raise(ox_parse_error_class, ":margin can be no longer than %ld characters.",
+		     sizeof(ox_default_options.margin) - 1);
+	}
+	strncpy(ox_default_options.margin, StringValuePtr(v), sizeof(ox_default_options.margin) - 1);
+	ox_default_options.margin[sizeof(ox_default_options.margin) - 1] = '\0';
+	ox_default_options.margin_len = strlen(ox_default_options.margin);
     }
 
     for (o = ynos; 0 != o->attr; o++) {
@@ -720,7 +741,7 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 
 	    Check_Type(v, T_STRING);
 	    slen = RSTRING_LEN(v);
-	    if (sizeof(options.inv_repl) - 2 <  (size_t)slen) {
+	    if (sizeof(options.inv_repl) - 2 < (size_t)slen) {
 		rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %ld characters.",
 			 sizeof(options.inv_repl) - 2);
 	    }
@@ -740,12 +761,26 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 
 	    Check_Type(v, T_STRING);
 	    slen = RSTRING_LEN(v);
-	    if (sizeof(options.strip_ns) - 1 <  (size_t)slen) {
+	    if (sizeof(options.strip_ns) - 1 < (size_t)slen) {
 		rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %ld characters.",
 			 sizeof(options.strip_ns) - 1);
 	    }
 	    strncpy(options.strip_ns, StringValuePtr(v), sizeof(options.strip_ns) - 1);
 	    options.strip_ns[sizeof(options.strip_ns) - 1] = '\0';
+	}
+	v = rb_hash_lookup(h, margin_sym);
+	if (Qnil != v) {
+	    long	slen;
+
+	    Check_Type(v, T_STRING);
+	    slen = RSTRING_LEN(v);
+	    if (sizeof(options.margin) - 1 < (size_t)slen) {
+		rb_raise(ox_parse_error_class, ":margin can be no longer than %ld characters.",
+			 sizeof(options.margin) - 1);
+	    }
+	    strncpy(options.margin, StringValuePtr(v), sizeof(options.margin) - 1);
+	    options.margin[sizeof(options.margin) - 1] = '\0';
+	    options.margin_len = strlen(options.margin);
 	}
     }
 #if HAS_ENCODING_SUPPORT
@@ -1140,6 +1175,20 @@ parse_dump_options(VALUE ropts, Options copts) {
 	    *copts->inv_repl = (char)slen;
 	    copts->allow_invalid = No;
 	}
+	v = rb_hash_lookup(ropts, margin_sym);
+	if (Qnil != v) {
+	    long	slen;
+
+	    Check_Type(v, T_STRING);
+	    slen = RSTRING_LEN(v);
+	    if (sizeof(copts->margin) - 2 <  (size_t)slen) {
+		rb_raise(ox_parse_error_class, ":margin can be no longer than %ld characters.",
+			 sizeof(copts->margin) - 2);
+	    }
+	    strncpy(copts->margin, StringValuePtr(v), sizeof(copts->margin) - 1);
+	    copts->margin[sizeof(copts->margin) - 1] = '\0';
+	    copts->margin_len = (char)slen;
+	}
 	
 	for (o = ynos; 0 != o->attr; o++) {
 	    if (Qnil != (v = rb_hash_lookup(ropts, o->sym))) {
@@ -1376,6 +1425,7 @@ void Init_ox() {
     smart_sym = ID2SYM(rb_intern("smart"));			rb_gc_register_address(&smart_sym);
     strict_sym = ID2SYM(rb_intern("strict"));			rb_gc_register_address(&strict_sym);
     strip_namespace_sym = ID2SYM(rb_intern("strip_namespace"));	rb_gc_register_address(&strip_namespace_sym);
+    margin_sym = ID2SYM(rb_intern("margin"));			rb_gc_register_address(&margin_sym);
     symbolize_keys_sym = ID2SYM(rb_intern("symbolize_keys"));	rb_gc_register_address(&symbolize_keys_sym);
     symbolize_sym = ID2SYM(rb_intern("symbolize"));		rb_gc_register_address(&symbolize_sym);
     tolerant_sym = ID2SYM(rb_intern("tolerant"));		rb_gc_register_address(&tolerant_sym);

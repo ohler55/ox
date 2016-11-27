@@ -30,6 +30,7 @@ opts.parse(ARGV)
 
 $ox_object_options = {
   :encoding=>nil,
+  :margin=>'',
   :indent=>2,
   :trace=>0,
   :with_dtd=>false,
@@ -50,6 +51,7 @@ $ox_object_options = {
 
 $ox_generic_options = {
   :encoding=>nil,
+  :margin=>'',
   :indent=>2,
   :trace=>0,
   :with_dtd=>false,
@@ -84,6 +86,7 @@ class Func < ::Minitest::Test
     Ox::default_options = $ox_object_options
     o2 = {
       :encoding=>"UTF-8",
+      :margin=>'zz',
       :indent=>4,
       :trace=>1,
       :with_dtd=>true,
@@ -655,6 +658,35 @@ class Func < ::Minitest::Test
   def test_complex
     Ox::default_options = $ox_object_options
     dump_and_load(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, {:b => 3, :a => [5], :c => Bag.new(:@x => 7)}]), false)
+  end
+
+  def test_dump_margin
+    Ox::default_options = $ox_object_options
+    x = Ox.dump(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, {:b => 3, :a => [5], :c => Bag.new(:@x => 7)}]), :indent => 1, :margin => '##')
+
+    assert_equal('##<o c="Bag">
+## <a a="@a">
+##  <i>1</i>
+##  <h>
+##   <m>b</m>
+##   <i>3</i>
+##   <m>a</m>
+##   <a>
+##    <i>5</i>
+##   </a>
+##   <m>c</m>
+##   <o c="Bag">
+##    <i a="@x">7</i>
+##   </o>
+##  </h>
+## </a>
+## <o a="@o" c="Bag">
+##  <a a="@a">
+##   <i>2</i>
+##  </a>
+## </o>
+##</o>
+', x)
   end
 
   # Create an Object and an Array with the same Objects in them. Dump and load

@@ -120,8 +120,10 @@ typedef struct _CircArray {
 
 typedef struct _Options {
     char		encoding[64];	/* encoding, stored in the option to avoid GC invalidation in default values */
+    char		margin[128];	/* left margin for dumping */
     int			indent;		/* indention for dump, default 2 */
     int			trace;		/* trace level */
+    char		margin_len;	/* margin length */
     char		with_dtd;	/* YesNo */
     char		with_xml;	/* YesNo */
     char		with_instruct;	/* YesNo */

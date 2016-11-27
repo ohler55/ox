@@ -158,6 +158,10 @@ inline static void
 fill_indent(Out out, int cnt) {
     if (0 <= cnt) {
 	*out->cur++ = '\n';
+	if (0 < out->opts->margin_len) {
+	    memcpy(out->cur, out->opts->margin, out->opts->margin_len);
+	    out->cur += out->opts->margin_len;
+	}
 	for (; 0 < cnt; cnt--) {
 	    *out->cur++ = ' ';
 	}
@@ -244,7 +248,7 @@ grow(Out out, size_t len) {
 
 static void
 dump_start(Out out, Element e) {
-    size_t	size = e->indent + 4;
+    size_t	size = e->indent + 4 + out->opts->margin_len;
 
     if (0 < e->attr.len) { /* a="attr" */
 	size += e->attr.len + 5;
@@ -258,7 +262,7 @@ dump_start(Out out, Element e) {
     if (out->end - out->cur <= (long)size) {
 	grow(out, size);
     }
-    if (out->buf < out->cur) {
+    if (out->buf + out->opts->margin_len < out->cur) {
 	fill_indent(out, e->indent);
     }
     *out->cur++ = '<';
@@ -285,7 +289,7 @@ dump_start(Out out, Element e) {
 
 static void
 dump_end(Out out, Element e) {
-    size_t	size = e->indent + 5;
+    size_t	size = e->indent + 5 + out->opts->margin_len;
 
     if (out->end - out->cur <= (long)size) {
 	grow(out, size);
@@ -530,6 +534,9 @@ dump_first_obj(VALUE obj, Out out) {
     int		cnt;
 
     if (Yes == copts->with_xml) {
+	if (0 < copts->margin_len) {
+	    dump_value(out, copts->margin, copts->margin_len);
+	}
 	if ('\0' == *copts->encoding) {
 	    dump_value(out, "<?xml version=\"1.0\"?>", 21);
 	} else {
@@ -538,15 +545,26 @@ dump_first_obj(VALUE obj, Out out) {
 	}
     }
     if (Yes == copts->with_instruct) {
-	cnt = snprintf(buf, sizeof(buf), "%s<?ox version=\"1.0\" mode=\"object\"%s%s?>",
-		      (out->buf < out->cur) ? "\n" : "",
+	if (out->buf < out->cur) {
+	    dump_value(out, "\n", 1);
+	}
+	if (0 < copts->margin_len) {
+	    dump_value(out, copts->margin, copts->margin_len);
+	}
+	cnt = snprintf(buf, sizeof(buf), "<?ox version=\"1.0\" mode=\"object\"%s%s?>",
 		      (Yes == copts->circular) ? " circular=\"yes\"" : ((No == copts->circular) ? " circular=\"no\"" : ""),
 		      (Yes == copts->xsd_date) ? " xsd_date=\"yes\"" : ((No == copts->xsd_date) ? " xsd_date=\"no\"" : ""));
 	dump_value(out, buf, cnt);
     }
     if (Yes == copts->with_dtd) {
+	if (0 < copts->margin_len) {
+	    dump_value(out, copts->margin, copts->margin_len);
+	}
 	cnt = snprintf(buf, sizeof(buf), "%s<!DOCTYPE %c SYSTEM \"ox.dtd\">", (out->buf < out->cur) ? "\n" : "", obj_class_code(obj));
 	dump_value(out, buf, cnt);
+    }
+    if (0 < copts->margin_len) {
+	dump_value(out, copts->margin, copts->margin_len);
     }
     dump_obj(0, obj, 0, out);
 }
@@ -568,7 +586,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
     } else {
 	e.attr.str = rb_id2name(aid);
 	// Ruby 2.3 started to return NULL for some IDs so check for
-	// NULL. Ignore is NULL aid.
+	// NULL. Ignore if NULL aid.
 	if (NULL == e.attr.str) {
 	    return;
 	}
@@ -1000,6 +1018,9 @@ dump_gen_doc(VALUE obj, int depth, Out out) {
 	}
     }
     if (Yes == out->opts->with_xml) {
+	if (0 < out->opts->margin_len) {
+	    dump_value(out, out->opts->margin, out->opts->margin_len);
+	}
 	dump_value(out, "<?xml", 5);
 	if (Qnil != attrs) {
 	    rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
@@ -1008,10 +1029,12 @@ dump_gen_doc(VALUE obj, int depth, Out out) {
     }
     if (Yes == out->opts->with_instruct) {
 	if (out->buf < out->cur) {
-	    dump_value(out, "\n<?ox version=\"1.0\" mode=\"generic\"?>", 36);
-	} else {
-	    dump_value(out, "<?ox version=\"1.0\" mode=\"generic\"?>", 35);
+	    dump_value(out, "\n", 1);
 	}
+	if (0 < out->opts->margin_len) {
+	    dump_value(out, out->opts->margin, out->opts->margin_len);
+	}
+	dump_value(out, "<?ox version=\"1.0\" mode=\"generic\"?>", 35);
     }
     if (Qnil != nodes) {
 	dump_gen_nodes(nodes, depth, out);
@@ -1035,9 +1058,13 @@ dump_gen_element(VALUE obj, int depth, Out out) {
     } else {
 	indent = depth * out->indent;
     }
-    size = indent + 4 + nlen;
+    size = indent + 4 + nlen + out->opts->margin_len;
     if (out->end - out->cur <= (long)size) {
 	grow(out, size);
+    }
+    if (0 == depth && 0 < out->opts->margin_len && 0 < out->indent) {
+	memcpy(out->cur, out->opts->margin, out->opts->margin_len);
+	out->cur += out->opts->margin_len;
     }
     fill_indent(out, indent);
     *out->cur++ = '<';
@@ -1201,7 +1228,7 @@ dump_gen_val_node(VALUE obj, int depth,
     } else {
 	indent = depth * out->indent;
     }
-    size = indent + plen + slen + vlen;
+    size = indent + plen + slen + vlen + out->opts->margin_len;
     if (out->end - out->cur <= (long)size) {
 	grow(out, size);
     }
