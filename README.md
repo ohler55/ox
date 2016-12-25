@@ -34,6 +34,10 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Release 2.4.7a1
+
+ - After encountering a <> the SAX parser will continue parsing after reporting an error.
+
 ### Release 2.4.6
 
  - Ready for Ruby 2.4 thanks to SHIBATA Hiroshi, hsbt.

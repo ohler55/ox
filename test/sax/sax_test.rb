@@ -402,13 +402,17 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<?xml version="1.0"?>
 <top>
   <>
+  <abc x="1">zzz</abc>
 </top>},
                   [[:instruct, 'xml'],
                    [:attr, :version, "1.0"],
                    [:end_instruct, "xml"],
                    [:start_element, :top],
                    [:error, "Invalid Format: empty element", 3, 3],
-                   [:error, "Start End Mismatch: element 'top' not closed", 3, 4],
+                   [:start_element, :abc],
+                   [:attr, :x, "1"],
+                   [:text, "zzz"],
+                   [:end_element, :abc],
                    [:end_element, :top],
                   ])
   end

@@ -875,7 +875,7 @@ read_element_start(SaxDrive dr) {
 	snprintf(msg, sizeof(msg) - 1, "%sempty element", INVALID_FORMAT);
 	ox_sax_drive_error_at(dr, msg, pos, line, col);
 
-	return '\0';
+	return buf_get(&dr->buf);
     }
     if (0 != parent) {
 	parent->childCnt++;
@@ -1411,8 +1411,8 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req, 
     return c;
 }
 
-/* The character after the character after the word is returned. dr->buf.tail is one past that. dr->buf.str will point to the
- * token which will be '\0' terminated.
+/* The character after the word is returned. dr->buf.tail is one past
+ * that. dr->buf.str will point to the token which will be '\0' terminated.
  */
 static char
 read_name_token(SaxDrive dr) {
