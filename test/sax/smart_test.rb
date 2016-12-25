@@ -273,6 +273,16 @@ class SaxSmartNormalTagTest < SaxSmartTest
                    [:end_element, :html]])
   end
 
+  def test_empty_element
+    html = %{<html class="class1"><>A terminated text</html>}
+    parse_compare(html,
+                  [[:start_element, :html],
+                   [:attr, :class, "class1"],
+                   [:error, "Invalid Format: empty element", 1, 22],
+                    [:text, "A terminated text"],
+                   [:end_element, :html]])
+  end
+
   def test_normal_self_closing_tags
     html = %{<br />}
     parse_compare(html,

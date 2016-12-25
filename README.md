@@ -34,7 +34,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
-### Release 2.4.7a1
+### Release 2.4.7
 
  - After encountering a <> the SAX parser will continue parsing after reporting an error.
 
@@ -43,18 +43,6 @@ A fast XML parser and Object marshaller as a Ruby gem.
  - Ready for Ruby 2.4 thanks to SHIBATA Hiroshi, hsbt.
 
  - Added margin option to dump.
-
-### Release 2.4.5
-
-- Thanks to GUI for fixing an infinite loop in Ox::Builder.
-
-### Release 2.4.4
-
-- Builder element attributes with special characters are now encoded correctly.
-
-- A newline at end of an XML string is now controlled by the indent value. A
-  value of -1 indicates no terminating newline character and an indentation of
-  zero.
 
 ## Description
 
