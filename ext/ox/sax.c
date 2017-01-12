@@ -1144,7 +1144,7 @@ read_text(SaxDrive dr) {
     if ('\0' != c) {
 	*(dr->buf.tail - 1) = '\0';
     }
-    if (allWhite) {
+    if (allWhite && dr->options.skip == SpcSkip) {
 	int	isEnd = ('/' == buf_get(&dr->buf));
 
 	buf_backup(&dr->buf);
