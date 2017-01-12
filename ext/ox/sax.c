@@ -1117,6 +1117,7 @@ read_text(SaxDrive dr) {
     int		col = dr->buf.col - 1;
     Nv		parent = stack_peek(&dr->stack);
     int		allWhite = 1;
+    int         lineBreak = 0;
 
     buf_backup(&dr->buf);
     buf_protect(&dr->buf);
@@ -1124,9 +1125,11 @@ read_text(SaxDrive dr) {
 	switch(c) {
 	case ' ':
 	case '\t':
+            break;
 	case '\f':
 	case '\n':
 	case '\r':
+            lineBreak = 1;
 	    break;
 	case '\0':
 	    if (allWhite) {
@@ -1144,7 +1147,7 @@ read_text(SaxDrive dr) {
     if ('\0' != c) {
 	*(dr->buf.tail - 1) = '\0';
     }
-    if (allWhite && dr->options.skip == SpcSkip) {
+    if (allWhite && lineBreak) {
 	int	isEnd = ('/' == buf_get(&dr->buf));
 
 	buf_backup(&dr->buf);
