@@ -34,15 +34,13 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Release Notes
 
+### Release 2.4.8
+
+ - Tolerant mode now allows case-insensitve matches on elements during parsing.
+
 ### Release 2.4.7
 
  - After encountering a <> the SAX parser will continue parsing after reporting an error.
-
-### Release 2.4.6
-
- - Ready for Ruby 2.4 thanks to SHIBATA Hiroshi, hsbt.
-
- - Added margin option to dump.
 
 ## Description
 

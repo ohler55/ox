@@ -570,6 +570,32 @@ class Func < ::Minitest::Test
     assert_equal(expected, Ox.dump(doc, :with_xml => false))
   end
 
+  def test_tolerant_case
+    Ox::default_options = $ox_generic_options
+    xml = %{<!doctype HTML>
+<html lang=en>
+  <head>
+    <nonsense/>
+  </HEAD>
+  <Body>
+    Some text.
+  </bODY>
+</hTml>
+}
+    expected = %{
+<!DOCTYPE HTML >
+<html lang="en">
+  <head>
+    <nonsense/>
+  </head>
+  <Body> Some text. </Body>
+</html>
+}
+    doc = Ox.load(xml, :effort => :tolerant)
+    #puts Ox.dump(doc)
+    assert_equal(expected, Ox.dump(doc, :with_xml => false))
+  end
+
   def test_class
     Ox::default_options = $ox_object_options
     dump_and_load(Bag, false)

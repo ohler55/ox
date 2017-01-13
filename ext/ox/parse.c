@@ -556,7 +556,7 @@ read_element(PInfo pi) {
 		    next_non_white(pi);
 		    c = *pi->s;
 		    *end = '\0';
-		    if (0 != strcmp(name, ename)) {
+		    if (0 != ((TolerantEffort == pi->options->effort) ? strcasecmp(name, ename) : strcmp(name, ename))) {
 			attr_stack_cleanup(&attrs);
 			if (TolerantEffort == pi->options->effort) {
 			    pi->pcb->end_element(pi, ename);
@@ -617,7 +617,8 @@ read_element(PInfo pi) {
 		    // Child closed with mismatched name.
 		    if (0 != (name = read_element(pi))) {
 			attr_stack_cleanup(&attrs);
-			if (0 == strcmp(name, ename)) {
+
+			if (0 == ((TolerantEffort == pi->options->effort) ? strcasecmp(name, ename) : strcmp(name, ename))) {
 			    pi->s++;
 			    pi->pcb->end_element(pi, ename);
 			    return 0;
@@ -638,8 +639,9 @@ read_element(PInfo pi) {
 
 		/* to exit read_text with no errors the next character must be < */
 		if ('/' == *(pi->s + 1) &&
-		    0 == strncmp(ename, pi->s + 2, elen) &&
+		    0 == ((TolerantEffort == pi->options->effort) ? strncasecmp(ename, pi->s + 2, elen) : strncmp(ename, pi->s + 2, elen)) &&
 		    '>' == *(pi->s + elen + 2)) {
+
 		    /* close tag after text so treat as a value */
 		    pi->s += elen + 3;
 		    pi->pcb->end_element(pi, ename);
