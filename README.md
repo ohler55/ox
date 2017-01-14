@@ -36,7 +36,8 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ### Release 2.4.8
 
- - Tolerant mode now allows case-insensitve matches on elements during parsing.
+ - Tolerant mode now allows case-insensitve matches on elements during
+   parsing. Smart mode in the SAX parser is also case insensitive.
 
 ### Release 2.4.7
 

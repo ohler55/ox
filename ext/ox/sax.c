@@ -327,7 +327,9 @@ parse(SaxDrive dr) {
 			}
 			c = read_doctype(dr);
 		    } else if (0 == strncasecmp("DOCTYPE", dr->buf.str, 7)) {
-			ox_sax_drive_error(dr, CASE_ERROR "expected DOCTYPE all in caps");
+			if (!dr->options.smart) {
+			    ox_sax_drive_error(dr, CASE_ERROR "expected DOCTYPE all in caps");
+			}
 			if (START_STATE != state) {
 			    ox_sax_drive_error(dr, OUT_OF_ORDER "DOCTYPE can not come after an element");
 			}
@@ -338,7 +340,9 @@ parse(SaxDrive dr) {
 			}
 			c = read_cdata(dr);
 		    } else if (0 == strncasecmp("[CDATA[", dr->buf.str, 7)) {
-			ox_sax_drive_error(dr, CASE_ERROR "expected CDATA all in caps");
+			if (!dr->options.smart) {
+			    ox_sax_drive_error(dr, CASE_ERROR "expected CDATA all in caps");
+			}
 			c = read_cdata(dr);
 		    } else {
 			Nv	parent = stack_peek(&dr->stack);
@@ -484,7 +488,7 @@ read_instruction(SaxDrive dr) {
     if ('\0' == (c = read_name_token(dr))) {
         return c;
     }
-    is_xml = (0 == strcmp("xml", dr->buf.str));
+    is_xml = (0 == (dr->options.smart ? strcasecmp("xml", dr->buf.str) : strcmp("xml", dr->buf.str)));
     if (dr->has.instruct || dr->has.end_instruct) {
 	target = rb_str_new2(dr->buf.str);
     }
@@ -1000,11 +1004,11 @@ read_element_start(SaxDrive dr) {
 }
 
 static Nv
-stack_rev_find(NStack stack, const char *name) {
+stack_rev_find(SaxDrive dr, const char *name) {
     Nv	nv;
 
-    for (nv = stack->tail - 1; stack->head <= nv; nv--) {
-	if (0 == strcmp(name, nv->name)) {
+    for (nv = dr->stack.tail - 1; dr->stack.head <= nv; nv--) {
+	if (0 == (dr->options.smart ? strcasecmp(name, nv->name) : strcmp(name, nv->name))) {
 	    return nv;
 	}
     }
@@ -1030,14 +1034,15 @@ read_element_end(SaxDrive dr) {
     // c should be > and current is one past so read another char
     c = buf_get(&dr->buf);
     nv = stack_peek(&dr->stack);
-    if (0 != nv && 0 == strcmp(dr->buf.str, nv->name)) {
+    if (0 != nv &&
+	0 == (dr->options.smart ? strcasecmp(dr->buf.str, nv->name) : strcmp(dr->buf.str, nv->name))) {
 	name = nv->val;
 	h = nv->hint;
 	stack_pop(&dr->stack);
     } else {
 	// Mismatched start and end
 	char	msg[256];
-	Nv	match = stack_rev_find(&dr->stack, dr->buf.str);
+	Nv	match = stack_rev_find(dr, dr->buf.str);
 
 	if (0 == match) {
 	    // Not found so open and close element.
@@ -1446,6 +1451,8 @@ read_name_token(SaxDrive dr) {
 	    if ('\0' == *dr->options.strip_ns) {
 		break;
 	    } else if ('*' == *dr->options.strip_ns && '\0' == dr->options.strip_ns[1]) {
+		dr->buf.str = dr->buf.tail;
+	    } else if (dr->options.smart && 0 == strncasecmp(dr->options.strip_ns, dr->buf.str, dr->buf.tail - dr->buf.str - 1)) {
 		dr->buf.str = dr->buf.tail;
 	    } else if (0 == strncmp(dr->options.strip_ns, dr->buf.str, dr->buf.tail - dr->buf.str - 1)) {
 		dr->buf.str = dr->buf.tail;

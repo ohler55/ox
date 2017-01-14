@@ -146,8 +146,8 @@ class SaxSmartTest < test_case
   }
 
   # Make the :smart => true option the default one
-  def parse_compare(xml, expected, handler = AllSax, opts = {}, handler_attr = :calls)
-    super(xml, expected, handler, opts.merge(:smart => true), handler_attr)
+  def smart_parse_compare(xml, expected, handler = AllSax, opts = {}, handler_attr = :calls)
+    parse_compare(xml, expected, handler, opts.merge(:smart => true), handler_attr)
   end
 
 end
@@ -179,7 +179,7 @@ class ErrorsOnParentNormalElementTest < SaxSmartTest
     NORMALELEMENTS.each_key do |el|
       ancestries(el).each do |arr|
         html = arr.reduce(&w)
-        parse_compare(html, [], ErrorSax, {}, :errors)
+        smart_parse_compare(html, [], ErrorSax, {}, :errors)
       end
     end
   end
@@ -198,7 +198,7 @@ class ErrorsOnParentVoidElementTest < SaxSmartTest
 
   def test_no_error_in_dependent_parent_on_void_elements
     VOIDELEMENTS.each_key do |el|
-      parse_compare(construct_html(el), [], ErrorSax, {}, :errors)
+      smart_parse_compare(construct_html(el), [], ErrorSax, {}, :errors)
     end
   end
 
@@ -212,49 +212,50 @@ class SaxSmartDoctypeTest < SaxSmartTest
 
   def test_doctype_html5
     html = %{<!DOCTYPE HTML>}
-    parse_compare(html, [[:doctype, " HTML"]])
+    smart_parse_compare(html, [[:doctype, " HTML"]])
   end
 
   def test_doctype_html401_strict
     html = %{<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">}
-    parse_compare(html, [[:doctype, " HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\""]])
+    smart_parse_compare(html, [[:doctype, " HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\""]])
   end
 
   def test_doctype_html401_transitional
     html = %{<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">}
-    parse_compare(html, [[:doctype, " HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\""]])
+    smart_parse_compare(html, [[:doctype, " HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\" \"http://www.w3.org/TR/html4/loose.dtd\""]])
   end
 
   def test_doctype_html401_frameset
     html = %{<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Frameset//EN" "http://www.w3.org/TR/html4/frameset.dtd">}
-    parse_compare(html, [[:doctype, " HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\" \"http://www.w3.org/TR/html4/frameset.dtd\""]])
+    smart_parse_compare(html, [[:doctype, " HTML PUBLIC \"-//W3C//DTD HTML 4.01 Frameset//EN\" \"http://www.w3.org/TR/html4/frameset.dtd\""]])
   end
 
   def test_doctype_xhtml_10_transitional
     html = %{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">}
-    parse_compare(html, [[:doctype, " html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\""]])
+    smart_parse_compare(html, [[:doctype, " html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\""]])
   end
 
   def test_doctype_xhtml_10_strict
     html = %{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">}
-    parse_compare(html, [[:doctype, " html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\""]])
+    smart_parse_compare(html, [[:doctype, " html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\""]])
   end
 
   def test_doctype_xhtml_10_frameset
     html = %{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">}
-    parse_compare(html, [[:doctype, " html PUBLIC \"-//W3C//DTD XHTML 1.0 Frameset//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd\""]])
+    smart_parse_compare(html, [[:doctype, " html PUBLIC \"-//W3C//DTD XHTML 1.0 Frameset//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd\""]])
   end
 
   def test_doctype_xhtml_11
     html = %{<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">}
-    parse_compare(html, [[:doctype, " html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\""]])
+    smart_parse_compare(html, [[:doctype, " html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" \"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\""]])
   end
 
   def test_doctype_declaration_allcaps
+    # allcaps is only required when not smart
     html = %{<!dOCTYPE HTML>}
     parse_compare(html,
                   [[:error, "Case Error: expected DOCTYPE all in caps", 1, 10],
-                   [:doctype, " HTML"]])
+                   [:doctype, " HTML"]], AllSax)
   end
 end
 
@@ -266,7 +267,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
 
   def test_normal_tags
     html = %{<html class="class1">A terminated text</html>}
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :html],
                    [:attr, :class, "class1"],
                    [:text, "A terminated text"],
@@ -275,7 +276,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
 
   def test_empty_element
     html = %{<html class="class1"><>A terminated text</html>}
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :html],
                    [:attr, :class, "class1"],
                    [:error, "Invalid Format: empty element", 1, 22],
@@ -285,14 +286,14 @@ class SaxSmartNormalTagTest < SaxSmartTest
 
   def test_normal_self_closing_tags
     html = %{<br />}
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :br],
                    [:end_element, :br]])
   end
 
   def test_with_no_close
     html = %{<html>}
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :html],
                    [:error, "Start End Mismatch: element 'html' not closed", 1, 6],
                    [:end_element, :html]])
@@ -300,7 +301,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
 
   def test_with_no_close_and_not_terminated_text
     html = %{<html>A not terminated text}
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :html],
                    [:error, "Not Terminated: text not terminated", 1, 27],
                    [:text, "A not terminated text"],
@@ -310,7 +311,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
 
   def test_with_no_close_nested
     html = %{<html>Test <div style='width: 100px;'>A div element</html>}
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :html],
                    [:text, "Test "],
                    [:start_element, :div],
@@ -323,7 +324,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
 
   def test_with_no_close_with_nested
     html = %{<html><div class='test'>A div element</div>}
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :html],
                    [:start_element, :div],
                    [:attr, :class, "test"],
@@ -335,7 +336,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
 
   def test_with_no_close_and_not_terminated_text_with_nested
     html = %{<html>A not terminated <div>A div</div> text}
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :html],
                    [:text, "A not terminated "],
                    [:start_element, :div],
@@ -353,7 +354,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
   <budy>Hello</budy>
 </html>
 }
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :html],
                    [:error, "Invalid Element: budy is not a valid element type for a HTML document type.", 3, 8],
                    [:start_element, :budy],
@@ -372,7 +373,7 @@ Word
   </body>
 </html>
 }
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :html], [:start_element, :body]] +
                   [[:start_element, :div]] * 20 +
                   [[:text, "\nWord\n    "]] +
@@ -385,7 +386,7 @@ Word
   # which is not the case for void elements, where only an error is triggered.
   def test_not_opened
     html = "</div>"
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:error, "Start End Mismatch: element 'div' closed but not opened", 1, 1],
                    [:start_element, :div],
                    [:end_element, :div]])
@@ -393,7 +394,7 @@ Word
 
   def test_not_opened_nested
     html = "<h1 class=a_class>A header</div> here</h1>"
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :h1],
                    [:error, "Unexpected Character: attribute value not in quotes", 1, 11],
                    [:attr, :class, "a_class"],
@@ -407,7 +408,7 @@ Word
 
   def test_unquoted_slash
     html = "<a href=abc/>def</a>"
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :a],
                    [:error, "Unexpected Character: attribute value not in quotes", 1, 9],
                    [:attr, :href, "abc/"],
@@ -417,7 +418,7 @@ Word
 
   def test_unquoted_slash_no_close
     html = "<a href=abc/>def"
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :a],
                    [:error, "Unexpected Character: attribute value not in quotes", 1, 9],
                    [:attr, :href, "abc/"],
@@ -457,7 +458,7 @@ class SaxSmartVoidTagTest < SaxSmartTest
   def test_closed
     VOIDELEMENTS.each do |el|
       html = %{<html>A terminated <#{el}/> text</html>}
-      parse_compare(html,
+      smart_parse_compare(html,
                     [
                      [:start_element, :html],
                      [:text, "A terminated "],
@@ -472,7 +473,7 @@ class SaxSmartVoidTagTest < SaxSmartTest
   def test_not_closed
     VOIDELEMENTS.each do |el|
       html = %{<html>A terminated <#{el}> text</html>}
-      parse_compare(html,
+      smart_parse_compare(html,
                     [
                      [:start_element, :html],
                      [:text, "A terminated "],
@@ -488,7 +489,7 @@ class SaxSmartVoidTagTest < SaxSmartTest
   def test_invalid_syntax
     VOIDELEMENTS.each do |el|
       html = %{<html>A terminated <#{el}>nice\n</#{el}> text</html>}
-      parse_compare(html,
+      smart_parse_compare(html,
                     [
                      [:start_element, :html],
                      [:text, "A terminated "],
@@ -523,7 +524,7 @@ class SaxSmartTableTagTest < SaxSmartTest
   </body>
 </html>
 }
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :html],
                    [:start_element, :body],
                    [:text, "Table\n    "],
@@ -563,7 +564,7 @@ class SaxSmartTableTagTest < SaxSmartTest
   </body>
 </html>
 }
-    parse_compare(html,
+    smart_parse_compare(html,
                   [[:start_element, :html],
                    [:start_element, :body],
                    [:start_element, :table],

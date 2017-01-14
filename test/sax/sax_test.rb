@@ -235,6 +235,24 @@ encoding = "UTF-8" ?>},
                   ])
   end
 
+  def test_sax_elements_case
+    Ox::default_options = $ox_sax_options
+    Ox::default_options = { :smart => true }
+    parse_compare(%{<top>
+  <Child>
+    <grandchild/>
+  </child >
+</TOP>
+},
+                  [[:start_element, :top],
+                   [:start_element, :Child],
+                   [:start_element, :grandchild],
+                   [:end_element, :grandchild],
+                   [:end_element, :Child],
+                   [:end_element, :top],
+                  ], AllSax, { :smart => true })
+  end
+
   def test_sax_nested1
     Ox::default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
@@ -1019,7 +1037,6 @@ this is not part of the xml document
 }
     parse_compare(xml,
                   [
-                   [:error, "Case Error: expected DOCTYPE all in caps", 1, 10],
                    [:doctype, " HTML"],
                    [:start_element, :html],
                    [:error, "Unexpected Character: attribute value not in quotes", 2, 12],
