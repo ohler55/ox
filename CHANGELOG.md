@@ -1,5 +1,5 @@
 
-## 2.4.8 - 
+## 2.4.8 - January 15, 2017
 
  - Tolerant mode now allows case-insensitve matches on elements during
    parsing. Smart mode in the SAX parser is also case insensitive.
