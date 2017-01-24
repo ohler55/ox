@@ -1,4 +1,8 @@
 
+## 2.4.9a1 - January 24, 2017
+
+ - Added a SAX hint that allows comments to be treated like other elements.
+
 ## 2.4.8 - January 15, 2017
 
  - Tolerant mode now allows case-insensitve matches on elements during

@@ -363,6 +363,32 @@ class SaxSmartNormalTagTest < SaxSmartTest
                    [:end_element, :html]])
   end
 
+  def test_comment_active
+    html = %{
+<html>
+  <body>
+    <p>hello</p>
+    <!-- a comment -->
+  </body>
+</html>
+}
+    overlay = Ox.sax_html_overlay.dup
+    overlay.each_key {|k| overlay[k] = :off }
+    overlay['!--'] = :active
+
+    handler = AllSax.new()
+    input = StringIO.new(html)
+    options = {
+      :overlay => overlay,
+    }
+    Ox.sax_html(handler, input, options)
+    expected = [[:comment, " a comment "]]
+    actual = handler.calls()
+
+    puts "\nexpected: #{expected}\n  actual: #{actual}" if expected != actual
+    assert_equal(expected, actual)
+  end
+
   def test_nested
     html = %{
 <html>

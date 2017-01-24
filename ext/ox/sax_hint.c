@@ -29,6 +29,7 @@ static const char	*table_0[] = { "table", 0 };
 static const char	*tr_0[] = { "tr", 0 };
 
 static struct _Hint	html_hint_array[] = {
+    { "!--", false, false, false, ActiveOverlay, NULL }, // comment
     { "a", false, false, false, ActiveOverlay, NULL },
     { "abbr", false, false, false, ActiveOverlay, NULL },
     { "acronym", false, false, false, ActiveOverlay, NULL },

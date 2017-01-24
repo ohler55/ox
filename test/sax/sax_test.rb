@@ -1255,6 +1255,7 @@ this is not part of the xml document
     overlay = Ox.sax_html_overlay()
     overlay['table'] = :off
     overlay['td'] = :off
+    overlay['!--'] = :off
 
     Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><hr/><tr><td>one</td></tr></table></html>', :overlay => overlay)
     assert_equal([[:start_element, :html],

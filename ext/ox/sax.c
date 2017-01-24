@@ -818,12 +818,14 @@ read_comment(SaxDrive dr) {
 	}
     }
  CB:
-    // TBD check parent overlay
     if (dr->has.comment && !dr->blocked) {
         VALUE	args[1];
 	Nv	parent = stack_peek(&dr->stack);
+	Hint	h = ox_hint_find(dr->options.hints, "!--");
+	
+	if (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay ||
+	    (NULL != h && ActiveOverlay == h->overlay)) {
 
-	if (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay) {
 	    args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
 	    if (0 != dr->encoding) {
