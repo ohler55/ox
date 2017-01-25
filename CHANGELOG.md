@@ -1,5 +1,5 @@
 
-## 2.4.9a1 - January 24, 2017
+## 2.4.9 - January 25, 2017
 
  - Added a SAX hint that allows comments to be treated like other elements.
 
