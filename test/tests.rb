@@ -377,7 +377,7 @@ class Func < ::Minitest::Test
 
   def test_escape_value
     Ox::default_options = $ox_object_options
-    xml = %{\n<top name="&lt;&amp;test&gt;"/>\n}
+    xml = %{\n<top name="<&amp;test>">&lt;not \'quoted\'&gt;</top>\n}
     doc = Ox.parse(xml)
     assert_equal('<&test>', doc.attributes[:name])
     dumped_xml = Ox.dump(doc)

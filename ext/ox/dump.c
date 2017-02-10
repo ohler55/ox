@@ -66,7 +66,7 @@ static void	dump_end(Out out, Element e);
 static void	grow(Out out, size_t len);
 
 static void	dump_value(Out out, const char *value, size_t size);
-static void	dump_str_value(Out out, const char *value, size_t size);
+static void	dump_str_value(Out out, const char *value, size_t size, int delim);
 static int	dump_var(ID key, VALUE value, Out out);
 static void	dump_num(Out out, VALUE obj);
 static void	dump_date(Out out, VALUE obj);
@@ -319,7 +319,7 @@ dump_value(Out out, const char *value, size_t size) {
 }
 
 inline static void
-dump_str_value(Out out, const char *value, size_t size) {
+dump_str_value(Out out, const char *value, size_t size, int delim) {
     size_t	xsize = xml_str_len((const uchar*)value, size);
     
     if (out->end - out->cur <= (long)xsize) {
@@ -331,12 +331,16 @@ dump_str_value(Out out, const char *value, size_t size) {
 	} else {
 	    switch (*value) {
 	    case '"':
-		*out->cur++ = '&';
-		*out->cur++ = 'q';
-		*out->cur++ = 'u';
-		*out->cur++ = 'o';
-		*out->cur++ = 't';
-		*out->cur++ = ';';
+		if ('"' == delim) {
+		    *out->cur++ = '&';
+		    *out->cur++ = 'q';
+		    *out->cur++ = 'u';
+		    *out->cur++ = 'o';
+		    *out->cur++ = 't';
+		    *out->cur++ = ';';
+		} else {
+		    *out->cur++ = '"';
+		}
 		break;
 	    case '&':
 		*out->cur++ = '&';
@@ -346,24 +350,36 @@ dump_str_value(Out out, const char *value, size_t size) {
 		*out->cur++ = ';';
 		break;
 	    case '\'':
-		*out->cur++ = '&';
-		*out->cur++ = 'a';
-		*out->cur++ = 'p';
-		*out->cur++ = 'o';
-		*out->cur++ = 's';
-		*out->cur++ = ';';
+		if ('\'' == delim) {
+		    *out->cur++ = '&';
+		    *out->cur++ = 'a';
+		    *out->cur++ = 'p';
+		    *out->cur++ = 'o';
+		    *out->cur++ = 's';
+		    *out->cur++ = ';';
+		} else {
+		    *out->cur++ = '\'';
+		}
 		break;
 	    case '<':
-		*out->cur++ = '&';
-		*out->cur++ = 'l';
-		*out->cur++ = 't';
-		*out->cur++ = ';';
+		if ('<' == delim) {
+		    *out->cur++ = '&';
+		    *out->cur++ = 'l';
+		    *out->cur++ = 't';
+		    *out->cur++ = ';';
+		} else {
+		    *out->cur++ = '<';
+		}
 		break;
 	    case '>':
-		*out->cur++ = '&';
-		*out->cur++ = 'g';
-		*out->cur++ = 't';
-		*out->cur++ = ';';
+		if ('<' == delim) {
+		    *out->cur++ = '&';
+		    *out->cur++ = 'g';
+		    *out->cur++ = 't';
+		    *out->cur++ = ';';
+		} else {
+		    *out->cur++ = '>';
+		}
 		break;
 	    default:
 		// Must be one of the invalid characters.
@@ -685,7 +701,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	if (is_xml_friendly((uchar*)str, cnt)) {
 	    e.type = StringCode;
 	    out->w_start(out, &e);
-	    dump_str_value(out, str, cnt);
+	    dump_str_value(out, str, cnt, '<');
 	    e.indent = -1;
 	    out->w_end(out, &e);
 	} else {
@@ -702,7 +718,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 #else
 	e.type = StringCode;
 	out->w_start(out, &e);
-	dump_str_value(out, str, cnt);
+	dump_str_value(out, str, cnt, '<');
 	e.indent = -1;
 	out->w_end(out, &e);
 #endif
@@ -717,7 +733,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	if (is_xml_friendly((uchar*)sym, cnt)) {
 	    e.type = SymbolCode;
 	    out->w_start(out, &e);
-	    dump_str_value(out, sym, cnt);
+	    dump_str_value(out, sym, cnt, '<');
 	    e.indent = -1;
 	    out->w_end(out, &e);
 	} else {
@@ -734,7 +750,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 #else
 	e.type = SymbolCode;
 	out->w_start(out, &e);
-	dump_str_value(out, sym, cnt);
+	dump_str_value(out, sym, cnt, '<');
 	e.indent = -1;
 	out->w_end(out, &e);
 #endif
@@ -901,7 +917,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 #if USE_B64
 	if (is_xml_friendly((uchar*)s, cnt)) {
 	    /*dump_value(out, "/", 1); */
-	    dump_str_value(out, s, cnt);
+	    dump_str_value(out, s, cnt, '<');
 	} else {
 	    ulong	size = b64_size(cnt);
 	    char	*b64 = ALLOCA_N(char, size + 1);
@@ -910,7 +926,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	    dump_value(out, b64, size);
 	}
 #else
-	dump_str_value(out, s, cnt);
+	dump_str_value(out, s, cnt, '<');
 #endif
 	e.indent = -1;
 	out->w_end(out, &e);
@@ -1148,7 +1164,7 @@ dump_gen_nodes(VALUE obj, int depth, Out out) {
 		dump_gen_instruct(*np, d2, out);
 		indent_needed = (1 == cnt) ? 0 : 1;
 	    } else if (rb_cString == clas) {
-		dump_str_value(out, StringValuePtr(*(VALUE*)np), RSTRING_LEN(*np));
+		dump_str_value(out, StringValuePtr(*(VALUE*)np), RSTRING_LEN(*np), '<');
 		indent_needed = (1 == cnt) ? 0 : 1;
 	    } else if (ox_comment_clas == clas) {
 		dump_gen_val_node(*np, d2, "<!-- ", 5, " -->", 4, out);
@@ -1200,7 +1216,7 @@ dump_gen_attr(VALUE key, VALUE value, Out out) {
     fill_value(out, ks, klen);
     *out->cur++ = '=';
     *out->cur++ = '"';
-    dump_str_value(out, StringValuePtr(value), RSTRING_LEN(value));
+    dump_str_value(out, StringValuePtr(value), RSTRING_LEN(value), '"');
     *out->cur++ = '"';
 
     return ST_CONTINUE;
