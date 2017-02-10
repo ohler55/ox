@@ -39,7 +39,7 @@ static const char	indent_spaces[] = "\n                                         
 
 // The : character is equivalent to 10. Used for replacement characters up to 10
 // characters long such as '&#x10FFFF;'.
-static char	xml_friendly_chars[257] = "\
+static const char	xml_friendly_chars[257] = "\
 :::::::::11::1::::::::::::::::::\
 11611156111111111111111111114141\
 11111111111111111111111111111111\
@@ -49,12 +49,32 @@ static char	xml_friendly_chars[257] = "\
 11111111111111111111111111111111\
 11111111111111111111111111111111";
 
+static const char	xml_quote_chars[257] = "\
+:::::::::11::1::::::::::::::::::\
+11611151111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111";
+
+static const char	xml_element_chars[257] = "\
+:::::::::11::1::::::::::::::::::\
+11111151111111111111111111114141\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111";
+
 inline static size_t
-xml_str_len(const unsigned char *str, size_t len) {
+xml_str_len(const unsigned char *str, size_t len, const char *table) {
     size_t	size = 0;
 
     for (; 0 < len; str++, len--) {
-	size += xml_friendly_chars[*str];
+	size += table[*str];
     }
     return size - len * (size_t)'0';
 }
@@ -78,8 +98,8 @@ append_indent(Builder b) {
 }
 
 static void
-append_string(Builder b, const char *str, size_t size) {
-    size_t	xsize = xml_str_len((const unsigned char*)str, size);
+append_string(Builder b, const char *str, size_t size, const char *table) {
+    size_t	xsize = xml_str_len((const unsigned char*)str, size, table);
 
     if (size == xsize) {
 	const char	*s = str;
@@ -102,7 +122,7 @@ append_string(Builder b, const char *str, size_t size) {
 	int	fcnt;
 	
 	for (; '\0' != *str && 0 < i; i--, str++) {
-	    if ('1' == (fcnt = xml_friendly_chars[(unsigned char)*str])) {
+	    if ('1' == (fcnt = table[(unsigned char)*str])) {
 		if (end <= bp) {
 		    buf_append_string(&b->buf, buf, bp - buf);
 		    bp = buf;
@@ -170,7 +190,7 @@ append_sym_str(Builder b, VALUE v) {
 	rb_raise(ox_arg_error_class, "expected a Symbol or String");
 	break;
     }
-    append_string(b, s, len);
+    append_string(b, s, len, xml_element_chars);
 }
 
 static void
@@ -200,7 +220,7 @@ append_attr(VALUE key, VALUE value, Builder b) {
     b->col += 2;
     b->pos += 2;
     Check_Type(value, T_STRING);
-    append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value));
+    append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value), xml_quote_chars);
     buf_append(&b->buf, '"');
     b->col++;
     b->pos++;
@@ -611,7 +631,7 @@ builder_element(int argc, VALUE *argv, VALUE self) {
     buf_append(&b->buf, '<');
     b->col++;
     b->pos++;
-    append_string(b, e->name, len);
+    append_string(b, e->name, len, xml_element_chars);
     if (1 < argc) {
 	rb_hash_foreach(argv[1], append_attr, (VALUE)b);
     }
@@ -638,7 +658,7 @@ builder_comment(VALUE self, VALUE text) {
     buf_append_string(&b->buf, "<!-- ", 5);
     b->col += 5;
     b->pos += 5;
-    append_string(b, StringValuePtr(text), RSTRING_LEN(text));
+    append_string(b, StringValuePtr(text), RSTRING_LEN(text), xml_element_chars);
     buf_append_string(&b->buf, " --/> ", 5);
     b->col += 5;
     b->pos += 5;
@@ -661,7 +681,7 @@ builder_doctype(VALUE self, VALUE text) {
     buf_append_string(&b->buf, "<!DOCTYPE ", 10);
     b->col += 10;
     b->pos += 10;
-    append_string(b, StringValuePtr(text), RSTRING_LEN(text));
+    append_string(b, StringValuePtr(text), RSTRING_LEN(text), xml_element_chars);
     buf_append(&b->buf, '>');
     b->col++;
     b->pos++;
@@ -683,7 +703,7 @@ builder_text(VALUE self, VALUE text) {
 	v = rb_funcall(v, ox_to_s_id, 0);
     }
     i_am_a_child(b, true);
-    append_string(b, StringValuePtr(v), RSTRING_LEN(v));
+    append_string(b, StringValuePtr(v), RSTRING_LEN(v), xml_element_chars);
 
     return Qnil;
 }

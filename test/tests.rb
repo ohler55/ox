@@ -1204,15 +1204,15 @@ class Func < ::Minitest::Test
     assert_equal(1, b.line())
     assert_equal(39, b.column())
     assert_equal(38, b.pos())
-    b.element('one', :a => "ack", 'b' => 'back')
+    b.element('one', :a => "ack", 'b' => "<ba\'ck>")
     b.element('two')
     assert_equal(3, b.line())
     assert_equal(6, b.column())
-    assert_equal(68, b.pos())
+    assert_equal(71, b.pos())
     b.pop()
     b.comment('just a comment')
     b.element('three')
-    b.text("my name is \"ピーター\"")
+    b.text("my name is <\"ピーター\">")
     b.pop()
     b.cdata("multi\nline\ncdata")
     b.raw("<multi></multi>\n<line></line>\n<raw></raw>")
@@ -1220,10 +1220,10 @@ class Func < ::Minitest::Test
     b.close()
     xml = b.to_s
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
-<one a="ack" b="back">
+<one a="ack" b="<ba'ck>">
   <two/>
   <!-- just a comment --/>
-  <three>my name is &quot;ピーター&quot;</three>
+  <three>my name is &lt;"ピーター"&gt;</three>
   <![CDATA[multi
 line
 cdata]]><multi></multi>
@@ -1256,7 +1256,7 @@ comment --/>
 <one a="ack" b="back">
   <two/>
   <!-- just a comment --/>
-  <three>my name is &quot;ピーター&quot;</three>
+  <three>my name is "ピーター"</three>
 </one>
 |, xml)
   end
@@ -1272,7 +1272,7 @@ comment --/>
 <one a="ack" b="back">
   <two/>
   <!-- just a comment --/>
-  <three>my name is &quot;ピーター&quot;</three>
+  <three>my name is "ピーター"</three>
 </one>
 |, xml)
       else
@@ -1309,7 +1309,7 @@ comment --/>
 <one a="ack" b="back">
   <two/>
   <!-- just a comment --/>
-  <three>my name is &quot;ピーター&quot;</three>
+  <three>my name is "ピーター"</three>
 </one>
 |, xml)
   end
@@ -1332,7 +1332,7 @@ comment --/>
 <one a="ack" b="back">
   <two/>
   <!-- just a comment --/>
-  <three>my name is &quot;ピーター&quot;</three>
+  <three>my name is "ピーター"</three>
 </one>
 |, xml)
   end
@@ -1348,7 +1348,7 @@ comment --/>
 <one a="ack" b="back">
   <two/>
   <!-- just a comment --/>
-  <three>my name is &quot;ピーター&quot;</three>
+  <three>my name is "ピーター"</three>
 </one>
 |, xml)
       else
