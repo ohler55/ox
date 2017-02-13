@@ -66,7 +66,7 @@ static void	dump_end(Out out, Element e);
 static void	grow(Out out, size_t len);
 
 static void	dump_value(Out out, const char *value, size_t size);
-static void	dump_str_value(Out out, const char *value, size_t size);
+static void	dump_str_value(Out out, const char *value, size_t size, const char *table);
 static int	dump_var(ID key, VALUE value, Out out);
 static void	dump_num(Out out, VALUE obj);
 static void	dump_date(Out out, VALUE obj);
@@ -74,13 +74,13 @@ static void	dump_time_thin(Out out, VALUE obj);
 static void	dump_time_xsd(Out out, VALUE obj);
 static int	dump_hash(VALUE key, VALUE value, Out out);
 
-static int	is_xml_friendly(const uchar *str, int len);
+static int	is_xml_friendly(const uchar *str, int len, const char *table);
 
 static const char	hex_chars[17] = "0123456789abcdef";
 
 // The : character is equivalent to 10. Used for replacement characters up to 10
 // characters long such as '&#x10FFFF;'.
-static char	xml_friendly_chars[257] = "\
+static const char	xml_friendly_chars[257] = "\
 :::::::::11::1::::::::::::::::::\
 11611156111111111111111111114141\
 11111111111111111111111111111111\
@@ -90,10 +90,30 @@ static char	xml_friendly_chars[257] = "\
 11111111111111111111111111111111\
 11111111111111111111111111111111";
 
+static const char	xml_quote_chars[257] = "\
+:::::::::11::1::::::::::::::::::\
+11611151111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111";
+
+static const char	xml_element_chars[257] = "\
+:::::::::11::1::::::::::::::::::\
+11111151111111111111111111114141\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111\
+11111111111111111111111111111111";
+
 inline static int
-is_xml_friendly(const uchar *str, int len) {
+is_xml_friendly(const uchar *str, int len, const char *table) {
     for (; 0 < len; str++, len--) {
-	if ('1' != xml_friendly_chars[*str]) {
+	if ('1' != table[*str]) {
 	    return 0;
 	}
     }
@@ -101,7 +121,7 @@ is_xml_friendly(const uchar *str, int len) {
 }
 
 inline static size_t
-xml_str_len(const uchar *str, size_t len) {
+xml_str_len(const uchar *str, size_t len, const char *table) {
     size_t	size = 0;
 
     for (; 0 < len; str++, len--) {
@@ -131,12 +151,12 @@ obj_class_code(VALUE obj) {
     case T_FALSE:	   return FalseClassCode;
     case T_FIXNUM:	   return FixnumCode;
     case T_FLOAT:	   return FloatCode;
-    case T_STRING:	   return (is_xml_friendly((uchar*)StringValuePtr(obj), (int)RSTRING_LEN(obj))) ? StringCode : String64Code;
+    case T_STRING:	   return (is_xml_friendly((uchar*)StringValuePtr(obj), (int)RSTRING_LEN(obj), xml_element_chars)) ? StringCode : String64Code;
     case T_SYMBOL:
     {
 	const char	*sym = rb_id2name(SYM2ID(obj));
 
-	return (is_xml_friendly((uchar*)sym, (int)strlen(sym))) ? SymbolCode : Symbol64Code;
+	return (is_xml_friendly((uchar*)sym, (int)strlen(sym), xml_element_chars)) ? SymbolCode : Symbol64Code;
     }
     case T_DATA:	   return (rb_cTime == clas) ? TimeCode : ((ox_date_class == clas) ? DateCode : 0);
     case T_STRUCT:	   return (rb_cRange == clas) ? RangeCode : StructCode;
@@ -319,14 +339,14 @@ dump_value(Out out, const char *value, size_t size) {
 }
 
 inline static void
-dump_str_value(Out out, const char *value, size_t size) {
-    size_t	xsize = xml_str_len((const uchar*)value, size);
+dump_str_value(Out out, const char *value, size_t size, const char *table) {
+    size_t	xsize = xml_str_len((const uchar*)value, size, table);
     
     if (out->end - out->cur <= (long)xsize) {
 	grow(out, xsize);
     }
     for (; '\0' != *value; value++) {
-	if ('1' == xml_friendly_chars[(uchar)*value]) {
+	if ('1' == table[(uchar)*value]) {
 	    *out->cur++ = *value;
 	} else {
 	    switch (*value) {
@@ -685,7 +705,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	if (is_xml_friendly((uchar*)str, cnt)) {
 	    e.type = StringCode;
 	    out->w_start(out, &e);
-	    dump_str_value(out, str, cnt);
+	    dump_str_value(out, str, cnt, '<');
 	    e.indent = -1;
 	    out->w_end(out, &e);
 	} else {
@@ -702,7 +722,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 #else
 	e.type = StringCode;
 	out->w_start(out, &e);
-	dump_str_value(out, str, cnt);
+	dump_str_value(out, str, cnt, xml_element_chars);
 	e.indent = -1;
 	out->w_end(out, &e);
 #endif
@@ -717,7 +737,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	if (is_xml_friendly((uchar*)sym, cnt)) {
 	    e.type = SymbolCode;
 	    out->w_start(out, &e);
-	    dump_str_value(out, sym, cnt);
+	    dump_str_value(out, sym, cnt, '<');
 	    e.indent = -1;
 	    out->w_end(out, &e);
 	} else {
@@ -734,7 +754,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 #else
 	e.type = SymbolCode;
 	out->w_start(out, &e);
-	dump_str_value(out, sym, cnt);
+	dump_str_value(out, sym, cnt, xml_element_chars);
 	e.indent = -1;
 	out->w_end(out, &e);
 #endif
@@ -901,7 +921,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 #if USE_B64
 	if (is_xml_friendly((uchar*)s, cnt)) {
 	    /*dump_value(out, "/", 1); */
-	    dump_str_value(out, s, cnt);
+	    dump_str_value(out, s, cnt, '<');
 	} else {
 	    ulong	size = b64_size(cnt);
 	    char	*b64 = ALLOCA_N(char, size + 1);
@@ -910,7 +930,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	    dump_value(out, b64, size);
 	}
 #else
-	dump_str_value(out, s, cnt);
+	dump_str_value(out, s, cnt, xml_element_chars);
 #endif
 	e.indent = -1;
 	out->w_end(out, &e);
@@ -1148,7 +1168,7 @@ dump_gen_nodes(VALUE obj, int depth, Out out) {
 		dump_gen_instruct(*np, d2, out);
 		indent_needed = (1 == cnt) ? 0 : 1;
 	    } else if (rb_cString == clas) {
-		dump_str_value(out, StringValuePtr(*(VALUE*)np), RSTRING_LEN(*np));
+		dump_str_value(out, StringValuePtr(*(VALUE*)np), RSTRING_LEN(*np), xml_element_chars);
 		indent_needed = (1 == cnt) ? 0 : 1;
 	    } else if (ox_comment_clas == clas) {
 		dump_gen_val_node(*np, d2, "<!-- ", 5, " -->", 4, out);
@@ -1200,7 +1220,7 @@ dump_gen_attr(VALUE key, VALUE value, Out out) {
     fill_value(out, ks, klen);
     *out->cur++ = '=';
     *out->cur++ = '"';
-    dump_str_value(out, StringValuePtr(value), RSTRING_LEN(value));
+    dump_str_value(out, StringValuePtr(value), RSTRING_LEN(value), xml_quote_chars);
     *out->cur++ = '"';
 
     return ST_CONTINUE;

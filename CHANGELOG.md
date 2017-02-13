@@ -1,4 +1,8 @@
 
+## 2.4.10 - February 13, 2017
+
+ - Dump is now smarter about which characters to replace with &xxx; alternatives.
+
 ## 2.4.9 - January 25, 2017
 
  - Added a SAX hint that allows comments to be treated like other elements.
