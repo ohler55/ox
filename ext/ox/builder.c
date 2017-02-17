@@ -263,7 +263,7 @@ pop(Builder b) {
     Element	e;
 
     if (0 > b->depth) {
-	rb_raise(ox_arg_error_class, "closed to many element");
+	rb_raise(ox_arg_error_class, "closed too many elements");
     }
     e = &b->stack[b->depth];
     b->depth--;
