@@ -3,6 +3,7 @@
  * All rights reserved.
  */
 
+#include <ctype.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
@@ -985,7 +986,7 @@ read_element_start(SaxDrive dr) {
 	end_element_cb(dr, name, pos, line, col, h);
     } else if (stackless) {
 	end_element_cb(dr, name, pos, line, col, h);
-    } else if (0 != h && h->jump) {
+    } else if (NULL != h && h->jump) {
 	stack_push(&dr->stack, ename, name, h);
 	if ('>' != c) {
 	    ox_sax_drive_error(dr, WRONG_CHAR "element not closed");
@@ -1224,11 +1225,11 @@ read_jump_term(Buf buf, const char *pat) {
     if ('/' != buf_next_non_white(buf)) {
 	return 0;
     }
-    if (*pat != buf_next_non_white(buf)) {
+    if (*pat != tolower(buf_next_non_white(buf))) {
 	return 0;
     }
     for (pat++; '\0' != *pat; pat++) {
-	if (*pat != buf_get(buf)) {
+	if (*pat != tolower(buf_get(buf))) {
 	    return 0;
 	}
     }

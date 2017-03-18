@@ -1,4 +1,8 @@
 
+## 2.4.11 - March 18, 2017
+
+ - Fixed SAX parser bug regarding upper case hints not matching.
+
 ## 2.4.10 - February 13, 2017
 
  - Dump is now smarter about which characters to replace with &xxx; alternatives.
