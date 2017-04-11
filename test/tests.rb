@@ -261,7 +261,7 @@ class Func < ::Minitest::Test
       Ox.load(xml, :mode => :object, :trace => 0)
     }
     loaded = Ox.load(xml, :mode => :object, :trace => 0, :effort => :tolerant)
-    assert_equal(loaded, nil)
+    assert_nil(loaded)
     loaded = Ox.load(xml, :mode => :object, :trace => 0, :effort => :auto_define)
     assert_equal(loaded.class.to_s, 'Bad::Boy')
     assert_equal(loaded.class.superclass.to_s, 'Ox::Bag')
@@ -336,7 +336,7 @@ class Func < ::Minitest::Test
     inst = doc.top.str.nodes[1]
     assert_equal(Ox::Instruct, inst.class)
     assert_equal('attrs', inst.target)
-    assert_equal(nil, inst.content)
+    assert_nil(inst.content)
     assert_equal({:dog=>'big'}, inst.attributes)
 
     inst = doc.top.content
@@ -909,7 +909,7 @@ class Func < ::Minitest::Test
     }
     xml = Ox.dump(f, :effort => :tolerant)
     obj = Ox.load(xml, :mode => :object) # should convert it to an object
-    assert_equal(nil, obj)
+    assert_nil(obj)
   end
   
   def locate_xml()
@@ -1110,7 +1110,7 @@ class Func < ::Minitest::Test
     assert_equal(::Ox::Element, doc.Family.Pete.class)
     assert_equal('Pete', doc.Family.Pete.name)
     assert_equal('Nicole', doc.Family.Pete.Kid.text)
-    assert_equal(nil, doc.Family.Pete.text)
+    assert_nil(doc.Family.Pete.text)
   end
 
   def test_easy_respond_to
@@ -1208,7 +1208,7 @@ class Func < ::Minitest::Test
     b.element('two')
     assert_equal(3, b.line())
     assert_equal(6, b.column())
-    assert_equal(71, b.pos())
+    assert_equal(77, b.pos())
     b.pop()
     b.comment('just a comment')
     b.element('three')
@@ -1220,7 +1220,7 @@ class Func < ::Minitest::Test
     b.close()
     xml = b.to_s
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
-<one a="ack" b="<ba'ck>">
+<one a="ack" b="&lt;ba'ck&gt;">
   <two/>
   <!-- just a comment --/>
   <three>my name is &lt;"ピーター"&gt;</three>
@@ -1383,7 +1383,11 @@ comment --/>
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)
     puts xml if trace
     loaded = Ox.load(xml, :trace => (trace ? 2 : 0))
-    assert_equal(obj, loaded)
+    if obj.nil?
+      assert_nil(loaded)
+    else
+      assert_equal(obj, loaded)
+    end
     loaded
   end
 

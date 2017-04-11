@@ -1,4 +1,8 @@
 
+## 2.4.12 - April 11, 2017
+
+ - Fixed position in builder when encoding special characters.
+
 ## 2.4.11 - March 19, 2017
 
  - Fixed SAX parser bug regarding upper case hints not matching.

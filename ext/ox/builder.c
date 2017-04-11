@@ -39,6 +39,7 @@ static const char	indent_spaces[] = "\n                                         
 
 // The : character is equivalent to 10. Used for replacement characters up to 10
 // characters long such as '&#x10FFFF;'.
+#if 0
 static const char	xml_friendly_chars[257] = "\
 :::::::::11::1::::::::::::::::::\
 11611156111111111111111111114141\
@@ -58,6 +59,7 @@ static const char	xml_quote_chars[257] = "\
 11111111111111111111111111111111\
 11111111111111111111111111111111\
 11111111111111111111111111111111";
+#endif
 
 static const char	xml_element_chars[257] = "\
 :::::::::11::1::::::::::::::::::\
@@ -136,8 +138,8 @@ append_string(Builder b, const char *str, size_t size, const char *table) {
 		b->pos++;
 		*bp++ = *str;
 	    } else {
-		b->pos += fcnt;
-		b->col += fcnt;
+		b->pos += fcnt - '0';
+		b->col += fcnt - '0';
 		if (buf < bp) {
 		    buf_append_string(&b->buf, buf, bp - buf);
 		    bp = buf;
@@ -220,7 +222,8 @@ append_attr(VALUE key, VALUE value, Builder b) {
     b->col += 2;
     b->pos += 2;
     Check_Type(value, T_STRING);
-    append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value), xml_quote_chars);
+    //append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value), xml_quote_chars);
+    append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value), xml_element_chars);
     buf_append(&b->buf, '"');
     b->col++;
     b->pos++;
