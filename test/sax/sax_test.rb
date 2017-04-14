@@ -237,7 +237,7 @@ encoding = "UTF-8" ?>},
 
   def test_sax_elements_case
     Ox::default_options = $ox_sax_options
-    Ox::default_options = { :smart => true }
+    Ox::default_options = { :smart => true, :skip => :skip_white }
     parse_compare(%{<top>
   <Child>
     <grandchild/>
@@ -438,7 +438,8 @@ encoding = "UTF-8" ?>},
   def test_sax_empty_element_noskip
     Ox::default_options = $ox_sax_options
     parse_compare(%{  <top>  </top>},
-                  [[:start_element, :top],
+                  [[:text, "  "],
+                   [:start_element, :top],
                    [:text, "  "],
                    [:end_element, :top]
                   ], AllSax, { :skip => :skip_none })
@@ -878,6 +879,25 @@ encoding = "UTF-8" ?>},
     xml = %{<top>  Pete\r\n  Ohler\r</top>}
     Ox.sax_parse(handler, StringIO.new(xml))
     assert_equal(%{  Pete\r\n  Ohler\r}, handler.item)
+  end
+
+  def test_sax_skip_none_nested
+    Ox::default_options = $ox_sax_options
+    Ox::default_options = { :skip => :skip_none }
+
+    handler = AllSax.new()
+    xml = %{<top>  <child>Pete\r</child>\n <child> Ohler\r</child></top>}
+    Ox.sax_parse(handler, StringIO.new(xml))
+    assert_equal([[:start_element, :top],
+                  [:text, "  "],
+                  [:start_element, :child],
+                  [:text, "Pete\r"],
+                  [:end_element, :child],
+                  [:text, "\n "],
+                  [:start_element, :child],
+                  [:text, " Ohler\r"],
+                  [:end_element, :child],
+                  [:end_element, :top]], handler.calls)
   end
 
   def test_sax_skip_return

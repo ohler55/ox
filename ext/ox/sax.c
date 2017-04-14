@@ -1156,6 +1156,28 @@ read_text(SaxDrive dr) {
 	int	isEnd = ('/' == buf_get(&dr->buf));
 
 	buf_backup(&dr->buf);
+	if (NoSkip == dr->options.skip && dr->has.text && !isEnd) {
+	    args[0] = rb_str_new2(dr->buf.str);
+#if HAS_ENCODING_SUPPORT
+	    if (0 != dr->encoding) {
+		rb_enc_associate(args[0], dr->encoding);
+	    }
+#elif HAS_PRIVATE_ENCODING
+	    if (Qnil != dr->encoding) {
+		rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
+	    }
+#endif
+	    if (dr->has.pos) {
+		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
+	    }
+	    if (dr->has.line) {
+		rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
+	    }
+	    if (dr->has.column) {
+		rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
+	    }
+	    rb_funcall2(dr->handler, ox_text_id, 1, args);
+	}
 	if (!isEnd || 0 == parent || 0 < parent->childCnt) {
 	    return c;
 	}
