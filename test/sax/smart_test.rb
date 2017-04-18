@@ -147,7 +147,7 @@ class SaxSmartTest < test_case
 
   # Make the :smart => true option the default one
   def smart_parse_compare(xml, expected, handler = AllSax, opts = {}, handler_attr = :calls)
-    parse_compare(xml, expected, handler, opts.merge(:smart => true), handler_attr)
+    parse_compare(xml, expected, handler, opts.merge(:smart => true, :skip => :skip_white), handler_attr)
   end
 
 end
@@ -380,6 +380,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
     input = StringIO.new(html)
     options = {
       :overlay => overlay,
+      :skip => :skip_white,
     }
     Ox.sax_html(handler, input, options)
     expected = [[:comment, " a comment "]]
@@ -402,7 +403,7 @@ Word
     smart_parse_compare(html,
                   [[:start_element, :html], [:start_element, :body]] +
                   [[:start_element, :div]] * 20 +
-                  [[:text, "\nWord\n    "]] +
+                  [[:text, " Word "]] +
                   [[:end_element, :div]] * 20 +
                   [[:end_element, :body], [:end_element, :html]
                   ])
@@ -553,7 +554,7 @@ class SaxSmartTableTagTest < SaxSmartTest
     smart_parse_compare(html,
                   [[:start_element, :html],
                    [:start_element, :body],
-                   [:text, "Table\n    "],
+                   [:text, "Table "],
                    [:start_element, :table],
                    [:start_element, :tr],
                    [:start_element, :td],
@@ -606,4 +607,5 @@ class SaxSmartTableTagTest < SaxSmartTest
                    [:end_element, :body],
                    [:end_element, :html]])
   end
+
 end
