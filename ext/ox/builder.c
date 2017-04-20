@@ -37,8 +37,9 @@ typedef struct _Builder {
 static VALUE		builder_class = Qundef;
 static const char	indent_spaces[] = "\n                                                                                                                                "; // 128 spaces
 
-// The : character is equivalent to 10. Used for replacement characters up to 10
-// characters long such as '&#x10FFFF;'.
+// The : character is equivalent to 10. Used for replacement characters up to
+// 10 characters long such as '&#x10FFFF;'. From
+// https://www.w3.org/TR/2006/REC-xml11-20060816
 #if 0
 static const char	xml_friendly_chars[257] = "\
 :::::::::11::1::::::::::::::::::\
@@ -49,21 +50,24 @@ static const char	xml_friendly_chars[257] = "\
 11111111111111111111111111111111\
 11111111111111111111111111111111\
 11111111111111111111111111111111";
+#endif
 
-static const char	xml_quote_chars[257] = "\
+// From 2.3 of the XML 1.1 spec. All over 0x20 except <&", > also. Builder
+// uses double quotes for attributes.
+static const char	xml_attr_chars[257] = "\
 :::::::::11::1::::::::::::::::::\
-11611151111111111111111111111111\
+11611151111111111111111111114141\
 11111111111111111111111111111111\
 11111111111111111111111111111111\
 11111111111111111111111111111111\
 11111111111111111111111111111111\
 11111111111111111111111111111111\
 11111111111111111111111111111111";
-#endif
 
+// From 3.1 of the XML 1.1 spec. All over 0x20 except <&, > also.
 static const char	xml_element_chars[257] = "\
 :::::::::11::1::::::::::::::::::\
-11611151111111111111111111114141\
+11111151111111111111111111114141\
 11111111111111111111111111111111\
 11111111111111111111111111111111\
 11111111111111111111111111111111\
@@ -222,8 +226,7 @@ append_attr(VALUE key, VALUE value, Builder b) {
     b->col += 2;
     b->pos += 2;
     Check_Type(value, T_STRING);
-    //append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value), xml_quote_chars);
-    append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value), xml_element_chars);
+    append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value), xml_attr_chars);
     buf_append(&b->buf, '"');
     b->col++;
     b->pos++;
@@ -854,9 +857,6 @@ builder_close(VALUE self) {
  * An XML builder.
  */
 void ox_init_builder(VALUE ox) {
-#if 0
-    ox = rb_define_module("Ox");
-#endif
     builder_class = rb_define_class_under(ox, "Builder", rb_cObject);
     rb_define_module_function(builder_class, "new", builder_new, -1);
     rb_define_module_function(builder_class, "file", builder_file, -1);

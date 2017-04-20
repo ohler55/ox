@@ -1204,15 +1204,15 @@ class Func < ::Minitest::Test
     assert_equal(1, b.line())
     assert_equal(39, b.column())
     assert_equal(38, b.pos())
-    b.element('one', :a => "ack", 'b' => "<ba\'ck>")
+    b.element('one', :a => "ack", 'b' => "<ba\"'&ck>")
     b.element('two')
     assert_equal(3, b.line())
     assert_equal(6, b.column())
-    assert_equal(77, b.pos())
+    assert_equal(88, b.pos())
     b.pop()
     b.comment('just a comment')
     b.element('three')
-    b.text("my name is <\"ピーター\">")
+    b.text(%|my name is Peter & <"ピーター">|)
     b.pop()
     b.cdata("multi\nline\ncdata")
     b.raw("<multi></multi>\n<line></line>\n<raw></raw>")
@@ -1220,10 +1220,10 @@ class Func < ::Minitest::Test
     b.close()
     xml = b.to_s
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
-<one a="ack" b="&lt;ba'ck&gt;">
+<one a="ack" b="&lt;ba&quot;'&amp;ck&gt;">
   <two/>
   <!-- just a comment --/>
-  <three>my name is &lt;"ピーター"&gt;</three>
+  <three>my name is Peter &amp; &lt;"ピーター"&gt;</three>
   <![CDATA[multi
 line
 cdata]]><multi></multi>

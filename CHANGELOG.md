@@ -1,4 +1,8 @@
 
+## 2.4.13 - April 19, 2017
+
+ - Corrected Builder special character handling.
+
 ## 2.4.12 - April 11, 2017
 
  - Fixed position in builder when encoding special characters.
