@@ -1,5 +1,5 @@
 
-## 2.4.13 - April 19, 2017
+## 2.4.13 - April 21, 2017
 
  - Corrected Builder special character handling.
 

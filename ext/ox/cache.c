@@ -9,6 +9,7 @@
 #include <string.h>
 #include <strings.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 #include "cache.h"
 
@@ -27,7 +28,7 @@ static char* form_key(const char *s) {
     size_t	len = strlen(s);
     char	*d = ALLOC_N(char, len + 2);
 
-    *d = (255 <= len) ? 255 : len;
+    *(uint8_t*)d = (255 <= len) ? 255 : len;
     memcpy(d + 1, s, len + 1);
 
     return d;
