@@ -1379,6 +1379,28 @@ comment --/>
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?><one a="ack" b="back">hello</one>|, xml)
   end
 
+  def test_builder_tolerant
+    b = Ox::Builder.new(:effort => :tolerant)
+    b.element('one')
+    b.text("tab\tamp&backspace\b.")
+    b.close()
+    xml = b.to_s
+    assert_equal(%|<one>tab\tamp&amp;backspace.</one>
+|, xml)
+  end
+
+  def test_builder_strict
+    begin
+      b = Ox::Builder.new(:effort => :strict)
+      b.element('one')
+      b.text("tab\tamp&backspace\b.")
+    rescue Exception => e
+      assert_equal("'\\#x08' is not a valid XML character.", e.message)
+      return
+    end
+    assert(false)
+  end
+
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)
     puts xml if trace

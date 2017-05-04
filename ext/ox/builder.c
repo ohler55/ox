@@ -25,6 +25,7 @@ typedef struct _Element {
 typedef struct _Builder {
     struct _Buf		buf;
     int			indent;
+    Effort		effort;
     char		encoding[64];
     int			depth;
     FILE		*file;
@@ -166,7 +167,9 @@ append_string(Builder b, const char *str, size_t size, const char *table) {
 		    break;
 		default:
 		    // Must be one of the invalid characters.
-		    rb_raise(rb_eSyntaxError, "'\\#x%02x' is not a valid XML character.", *str);
+		    if (StrictEffort == b->effort) {
+			rb_raise(rb_eSyntaxError, "'\\#x%02x' is not a valid XML character.", *str);
+		    }
 		    break;
 		}
 	    }
@@ -235,9 +238,10 @@ append_attr(VALUE key, VALUE value, Builder b) {
 }
 
 static void
-init(Builder b, int fd, int indent, long initial_size) {
+init(Builder b, int fd, int indent, long initial_size, Effort effort) {
     buf_init(&b->buf, fd, initial_size);
     b->indent = indent;
+    b->effort = effort;
     *b->encoding = '\0';
     b->depth = -1;
     b->line = 1;
@@ -343,11 +347,13 @@ to_s(Builder b) {
  * - +options+ - (Hash) formating options
  *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
+ *   - +:effort+ [:strict|:tolerant|:auto_define] set the tolerance level for writing text
  */
 static VALUE
 builder_new(int argc, VALUE *argv, VALUE self) {
     Builder	b = ALLOC(struct _Builder);
     int		indent = ox_default_options.indent;
+    Effort	effort = ox_default_options.effort;
     long	buf_size = 0;
     
     if (1 == argc) {
@@ -374,9 +380,20 @@ builder_new(int argc, VALUE *argv, VALUE self) {
 	    }
 	    buf_size = NUM2LONG(v);
 	}
+	if (Qnil != (v = rb_hash_lookup(*argv, effort_sym))) {
+	    if (auto_define_sym == v) {
+		effort = AutoEffort;
+	    } else if (tolerant_sym == v) {
+		effort = TolerantEffort;
+	    } else if (strict_sym == v) {
+		effort = StrictEffort;
+	    } else {
+		rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
+	    }
+	}
     }
     b->file = NULL;
-    init(b, 0, indent, buf_size);
+    init(b, 0, indent, buf_size, effort);
 
     if (rb_block_given_p()) {
 	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
@@ -398,11 +415,13 @@ builder_new(int argc, VALUE *argv, VALUE self) {
  * - +options+ - (Hash) formating options
  *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
+ *   - +:effort+ [:strict|:tolerant|:auto_define] set the tolerance level for writing text
  */
 static VALUE
 builder_file(int argc, VALUE *argv, VALUE self) {
     Builder	b = ALLOC(struct _Builder);
     int		indent = ox_default_options.indent;
+    Effort	effort = ox_default_options.effort;
     long	buf_size = 0;
     FILE	*f;
     
@@ -438,9 +457,20 @@ builder_file(int argc, VALUE *argv, VALUE self) {
 	    }
 	    buf_size = NUM2LONG(v);
 	}
+	if (Qnil != (v = rb_hash_lookup(argv[1], effort_sym))) {
+	    if (auto_define_sym == v) {
+		effort = AutoEffort;
+	    } else if (tolerant_sym == v) {
+		effort = TolerantEffort;
+	    } else if (strict_sym == v) {
+		effort = StrictEffort;
+	    } else {
+		rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
+	    }
+	}
     }
     b->file = f;
-    init(b, fileno(f), indent, buf_size);
+    init(b, fileno(f), indent, buf_size, effort);
 
     if (rb_block_given_p()) {
 	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
@@ -460,12 +490,14 @@ builder_file(int argc, VALUE *argv, VALUE self) {
  * - +options+ - (Hash) formating options
  *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
+ *   - +:effort+ [:strict|:tolerant|:auto_define] set the tolerance level for writing text
  */
 static VALUE
 builder_io(int argc, VALUE *argv, VALUE self) {
     Builder		b = ALLOC(struct _Builder);
     int			indent = ox_default_options.indent;
     long		buf_size = 0;
+    Effort		effort = ox_default_options.effort;
     int			fd;
     volatile VALUE	v;
     
@@ -501,9 +533,20 @@ builder_io(int argc, VALUE *argv, VALUE self) {
 	    }
 	    buf_size = NUM2LONG(v);
 	}
+	if (Qnil != (v = rb_hash_lookup(argv[1], effort_sym))) {
+	    if (auto_define_sym == v) {
+		effort = AutoEffort;
+	    } else if (tolerant_sym == v) {
+		effort = TolerantEffort;
+	    } else if (strict_sym == v) {
+		effort = StrictEffort;
+	    } else {
+		rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
+	    }
+	}
     }
     b->file = NULL;
-    init(b, fd, indent, buf_size);
+    init(b, fd, indent, buf_size, effort);
 
     if (rb_block_given_p()) {
 	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
