@@ -11,8 +11,7 @@ $: << File.join(File.dirname(__FILE__), "../lib")
 $: << File.join(File.dirname(__FILE__), "../ext")
 
 require 'rubygems' if RUBY_VERSION.start_with?('1.8.')
-require 'minitest'
-require 'minitest/autorun'
+require 'test/unit'
 require 'optparse'
 require 'date'
 require 'bigdecimal'
@@ -70,7 +69,7 @@ $ox_generic_options = {
   :overlay=>nil,
 }
 
-class Func < ::Minitest::Test
+class Func < ::Test::Unit::TestCase
 
   unless respond_to?(:assert_raise)
     alias assert_raise assert_raises
