@@ -658,4 +658,19 @@ class SaxSmartTableTagTest < SaxSmartTest
                        {:overlay => hints})
   end
   
+  def test_nest_ok_auto_closing
+    html = %{<html><body><h5>test</body></html>}
+    hints = Ox.sax_html_overlay()
+    hints['h5'] = :nest_ok
+    html_parse_compare(html,
+                       [[:start_element, :html],
+                        [:start_element, :body],
+                        [:start_element, :h5],
+                        [:text, "test"],
+                        [:error, "Start End Mismatch: element 'body' close does not match 'h5' open", 1, 21],
+                        [:end_element, :h5],
+                        [:end_element, :body],
+                        [:end_element, :html]],
+                       {:overlay => hints})
+  end
 end
