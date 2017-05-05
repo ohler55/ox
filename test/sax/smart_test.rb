@@ -608,4 +608,54 @@ class SaxSmartTableTagTest < SaxSmartTest
                    [:end_element, :html]])
   end
 
+  def html_parse_compare(xml, expected, opts = {})
+    handler = AllSax.new()
+    input = StringIO.new(xml)
+    options = {
+      :smart => true,
+      :symbolize => true,
+      :smart => false,
+      :skip => :skip_white,
+    }.merge(opts)
+
+    Ox.sax_html(handler, input, options)
+
+    actual = handler.send(:calls)
+
+    puts "\nexpected: #{expected}\n  actual: #{actual}" if expected != actual
+    assert_equal(expected, actual)
+  end
+
+  def test_nest_ok
+    html = %{
+<html>
+  <body>Table
+    <table>
+      <tr><td>one<td>two</td></td></tr>
+    </table>
+  </body>
+</html>
+}
+
+    hints = Ox.sax_html_overlay()
+    hints["td"] = :nest_ok
+    html_parse_compare(html,
+                       [[:start_element, :html],
+                        [:start_element, :body],
+                        [:text, "Table "],
+                        [:start_element, :table],
+                        [:start_element, :tr],
+                        [:start_element, :td],
+                        [:text, "one"],
+                        [:start_element, :td],
+                        [:text, "two"],
+                        [:end_element, :td],
+                        [:end_element, :td],
+                        [:end_element, :tr],
+                        [:end_element, :table],
+                        [:end_element, :body],
+                        [:end_element, :html]],
+                       {:overlay => hints})
+  end
+  
 end

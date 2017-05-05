@@ -14,6 +14,7 @@ typedef enum {
     BlockOverlay	= 'b',
     OffOverlay		= 'o',
     AbortOverlay	= 'a',
+    NestOverlay		= 'n', // nest flag is ignored
 } Overlay;
 
 typedef struct _Hint {

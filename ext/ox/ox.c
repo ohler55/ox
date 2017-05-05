@@ -120,6 +120,7 @@ static VALUE	invalid_replace_sym;
 static VALUE	limited_sym;
 static VALUE	margin_sym;
 static VALUE	mode_sym;
+static VALUE	nest_ok_sym;
 static VALUE	object_sym;
 static VALUE	off_sym;
 static VALUE	opt_format_sym;
@@ -166,7 +167,7 @@ struct _Options	 ox_default_options = {
     NoMode,		/* mode */
     StrictEffort,	/* effort */
     Yes,		/* sym_keys */
-    NoSkip,		/* skip */
+    SpcSkip,		/* skip */
     No,			/* smart */
     1,			/* convert_special */
     No,			/* allow_invalid */
@@ -249,6 +250,7 @@ hints_to_overlay(Hints hints) {
 	case BlockOverlay:	ov = block_sym;		break;
 	case OffOverlay:	ov = off_sym;		break;
 	case AbortOverlay:	ov = abort_sym;		break;
+	case NestOverlay:	ov = nest_ok_sym;	break;
 	case ActiveOverlay:
 	default:		ov = active_sym;	break;
 	}
@@ -279,6 +281,7 @@ hints_to_overlay(Hints hints) {
  * - _:strip_namespace_ [String|true|false] false or "" results in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  * - _:overlay_ [Hash] a Hash of keys that match html element names and values that are one of
  *   - _:active_ - make the normal callback for the element
+ *   - _:nest_ok_ - active but the nesting check is ignored
  *   - _:inactive_ - do not make the element start, end, or attribute callbacks for this element only
  *   - _:block_ - block this and all children callbacks
  *   - _:off_ - block this element and it's children unless the child element is active
@@ -359,6 +362,8 @@ set_overlay(VALUE key, VALUE value, VALUE ctx) {
 	    hint->overlay = InactiveOverlay;
 	} else if (block_sym == value) {
 	    hint->overlay = BlockOverlay;
+	} else if (nest_ok_sym == value) {
+	    hint->overlay = NestOverlay;
 	} else if (off_sym == value) {
 	    hint->overlay = OffOverlay;
 	} else if (abort_sym == value) {
@@ -373,6 +378,7 @@ set_overlay(VALUE key, VALUE value, VALUE ctx) {
  * Returns an overlay hash that can be modified and used as an overlay in the
  * default options or in the sax_html() function call. Values for the keys are:
  *   - _:active_ - make the normal callback for the element
+ *   - _:nest_ok_ - active but ignore nest check
  *   - _:inactive_ - do not make the element start, end, or attribute callbacks for this element only
  *   - _:block_ - block this and all children callbacks
  *   - _:off_ - block this element and it's children unless the child element is active
@@ -407,6 +413,7 @@ sax_html_overlay(VALUE self) {
  *   - _:strip_namespace_ [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  * - _:overlay_ [Hash] a Hash of keys that match html element names and values that are one of
  *   - _:active_ - make the normal callback for the element
+ *   - _:nest_ok_ - active but ignore nest check
  *   - _:inactive_ - do not make the element start, end, or attribute callbacks for this element only
  *   - _:block_ - block this and all children callbacks
  *   - _:off_ - block this element and it's children unless the child element is active
@@ -965,7 +972,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
  *   - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
  *   - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
  *   - *:smart* [true|false] flag indicating the parser uses hints if available (use with html)
- *   - *:skip* [:skip_return|:skip_white] flag indicating the parser skips \r or collpase white space into a single space. Default (skip nothing)
+ *   - *:skip* [:skip_return|:skip_white] flag indicating the parser skips \r or collpase white space into a single space. Default (skip space)
  *   - *:strip_namespace* [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
@@ -1038,9 +1045,10 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
  * - +options+ [Hash] options parse options
  *   - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
  *   - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
- *   - *:skip* [:skip_return|:skip_white] flag indicating the parser skips \r or collapse white space into a single space. Default (skip nothing)
+ *   - *:skip* [:skip_return|:skip_white] flag indicating the parser skips \r or collapse white space into a single space. Default (skip space)
  *   - *:overlay* [Hash] a Hash of keys that match html element names and values that are one of
  *     - _:active_ - make the normal callback for the element
+ *     - _:nest_ok_ - active but ignore nest check
  *     - _:inactive_ - do not make the element start, end, or attribute callbacks for this element only
  *     - _:block_ - block this and all children callbacks
  *     - _:off_ - block this element and it's children unless the child element is active
@@ -1408,6 +1416,7 @@ void Init_ox() {
     invalid_replace_sym = ID2SYM(rb_intern("invalid_replace"));	rb_gc_register_address(&invalid_replace_sym);
     limited_sym = ID2SYM(rb_intern("limited"));			rb_gc_register_address(&limited_sym);
     mode_sym = ID2SYM(rb_intern("mode"));			rb_gc_register_address(&mode_sym);
+    nest_ok_sym = ID2SYM(rb_intern("nest_ok"));			rb_gc_register_address(&nest_ok_sym);
     object_sym = ID2SYM(rb_intern("object"));			rb_gc_register_address(&object_sym);
     off_sym = ID2SYM(rb_intern("off"));				rb_gc_register_address(&off_sym);
     opt_format_sym = ID2SYM(rb_intern("opt_format"));		rb_gc_register_address(&opt_format_sym);

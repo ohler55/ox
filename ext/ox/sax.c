@@ -432,7 +432,8 @@ parse(SaxDrive dr) {
 	for (sp = dr->stack.tail - 1; dr->stack.head <= sp; sp--) {
 	    snprintf(msg, sizeof(msg) - 1, "%selement '%s' not closed", EL_MISMATCH, sp->name);
 	    ox_sax_drive_error_at(dr, msg, dr->buf.pos, dr->buf.line, dr->buf.col);
-	    if (dr->has.end_element && 0 >= dr->blocked && (NULL == sp->hint || ActiveOverlay == sp->hint->overlay)) {
+	    if (dr->has.end_element && 0 >= dr->blocked &&
+		(NULL == sp->hint || ActiveOverlay == sp->hint->overlay || NestOverlay == sp->hint->overlay)) {
 		VALUE       args[1];
 
 		args[0] = sp->val;
@@ -825,7 +826,7 @@ read_comment(SaxDrive dr) {
 	Hint	h = ox_hint_find(dr->options.hints, "!--");
 	
 	if (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay ||
-	    (NULL != h && ActiveOverlay == h->overlay)) {
+	    (NULL != h && (ActiveOverlay == h->overlay || ActiveOverlay == h->overlay))) {
 
 	    args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
@@ -919,8 +920,8 @@ read_element_start(SaxDrive dr) {
 	    }
 	    if (0 != top_nv) {
 		char	msg[256];
-	
-		if (!h->nest && 0 == strcasecmp(top_nv->name, h->name)) {
+
+		if (!h->nest && NestOverlay != h->overlay && 0 == strcasecmp(top_nv->name, h->name)) {
 		    snprintf(msg, sizeof(msg) - 1, "%s%s can not be nested in a %s document, closing previous.",
 			     INV_ELEMENT, dr->buf.str, dr->options.hints->name);
 		    ox_sax_drive_error(dr, msg);
@@ -928,7 +929,7 @@ read_element_start(SaxDrive dr) {
 		    end_element_cb(dr, top_nv->val, pos, line, col, top_nv->hint);
 		    top_nv = stack_peek(&dr->stack);
 		}
-		if (0 != h->parents) {
+		if (0 != h->parents && NestOverlay != h->overlay) {
 		    const char	**p;
 		    int		ok = 0;
 
@@ -948,7 +949,7 @@ read_element_start(SaxDrive dr) {
 	}
     }
     name = str2sym(dr, dr->buf.str, &ename);
-    if (dr->has.start_element && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay)) {
+    if (dr->has.start_element && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
         VALUE       args[1];
 
 	if (dr->has.pos) {
@@ -975,7 +976,7 @@ read_element_start(SaxDrive dr) {
 	}
 	closed = ('/' == c);
     }
-    if (dr->has.attrs_done && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay)) {
+    if (dr->has.attrs_done && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
 	rb_funcall(dr->handler, ox_attrs_done_id, 0);
     }
     if (closed) {
@@ -1060,7 +1061,7 @@ read_element_end(SaxDrive dr) {
 		snprintf(msg, sizeof(msg) - 1, "%selement '%s' closed but not opened", EL_MISMATCH, dr->buf.str);
 		ox_sax_drive_error_at(dr, msg, pos, line, col);
 		name = str2sym(dr, dr->buf.str, 0);
-		if (dr->has.start_element && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay)) {
+		if (dr->has.start_element && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
 		    VALUE       args[1];
 
 		    if (dr->has.pos) {
@@ -1099,7 +1100,7 @@ read_element_end(SaxDrive dr) {
 		    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
 		}
 		for (nv = stack_pop(&dr->stack); match < nv; nv = stack_pop(&dr->stack)) {
-		    if (dr->has.end_element && 0 >= dr->blocked && (NULL == nv->hint || ActiveOverlay == nv->hint->overlay)) {
+		    if (dr->has.end_element && 0 >= dr->blocked && (NULL == nv->hint || ActiveOverlay == nv->hint->overlay || NestOverlay == h->overlay)) {
 			rb_funcall(dr->handler, ox_end_element_id, 1, nv->val);
 		    }
 		    if (NULL != nv->hint && BlockOverlay == nv->hint->overlay && 0 < dr->blocked) {
@@ -1387,7 +1388,7 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req, 
 		is_encoding = 0;
 	    }
 	}
-	if (0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay)) {
+	if (0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
 	    if (dr->has.attr_value) {
 		VALUE       args[2];
 
@@ -1732,7 +1733,7 @@ hint_try_close(SaxDrive dr, const char *name) {
 
 static void
 end_element_cb(SaxDrive dr, VALUE name, int pos, int line, int col, Hint h) {
-    if (dr->has.end_element && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay)) {
+    if (dr->has.end_element && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
 	if (dr->has.pos) {
 	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
 	}
