@@ -1100,7 +1100,7 @@ read_element_end(SaxDrive dr) {
 		    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
 		}
 		for (nv = stack_pop(&dr->stack); match < nv; nv = stack_pop(&dr->stack)) {
-		    if (dr->has.end_element && 0 >= dr->blocked && (NULL == nv->hint || ActiveOverlay == nv->hint->overlay || NestOverlay == h->overlay)) {
+		    if (dr->has.end_element && 0 >= dr->blocked && (NULL == nv->hint || ActiveOverlay == nv->hint->overlay || NestOverlay == nv->hint->overlay)) {
 			rb_funcall(dr->handler, ox_end_element_id, 1, nv->val);
 		    }
 		    if (NULL != nv->hint && BlockOverlay == nv->hint->overlay && 0 < dr->blocked) {
