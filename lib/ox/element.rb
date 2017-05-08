@@ -78,9 +78,9 @@ module Ox
     # Returns the first String in the elements nodes array or nil if there is
     # no String node.
     def text()
-      nodes.each { |n| return n if n.is_a?(String) }
-      nil
-    end
+		  nodes.each { |n| return n.force_encoding('UTF-8') if n.is_a?(String) }
+		  nil
+	  end
 
     # Clears any child nodes of an element and replaces those with a single Text
     # (String) node. Note the existing nodes array is modified and not replaced.
