@@ -972,7 +972,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
  *   - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
  *   - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
  *   - *:smart* [true|false] flag indicating the parser uses hints if available (use with html)
- *   - *:skip* [:skip_return|:skip_white] flag indicating the parser skips \r or collpase white space into a single space. Default (skip space)
+ *   - *:skip* [:skip_none|:skip_return|:skip_white] flag indicating the parser skips \\r or collpase white space into a single space. Default (skip space)
  *   - *:strip_namespace* [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
@@ -1045,7 +1045,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
  * - +options+ [Hash] options parse options
  *   - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
  *   - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
- *   - *:skip* [:skip_return|:skip_white] flag indicating the parser skips \r or collapse white space into a single space. Default (skip space)
+ *   - *:skip* [:skip_none|:skip_return|:skip_white] flag indicating the parser skips \\r or collapse white space into a single space. Default (skip space)
  *   - *:overlay* [Hash] a Hash of keys that match html element names and values that are one of
  *     - _:active_ - make the normal callback for the element
  *     - _:nest_ok_ - active but ignore nest check
