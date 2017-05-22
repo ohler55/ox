@@ -231,10 +231,6 @@ extern VALUE		ox_utf8_encoding;
 extern void		*ox_utf8_encoding;
 #endif
 
-extern VALUE    auto_define_sym;
-extern VALUE    tolerant_sym;
-extern VALUE    strict_sym;
-extern VALUE    effort_sym;
 extern VALUE	ox_empty_string;
 extern VALUE	ox_encoding_sym;
 extern VALUE	ox_indent_sym;

@@ -1379,19 +1379,19 @@ comment --/>
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?><one a="ack" b="back">hello</one>|, xml)
   end
 
-  def test_builder_tolerant
-    b = Ox::Builder.new(:effort => :tolerant)
+  def test_builder_with_invalid_characters_stripping
+    b = Ox::Builder.new
     b.element('one')
-    b.text("tab\tamp&backspace\b.")
+    b.text("tab\tamp&backspace\b.", true)
     b.close()
     xml = b.to_s
     assert_equal(%|<one>tab\tamp&amp;backspace.</one>
 |, xml)
   end
 
-  def test_builder_strict
+  def test_builder_without_invalid_characters_stripping
     begin
-      b = Ox::Builder.new(:effort => :strict)
+      b = Ox::Builder.new
       b.element('one')
       b.text("tab\tamp&backspace\b.")
     rescue Exception => e

@@ -4,6 +4,7 @@ ox-*.gem
 .\#*
 *~
 *.o
+*.so
 Makefile
 *.bundle
 .rbenv-version

@@ -25,7 +25,6 @@ typedef struct _Element {
 typedef struct _Builder {
     struct _Buf		buf;
     int			indent;
-    Effort		effort;
     char		encoding[64];
     int			depth;
     FILE		*file;
@@ -105,7 +104,7 @@ append_indent(Builder b) {
 }
 
 static void
-append_string(Builder b, const char *str, size_t size, const char *table) {
+append_string(Builder b, const char *str, size_t size, const char *table, const bool strip_invalid_chars) {
     size_t	xsize = xml_str_len((const unsigned char*)str, size, table);
 
     if (size == xsize) {
@@ -167,7 +166,7 @@ append_string(Builder b, const char *str, size_t size, const char *table) {
 		    break;
 		default:
 		    // Must be one of the invalid characters.
-		    if (StrictEffort == b->effort) {
+		    if (!strip_invalid_chars) {
 			rb_raise(rb_eSyntaxError, "'\\#x%02x' is not a valid XML character.", *str);
 		    }
 		    break;
@@ -199,7 +198,7 @@ append_sym_str(Builder b, VALUE v) {
 	rb_raise(ox_arg_error_class, "expected a Symbol or String");
 	break;
     }
-    append_string(b, s, len, xml_element_chars);
+    append_string(b, s, len, xml_element_chars, false);
 }
 
 static void
@@ -229,7 +228,7 @@ append_attr(VALUE key, VALUE value, Builder b) {
     b->col += 2;
     b->pos += 2;
     Check_Type(value, T_STRING);
-    append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value), xml_attr_chars);
+    append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value), xml_attr_chars, false);
     buf_append(&b->buf, '"');
     b->col++;
     b->pos++;
@@ -238,10 +237,9 @@ append_attr(VALUE key, VALUE value, Builder b) {
 }
 
 static void
-init(Builder b, int fd, int indent, long initial_size, Effort effort) {
+init(Builder b, int fd, int indent, long initial_size) {
     buf_init(&b->buf, fd, initial_size);
     b->indent = indent;
-    b->effort = effort;
     *b->encoding = '\0';
     b->depth = -1;
     b->line = 1;
@@ -347,13 +345,11 @@ to_s(Builder b) {
  * - +options+ - (Hash) formating options
  *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
- *   - +:effort+ [:strict|:tolerant|:auto_define] set the tolerance level for writing text
  */
 static VALUE
 builder_new(int argc, VALUE *argv, VALUE self) {
     Builder	b = ALLOC(struct _Builder);
     int		indent = ox_default_options.indent;
-    Effort	effort = ox_default_options.effort;
     long	buf_size = 0;
     
     if (1 == argc) {
@@ -380,20 +376,9 @@ builder_new(int argc, VALUE *argv, VALUE self) {
 	    }
 	    buf_size = NUM2LONG(v);
 	}
-	if (Qnil != (v = rb_hash_lookup(*argv, effort_sym))) {
-	    if (auto_define_sym == v) {
-		effort = AutoEffort;
-	    } else if (tolerant_sym == v) {
-		effort = TolerantEffort;
-	    } else if (strict_sym == v) {
-		effort = StrictEffort;
-	    } else {
-		rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
-	    }
-	}
     }
     b->file = NULL;
-    init(b, 0, indent, buf_size, effort);
+    init(b, 0, indent, buf_size);
 
     if (rb_block_given_p()) {
 	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
@@ -421,7 +406,6 @@ static VALUE
 builder_file(int argc, VALUE *argv, VALUE self) {
     Builder	b = ALLOC(struct _Builder);
     int		indent = ox_default_options.indent;
-    Effort	effort = ox_default_options.effort;
     long	buf_size = 0;
     FILE	*f;
     
@@ -457,20 +441,9 @@ builder_file(int argc, VALUE *argv, VALUE self) {
 	    }
 	    buf_size = NUM2LONG(v);
 	}
-	if (Qnil != (v = rb_hash_lookup(argv[1], effort_sym))) {
-	    if (auto_define_sym == v) {
-		effort = AutoEffort;
-	    } else if (tolerant_sym == v) {
-		effort = TolerantEffort;
-	    } else if (strict_sym == v) {
-		effort = StrictEffort;
-	    } else {
-		rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
-	    }
-	}
     }
     b->file = f;
-    init(b, fileno(f), indent, buf_size, effort);
+    init(b, fileno(f), indent, buf_size);
 
     if (rb_block_given_p()) {
 	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
@@ -497,7 +470,6 @@ builder_io(int argc, VALUE *argv, VALUE self) {
     Builder		b = ALLOC(struct _Builder);
     int			indent = ox_default_options.indent;
     long		buf_size = 0;
-    Effort		effort = ox_default_options.effort;
     int			fd;
     volatile VALUE	v;
     
@@ -533,20 +505,9 @@ builder_io(int argc, VALUE *argv, VALUE self) {
 	    }
 	    buf_size = NUM2LONG(v);
 	}
-	if (Qnil != (v = rb_hash_lookup(argv[1], effort_sym))) {
-	    if (auto_define_sym == v) {
-		effort = AutoEffort;
-	    } else if (tolerant_sym == v) {
-		effort = TolerantEffort;
-	    } else if (strict_sym == v) {
-		effort = StrictEffort;
-	    } else {
-		rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
-	    }
-	}
     }
     b->file = NULL;
-    init(b, fd, indent, buf_size, effort);
+    init(b, fd, indent, buf_size);
 
     if (rb_block_given_p()) {
 	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
@@ -680,7 +641,7 @@ builder_element(int argc, VALUE *argv, VALUE self) {
     buf_append(&b->buf, '<');
     b->col++;
     b->pos++;
-    append_string(b, e->name, len, xml_element_chars);
+    append_string(b, e->name, len, xml_element_chars, false);
     if (1 < argc) {
 	rb_hash_foreach(argv[1], append_attr, (VALUE)b);
     }
@@ -707,7 +668,7 @@ builder_comment(VALUE self, VALUE text) {
     buf_append_string(&b->buf, "<!-- ", 5);
     b->col += 5;
     b->pos += 5;
-    append_string(b, StringValuePtr(text), RSTRING_LEN(text), xml_element_chars);
+    append_string(b, StringValuePtr(text), RSTRING_LEN(text), xml_element_chars, false);
     buf_append_string(&b->buf, " --/> ", 5);
     b->col += 5;
     b->pos += 5;
@@ -730,7 +691,7 @@ builder_doctype(VALUE self, VALUE text) {
     buf_append_string(&b->buf, "<!DOCTYPE ", 10);
     b->col += 10;
     b->pos += 10;
-    append_string(b, StringValuePtr(text), RSTRING_LEN(text), xml_element_chars);
+    append_string(b, StringValuePtr(text), RSTRING_LEN(text), xml_element_chars, false);
     buf_append(&b->buf, '>');
     b->col++;
     b->pos++;
@@ -742,17 +703,21 @@ builder_doctype(VALUE self, VALUE text) {
  *
  * Adds a text element to the XML string being formed.
  * - +text+ - (String) contents of the text field
+ * - +strip_invalid_chars+ - [true|false] strips any characters invalid for XML, defaults to false
  */
 static VALUE
-builder_text(VALUE self, VALUE text) {
+builder_text(int argc, VALUE *argv, VALUE self) {
     Builder		b = (Builder)DATA_PTR(self);
-    volatile VALUE	v = text;
+    volatile VALUE	v;
+    volatile VALUE	strip_invalid_chars;
+
+    rb_scan_args(argc, argv, "11", &v, &strip_invalid_chars);
 
     if (T_STRING != rb_type(v)) {
 	v = rb_funcall(v, ox_to_s_id, 0);
     }
     i_am_a_child(b, true);
-    append_string(b, StringValuePtr(v), RSTRING_LEN(v), xml_element_chars);
+    append_string(b, StringValuePtr(v), RSTRING_LEN(v), xml_element_chars, RTEST(strip_invalid_chars));
 
     return Qnil;
 }
@@ -908,7 +873,7 @@ void ox_init_builder(VALUE ox) {
     rb_define_method(builder_class, "comment", builder_comment, 1);
     rb_define_method(builder_class, "doctype", builder_doctype, 1);
     rb_define_method(builder_class, "element", builder_element, -1);
-    rb_define_method(builder_class, "text", builder_text, 1);
+    rb_define_method(builder_class, "text", builder_text, -1);
     rb_define_method(builder_class, "cdata", builder_cdata, 1);
     rb_define_method(builder_class, "raw", builder_raw, 1);
     rb_define_method(builder_class, "pop", builder_pop, 0);
