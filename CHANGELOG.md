@@ -1,4 +1,11 @@
 
+## 2.5.0 - May 4, 2017
+
+ - Set the default for skip to be to skip white space.
+
+ - Added a :nest_ok option to SAX hints that will ignore the nested check on a
+   tag to accomadate non-compliant HTML.
+
 ## 2.4.13 - April 21, 2017
 
  - Corrected Builder special character handling.

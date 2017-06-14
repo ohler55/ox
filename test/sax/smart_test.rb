@@ -12,12 +12,7 @@ $: << File.join(File.dirname(__FILE__), "../../ext")
 $: << File.join(File.dirname(__FILE__), ".")
 
 require 'stringio'
-use_minitest = RUBY_VERSION.start_with?('2.1.') && RUBY_ENGINE != 'rbx'
-if use_minitest
-  require 'minitest/autorun'
-else
-  require 'test/unit'
-end
+require 'test/unit'
 require 'optparse'
 require 'helpers'
 require 'ox'
@@ -27,9 +22,7 @@ opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
-test_case = (use_minitest) ? ::Minitest::Test : ::Test::Unit::TestCase
-
-class SaxSmartTest < test_case
+class SaxSmartTest < ::Test::Unit::TestCase
   include SaxTestHelpers
 
   NORMALELEMENTS = {
@@ -608,4 +601,69 @@ class SaxSmartTableTagTest < SaxSmartTest
                    [:end_element, :html]])
   end
 
+  def html_parse_compare(xml, expected, opts = {})
+    handler = AllSax.new()
+    input = StringIO.new(xml)
+    options = {
+      :smart => true,
+      :symbolize => true,
+      :smart => false,
+      :skip => :skip_white,
+    }.merge(opts)
+
+    Ox.sax_html(handler, input, options)
+
+    actual = handler.send(:calls)
+
+    puts "\nexpected: #{expected}\n  actual: #{actual}" if expected != actual
+    assert_equal(expected, actual)
+  end
+
+  def test_nest_ok
+    html = %{
+<html>
+  <body>Table
+    <table>
+      <tr><td>one<td>two</td></td></tr>
+    </table>
+  </body>
+</html>
+}
+
+    hints = Ox.sax_html_overlay()
+    hints["td"] = :nest_ok
+    html_parse_compare(html,
+                       [[:start_element, :html],
+                        [:start_element, :body],
+                        [:text, "Table "],
+                        [:start_element, :table],
+                        [:start_element, :tr],
+                        [:start_element, :td],
+                        [:text, "one"],
+                        [:start_element, :td],
+                        [:text, "two"],
+                        [:end_element, :td],
+                        [:end_element, :td],
+                        [:end_element, :tr],
+                        [:end_element, :table],
+                        [:end_element, :body],
+                        [:end_element, :html]],
+                       {:overlay => hints})
+  end
+  
+  def test_nest_ok_auto_closing
+    html = %{<html><body><h5>test</body></html>}
+    hints = Ox.sax_html_overlay()
+    hints['h5'] = :nest_ok
+    html_parse_compare(html,
+                       [[:start_element, :html],
+                        [:start_element, :body],
+                        [:start_element, :h5],
+                        [:text, "test"],
+                        [:error, "Start End Mismatch: element 'body' close does not match 'h5' open", 1, 21],
+                        [:end_element, :h5],
+                        [:end_element, :body],
+                        [:end_element, :html]],
+                       {:overlay => hints})
+  end
 end
