@@ -8,7 +8,7 @@ for ruby in \
  2.1.5\
  2.2.2\
  2.3.3\
- 2.4.0-preview3
+ 2.4.1 \
 do
     echo "\n********************************************************************************"
     echo "Building $ruby\n"
@@ -45,13 +45,13 @@ cd ../../test
 ./sax/sax_test.rb
 cd ..
 
-echo "resetting to 2.3.0\n"
+echo "resetting to 2.4.1\n"
 
 cd ext/ox
-rbenv local 2.3.3
+rbenv local 2.4.1
 cd ../../test
-rbenv local 2.3.3
+rbenv local 2.4.1
 cd sax
-rbenv local 2.3.3
+rbenv local 2.4.1
 cd ../..
 echo "\n"

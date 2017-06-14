@@ -1121,7 +1121,7 @@ parse_dump_options(VALUE ropts, Options copts) {
 	
 	if (Qnil != (v = rb_hash_lookup(ropts, ox_indent_sym))) {
 #ifdef RUBY_INTEGER_UNIFICATION
-	    if (rb_cInteger != rb_obj_class(v)) {
+	    if (rb_cInteger != rb_obj_class(v) && T_FIXNUM != rb_type(v)) {
 #else
 	    if (rb_cFixnum != rb_obj_class(v)) {
 #endif
@@ -1131,7 +1131,7 @@ parse_dump_options(VALUE ropts, Options copts) {
 	}
 	if (Qnil != (v = rb_hash_lookup(ropts, trace_sym))) {
 #ifdef RUBY_INTEGER_UNIFICATION
-	    if (rb_cInteger != rb_obj_class(v)) {
+	    if (rb_cInteger != rb_obj_class(v) && T_FIXNUM != rb_type(v)) {
 #else
 	    if (rb_cFixnum != rb_obj_class(v)) {
 #endif
