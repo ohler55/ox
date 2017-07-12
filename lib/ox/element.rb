@@ -154,12 +154,16 @@ module Ox
       
       if ids[-1] == '!' # return array of elements matching ids
         ids.chomp!('!')
-        return self.nodes.select{|n| n.value.to_s == ids }
+        return self.nodes.select{|n| !n.is_a?(String) && n.name == ids }
       end
       
       if ids[-1] == '?' # tests for presence of elements matching ids
         ids.chomp!('?')
-        return self.nodes.detect{|n| n.value.to_s == ids }
+        begin
+          return self.send(ids.to_synm, *args, &block)
+        rescue NoMethodError
+          return false
+        end
       end
       
       i = args[0].to_i # will be 0 if no arg or parsing fails
