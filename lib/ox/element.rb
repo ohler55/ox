@@ -150,7 +150,18 @@ module Ox
     # _raise_ [NoMethodError] if no match is found
     def method_missing(id, *args, &block)
       has_some = false
-      ids = id.to_s
+      ids = id.to_s.sub('_', ':') # allows easy API with namespaces
+      
+      if ids[-1] == '!' # return array of elements matching ids
+        ids.chomp!('!')
+        return self.nodes.select{|n| n.value.to_s == ids }
+      end
+      
+      if ids[-1] == '?' # tests for presence of elements matching ids
+        ids.chomp!('?')
+        return self.nodes.detect{|n| n.value.to_s == ids }
+      end
+      
       i = args[0].to_i # will be 0 if no arg or parsing fails
       nodes.each do |n|
         if (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids)
