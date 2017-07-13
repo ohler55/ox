@@ -11,7 +11,7 @@ module Ox
   #
   #  class MySax < ::Ox::Sax
   #    def initialize()
-  #      @element_name = []
+  #      @element_names = []
   #    end
   #
   #    def start_element(name)
@@ -31,7 +31,7 @@ module Ox
   # arguments will be Ox::Sax::Value objects. Since both the text() and the
   # value() methods are called for the same element in the XML document the the
   # text() method is ignored if the value() method is defined or public. The
-  # same is true for attr() and attr_value(). When all attribtues have been read
+  # same is true for attr() and attr_value(). When all attributes have been read
   # the attr_done() callback will be invoked.
   #
   #    def instruct(target); end
