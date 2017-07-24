@@ -18,7 +18,7 @@ XML parsers for generic XML parsing and as an alternative to Marshal for Object
 serialization. }
 
   s.licenses = ['MIT']
-  s.files = Dir["{lib,ext}/**/*.{rb,h,c}"] + ['LICENSE', 'README.md']
+  s.files = Dir["{lib,ext}/**/*.{rb,h,c}"] + ['LICENSE', 'README.md', 'CHANGELOG.md']
 
   s.extensions = ["ext/ox/extconf.rb"]
   # s.executables = []
@@ -26,7 +26,7 @@ serialization. }
   s.require_paths = ["lib", "ext"]
 
   s.has_rdoc = true
-  s.extra_rdoc_files = ['README.md']
+  s.extra_rdoc_files = ['README.md', 'CHANGELOG.md']
   s.rdoc_options = ['--main', 'README.md', '--title', 'Ox Documentation', '--exclude', 'extconf.rb']
   
   s.rubyforge_project = 'ox'

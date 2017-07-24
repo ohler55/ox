@@ -1,4 +1,10 @@
 
+## 2.6.0 - July 25, 2017
+
+  - The Element#each() method was added to allow iteration over Element nodes conditionally.
+
+  - Element#locate() now supports a [@attr=value] specification.
+
 ## 2.5.0 - May 4, 2017
 
  - Set the default for skip to be to skip white space.

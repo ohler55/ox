@@ -910,7 +910,60 @@ class Func < ::Test::Unit::TestCase
     obj = Ox.load(xml, :mode => :object) # should convert it to an object
     assert_nil(obj)
   end
+
+  def each_xml()
+    %{<?xml?>
+<Family real="false">
+  <Pete age="57" type="male">
+    <Kid gender="female" age="32" id="Nicole"/>
+    <Kid gender="female" age="31" id="Pamela"/>
+    Some text
+    <Kidding gender="male" age="30" id="Fictional"/>
+  </Pete>
+</Family>
+}
+  end
   
+  def test_each
+    Ox::default_options = $ox_object_options
+    doc = Ox.parse(each_xml)
+    nodes = []
+    doc.Family.Pete.each { |n| n.is_a?(Ox::Element) && nodes << n.id }
+    assert_equal(['Nicole', 'Pamela', 'Fictional'], nodes)
+  end
+  
+  def test_each_name
+    Ox::default_options = $ox_object_options
+    doc = Ox.parse(each_xml)
+    nodes = []
+    doc.Family.Pete.each('Kid') { |n| nodes << n.id }
+    assert_equal(['Nicole', 'Pamela'], nodes)
+  end
+
+  def test_each_name_sym
+    Ox::default_options = $ox_object_options
+    doc = Ox.parse(each_xml)
+    nodes = []
+    doc.Family.Pete.each(:Kid) { |n| nodes << n.id }
+    assert_equal(['Nicole', 'Pamela'], nodes)
+  end
+
+  def test_each_attr
+    Ox::default_options = $ox_object_options
+    doc = Ox.parse(each_xml)
+    nodes = []
+    doc.Family.Pete.each(gender: 'female') { |n| nodes << n.id }
+    assert_equal(['Nicole', 'Pamela'], nodes)
+  end
+
+  def test_each_attr_multi
+    Ox::default_options = $ox_object_options
+    doc = Ox.parse(each_xml)
+    nodes = []
+    doc.Family.Pete.each(gender: 'female', age: '31') { |n| nodes << n.id }
+    assert_equal(['Pamela'], nodes)
+  end
+
   def locate_xml()
     %{<?xml?>
 <Family real="false">
@@ -1075,6 +1128,13 @@ class Func < ::Test::Unit::TestCase
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[-2]/@age')
     assert_equal(['31'], nodes )
+  end
+
+  def test_locate_attr_match
+    Ox::default_options = $ox_object_options
+    doc = Ox.parse(locate_xml)
+    nodes = doc.locate('Family/Pete/?[@age=32]')
+    assert_equal(['Kid1'], nodes.map { |e| e.value } )
   end
 
   def easy_xml()

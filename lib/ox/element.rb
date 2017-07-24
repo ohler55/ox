@@ -91,6 +91,32 @@ module Ox
       @nodes << txt
     end
 
+    # Return true if all the key-value pairs in the cond Hash match the
+    # @attributes key-values.
+    def attr_match(cond)
+      cond.each_pair { |k,v| return false unless v == @attributes[k.to_sym] || v == @attributes[k.to_s] }
+      true
+    end
+
+    # Iterate over each child of the instance yielding according to the cond
+    # argument value. If the cond argument is nil then all child nodes are
+    # yielded to. If cond is a string then only the child Elements with a
+    # matching name will be yielded to. If the cond is a Hash then the
+    # keys-value pairs in the cond must match the child attribute values with
+    # the same keys. Any other cond type will yield to nothing.
+    def each(cond=nil)
+      if cond.nil?
+        nodes.each { |n| yield(n) }
+      else
+        cond = cond.to_s if cond.is_a?(Symbol)
+        if cond.is_a?(String)
+          nodes.each { |n| yield(n) if n.is_a?(Element) && cond == n.name }
+        elsif cond.is_a?(Hash)
+          nodes.each { |n| yield(n) if n.is_a?(Element) && n.attr_match(cond) }
+        end
+      end
+    end
+
     # Returns an array of Nodes or Strings that correspond to the locations
     # specified by the path parameter. The path parameter describes the path
     # to the return values which can be either nodes in the XML or
@@ -122,6 +148,7 @@ module Ox
     # * <code>element.locate("Family/Pete/*")</code> returns all children of the Pete Element.
     # * <code>element.locate("Family/?[1]")</code> returns the first element in the Family Element.
     # * <code>element.locate("Family/?[<3]")</code> returns the first 3 elements in the Family Element.
+    # * <code>element.locate("Family/?[@age=32]")</code> returns the elements with an age attribute equal to 32 in the Family Element.
     # * <code>element.locate("Family/?/@age")</code> returns the arg attribute for each child in the Family Element.
     # * <code>element.locate("Family/*/@type")</code> returns the type attribute value for decendents of the Family.
     # * <code>element.locate("Family/^Comment")</code> returns any comments that are a child of Family.
@@ -233,6 +260,7 @@ module Ox
             match = []
           end
         else
+          #puts "*** name: #{name}"
           match = nodes.select { |e| e.is_a?(Element) and name == e.name }
         end
         unless qual.nil? or match.empty?
@@ -245,6 +273,9 @@ module Ox
             match = 0 < index ? match[0..index - 1] : []
           when '>'
             match = index <= match.size ? match[index + 1..-1] : []
+          when '@'
+            k,v = step[3..-2].split('=')
+            match = match.select { |n| n.is_a?(Element) && (v == n.attributes[k.to_sym] || v == n.attributes[k]) }
           else
             raise InvalidPath.new(path)
           end
