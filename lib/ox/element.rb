@@ -151,9 +151,25 @@ module Ox
     def method_missing(id, *args, &block)
       has_some = false
       ids = id.to_s
+      idns = ids.sub('_', ':') # allows easy API with namespaces
+      
+      if ids[-1] == '!' # return array of elements matching ids
+        ids.chomp!('!')
+        return self.nodes.select{|n| !n.is_a?(String) && n.name == ids }
+      end
+      
+      if ids[-1] == '?' # tests for presence of elements matching ids
+        ids.chomp!('?')
+        begin
+          return self.send(ids.to_synm, *args, &block)
+        rescue NoMethodError
+          return false
+        end
+      end
+      
       i = args[0].to_i # will be 0 if no arg or parsing fails
       nodes.each do |n|
-        if (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids)
+        if (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids || n.value == idns)
           return n if 0 == i
           has_some = true
           i -= 1
@@ -162,6 +178,7 @@ module Ox
       if instance_variable_defined?(:@attributes)
         return @attributes[id] if @attributes.has_key?(id)
         return @attributes[ids] if @attributes.has_key?(ids)
+        return @attributes[idns] if @attributes.has_key?(idns)
       end
       return nil if has_some
       raise NoMethodError.new("#{ids} not found", name)
