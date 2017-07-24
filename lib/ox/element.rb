@@ -180,7 +180,7 @@ module Ox
       ids = id.to_s
       i = args[0].to_i # will be 0 if no arg or parsing fails
       nodes.each do |n|
-        if (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids)
+        if (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids || name_matchs?(n.value, ids))
           return n if 0 == i
           has_some = true
           i -= 1
@@ -203,7 +203,7 @@ module Ox
       id_sym = id.to_sym
       nodes.each do |n|
         next if n.is_a?(String)
-        return true if n.value == id_str || n.value == id_sym
+        return true if n.value == id_str || n.value == id_sym || name_matchs?(n.value, id_str)
       end
       if instance_variable_defined?(:@attributes) && !@attributes.nil?
         return true if @attributes.has_key?(id_str)
@@ -260,7 +260,6 @@ module Ox
             match = []
           end
         else
-          #puts "*** name: #{name}"
           match = nodes.select { |e| e.is_a?(Element) and name == e.name }
         end
         unless qual.nil? or match.empty?
@@ -289,6 +288,14 @@ module Ox
           match.each { |n| n.alocate(path[1..-1], found) if n.is_a?(Element) }
         end
       end
+    end
+
+    private
+
+    def name_matchs?(pat, id)
+      return false unless pat.length == id.length
+      pat.length.times { |i| return false unless '_' == id[i] || pat[i] == id[i] }
+      true
     end
 
   end # Element

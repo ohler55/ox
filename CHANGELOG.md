@@ -5,6 +5,8 @@
 
   - Element#locate() now supports a [@attr=value] specification.
 
+  - An underscore character used in the easy API is now treated as a wild card for valid XML characters that are not valid for Ruby method names.
+
 ## 2.5.0 - May 4, 2017
 
  - Set the default for skip to be to skip white space.

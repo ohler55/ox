@@ -1155,6 +1155,20 @@ class Func < ::Test::Unit::TestCase
     assert_equal('58', doc.Family.Pete.age)
   end
 
+  def test_easy_namespace
+    Ox::default_options = $ox_object_options
+    doc = Ox.parse(%{<?xml?>
+<Ox:Test:Family real="false">
+  <Ox:Test:Pete age="58" type="male">
+    <Ox:Test:Kid age="33"><!-- comment -->Nicole</Ox:Test:Kid>
+    <Ox:Test:Kid age="31">Pamela</Ox:Test:Kid>
+  </Ox:Test:Pete>
+</Ox:Test:Family>
+})
+    assert_equal('false', doc.Ox_Test_Family.real)
+    assert_equal('58', doc.Ox_Test_Family.Ox_Test_Pete.age)
+  end
+
   def test_easy_attribute_missing
     Ox::default_options = $ox_object_options
     doc = Ox.parse(easy_xml)
