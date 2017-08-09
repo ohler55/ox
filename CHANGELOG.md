@@ -1,5 +1,5 @@
 
-## 2.6.0 - July 25, 2017
+## 2.6.0 - August 9, 2017
 
   - The Element#each() method was added to allow iteration over Element nodes conditionally.
 
