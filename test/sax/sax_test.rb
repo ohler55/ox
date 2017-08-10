@@ -437,6 +437,21 @@ encoding = "UTF-8" ?>},
                   ], AllSax, { :skip => :skip_none })
   end
 
+  def test_sax_whitespace_between_elements
+    Ox::default_options = $ox_sax_options
+    parse_compare(%{<p><em>Text</em> <strong>Text</strong></p>},
+                  [[:start_element, :p],
+                   [:start_element, :em],
+                   [:text, "Text"],
+                   [:end_element, :em],
+                   [:text, " "],
+                   [:start_element, :strong],
+                   [:text, "Text"],
+                   [:end_element, :strong],
+                   [:end_element, :p],
+                  ], AllSax, { :skip => :skip_none })
+  end
+
   def test_sax_special
     Ox::default_options = $ox_sax_options
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
