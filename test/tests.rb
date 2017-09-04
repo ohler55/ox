@@ -1379,7 +1379,7 @@ comment --/>
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?><one a="ack" b="back">hello</one>|, xml)
   end
 
-  def test_builder_with_invalid_characters_stripping
+  def test_builder_text_with_invalid_characters_stripping
     b = Ox::Builder.new
     b.element('one')
     b.text("tab\tamp&backspace\b.", true)
@@ -1389,13 +1389,35 @@ comment --/>
 |, xml)
   end
 
-  def test_builder_without_invalid_characters_stripping
+  def test_builder_text_without_invalid_characters_stripping
     begin
       b = Ox::Builder.new
       b.element('one')
       b.text("tab\tamp&backspace\b.")
     rescue Exception => e
       assert_equal("'\\#x08' is not a valid XML character.", e.message)
+      return
+    end
+    assert(false)
+  end
+
+  def test_builder_text_with_too_few_args
+    begin
+      b = Ox::Builder.new
+      b.text()
+    rescue ArgumentError => e
+      assert_equal("wrong number of arguments (given 0, expected 1..2)", e.message)
+      return
+    end
+    assert(false)
+  end
+
+  def test_builder_text_with_too_much_args
+    begin
+      b = Ox::Builder.new
+      b.text("Hello", false, "world")
+    rescue ArgumentError => e
+      assert_equal("wrong number of arguments (given 3, expected 1..2)", e.message)
       return
     end
     assert(false)

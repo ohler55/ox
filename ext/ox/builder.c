@@ -104,13 +104,13 @@ append_indent(Builder b) {
 }
 
 static void
-append_string(Builder b, const char *str, size_t size, const char *table, const bool strip_invalid_chars) {
+append_string(Builder b, const char *str, size_t size, const char *table, bool strip_invalid_chars) {
     size_t	xsize = xml_str_len((const unsigned char*)str, size, table);
 
     if (size == xsize) {
 	const char	*s = str;
 	const char	*end = str + size;
-	
+
 	buf_append_string(&b->buf, str, size);
 	b->col += size;
         s = strchr(s, '\n');
@@ -126,7 +126,7 @@ append_string(Builder b, const char *str, size_t size, const char *table, const 
 	char	*bp = buf;
 	int	i = size;
 	int	fcnt;
-	
+
 	for (; '\0' != *str && 0 < i; i--, str++) {
 	    if ('1' == (fcnt = table[(unsigned char)*str])) {
 		if (end <= bp) {
@@ -184,7 +184,7 @@ static void
 append_sym_str(Builder b, VALUE v) {
     const char	*s;
     int		len;
-    
+
     switch (rb_type(v)) {
     case T_STRING:
 	s = StringValuePtr(v);
@@ -205,7 +205,7 @@ static void
 i_am_a_child(Builder b, bool is_text) {
     if (0 <= b->depth) {
 	Element	e = &b->stack[b->depth];
-	
+
 	if (!e->has_child) {
 	    e->has_child = true;
 	    buf_append(&b->buf, '>');
@@ -232,7 +232,7 @@ append_attr(VALUE key, VALUE value, Builder b) {
     buf_append(&b->buf, '"');
     b->col++;
     b->pos++;
-    
+
     return ST_CONTINUE;
 }
 
@@ -252,7 +252,7 @@ builder_free(void *ptr) {
     Builder	b;
     Element	e;
     int		d;
-    
+
     if (0 == ptr) {
 	return;
     }
@@ -351,7 +351,7 @@ builder_new(int argc, VALUE *argv, VALUE self) {
     Builder	b = ALLOC(struct _Builder);
     int		indent = ox_default_options.indent;
     long	buf_size = 0;
-    
+
     if (1 == argc) {
 	volatile VALUE	v;
 
@@ -382,7 +382,7 @@ builder_new(int argc, VALUE *argv, VALUE self) {
 
     if (rb_block_given_p()) {
 	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
-	
+
 	rb_yield(rb);
 	bclose(b);
 
@@ -400,7 +400,6 @@ builder_new(int argc, VALUE *argv, VALUE self) {
  * - +options+ - (Hash) formating options
  *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
- *   - +:effort+ [:strict|:tolerant|:auto_define] set the tolerance level for writing text
  */
 static VALUE
 builder_file(int argc, VALUE *argv, VALUE self) {
@@ -408,7 +407,7 @@ builder_file(int argc, VALUE *argv, VALUE self) {
     int		indent = ox_default_options.indent;
     long	buf_size = 0;
     FILE	*f;
-    
+
     if (1 > argc) {
 	rb_raise(ox_arg_error_class, "missing filename");
     }
@@ -463,7 +462,6 @@ builder_file(int argc, VALUE *argv, VALUE self) {
  * - +options+ - (Hash) formating options
  *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
- *   - +:effort+ [:strict|:tolerant|:auto_define] set the tolerance level for writing text
  */
 static VALUE
 builder_io(int argc, VALUE *argv, VALUE self) {
@@ -472,7 +470,7 @@ builder_io(int argc, VALUE *argv, VALUE self) {
     long		buf_size = 0;
     int			fd;
     volatile VALUE	v;
-    
+
     if (1 > argc) {
 	rb_raise(ox_arg_error_class, "missing IO object");
     }
@@ -538,14 +536,14 @@ builder_instruct(int argc, VALUE *argv, VALUE self) {
 	b->pos += 7;
     } else {
 	volatile VALUE	v;
-	
+
 	buf_append_string(&b->buf, "<?", 2);
 	b->col += 2;
 	b->pos += 2;
 	append_sym_str(b, *argv);
 	if (1 < argc && rb_cHash == rb_obj_class(argv[1])) {
 	    int	len;
-		
+
 	    if (Qnil != (v = rb_hash_lookup(argv[1], ox_version_sym))) {
 		if (rb_cString != rb_obj_class(v)) {
 		    rb_raise(ox_parse_error_class, ":version must be a Symbol.\n");
@@ -661,7 +659,7 @@ builder_element(int argc, VALUE *argv, VALUE self) {
 static VALUE
 builder_comment(VALUE self, VALUE text) {
     Builder	b = (Builder)DATA_PTR(self);
-    
+
     rb_check_type(text, T_STRING);
     i_am_a_child(b, false);
     append_indent(b);
@@ -672,7 +670,7 @@ builder_comment(VALUE self, VALUE text) {
     buf_append_string(&b->buf, " --/> ", 5);
     b->col += 5;
     b->pos += 5;
-	
+
     return Qnil;
 }
 
@@ -711,7 +709,15 @@ builder_text(int argc, VALUE *argv, VALUE self) {
     volatile VALUE	v;
     volatile VALUE	strip_invalid_chars;
 
-    rb_scan_args(argc, argv, "11", &v, &strip_invalid_chars);
+    if ((0 == argc) || (argc > 2)) {
+	rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1..2)", argc);
+    }
+    v = argv[0];
+    if (2 == argc) {
+	strip_invalid_chars = argv[1];
+    } else {
+	strip_invalid_chars = Qfalse;
+    }
 
     if (T_STRING != rb_type(v)) {
 	v = rb_funcall(v, ox_to_s_id, 0);
