@@ -87,10 +87,12 @@ typedef enum {
 } YesNo;
 
 typedef enum {
-    ObjMode  = 'o',
-    GenMode  = 'g',
-    LimMode  = 'l',
-    NoMode   = 0
+    ObjMode        = 'o',
+    GenMode        = 'g',
+    LimMode        = 'l',
+    HashMode       = 'h',
+    HashNoAttrMode = 'n',
+    NoMode         = 0
 } LoadMode;
 
 typedef enum {
