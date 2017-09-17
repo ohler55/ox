@@ -1551,7 +1551,6 @@ comment --/>
     doc = Ox.load(xml, :mode => :hash)
     assert_equal({top: ['First', {empty: nil}, 'Second', {empty: nil}, 'Third']}, doc)
   end
-  # TBD with attributes
 
   def test_hash_mode_simple_attrs
     Ox::default_options = $ox_generic_options
@@ -1560,9 +1559,6 @@ comment --/>
     doc = Ox.load(xml, :mode => :hash)
     assert_equal({top: [{type: 'string'},'This is the top.']}, doc)
   end
-
-
-  
 
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)
