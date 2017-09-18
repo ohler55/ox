@@ -111,6 +111,7 @@ typedef struct _ParseCallbacks {
     void	(*add_text)(PInfo pi, char *text, int closed);
     void	(*add_element)(PInfo pi, const char *ename, Attr attrs, int hasChildren);
     void	(*end_element)(PInfo pi, const char *ename);
+    void	(*finish)(PInfo pi);
 } *ParseCallbacks;
 
 typedef struct _CircArray {

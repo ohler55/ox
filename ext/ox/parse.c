@@ -193,11 +193,17 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err) {
 	    return Qnil;
 	}
 	if (block_given && Qnil != pi.obj && Qundef != pi.obj) {
+	    if (NULL != pcb->finish) {
+		pcb->finish(&pi);
+	    }
 	    rb_yield(pi.obj);
 	}
     }
     DATA_PTR(wrap) = NULL;
     helper_stack_cleanup(&pi.helpers);
+    if (NULL != pcb->finish) {
+	pcb->finish(&pi);
+    }
     return pi.obj;
 }
 

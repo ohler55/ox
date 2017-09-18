@@ -3,6 +3,7 @@
  * All rights reserved.
  */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
@@ -27,8 +28,9 @@ create_top(PInfo pi) {
 
 static void
 add_text(PInfo pi, char *text, int closed) {
-    Helper	parent = helper_stack_peek(&pi->helpers);
-    VALUE       s = rb_str_new2(text);
+    Helper		parent = helper_stack_peek(&pi->helpers);
+    volatile VALUE	s = rb_str_new2(text);
+    volatile VALUE	a;
 
 #if HAS_ENCODING_SUPPORT
     if (0 != pi->options->rb_enc) {
@@ -47,15 +49,13 @@ add_text(PInfo pi, char *text, int closed) {
     case ArrayCode:
 	rb_ary_push(parent->obj, s);
 	break;
-    default: {
-	volatile VALUE	a = rb_ary_new();
-
+    default:
+	a = rb_ary_new();
 	rb_ary_push(a, parent->obj);
 	rb_ary_push(a, s);
 	parent->obj = a;
 	parent->type = ArrayCode;
 	break;
-    }
     }
 }
 
@@ -68,6 +68,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	volatile VALUE	h = rb_hash_new();
         volatile VALUE	key;
 	volatile VALUE	val;
+	volatile VALUE	a;
 	
         for (; 0 != attrs->name; attrs++) {
 	    if (Yes == pi->options->sym_keys) {
@@ -87,7 +88,10 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 #endif
 	    rb_hash_aset(h, key, val);
 	}
-	helper_stack_push(&pi->helpers, rb_intern(ename), h, HashCode);
+	a = rb_ary_new();
+	rb_ary_push(a, h);
+	rb_obj_taint(a); // flag indicating it is a unit, kind of a hack but it works
+	helper_stack_push(&pi->helpers, rb_intern(ename), a, ArrayCode);
     } else {
 	helper_stack_push(&pi->helpers, rb_intern(ename), Qnil, NoCode);
     }
@@ -101,8 +105,16 @@ add_element_no_attrs(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     helper_stack_push(&pi->helpers, rb_intern(ename), Qnil, NoCode);
 }
 
+static int
+untaint_hash_cb(VALUE key, VALUE value, VALUE x) {
+    if (Qtrue == rb_obj_tainted(value)) {
+	rb_obj_untaint(value);
+    }
+    return ST_CONTINUE;
+}
+
 static void
-end_element(PInfo pi, const char *ename) {
+end_element_core(PInfo pi, const char *ename, bool check_taint) {
     Helper		e = helper_stack_pop(&pi->helpers);
     Helper		parent = helper_stack_peek(&pi->helpers);
     volatile VALUE	pobj = parent->obj;
@@ -145,12 +157,43 @@ end_element(PInfo pi, const char *ename) {
     if (Qundef == found) {
 	rb_hash_aset(pobj, key, e->obj);
     } else if (RUBY_T_ARRAY == rb_type(found)) {
-	rb_ary_push(found, e->obj);
-    } else { // somthing there other than an array
+	if (check_taint && Qtrue == rb_obj_tainted(found)) {
+	    rb_obj_untaint(found);
+	    a = rb_ary_new();
+	    rb_ary_push(a, found);
+	    rb_ary_push(a, e->obj);
+	    rb_hash_aset(pobj, key, a);
+	} else {
+	    rb_ary_push(found, e->obj);
+	}
+    } else { // something there other than an array
+	if (check_taint && Qtrue == rb_obj_tainted(e->obj)) {
+	    rb_obj_untaint(e->obj);
+	}
 	a = rb_ary_new();
 	rb_ary_push(a, found);
 	rb_ary_push(a, e->obj);
 	rb_hash_aset(pobj, key, a);
+    }
+    if (check_taint && RUBY_T_HASH == rb_type(e->obj)) {
+	rb_hash_foreach(e->obj, untaint_hash_cb, Qnil);
+    }
+}
+
+static void
+end_element(PInfo pi, const char *ename) {
+    end_element_core(pi, ename, true);
+}
+
+static void
+end_element_no_attrs(PInfo pi, const char *ename) {
+    end_element_core(pi, ename, false);
+}
+
+static void
+finish(PInfo pi) {
+    if (Qnil != pi->obj && RUBY_T_HASH == rb_type(pi->obj)) {
+	rb_hash_foreach(pi->obj, untaint_hash_cb, Qnil);
     }
 }
 
@@ -162,6 +205,7 @@ struct _ParseCallbacks   _ox_hash_callbacks = {
     add_text,
     add_element,
     end_element,
+    finish,
 };
 
 ParseCallbacks   ox_hash_callbacks = &_ox_hash_callbacks;
@@ -173,7 +217,8 @@ struct _ParseCallbacks   _ox_hash_no_attrs_callbacks = {
     NULL,
     add_text,
     add_element_no_attrs,
-    end_element,
+    end_element_no_attrs,
+    NULL,
 };
 
 ParseCallbacks   ox_hash_no_attrs_callbacks = &_ox_hash_no_attrs_callbacks;

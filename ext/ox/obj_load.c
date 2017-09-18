@@ -46,6 +46,7 @@ struct _ParseCallbacks	 _ox_obj_callbacks = {
     add_text,
     add_element,
     end_element,
+    NULL,
 };
 
 ParseCallbacks	 ox_obj_callbacks = &_ox_obj_callbacks;

@@ -1560,6 +1560,85 @@ comment --/>
     assert_equal({top: [{type: 'string'},'This is the top.']}, doc)
   end
 
+  def test_hash_mode_attrs
+    Ox::default_options = $ox_generic_options
+    xml = %{
+<result>
+  <variables>
+       <var name="Blue">14</var>
+       <var name="Jack">14</var>
+       <var name="Magenta">12</var>
+       <var name="Yellow">14</var>
+  </variables>
+</result>
+}
+    doc = Ox.load(xml, :mode => :hash)
+    assert_equal({result: {
+                     variables: {
+                       var: [
+                             [{name: 'Blue'}, '14'],
+                             [{name: 'Jack'}, '14'],
+                             [{name: 'Magenta'}, '12'],
+                             [{name: 'Yellow'}, '14']
+                            ],
+                     }
+                   }
+                 }, doc)
+  end
+
+  def test_hash_mode_attrs2
+    Ox::default_options = $ox_generic_options
+    xml = %{
+<result>
+  <variables>
+       <var>14</var>
+       <var name="Jack">14</var>
+       <var name="Magenta">12</var>
+       <var name="Yellow">14</var>
+  </variables>
+</result>
+}
+    doc = Ox.load(xml, :mode => :hash)
+    assert_equal({result: {
+                     variables: {
+                       var: [
+                             '14',
+                             [{name: 'Jack'}, '14'],
+                             [{name: 'Magenta'}, '12'],
+                             [{name: 'Yellow'}, '14']
+                            ],
+                     }
+                   }
+                 }, doc)
+  end
+
+  def test_hash_mode_attrs3
+    Ox::default_options = $ox_generic_options
+    xml = %{
+<result>
+  <variables>
+       <var name="Blue">14</var>
+       <var>14</var>
+       <var name="Magenta">12</var>
+       <var name="Yellow">14</var>
+  </variables>
+</result>
+}
+    doc = Ox.load(xml, :mode => :hash)
+    assert_equal({result: {
+                     variables: {
+                       var: [
+                             [{name: 'Blue'}, '14'],
+                             '14',
+                             [{name: 'Magenta'}, '12'],
+                             [{name: 'Yellow'}, '14']
+                            ],
+                     }
+                   }
+                 }, doc)
+  end
+
+
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)
     puts xml if trace
