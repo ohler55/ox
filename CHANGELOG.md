@@ -1,9 +1,4 @@
 
-## 2.7.0 - August 18, 2017
-
-  - Two new load modes added, :hash and :hash_no_attrs. Both load an XML
-    document to create a Hash populated with core Ruby objects.
-
 ## 2.6.0 - August 9, 2017
 
   - The Element#each() method was added to allow iteration over Element nodes conditionally.

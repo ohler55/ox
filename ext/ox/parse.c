@@ -93,27 +93,12 @@ next_white(PInfo pi) {
     }
 }
 
-static void
-mark_pi_cb(void *ptr) {
-    if (NULL != ptr) {
-	HelperStack	stack = &((PInfo)ptr)->helpers;
-	Helper		h;
-
-	for (h = stack->head; h < stack->tail; h++) {
-	    if (NoCode != h->type) {
-		rb_gc_mark(h->obj);
-	    }
-	}
-    }
-}
-
 VALUE
 ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err) {
     struct _PInfo	pi;
     int			body_read = 0;
     int			block_given = rb_block_given_p();
-    volatile VALUE	wrap;
-    
+
     if (0 == xml) {
 	set_error(err, "Invalid arg, xml string can not be null", xml, 0);
 	return Qnil;
@@ -123,9 +108,6 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err) {
     }
     /* initialize parse info */
     helper_stack_init(&pi.helpers);
-    // Protect against GC
-    wrap = rb_data_object_wrap(rb_cObject, &pi, mark_pi_cb, NULL);
-
     err_init(&pi.err);
     pi.str = xml;
     pi.s = xml;
@@ -193,17 +175,10 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err) {
 	    return Qnil;
 	}
 	if (block_given && Qnil != pi.obj && Qundef != pi.obj) {
-	    if (NULL != pcb->finish) {
-		pcb->finish(&pi);
-	    }
 	    rb_yield(pi.obj);
 	}
     }
-    DATA_PTR(wrap) = NULL;
     helper_stack_cleanup(&pi.helpers);
-    if (NULL != pcb->finish) {
-	pcb->finish(&pi);
-    }
     return pi.obj;
 }
 

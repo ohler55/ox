@@ -17,7 +17,7 @@ ox_err_set(Err e, VALUE clas, const char *format, ...) {
     va_end(ap);
 }
 
-_Noreturn void
+void
 ox_err_raise(Err e) {
     rb_raise(e->clas, "%s", e->msg);
 }
