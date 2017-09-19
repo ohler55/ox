@@ -34,7 +34,6 @@ struct _ParseCallbacks   _ox_gen_callbacks = {
     add_text,
     add_element,
     end_element,
-    NULL,
 };
 
 ParseCallbacks   ox_gen_callbacks = &_ox_gen_callbacks;
@@ -47,7 +46,6 @@ struct _ParseCallbacks   _ox_limited_callbacks = {
     add_text,
     add_element,
     end_element,
-    NULL,
 };
 
 ParseCallbacks   ox_limited_callbacks = &_ox_limited_callbacks;
@@ -60,7 +58,6 @@ struct _ParseCallbacks   _ox_nomode_callbacks = {
     add_text,
     add_element,
     end_element,
-    NULL,
 };
 
 ParseCallbacks   ox_nomode_callbacks = &_ox_nomode_callbacks;

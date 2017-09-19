@@ -12,6 +12,7 @@ $: << File.join(File.dirname(__FILE__), "../ext")
 
 require 'rubygems' if RUBY_VERSION.start_with?('1.8.')
 require 'test/unit'
+require 'optparse'
 require 'date'
 require 'bigdecimal'
 require 'ox'
@@ -20,6 +21,11 @@ $ruby = RUBY_DESCRIPTION.split(' ')[0]
 $ruby = 'ree' if 'ruby' == $ruby && RUBY_DESCRIPTION.include?('Ruby Enterprise Edition')
 
 $indent = 2
+
+opts = OptionParser.new
+# TBD add indent
+opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
+opts.parse(ARGV)
 
 $ox_object_options = {
   :encoding=>nil,
@@ -1479,7 +1485,7 @@ comment --/>
     assert(false)
   end
 
-  def test_builder_text_with_too_many_args
+  def test_builder_text_with_too_much_args
     begin
       b = Ox::Builder.new
       b.text("Hello", false, "world")
@@ -1489,155 +1495,6 @@ comment --/>
     end
     assert(false)
   end
-
-  def test_hash_no_attrs_mode_simple
-    Ox::default_options = $ox_generic_options
-    xml = %{<top>This is the top.</top>
-}
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: 'This is the top.'}, doc)
-  end
-
-  def test_hash_no_attrs_mode_simple_nested
-    Ox::default_options = $ox_generic_options
-    xml = %{<?xml version="1.0"?>
-<top>
-  <one>This is a one.</one>
-  <mid>
-    <a>alpha</a>
-    <b>bravo</b>
-  </mid>
-</top>
-}
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: {one: 'This is a one.', mid: {a: 'alpha', b: 'bravo'}}}, doc)
-  end
-
-  def test_hash_no_attrs_mode_multi_text
-    Ox::default_options = $ox_generic_options
-    xml = %{<top>First<empty/>Second<empty></empty>Third</top>
-}
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: ['First', {empty: nil}, 'Second', {empty: nil}, 'Third']}, doc)
-  end
-
-  def test_hash_mode_simple
-    Ox::default_options = $ox_generic_options
-    xml = %{<top>This is the top.</top>
-}
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: 'This is the top.'}, doc)
-  end
-
-  def test_hash_mode_simple_nested
-    Ox::default_options = $ox_generic_options
-    xml = %{<?xml version="1.0"?>
-<top>
-  <one>This is a one.</one>
-  <mid>
-    <a>alpha</a>
-    <b>bravo</b>
-  </mid>
-</top>
-}
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: {one: 'This is a one.', mid: {a: 'alpha', b: 'bravo'}}}, doc)
-  end
-
-  def test_hash_mode_multi_text
-    Ox::default_options = $ox_generic_options
-    xml = %{<top>First<empty/>Second<empty></empty>Third</top>
-}
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: ['First', {empty: nil}, 'Second', {empty: nil}, 'Third']}, doc)
-  end
-
-  def test_hash_mode_simple_attrs
-    Ox::default_options = $ox_generic_options
-    xml = %{<top type="string">This is the top.</top>
-}
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: [{type: 'string'},'This is the top.']}, doc)
-  end
-
-  def test_hash_mode_attrs
-    Ox::default_options = $ox_generic_options
-    xml = %{
-<result>
-  <variables>
-       <var name="Blue">14</var>
-       <var name="Jack">14</var>
-       <var name="Magenta">12</var>
-       <var name="Yellow">14</var>
-  </variables>
-</result>
-}
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({result: {
-                     variables: {
-                       var: [
-                             [{name: 'Blue'}, '14'],
-                             [{name: 'Jack'}, '14'],
-                             [{name: 'Magenta'}, '12'],
-                             [{name: 'Yellow'}, '14']
-                            ],
-                     }
-                   }
-                 }, doc)
-  end
-
-  def test_hash_mode_attrs2
-    Ox::default_options = $ox_generic_options
-    xml = %{
-<result>
-  <variables>
-       <var>14</var>
-       <var name="Jack">14</var>
-       <var name="Magenta">12</var>
-       <var name="Yellow">14</var>
-  </variables>
-</result>
-}
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({result: {
-                     variables: {
-                       var: [
-                             '14',
-                             [{name: 'Jack'}, '14'],
-                             [{name: 'Magenta'}, '12'],
-                             [{name: 'Yellow'}, '14']
-                            ],
-                     }
-                   }
-                 }, doc)
-  end
-
-  def test_hash_mode_attrs3
-    Ox::default_options = $ox_generic_options
-    xml = %{
-<result>
-  <variables>
-       <var name="Blue">14</var>
-       <var>14</var>
-       <var name="Magenta">12</var>
-       <var name="Yellow">14</var>
-  </variables>
-</result>
-}
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({result: {
-                     variables: {
-                       var: [
-                             [{name: 'Blue'}, '14'],
-                             '14',
-                             [{name: 'Magenta'}, '12'],
-                             [{name: 'Yellow'}, '14']
-                            ],
-                     }
-                   }
-                 }, doc)
-  end
-
 
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)

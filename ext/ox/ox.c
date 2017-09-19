@@ -115,8 +115,6 @@ static VALUE	circular_sym;
 static VALUE	convert_special_sym;
 static VALUE	effort_sym;
 static VALUE	generic_sym;
-static VALUE	hash_no_attrs_sym;
-static VALUE	hash_sym;
 static VALUE	inactive_sym;
 static VALUE	invalid_replace_sym;
 static VALUE	limited_sym;
@@ -187,8 +185,6 @@ extern ParseCallbacks	ox_obj_callbacks;
 extern ParseCallbacks	ox_gen_callbacks;
 extern ParseCallbacks	ox_limited_callbacks;
 extern ParseCallbacks	ox_nomode_callbacks;
-extern ParseCallbacks	ox_hash_callbacks;
-extern ParseCallbacks	ox_hash_no_attrs_callbacks;
 
 static void	parse_dump_options(VALUE ropts, Options copts);
 
@@ -275,7 +271,7 @@ hints_to_overlay(Hints hints) {
  * - _:with_xml_ [true|false|nil] include XML prolog in the dump
  * - _:circular_ [true|false|nil] support circular references while dumping
  * - _:xsd_date_ [true|false|nil] use XSD date format instead of decimal format
- * - _:mode_ [:object|:generic|:limited|hash}hash_no_attrs|nil] load method to use for XML
+ * - _:mode_ [:object|:generic|:limited|nil] load method to use for XML
  * - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
  * - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
  * - _:skip_ [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
@@ -314,13 +310,11 @@ get_def_opts(VALUE self) {
     rb_hash_aset(opts, smart_sym, (Yes == ox_default_options.smart) ? Qtrue : ((No == ox_default_options.smart) ? Qfalse : Qnil));
     rb_hash_aset(opts, convert_special_sym, (ox_default_options.convert_special) ? Qtrue : Qfalse);
     switch (ox_default_options.mode) {
-    case ObjMode:		rb_hash_aset(opts, mode_sym, object_sym);		break;
-    case GenMode:		rb_hash_aset(opts, mode_sym, generic_sym);		break;
-    case LimMode:		rb_hash_aset(opts, mode_sym, limited_sym);		break;
-    case HashMode:		rb_hash_aset(opts, mode_sym, hash_sym);			break;
-    case HashNoAttrMode:	rb_hash_aset(opts, mode_sym, hash_no_attrs_sym);	break;
+    case ObjMode:	rb_hash_aset(opts, mode_sym, object_sym);	break;
+    case GenMode:	rb_hash_aset(opts, mode_sym, generic_sym);	break;
+    case LimMode:	rb_hash_aset(opts, mode_sym, limited_sym);	break;
     case NoMode:
-    default:			rb_hash_aset(opts, mode_sym, Qnil);			break;
+    default:		rb_hash_aset(opts, mode_sym, Qnil);		break;
     }
     switch (ox_default_options.effort) {
     case StrictEffort:		rb_hash_aset(opts, effort_sym, strict_sym);		break;
@@ -410,7 +404,7 @@ sax_html_overlay(VALUE self) {
  *   - _:with_xml_ [true|false|nil] include XML prolog in the dump
  *   - _:circular_ [true|false|nil] support circular references while dumping
  *   - _:xsd_date_ [true|false|nil] use XSD date format instead of decimal format
- *   - _:mode_ [:object|:generic|:limited|hash|hash_no_attrsnil] load method to use for XML
+ *   - _:mode_ [:object|:generic|:limited|nil] load method to use for XML
  *   - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
  *   - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
  *   - _:skip_ [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
@@ -479,12 +473,8 @@ set_def_opts(VALUE self, VALUE opts) {
 	ox_default_options.mode = GenMode;
     } else if (limited_sym == v) {
 	ox_default_options.mode = LimMode;
-    } else if (hash_sym == v) {
-	ox_default_options.mode = HashMode;
-    } else if (hash_no_attrs_sym == v) {
-	ox_default_options.mode = HashNoAttrMode;
     } else {
-	rb_raise(ox_parse_error_class, ":mode must be :object, :generic, :limited, :hash, :hash_no_attrs, or nil.\n");
+	rb_raise(ox_parse_error_class, ":mode must be :object, :generic, :limited, or nil.\n");
     }
 
     v = rb_hash_aref(opts, effort_sym);
@@ -710,12 +700,8 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 		options.mode = GenMode;
 	    } else if (limited_sym == v) {
 		options.mode = LimMode;
-	    } else if (hash_sym == v) {
-		options.mode = HashMode;
-	    } else if (hash_no_attrs_sym == v) {
-		options.mode = HashNoAttrMode;
 	    } else {
-		rb_raise(ox_parse_error_class, ":mode must be :generic, :object, :limited, :hash, :hash_no_attrs.\n");
+		rb_raise(ox_parse_error_class, ":mode must be :generic, :object, or :limited.\n");
 	    }
 	}
 	if (Qnil != (v = rb_hash_lookup(h, effort_sym))) {
@@ -844,12 +830,6 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
     case LimMode:
 	obj = ox_parse(xml, ox_limited_callbacks, 0, &options, err);
 	break;
-    case HashMode:
-	obj = ox_parse(xml, ox_hash_callbacks, 0, &options, err);
-	break;
-    case HashNoAttrMode:
-	obj = ox_parse(xml, ox_hash_no_attrs_callbacks, 0, &options, err);
-	break;
     case NoMode:
 	obj = ox_parse(xml, ox_nomode_callbacks, 0, &options, err);
 	break;
@@ -874,8 +854,6 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
  *     - _:object_ - object format
  *     - _:generic_ - read as a generic XML file
  *     - _:limited_ - read as a generic XML file but with callbacks on text and elements events only
- *     - _:hash_ - read and convert to a Hash and core class objects only
- *     - _:hash_no_attrs_ - read and convert to a Hash and core class objects only without capturing attributes
  *   - *:effort* [:strict|:tolerant|:auto_define] effort to use when an undefined class is encountered, default: :strict
  *     - _:strict_ - raise an NameError for missing classes and modules
  *     - _:tolerant_ - return nil for missing classes and modules
@@ -935,8 +913,6 @@ load_str(int argc, VALUE *argv, VALUE self) {
  *     - _:object_ - object format
  *     - _:generic_ - read as a generic XML file
  *     - _:limited_ - read as a generic XML file but with callbacks on text and elements events only
- *     - _:hash_ - read and convert to a Hash and core class objects only
- *     - _:hash_no_attrs_ - read and convert to a Hash and core class objects only without capturing attributes
  *   - *:effort* [:strict|:tolerant|:auto_define] effort to use when an undefined class is encountered, default: :strict
  *     - _:strict_ - raise an NameError for missing classes and modules
  *     - _:tolerant_ - return nil for missing classes and modules
@@ -1436,12 +1412,9 @@ void Init_ox() {
     convert_special_sym = ID2SYM(rb_intern("convert_special")); rb_gc_register_address(&convert_special_sym);
     effort_sym = ID2SYM(rb_intern("effort"));			rb_gc_register_address(&effort_sym);
     generic_sym = ID2SYM(rb_intern("generic"));			rb_gc_register_address(&generic_sym);
-    hash_no_attrs_sym = ID2SYM(rb_intern("hash_no_attrs"));	rb_gc_register_address(&hash_no_attrs_sym);
-    hash_sym = ID2SYM(rb_intern("hash"));			rb_gc_register_address(&hash_sym);
     inactive_sym = ID2SYM(rb_intern("inactive"));		rb_gc_register_address(&inactive_sym);
     invalid_replace_sym = ID2SYM(rb_intern("invalid_replace"));	rb_gc_register_address(&invalid_replace_sym);
     limited_sym = ID2SYM(rb_intern("limited"));			rb_gc_register_address(&limited_sym);
-    margin_sym = ID2SYM(rb_intern("margin"));			rb_gc_register_address(&margin_sym);
     mode_sym = ID2SYM(rb_intern("mode"));			rb_gc_register_address(&mode_sym);
     nest_ok_sym = ID2SYM(rb_intern("nest_ok"));			rb_gc_register_address(&nest_ok_sym);
     object_sym = ID2SYM(rb_intern("object"));			rb_gc_register_address(&object_sym);
@@ -1461,6 +1434,7 @@ void Init_ox() {
     smart_sym = ID2SYM(rb_intern("smart"));			rb_gc_register_address(&smart_sym);
     strict_sym = ID2SYM(rb_intern("strict"));			rb_gc_register_address(&strict_sym);
     strip_namespace_sym = ID2SYM(rb_intern("strip_namespace"));	rb_gc_register_address(&strip_namespace_sym);
+    margin_sym = ID2SYM(rb_intern("margin"));			rb_gc_register_address(&margin_sym);
     symbolize_keys_sym = ID2SYM(rb_intern("symbolize_keys"));	rb_gc_register_address(&symbolize_keys_sym);
     symbolize_sym = ID2SYM(rb_intern("symbolize"));		rb_gc_register_address(&symbolize_sym);
     tolerant_sym = ID2SYM(rb_intern("tolerant"));		rb_gc_register_address(&tolerant_sym);
@@ -1503,7 +1477,7 @@ void Init_ox() {
 #endif
 }
 
-_Noreturn void
+void
 _ox_raise_error(const char *msg, const char *xml, const char *current, const char* file, int line) {
     int	xline = 1;
     int	col = 1;
