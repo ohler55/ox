@@ -826,12 +826,11 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	    int		d2 = depth + 1;
 #if UNIFY_FIXNUM_AND_BIGNUM
 		long i;
-		long cnt = NUM2LONG(RSTRUCT_LEN(obj));
+		long cnt = NUM2LONG(rb_struct_size(obj));
 #else // UNIFY_FIXNUM_AND_INTEGER
 		int   i;
 		int   cnt = (int)RSTRUCT_LEN(obj);
 #endif // UNIFY_FIXNUM_AND_INTEGER
-	    
 	    e.type = StructCode;
 	    e.clas.str = rb_class2name(clas);
 	    e.clas.len = strlen(e.clas.str);

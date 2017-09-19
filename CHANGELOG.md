@@ -1,8 +1,10 @@
-	
+
 ## 2.7.0 - August 18, 2017
 
   - Two new load modes added, :hash and :hash_no_attrs. Both load an XML
     document to create a Hash populated with core Ruby objects.
+
+  - Worked around Ruby API change for RSTRUCT_LEN so Ruby 2.4.2 does not crash.
 
 ## 2.6.0 - August 9, 2017
 
