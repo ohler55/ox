@@ -605,7 +605,6 @@ class SaxSmartTableTagTest < SaxSmartTest
     handler = AllSax.new()
     input = StringIO.new(xml)
     options = {
-      :smart => true,
       :symbolize => true,
       :smart => false,
       :skip => :skip_white,
