@@ -275,7 +275,7 @@ hints_to_overlay(Hints hints) {
  * - _:with_xml_ [true|false|nil] include XML prolog in the dump
  * - _:circular_ [true|false|nil] support circular references while dumping
  * - _:xsd_date_ [true|false|nil] use XSD date format instead of decimal format
- * - _:mode_ [:object|:generic|:limited|hash}hash_no_attrs|nil] load method to use for XML
+ * - _:mode_ [:object|:generic|:limited|:hash|:hash_no_attrs|nil] load method to use for XML
  * - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
  * - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
  * - _:skip_ [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
@@ -410,7 +410,7 @@ sax_html_overlay(VALUE self) {
  *   - _:with_xml_ [true|false|nil] include XML prolog in the dump
  *   - _:circular_ [true|false|nil] support circular references while dumping
  *   - _:xsd_date_ [true|false|nil] use XSD date format instead of decimal format
- *   - _:mode_ [:object|:generic|:limited|hash|hash_no_attrsnil] load method to use for XML
+ *   - _:mode_ [:object|:generic|:limited|:hash|:hash_no_attrs|nil] load method to use for XML
  *   - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
  *   - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
  *   - _:skip_ [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
