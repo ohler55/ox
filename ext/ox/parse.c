@@ -124,7 +124,7 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err) {
     /* initialize parse info */
     helper_stack_init(&pi.helpers);
     // Protect against GC
-    wrap = rb_data_object_wrap(rb_cObject, &pi, mark_pi_cb, NULL);
+    wrap = Data_Wrap_Struct(rb_cObject, mark_pi_cb, NULL, &pi);
 
     err_init(&pi.err);
     pi.str = xml;
@@ -617,6 +617,7 @@ read_element(PInfo pi) {
 			    *start = '\0';
 			    break;
 			case NoSkip:
+			case OffSkip:
 			default:
 			    break;
 			}
@@ -745,6 +746,7 @@ read_text(PInfo pi) {
 			}			
 			break;
 		    case NoSkip:
+		    case OffSkip:
 		    default:
 			*b++ = c;
 			break;

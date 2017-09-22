@@ -175,11 +175,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
     dr->buf.dr = dr;
     stack_init(&dr->stack);
     dr->handler = handler;
-#if HAS_DATA_OBJECT_WRAP
-    dr->value_obj = rb_data_object_wrap(ox_sax_value_class, dr, 0, 0);
-#else
-    dr->value_obj = rb_data_object_alloc(ox_sax_value_class, dr, 0, 0);
-#endif
+    dr->value_obj = Data_Wrap_Struct(ox_sax_value_class, 0, 0, dr);
     rb_gc_register_address(&dr->value_obj);
     dr->options = *options;
     dr->err = 0;
@@ -1157,7 +1153,9 @@ read_text(SaxDrive dr) {
 	int	isEnd = ('/' == buf_get(&dr->buf));
 
 	buf_backup(&dr->buf);
-	if (NoSkip == dr->options.skip && dr->has.text && !isEnd) {
+	if (dr->has.text &&
+	    ((NoSkip == dr->options.skip && !isEnd) ||
+	     (OffSkip == dr->options.skip))) {
 	    args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
 	    if (0 != dr->encoding) {

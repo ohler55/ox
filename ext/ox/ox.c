@@ -129,6 +129,7 @@ static VALUE	opt_format_sym;
 static VALUE	optimized_sym;
 static VALUE	overlay_sym;
 static VALUE	skip_none_sym;
+static VALUE	skip_off_sym;
 static VALUE	skip_return_sym;
 static VALUE	skip_sym;
 static VALUE	skip_white_sym;
@@ -278,7 +279,7 @@ hints_to_overlay(Hints hints) {
  * - _:mode_ [:object|:generic|:limited|:hash|:hash_no_attrs|nil] load method to use for XML
  * - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
  * - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
- * - _:skip_ [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
+ * - _:skip_ [:skip_none|:skip_return|:skip_white|:skip_off] determines how to handle white space in text
  * - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  * - _:convert_special_ [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
  * - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
@@ -330,6 +331,7 @@ get_def_opts(VALUE self) {
     default:			rb_hash_aset(opts, effort_sym, Qnil);			break;
     }
     switch (ox_default_options.skip) {
+    case OffSkip:		rb_hash_aset(opts, skip_sym, skip_off_sym);		break;
     case NoSkip:		rb_hash_aset(opts, skip_sym, skip_none_sym);		break;
     case CrSkip:		rb_hash_aset(opts, skip_sym, skip_return_sym);		break;
     case SpcSkip:		rb_hash_aset(opts, skip_sym, skip_white_sym);		break;
@@ -413,7 +415,7 @@ sax_html_overlay(VALUE self) {
  *   - _:mode_ [:object|:generic|:limited|:hash|:hash_no_attrs|nil] load method to use for XML
  *   - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
  *   - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
- *   - _:skip_ [:skip_none|:skip_return|:skip_white] determines how to handle white space in text
+ *   - _:skip_ [:skip_none|:skip_return|:skip_white|:skip_off] determines how to handle white space in text
  *   - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  *   - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  *   - _:strip_namespace_ [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
@@ -503,6 +505,8 @@ set_def_opts(VALUE self, VALUE opts) {
     v = rb_hash_aref(opts, skip_sym);
     if (Qnil == v) {
 	ox_default_options.skip = NoSkip;
+    } else if (skip_off_sym == v) {
+	ox_default_options.skip = OffSkip;
     } else if (skip_none_sym == v) {
 	ox_default_options.skip = NoSkip;
     } else if (skip_return_sym == v) {
@@ -510,7 +514,7 @@ set_def_opts(VALUE self, VALUE opts) {
     } else if (skip_white_sym == v) {
 	ox_default_options.skip = SpcSkip;
     } else {
-	rb_raise(ox_parse_error_class, ":skip must be :skip_none, :skip_return, :skip_white, or nil.\n");
+	rb_raise(ox_parse_error_class, ":skip must be :skip_none, :skip_return, :skip_white, :skip_off, or nil.\n");
     }
 
     v = rb_hash_lookup(opts, convert_special_sym);
@@ -732,12 +736,14 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 	if (Qnil != (v = rb_hash_lookup(h, skip_sym))) {
 	    if (skip_none_sym == v) {
 		options.skip = NoSkip;
+	    } else if (skip_off_sym == v) {
+		options.skip = OffSkip;
 	    } else if (skip_return_sym == v) {
 		options.skip = CrSkip;
 	    } else if (skip_white_sym == v) {
 		options.skip = SpcSkip;
 	    } else {
-		rb_raise(ox_parse_error_class, ":skip must be :skip_none, :skip_return, or :skip_white.\n");
+		rb_raise(ox_parse_error_class, ":skip must be :skip_none, :skip_return, :skip_white, or :skip_off.\n");
 	    }
 	}
 
@@ -996,7 +1002,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
  *   - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
  *   - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
  *   - *:smart* [true|false] flag indicating the parser uses hints if available (use with html)
- *   - *:skip* [:skip_none|:skip_return|:skip_white] flag indicating the parser skips \\r or collpase white space into a single space. Default (skip space)
+ *   - *:skip* [:skip_none|:skip_return|:skip_white|:skip_off] flag indicating the parser skips \\r or collpase white space into a single space. Default (skip space)
  *   - *:strip_namespace* [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
 static VALUE
@@ -1033,6 +1039,8 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
 		options.skip = SpcSkip;
 	    } else if (skip_none_sym == v) {
 		options.skip = NoSkip;
+	    } else if (skip_off_sym == v) {
+		options.skip = OffSkip;
 	    }
 	}
 	if (Qnil != (v = rb_hash_lookup(h, strip_namespace_sym))) {
@@ -1069,7 +1077,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
  * - +options+ [Hash] options parse options
  *   - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
  *   - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
- *   - *:skip* [:skip_none|:skip_return|:skip_white] flag indicating the parser skips \\r or collapse white space into a single space. Default (skip space)
+ *   - *:skip* [:skip_none|:skip_return|:skip_white|:skip_off] flag indicating the parser skips \\r or collapse white space into a single space. Default (skip space)
  *   - *:overlay* [Hash] a Hash of keys that match html element names and values that are one of
  *     - _:active_ - make the normal callback for the element
  *     - _:nest_ok_ - active but ignore nest check
@@ -1113,6 +1121,8 @@ sax_html(int argc, VALUE *argv, VALUE self) {
 		options.skip = SpcSkip;
 	    } else if (skip_none_sym == v) {
 		options.skip = NoSkip;
+	    } else if (skip_off_sym == v) {
+		options.skip = OffSkip;
 	    }
 	}
 	if (Qnil != (v = rb_hash_lookup(h, overlay_sym))) {
@@ -1455,6 +1465,7 @@ void Init_ox() {
     ox_standalone_sym = ID2SYM(rb_intern("standalone"));	rb_gc_register_address(&ox_standalone_sym);
     ox_version_sym = ID2SYM(rb_intern("version"));		rb_gc_register_address(&ox_version_sym);
     skip_none_sym = ID2SYM(rb_intern("skip_none"));		rb_gc_register_address(&skip_none_sym);
+    skip_off_sym = ID2SYM(rb_intern("skip_off"));		rb_gc_register_address(&skip_off_sym);
     skip_return_sym = ID2SYM(rb_intern("skip_return"));		rb_gc_register_address(&skip_return_sym);
     skip_sym = ID2SYM(rb_intern("skip"));			rb_gc_register_address(&skip_sym);
     skip_white_sym = ID2SYM(rb_intern("skip_white"));		rb_gc_register_address(&skip_white_sym);
