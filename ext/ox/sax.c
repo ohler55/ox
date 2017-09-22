@@ -1157,7 +1157,9 @@ read_text(SaxDrive dr) {
 	int	isEnd = ('/' == buf_get(&dr->buf));
 
 	buf_backup(&dr->buf);
-	if (NoSkip == dr->options.skip && dr->has.text && !isEnd) {
+	if (dr->has.text &&
+	    ((NoSkip == dr->options.skip && !isEnd) ||
+	     (OffSkip == dr->options.skip))) {
 	    args[0] = rb_str_new2(dr->buf.str);
 #if HAS_ENCODING_SUPPORT
 	    if (0 != dr->encoding) {

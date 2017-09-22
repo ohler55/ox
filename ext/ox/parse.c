@@ -617,6 +617,7 @@ read_element(PInfo pi) {
 			    *start = '\0';
 			    break;
 			case NoSkip:
+			case OffSkip:
 			default:
 			    break;
 			}
@@ -745,6 +746,7 @@ read_text(PInfo pi) {
 			}			
 			break;
 		    case NoSkip:
+		    case OffSkip:
 		    default:
 			*b++ = c;
 			break;

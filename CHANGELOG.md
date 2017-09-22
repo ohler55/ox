@@ -1,4 +1,9 @@
 
+## 2.8.0 - September 22, 2017
+
+  - Added :skip_off mode to make sax callback on every none empty string even
+    if there are not other non-whitespace characters present.
+
 ## 2.7.0 - August 18, 2017
 
   - Two new load modes added, :hash and :hash_no_attrs. Both load an XML

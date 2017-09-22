@@ -96,6 +96,7 @@ typedef enum {
 } LoadMode;
 
 typedef enum {
+    OffSkip  = 'o',
     NoSkip   = 'n',
     CrSkip   = 'r',
     SpcSkip  = 's',
