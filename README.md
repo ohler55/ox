@@ -6,7 +6,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Documentation
 
-*Documentation*: http://www.ohler.com/ox/doc
+*Documentation*: http://www.ohler.com/ox
 
 ## Source
 
