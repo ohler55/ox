@@ -1514,7 +1514,11 @@ void Init_ox() {
 #endif
 }
 
+#if __GNUC__ > 4
 _Noreturn void
+#else
+void
+#endif
 _ox_raise_error(const char *msg, const char *xml, const char *current, const char* file, int line) {
     int	xline = 1;
     int	col = 1;

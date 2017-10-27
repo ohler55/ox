@@ -1,4 +1,8 @@
 
+## 2.8.1 - October 27, 2017
+
+  - Avoid crash with invalid XML passed to Oj.parse_obj().
+
 ## 2.8.0 - September 22, 2017
 
   - Added :skip_off mode to make sax callback on every none empty string even

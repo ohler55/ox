@@ -776,8 +776,10 @@ end_element(PInfo pi, const char *ename) {
 		    Helper	gh;
 
 		    helper_stack_pop(&pi->helpers);
-		    gh = helper_stack_peek(&pi->helpers);
-
+		    if (NULL == (gh = helper_stack_peek(&pi->helpers))) {
+			set_error(&pi->err, "Corrupt parse stack, container is wrong type", pi->str, pi->s);
+			return;
+		    }
 		    rb_hash_aset(gh->obj, ph->obj, h->obj);
 		}
 		break;

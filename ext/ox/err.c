@@ -17,7 +17,11 @@ ox_err_set(Err e, VALUE clas, const char *format, ...) {
     va_end(ap);
 }
 
+#if __GNUC__ > 4
 _Noreturn void
+#else
+void
+#endif
 ox_err_raise(Err e) {
     rb_raise(e->clas, "%s", e->msg);
 }
