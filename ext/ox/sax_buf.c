@@ -9,7 +9,7 @@
 #include <strings.h>
 #include <sys/types.h>
 #if NEEDS_UIO
-#include <sys/uio.h>    
+#include <sys/uio.h>
 #endif
 #include <unistd.h>
 #include <time.h>
@@ -73,7 +73,7 @@ int
 ox_sax_buf_read(Buf buf) {
     int         err;
     size_t      shift = 0;
-    
+
     // if there is not much room to read into, shift or realloc a larger buffer.
     if (buf->head < buf->tail && 4096 > buf->end - buf->tail) {
         if (0 == buf->pro) {
@@ -84,7 +84,7 @@ ox_sax_buf_read(Buf buf) {
         if (0 >= shift) { /* no space left so allocate more */
             char        *old = buf->head;
             size_t      size = buf->end - buf->head + BUF_PAD;
-        
+
             if (buf->head == buf->base) {
                 buf->head = ALLOC_N(char, size * 2);
                 memcpy(buf->head, old, size);
@@ -197,9 +197,13 @@ read_from_fd(Buf buf) {
 static char*
 ox_stpncpy(char *dest, const char *src, size_t n) {
     size_t	cnt = strlen(src) + 1;
+    size_t	dest_s = sizeof(dest) - 1;
 
     if (n < cnt) {
 	cnt = n;
+    }
+    if (cnt > dest_s){
+      cnt = dest_s;
     }
     strncpy(dest, src, cnt);
 
@@ -225,4 +229,3 @@ read_from_str(Buf buf) {
 
     return 0;
 }
-
