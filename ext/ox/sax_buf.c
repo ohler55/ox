@@ -203,7 +203,7 @@ ox_stpncpy(char *dest, const char *src, size_t n) {
 	cnt = n;
     }
     if (cnt > dest_s){
-      cnt = dest_s - 1;
+      cnt = dest_s;
     }
     strncpy(dest, src, cnt);
 
