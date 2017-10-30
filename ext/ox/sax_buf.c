@@ -197,12 +197,13 @@ read_from_fd(Buf buf) {
 static char*
 ox_stpncpy(char *dest, const char *src, size_t n) {
     size_t	cnt = strlen(src) + 1;
+    size_t	dest_s = sizeof(dest) - 1;
 
     if (n < cnt) {
 	cnt = n;
     }
-    if (cnt > sizeof(dest) - 1){
-      cnt = sizeof(dest) - 1;
+    if (cnt > dest_s){
+      cnt = dest_s - 1;
     }
     strncpy(dest, src, cnt);
 
