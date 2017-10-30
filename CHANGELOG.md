@@ -1,4 +1,8 @@
 
+## 2.8.2 - October 30, 2017
+
+  - Fixed bug with SAX parser that caused a crash with very long invalid instruction element.
+
 ## 2.8.1 - October 27, 2017
 
   - Avoid crash with invalid XML passed to Oj.parse_obj().

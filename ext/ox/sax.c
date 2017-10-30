@@ -475,7 +475,7 @@ static char
 read_instruction(SaxDrive dr) {
     char	content[1024];
     char        c;
-    char	*cend;
+    int		coff;
     VALUE	target = Qnil;
     int		is_xml;
     int		pos = dr->buf.pos - 1;
@@ -510,7 +510,7 @@ read_instruction(SaxDrive dr) {
     line = dr->buf.line;
     col = dr->buf.col;
     read_content(dr, content, sizeof(content) - 1);
-    cend = dr->buf.tail;
+    coff = dr->buf.tail - dr->buf.head;
     buf_reset(&dr->buf);
     dr->err = 0;
     c = read_attrs(dr, c, '?', '?', is_xml, 1, NULL);
@@ -545,7 +545,7 @@ read_instruction(SaxDrive dr) {
 	    }
 	    rb_funcall2(dr->handler, ox_text_id, 1, args);
 	}
-	dr->buf.tail = cend;
+	dr->buf.tail = dr->buf.head + coff;
 	c = buf_get(&dr->buf);
     } else {
 	pos = dr->buf.pos;
