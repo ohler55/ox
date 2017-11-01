@@ -537,8 +537,8 @@ set_def_opts(VALUE self, VALUE opts) {
 	Check_Type(v, T_STRING);
 	slen = RSTRING_LEN(v);
 	if (sizeof(ox_default_options.inv_repl) - 2 < (size_t)slen) {
-	    rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %ld characters.",
-		     sizeof(ox_default_options.inv_repl) - 2);
+	    rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %d characters.",
+		     (int)sizeof(ox_default_options.inv_repl) - 2);
 	}
 	strncpy(ox_default_options.inv_repl + 1, StringValuePtr(v), sizeof(ox_default_options.inv_repl) - 1);
 	ox_default_options.inv_repl[sizeof(ox_default_options.inv_repl) - 1] = '\0';
@@ -558,8 +558,8 @@ set_def_opts(VALUE self, VALUE opts) {
 	Check_Type(v, T_STRING);
 	slen = RSTRING_LEN(v);
 	if (sizeof(ox_default_options.strip_ns) - 1 < (size_t)slen) {
-	    rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %ld characters.",
-		     sizeof(ox_default_options.strip_ns) - 1);
+	    rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %d characters.",
+		     (int)sizeof(ox_default_options.strip_ns) - 1);
 	}
 	strncpy(ox_default_options.strip_ns, StringValuePtr(v), sizeof(ox_default_options.strip_ns) - 1);
 	ox_default_options.strip_ns[sizeof(ox_default_options.strip_ns) - 1] = '\0';
@@ -572,8 +572,8 @@ set_def_opts(VALUE self, VALUE opts) {
 	Check_Type(v, T_STRING);
 	slen = RSTRING_LEN(v);
 	if (sizeof(ox_default_options.margin) - 1 < (size_t)slen) {
-	    rb_raise(ox_parse_error_class, ":margin can be no longer than %ld characters.",
-		     sizeof(ox_default_options.margin) - 1);
+	    rb_raise(ox_parse_error_class, ":margin can be no longer than %d characters.",
+		     (int)sizeof(ox_default_options.margin) - 1);
 	}
 	strncpy(ox_default_options.margin, StringValuePtr(v), sizeof(ox_default_options.margin) - 1);
 	ox_default_options.margin[sizeof(ox_default_options.margin) - 1] = '\0';
@@ -769,8 +769,8 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 	    Check_Type(v, T_STRING);
 	    slen = RSTRING_LEN(v);
 	    if (sizeof(options.inv_repl) - 2 < (size_t)slen) {
-		rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %ld characters.",
-			 sizeof(options.inv_repl) - 2);
+		rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %d characters.",
+			 (int)sizeof(options.inv_repl) - 2);
 	    }
 	    strncpy(options.inv_repl + 1, StringValuePtr(v), sizeof(options.inv_repl) - 1);
 	    options.inv_repl[sizeof(options.inv_repl) - 1] = '\0';
@@ -789,8 +789,8 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 	    Check_Type(v, T_STRING);
 	    slen = RSTRING_LEN(v);
 	    if (sizeof(options.strip_ns) - 1 < (size_t)slen) {
-		rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %ld characters.",
-			 sizeof(options.strip_ns) - 1);
+		rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %d characters.",
+			 (int)sizeof(options.strip_ns) - 1);
 	    }
 	    strncpy(options.strip_ns, StringValuePtr(v), sizeof(options.strip_ns) - 1);
 	    options.strip_ns[sizeof(options.strip_ns) - 1] = '\0';
@@ -802,8 +802,8 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 	    Check_Type(v, T_STRING);
 	    slen = RSTRING_LEN(v);
 	    if (sizeof(options.margin) - 1 < (size_t)slen) {
-		rb_raise(ox_parse_error_class, ":margin can be no longer than %ld characters.",
-			 sizeof(options.margin) - 1);
+		rb_raise(ox_parse_error_class, ":margin can be no longer than %d characters.",
+			 (int)sizeof(options.margin) - 1);
 	    }
 	    strncpy(options.margin, StringValuePtr(v), sizeof(options.margin) - 1);
 	    options.margin[sizeof(options.margin) - 1] = '\0';
@@ -1055,8 +1055,8 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
 		Check_Type(v, T_STRING);
 		slen = RSTRING_LEN(v);
 		if (sizeof(options.strip_ns) - 1 <  (size_t)slen) {
-		    rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %ld characters.",
-			     sizeof(options.strip_ns) - 1);
+		    rb_raise(ox_parse_error_class, ":strip_namespace can be no longer than %d characters.",
+			     (int)sizeof(options.strip_ns) - 1);
 		}
 		strncpy(options.strip_ns, StringValuePtr(v), sizeof(options.strip_ns) - 1);
 		options.strip_ns[sizeof(options.strip_ns) - 1] = '\0';
@@ -1209,8 +1209,8 @@ parse_dump_options(VALUE ropts, Options copts) {
 	    Check_Type(v, T_STRING);
 	    slen = RSTRING_LEN(v);
 	    if (sizeof(copts->inv_repl) - 2 <  (size_t)slen) {
-		rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %ld characters.",
-			 sizeof(copts->inv_repl) - 2);
+		rb_raise(ox_parse_error_class, ":invalid_replace can be no longer than %d characters.",
+			 (int)sizeof(copts->inv_repl) - 2);
 	    }
 	    strncpy(copts->inv_repl + 1, StringValuePtr(v), sizeof(copts->inv_repl) - 1);
 	    copts->inv_repl[sizeof(copts->inv_repl) - 1] = '\0';
@@ -1224,8 +1224,8 @@ parse_dump_options(VALUE ropts, Options copts) {
 	    Check_Type(v, T_STRING);
 	    slen = RSTRING_LEN(v);
 	    if (sizeof(copts->margin) - 2 <  (size_t)slen) {
-		rb_raise(ox_parse_error_class, ":margin can be no longer than %ld characters.",
-			 sizeof(copts->margin) - 2);
+		rb_raise(ox_parse_error_class, ":margin can be no longer than %d characters.",
+			 (int)sizeof(copts->margin) - 2);
 	    }
 	    strncpy(copts->margin, StringValuePtr(v), sizeof(copts->margin) - 1);
 	    copts->margin[sizeof(copts->margin) - 1] = '\0';

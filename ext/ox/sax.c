@@ -448,7 +448,8 @@ read_content(SaxDrive dr, char *content, size_t len) {
     char	*end = content + len;
 
     while ('\0' != (c = buf_get(&dr->buf))) {
-	if (end < content) {
+	if (end <= content) {
+	    *content = '\0';
 	    ox_sax_drive_error(dr, "processing instruction content too large");
 	    return;
 	}
@@ -473,7 +474,7 @@ read_content(SaxDrive dr, char *content, size_t len) {
  */
 static char
 read_instruction(SaxDrive dr) {
-    char	content[1024];
+    char	content[4096];
     char        c;
     int		coff;
     VALUE	target = Qnil;
