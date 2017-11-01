@@ -1,5 +1,5 @@
 
-## 2.8.2 - November 2, 2017
+## 2.8.2 - November 1, 2017
 
   - Fixed bug with SAX parser that caused a crash with very long invalid instruction element.
 
