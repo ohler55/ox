@@ -925,7 +925,7 @@ read_element_start(SaxDrive dr) {
 		    end_element_cb(dr, top_nv->val, pos, line, col, top_nv->hint);
 		    top_nv = stack_peek(&dr->stack);
 		}
-		if (0 != h->parents && NestOverlay != h->overlay) {
+		if (NULL != top_nv && 0 != h->parents && NestOverlay != h->overlay) {
 		    const char	**p;
 		    int		ok = 0;
 
