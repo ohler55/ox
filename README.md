@@ -218,6 +218,26 @@ puts "after parse"
 # after parse
 ```
 
+### Parsing XML into a Hash (fast)
+
+```ruby
+require 'ox'
+
+xml = %{
+<top name="sample">
+  <middle name="second">
+    <bottom name="third">Rock bottom</bottom>
+  </middle>
+</top>
+}
+
+puts Ox.load(xml, mode: :hash)
+puts Ox.load(xml, mode: :hash_no_attrs)
+
+#{:top=>[{:name=>"sample"}, {:middle=>[{:name=>"second"}, {:bottom=>[{:name=>"third"}, "Rock bottom"]}]}]}
+#{:top=>{:middle=>{:bottom=>"Rock bottom"}}}
+```
+
 ### Object XML format
 
 The XML format used for Object encoding follows the structure of the
