@@ -7,7 +7,7 @@
 
 ## 2.8.1 - October 27, 2017
 
-  - Avoid crash with invalid XML passed to Oj.parse_obj().
+  - Avoid crash with invalid XML passed to Ox.parse_obj().
 
 ## 2.8.0 - September 22, 2017
 
