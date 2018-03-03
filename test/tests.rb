@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# encoding: UTF-8
+# encoding: utf-8
 
 # Ubuntu does not accept arguments to ruby when called using env. To get warnings to show up the -w options is
 # required. That can be set in the RUBYOPT environment variable.
@@ -374,7 +374,8 @@ class Func < ::Test::Unit::TestCase
     doc = Ox.parse(xml)
     assert_equal('<&test>', doc.attributes[:name])
     dumped_xml = Ox.dump(doc)
-    assert_equal(xml, dumped_xml)
+    escaped_xml = %{\n<top name="&lt;&amp;test&gt;">&lt;not \'quoted\'&gt;</top>\n}
+    assert_equal(escaped_xml, dumped_xml)
   end
 
   def test_escape_bad

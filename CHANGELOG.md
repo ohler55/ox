@@ -1,4 +1,8 @@
 
+## 2.8.3 - March 3, 2018
+
+  - Attribute values now escape < and > on dump.
+
 ## 2.8.2 - November 1, 2017
 
   - Fixed bug with SAX parser that caused a crash with very long invalid instruction element.
