@@ -1,6 +1,8 @@
 # Ox gem
 A fast XML parser and Object marshaller as a Ruby gem.
 
+[![Build Status](https://secure.travis-ci.org/ohler55/ox.png?branch=master)](http://travis-ci.org/ohler55/ox)
+
 ## Installation
     gem install ox
 
@@ -20,11 +22,6 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Build Status
 
-[![Build Status](https://secure.travis-ci.org/ohler55/ox.png?branch=master)](http://travis-ci.org/ohler55/ox)
-
-## Donate
-
-[![Gratipay](https://img.shields.io/gratipay/project/ox.svg)](https://gratipay.com/ox/)
 
 ## Links of Interest
 
