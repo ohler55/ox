@@ -44,7 +44,7 @@ extern int	ox_sax_buf_read(Buf buf);
 
 static inline char
 buf_get(Buf buf) {
-    printf("*** drive get from '%s'  from start: %ld  buf: %p  from read_end: %ld\n", buf->tail, buf->tail - buf->head, buf->head, buf->read_end - buf->tail);
+    //printf("*** drive get from '%s'  from start: %ld  buf: %p  from read_end: %ld\n", buf->tail, buf->tail - buf->head, buf->head, buf->read_end - buf->tail);
     if (buf->read_end <= buf->tail) {
         if (0 != ox_sax_buf_read(buf)) {
             return '\0';

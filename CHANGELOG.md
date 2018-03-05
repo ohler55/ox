@@ -1,4 +1,8 @@
 
+## 2.8.4 - March 4, 2018
+
+  - Commented out debuf statement.
+
 ## 2.8.3 - March 3, 2018
 
   - Attribute values now escape < and > on dump.
