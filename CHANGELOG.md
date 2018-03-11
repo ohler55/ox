@@ -1,4 +1,10 @@
 
+## 2.9.0 - March 15, 2018
+
+  - New builder methods for building HTML.
+
+  - Examples added.
+
 ## 2.8.4 - March 4, 2018
 
   - Commented out debuf statement.
