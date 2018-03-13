@@ -10,7 +10,6 @@ $LOAD_PATH << File.join(ox_dir, 'lib')
 require 'ox'
 
 # Define a class that will be used for instances that are encoded and decoded.
-
 class Classy
   def initialize(a, b)
     @a = a
@@ -33,4 +32,5 @@ puts "encoded object:\n#{doc}"
 # Now convert back to a Ruby object.
 obj2 = Ox.load(doc, mode: :object)
 
+# Looks the same, print it out to check.
 puts "decoded object: #{obj2}"
