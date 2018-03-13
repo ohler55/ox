@@ -1,5 +1,5 @@
 
-## 2.9.0 - March 15, 2018
+## 2.9.0 - March 13, 2018
 
   - New builder methods for building HTML.
 
