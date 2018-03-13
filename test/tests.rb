@@ -1278,19 +1278,19 @@ class Func < ::Test::Unit::TestCase
     assert_equal(6, b.column())
     assert_equal(88, b.pos())
     b.pop()
-    b.comment('just a comment')
+    b.comment(' just a comment ')
     b.element('three')
     b.text(%|my name is Peter & <"ピーター">|)
     b.pop()
     b.cdata("multi\nline\ncdata")
     b.raw("<multi></multi>\n<line></line>\n<raw></raw>")
-    b.comment("Multi\nline\ncomment")
+    b.comment(" Multi\nline\ncomment ")
     b.close()
     xml = b.to_s
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
 <one a="ack" b="&lt;ba&quot;'&amp;ck&gt;">
   <two/>
-  <!-- just a comment --/>
+  <!-- just a comment -->
   <three>my name is Peter &amp; &lt;"ピーター"&gt;</three>
   <![CDATA[multi
 line
@@ -1299,7 +1299,7 @@ cdata]]><multi></multi>
 <raw></raw>
   <!-- Multi
 line
-comment --/>
+comment -->
 </one>
 |, xml)
   end
@@ -1311,7 +1311,7 @@ comment --/>
     b.element('one', :a => "ack", 'b' => 'back')
     b.element('two')
     b.pop()
-    b.comment('just a comment')
+    b.comment(' just a comment ')
     b.element('three')
     b.text("my name is \"ピーター\"")
     b.pop()
@@ -1323,7 +1323,7 @@ comment --/>
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
 <one a="ack" b="back">
   <two/>
-  <!-- just a comment --/>
+  <!-- just a comment -->
   <three>my name is "ピーター"</three>
 </one>
 |, xml)
@@ -1339,7 +1339,7 @@ comment --/>
         assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
 <one a="ack" b="back">
   <two/>
-  <!-- just a comment --/>
+  <!-- just a comment -->
   <three>my name is "ピーター"</three>
 </one>
 |, xml)
@@ -1350,7 +1350,7 @@ comment --/>
         b.element('one', :a => "ack", 'b' => 'back')
         b.element('two')
         b.pop()
-        b.comment('just a comment')
+        b.comment(' just a comment ')
         b.element('three')
         b.text("my name is \"ピーター\"")
         b.pop()
@@ -1367,7 +1367,7 @@ comment --/>
       b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
       b.element('one', :a => "ack", 'b' => 'back') {
         b.element('two') {}
-        b.comment('just a comment')
+        b.comment(' just a comment ')
         b.element('three') {
           b.text("my name is \"ピーター\"")
         }
@@ -1376,7 +1376,7 @@ comment --/>
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
 <one a="ack" b="back">
   <two/>
-  <!-- just a comment --/>
+  <!-- just a comment -->
   <three>my name is "ピーター"</three>
 </one>
 |, xml)
@@ -1388,7 +1388,7 @@ comment --/>
       b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
       b.element('one', :a => "ack", 'b' => 'back') {
         b.element('two') {}
-        b.comment('just a comment')
+        b.comment(' just a comment ')
         b.element('three') {
           b.text("my name is \"ピーター\"")
         }
@@ -1399,7 +1399,7 @@ comment --/>
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
 <one a="ack" b="back">
   <two/>
-  <!-- just a comment --/>
+  <!-- just a comment -->
   <three>my name is "ピーター"</three>
 </one>
 |, xml)
@@ -1415,7 +1415,7 @@ comment --/>
         assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
 <one a="ack" b="back">
   <two/>
-  <!-- just a comment --/>
+  <!-- just a comment -->
   <three>my name is "ピーター"</three>
 </one>
 |, xml)
@@ -1425,7 +1425,7 @@ comment --/>
           b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
           b.element('one', :a => "ack", 'b' => 'back') {
             b.element('two') {}
-            b.comment('just a comment')
+            b.comment(' just a comment ')
             b.element('three') {
               b.text("my name is \"ピーター\"")
             }

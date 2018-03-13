@@ -590,7 +590,7 @@ builder_instruct(int argc, VALUE *argv, VALUE self) {
 /* call-seq: element(name,attributes)
  *
  * Adds an element with the name and attributes provided. If a block is given
- * then on closing of the block a pop() done at the close of the block.
+ * then on closing of the block a pop() is called.
  *
  * - +name+ - (String) name of the element
  * - +attributes+ - (Hash) of the element
@@ -640,7 +640,7 @@ builder_element(int argc, VALUE *argv, VALUE self) {
     b->col++;
     b->pos++;
     append_string(b, e->name, len, xml_element_chars, false);
-    if (1 < argc) {
+    if (1 < argc && T_HASH == rb_type(argv[1])) {
 	rb_hash_foreach(argv[1], append_attr, (VALUE)b);
     }
     // Do not close with > or /> yet. That is done with i_am_a_child() or pop().
@@ -648,6 +648,51 @@ builder_element(int argc, VALUE *argv, VALUE self) {
 	rb_yield(self);
 	pop(b);
     }
+    return Qnil;
+}
+
+/* call-seq: void_element(name,attributes)
+ *
+ * Adds an void element with the name and attributes provided.
+ *
+ * - +name+ - (String) name of the element
+ * - +attributes+ - (Hash) of the element
+ */
+static VALUE
+builder_void_element(int argc, VALUE *argv, VALUE self) {
+    Builder	b = (Builder)DATA_PTR(self);
+    const char	*name;
+    int		len;
+
+    if (1 > argc) {
+	rb_raise(ox_arg_error_class, "missing element name");
+    }
+    i_am_a_child(b, false);
+    append_indent(b);
+    switch (rb_type(*argv)) {
+    case T_STRING:
+	name = StringValuePtr(*argv);
+	len = RSTRING_LEN(*argv);
+	break;
+    case T_SYMBOL:
+	name = rb_id2name(SYM2ID(*argv));
+	len = strlen(name);
+	break;
+    default:
+	rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name");
+	break;
+    }
+    buf_append(&b->buf, '<');
+    b->col++;
+    b->pos++;
+    append_string(b, name, len, xml_element_chars, false);
+    if (1 < argc && T_HASH == rb_type(argv[1])) {
+	rb_hash_foreach(argv[1], append_attr, (VALUE)b);
+    }
+    buf_append_string(&b->buf, ">", 1);
+    b->col++;;
+    b->pos++;
+
     return Qnil;
 }
 
@@ -663,11 +708,11 @@ builder_comment(VALUE self, VALUE text) {
     rb_check_type(text, T_STRING);
     i_am_a_child(b, false);
     append_indent(b);
-    buf_append_string(&b->buf, "<!-- ", 5);
+    buf_append_string(&b->buf, "<!--", 4);
     b->col += 5;
     b->pos += 5;
     append_string(b, StringValuePtr(text), RSTRING_LEN(text), xml_element_chars, false);
-    buf_append_string(&b->buf, " --/> ", 5);
+    buf_append_string(&b->buf, "-->", 3);
     b->col += 5;
     b->pos += 5;
 
@@ -879,6 +924,7 @@ void ox_init_builder(VALUE ox) {
     rb_define_method(builder_class, "comment", builder_comment, 1);
     rb_define_method(builder_class, "doctype", builder_doctype, 1);
     rb_define_method(builder_class, "element", builder_element, -1);
+    rb_define_method(builder_class, "void_element", builder_void_element, -1);
     rb_define_method(builder_class, "text", builder_text, -1);
     rb_define_method(builder_class, "cdata", builder_cdata, 1);
     rb_define_method(builder_class, "raw", builder_raw, 1);
