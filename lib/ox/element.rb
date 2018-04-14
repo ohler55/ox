@@ -10,9 +10,9 @@ module Ox
   # sub elements or attributes simply by name. Repeating elements with the
   # same name can be referenced with an element count as well. A few examples
   # should explain the 'easy' API more clearly.
-  # 
+  #
   # *Example*
-  # 
+  #
   #   doc = Ox.parse(%{
   #   <?xml?>
   #   <People>
@@ -26,7 +26,7 @@ module Ox
   #     </Person>
   #   </People>
   #   })
-  #   
+  #
   #   doc.People.Person.given.text
   #   => "Peter"
   #   doc.People.Person(1).given.text
@@ -35,7 +35,7 @@ module Ox
   #   => "58"
   class Element < Node
     include HasAttrs
-    
+
     # Creates a new Element with the specified name.
     # - +name+ [String] name of the Element
     def initialize(name)
@@ -44,7 +44,7 @@ module Ox
       @nodes = []
     end
     alias name value
-    
+
     # Returns the Element's nodes array. These are the sub-elements of this
     # Element.
     # *return* [Array] all child Nodes.
@@ -63,6 +63,16 @@ module Ox
       self
     end
 
+    # Prepend a Node to the Element's nodes array. Returns the element itself
+    # so multiple appends can be chained together.
+    # - +node+ [Node] Node to prepend to the nodes array
+    def prepend_child(node)
+      raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
+      @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
+      @nodes.unshift(node)
+      self
+    end
+
     # Returns true if this Object and other are of the same type and have the
     # equivalent value and the equivalent elements otherwise false is returned.
     # - +other+ [Object] Object compare _self_ to.
@@ -74,7 +84,7 @@ module Ox
       true
     end
     alias == eql?
-    
+
     # Returns the first String in the elements nodes array or nil if there is
     # no String node.
     def text()
@@ -168,7 +178,7 @@ module Ox
       end
       found
     end
-    
+
     # Handles the 'easy' API that allows navigating a simple XML by
     # referencing elements and attributes by name.
     # - +id+ [Symbol] element or attribute name

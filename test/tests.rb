@@ -237,7 +237,7 @@ class Func < ::Test::Unit::TestCase
     dump_and_load(Bag.new({ }), false)
     dump_and_load(Bag.new(:@x => 3), false)
   end
-  
+
   def test_bad_object
     Ox::default_options = $ox_object_options
     xml = %{<?xml version="1.0"?>
@@ -785,7 +785,7 @@ class Func < ::Test::Unit::TestCase
     end
     assert(false)
   end
-  
+
   def test_mutex
     Ox::default_options = $ox_object_options
     if defined?(Mutex) && 'rubinius' != $ruby
@@ -918,7 +918,7 @@ class Func < ::Test::Unit::TestCase
 </Family>
 }
   end
-  
+
   def test_each
     Ox::default_options = $ox_object_options
     doc = Ox.parse(each_xml)
@@ -926,7 +926,7 @@ class Func < ::Test::Unit::TestCase
     doc.Family.Pete.each { |n| n.is_a?(Ox::Element) && nodes << n.id }
     assert_equal(['Nicole', 'Pamela', 'Fictional'], nodes)
   end
-  
+
   def test_each_name
     Ox::default_options = $ox_object_options
     doc = Ox.parse(each_xml)
@@ -970,7 +970,7 @@ class Func < ::Test::Unit::TestCase
 <!--One Only-->
 }
   end
-  
+
   def test_locate_self
     Ox::default_options = $ox_object_options
     doc = Ox.parse(locate_xml)
@@ -1142,7 +1142,7 @@ class Func < ::Test::Unit::TestCase
 </Family>
 }
   end
-  
+
   def test_easy_attribute
     Ox::default_options = $ox_object_options
     doc = Ox.parse(easy_xml)
@@ -1198,7 +1198,7 @@ class Func < ::Test::Unit::TestCase
     k1.replace_text('Spam')
     assert_equal('Spam', doc.Family.Pete.Kid(1).text)
   end
-  
+
   def test_easy_element_index
     Ox::default_options = $ox_object_options
     doc = Ox.parse(easy_xml)
@@ -1263,6 +1263,31 @@ class Func < ::Test::Unit::TestCase
 |, Ox.dump(doc))
   end
 
+  def test_prepend_child_invalid_node
+    parent = Ox::Element.new('Parent')
+    invalid_node = 12345
+    assert_raise { parent.prepend_child(invalid_node) }
+  end
+
+  def test_prepend_child_when_nodes_are_empty
+    parent = Ox::Element.new('Parent')
+    assert_equal(parent.nodes, [])
+    child = Ox::Element.new('Child')
+    parent.prepend_child(child)
+    assert_equal([child], parent.nodes)
+  end
+
+  def test_prepend_child_when_nodes_not_empty
+    parent = Ox::Element.new('Parent')
+    child0 = Ox::Element.new('Child0').tap { |n| parent << n }
+    child1 = Ox::Element.new('Child1').tap { |n| parent << n }
+    assert_equal(parent.nodes, [child0, child1])
+
+    child2 = Ox::Element.new('Child2')
+    parent.prepend_child(child2)
+    assert_equal([child2, child0, child1], parent.nodes)
+  end
+
   def test_builder
     b = Ox::Builder.new(:indent => 2)
     assert_equal(1, b.line())
@@ -1317,7 +1342,7 @@ comment -->
     b.pop()
     b.pop()
     b.close()
-    
+
     xml = File.read(filename)
     xml.force_encoding('UTF-8')
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
@@ -1361,7 +1386,7 @@ comment -->
       end
     end
   end
-  
+
   def test_builder_block
     xml = Ox::Builder.new(:indent => 2) { |b|
       b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
@@ -1393,7 +1418,7 @@ comment -->
           b.text("my name is \"ピーター\"")
         }
       }
-    }    
+    }
     xml = File.read(filename)
     xml.force_encoding('UTF-8')
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
@@ -1436,7 +1461,7 @@ comment -->
       end
     end
   end
-  
+
   def test_builder_no_newline
     b = Ox::Builder.new(:indent => -1)
     b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
