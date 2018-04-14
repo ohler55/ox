@@ -1,4 +1,8 @@
 
+## 2.9.1 - April 14, 2018
+
+  - `prepend_child` added by mberlanda.
+
 ## 2.9.0 - March 13, 2018
 
   - New builder methods for building HTML.
