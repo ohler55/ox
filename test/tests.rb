@@ -1138,6 +1138,24 @@ class Func < ::Test::Unit::TestCase
     assert_equal([], nodes.map { |e| e.value } )
   end
 
+  def test_locate_attr_presence
+    parent = Ox::Element.new('Parent')
+    son_with_job = Ox::Element.new('Son').tap do |n|
+      n['job'] = 'a job'
+      parent << n
+    end
+    son_without_job = Ox::Element.new('Son').tap { |n| parent << n }
+    daughter_with_job = Ox::Element.new('Daughter').tap do |n|
+      n['job'] = 'another job'
+      parent << n
+    end
+    assert_equal([son_with_job, son_without_job, daughter_with_job], parent.nodes)
+
+    assert_equal([son_with_job, daughter_with_job], parent.locate('?[@job]'))
+    assert_equal([son_with_job], parent.locate('Son[@job]'))
+    assert_equal([daughter_with_job], parent.locate('Daughter[@job]'))
+  end
+
   def easy_xml()
     %{<?xml?>
 <Family real="false">

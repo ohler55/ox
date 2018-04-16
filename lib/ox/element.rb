@@ -158,6 +158,8 @@ module Ox
     # * <code>element.locate("Family/Pete/*")</code> returns all children of the Pete Element.
     # * <code>element.locate("Family/?[1]")</code> returns the first element in the Family Element.
     # * <code>element.locate("Family/?[<3]")</code> returns the first 3 elements in the Family Element.
+    # * <code>element.locate("Family/?[@age]")</code> returns the elements with an age attribute defined in the Family Element.
+    # * <code>element.locate("Family/Kid[@age]")</code> returns the Kid elements with an age attribute defined in the Family Element.
     # * <code>element.locate("Family/?[@age=32]")</code> returns the elements with an age attribute equal to 32 in the Family Element.
     # * <code>element.locate("Family/Kid[@age=32]")</code> returns the Kid elements with an age attribute equal to 32 in the Family Element.
     # * <code>element.locate("Family/?/@age")</code> returns the arg attribute for each child in the Family Element.
@@ -285,7 +287,11 @@ module Ox
             match = index <= match.size ? match[index + 1..-1] : []
           when '@'
             k,v = step[i..-2].split('=')
-            match = match.select { |n| n.is_a?(Element) && (v == n.attributes[k.to_sym] || v == n.attributes[k]) }
+            if v
+              match = match.select { |n| n.is_a?(Element) && (v == n.attributes[k.to_sym] || v == n.attributes[k]) }
+            else
+              match = match.select { |n| n.is_a?(Element) && (n.attributes[k.to_sym] || n.attributes[k]) }
+            end
           else
             raise InvalidPath.new(path)
           end
