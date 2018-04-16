@@ -1,4 +1,8 @@
 
+## 2.9.2 - April 16, 2018
+
+  - `locate` fixed to cover a missing condition with named child thanks to mberlanda.
+
 ## 2.9.1 - April 14, 2018
 
   - `prepend_child` added by mberlanda.
