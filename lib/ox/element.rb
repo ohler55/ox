@@ -159,6 +159,7 @@ module Ox
     # * <code>element.locate("Family/?[1]")</code> returns the first element in the Family Element.
     # * <code>element.locate("Family/?[<3]")</code> returns the first 3 elements in the Family Element.
     # * <code>element.locate("Family/?[@age=32]")</code> returns the elements with an age attribute equal to 32 in the Family Element.
+    # * <code>element.locate("Family/Kid[@age=32]")</code> returns the Kid elements with an age attribute equal to 32 in the Family Element.
     # * <code>element.locate("Family/?/@age")</code> returns the arg attribute for each child in the Family Element.
     # * <code>element.locate("Family/*/@type")</code> returns the type attribute value for decendents of the Family.
     # * <code>element.locate("Family/^Comment")</code> returns any comments that are a child of Family.
@@ -283,7 +284,7 @@ module Ox
           when '>'
             match = index <= match.size ? match[index + 1..-1] : []
           when '@'
-            k,v = step[3..-2].split('=')
+            k,v = step[i..-2].split('=')
             match = match.select { |n| n.is_a?(Element) && (v == n.attributes[k.to_sym] || v == n.attributes[k]) }
           else
             raise InvalidPath.new(path)
