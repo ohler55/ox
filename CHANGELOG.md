@@ -3,6 +3,8 @@
 
   - `locate` fixed to cover a missing condition with named child thanks to mberlanda.
 
+  - `locate` supports attribute exists searches thanks to mberlanda.
+
 ## 2.9.1 - April 14, 2018
 
   - `prepend_child` added by mberlanda.
