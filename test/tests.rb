@@ -1130,6 +1130,12 @@ class Func < ::Test::Unit::TestCase
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[@age=32]')
     assert_equal(['Kid1'], nodes.map { |e| e.value } )
+
+    nodes = doc.locate('Family/Pete/Kid1[@age=32]')
+    assert_equal(['Kid1'], nodes.map { |e| e.value } )
+
+    nodes = doc.locate('Family/Pete/Kid1[@age=31]')
+    assert_equal([], nodes.map { |e| e.value } )
   end
 
   def easy_xml()
