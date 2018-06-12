@@ -246,7 +246,7 @@ necessary.
 The type indicator map is:
 
 - **a** => `Array`
-- **b** => `Base64`
+- **b** => `Base64` - only for legacy loads
 - **c** => `Class`
 - **f** => `Float`
 - **g** => `Regexp`
@@ -300,8 +300,6 @@ Hash. An example is of { 1 => 'one', 2 => 'two' } encoding is:
   <s>two</s>
 </h>
 ```
-Strings with characters not allowed in XML are base64 encoded amd will be
-converted back into a String when loaded.
 
 Ox supports circular references where attributes of one Object can refer to
 an Object that refers back to the first Object. When this option is used an
