@@ -1284,7 +1284,9 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
 	out->w_end = dump_end;
 	dump_first_obj(obj, out);
     }
-    dump_value(out, "\n", 1);
+    if (0 <= out->indent) {
+	dump_value(out, "\n", 1);
+    }
     if (Yes == copts->circular) {
 	ox_cache8_delete(out->circ_cache);
     }
