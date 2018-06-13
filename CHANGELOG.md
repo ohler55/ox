@@ -1,4 +1,10 @@
 
+## 2.9.3 - June 12, 2018
+
+  - Handle `\0` in dumped strings better.
+
+  - No `\n` added on dumped if indent is less than zero.
+
 ## 2.9.2 - April 16, 2018
 
   - `locate` fixed to cover a missing condition with named child thanks to mberlanda.

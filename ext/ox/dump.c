@@ -194,7 +194,7 @@ fill_value(Out out, const char *value, size_t len) {
 	memcpy(out->cur, value, len);
 	out->cur += len;
     } else {
-	for (; '\0' != *value; value++) {
+	for (; 0 < len; len--, value++) {
 	    *out->cur++ = *value;
 	}
     }
@@ -210,7 +210,7 @@ fill_attr(Out out, char name, const char *value, size_t len) {
 	memcpy(out->cur, value, len);
 	out->cur += len;
     } else {
-	for (; '\0' != *value; value++) {
+	for (; 0 < len; len--, value++) {
 	    *out->cur++ = *value;
 	}
     }
@@ -331,7 +331,7 @@ dump_value(Out out, const char *value, size_t size) {
 	memcpy(out->cur, value, size);
 	out->cur += size;
     } else {
-	for (; '\0' != *value; value++) {
+	for (; 0 < size; size--, value++) {
 	    *out->cur++ = *value;
 	}
     }
@@ -345,7 +345,7 @@ dump_str_value(Out out, const char *value, size_t size, const char *table) {
     if (out->end - out->cur <= (long)xsize) {
 	grow(out, xsize);
     }
-    for (; '\0' != *value; value++) {
+    for (; 0 < size; size--, value++) {
 	if ('1' == table[(uchar)*value]) {
 	    *out->cur++ = *value;
 	} else {
