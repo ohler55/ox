@@ -1270,6 +1270,7 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
     out->circ_cnt = 0;
     out->opts = copts;
     out->obj = obj;
+    *out->cur = '\0';
     if (Yes == copts->circular) {
 	ox_cache8_new(&out->circ_cache);
     }
