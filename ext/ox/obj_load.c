@@ -544,7 +544,9 @@ add_text(PInfo pi, char *text, int closed) {
 	break;
     case BigDecimalCode:
 #if HAS_BIGDECIMAL
-	h->obj = rb_funcall(ox_bigdecimal_class, ox_new_id, 1, rb_str_new2(text));
+	h->obj = rb_funcall(rb_cObject, ox_bigdecimal_id, 1, rb_str_new2(text));
+	// TBD does this work for older versions
+	//h->obj = rb_funcall(ox_bigdecimal_class, ox_new_id, 1, rb_str_new2(text));
 #else
 	h->obj = Qnil;
 #endif
@@ -646,7 +648,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	break;
     case RawCode:
 	if (hasChildren) {
-	    h->obj = ox_parse(pi->s, ox_gen_callbacks, &pi->s, pi->options, &pi->err);
+	    h->obj = ox_parse(pi->s, pi->end - pi->s, ox_gen_callbacks, &pi->s, pi->options, &pi->err);
 	    if (0 != pi->circ_array) {
 		circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
 	    }
@@ -729,6 +731,10 @@ end_element(PInfo pi, const char *ename) {
 	if (ox_empty_string == h->obj) {
 	    /* special catch for empty strings */
 	    h->obj = rb_str_new2("");
+	}
+	if (Qundef == h->obj) {
+	    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
+	    return;
 	}
 	pi->obj = h->obj;
 	if (0 != ph) {

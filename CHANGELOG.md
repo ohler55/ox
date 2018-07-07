@@ -1,4 +1,8 @@
 
+## 2.9.4 - July 07, 2018
+
+  - Fixed issue with malformed object mode input.
+
 ## 2.9.3 - June 12, 2018
 
   - Handle `\0` in dumped strings better.
