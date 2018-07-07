@@ -457,9 +457,8 @@ read_element(PInfo pi) {
     /* read attribute names until the close (/ or >) is reached */
     while (!done) {
 	if ('\0' == c) {
-	    // TBD if at end then exit loop
 	    if (pi->end <= pi->s) {
-		return 0;
+		break;
 	    }
 	    next_non_white(pi);
 	    c = *pi->s;
