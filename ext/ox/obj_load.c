@@ -545,8 +545,6 @@ add_text(PInfo pi, char *text, int closed) {
     case BigDecimalCode:
 #if HAS_BIGDECIMAL
 	h->obj = rb_funcall(rb_cObject, ox_bigdecimal_id, 1, rb_str_new2(text));
-	// TBD does this work for older versions
-	//h->obj = rb_funcall(ox_bigdecimal_class, ox_new_id, 1, rb_str_new2(text));
 #else
 	h->obj = Qnil;
 #endif
