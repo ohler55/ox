@@ -730,7 +730,7 @@ end_element(PInfo pi, const char *ename) {
 	    /* special catch for empty strings */
 	    h->obj = rb_str_new2("");
 	}
-	if (Qundef == h->var || Qundef == h->obj) {
+	if (Qundef == h->obj) {
 	    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
 	    return;
 	}
@@ -743,11 +743,19 @@ end_element(PInfo pi, const char *ename) {
 	    case ExceptionCode:
 	    case ObjectCode:
 		if (Qnil != ph->obj) {
+		    if (Qundef == h->var) {
+			set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
+			return;
+		    }
 		    rb_ivar_set(ph->obj, h->var, h->obj);
 		}
 		break;
 	    case StructCode:
 #if HAS_RSTRUCT
+		if (Qundef == h->var) {
+		    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
+		    return;
+		}
 		rb_struct_aset(ph->obj, h->var, h->obj);
 #else
 		set_error(&pi->err, "Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
@@ -755,11 +763,19 @@ end_element(PInfo pi, const char *ename) {
 #endif
 		break;
 	    case HashCode:
+		if (Qundef == h->var) {
+		    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
+		    return;
+		}
 		// put back h
 		helper_stack_push(&pi->helpers, h->var, h->obj, KeyCode);
 		break;
 	    case RangeCode:
 #if HAS_RSTRUCT
+		if (Qundef == h->var) {
+		    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
+		    return;
+		}
 		if (ox_beg_id == h->var) {
 		    RSTRUCT_SET(ph->obj, 0, h->obj);
 		} else if (ox_end_id == h->var) {
