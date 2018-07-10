@@ -730,7 +730,7 @@ end_element(PInfo pi, const char *ename) {
 	    /* special catch for empty strings */
 	    h->obj = rb_str_new2("");
 	}
-	if (Qundef == h->obj) {
+	if (Qundef == h->var || Qundef == h->obj) {
 	    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
 	    return;
 	}
