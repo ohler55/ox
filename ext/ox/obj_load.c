@@ -24,7 +24,7 @@ static VALUE	parse_xsd_time(const char *text, VALUE clas);
 static VALUE	parse_double_time(const char *text, VALUE clas);
 static VALUE	parse_regexp(const char *text);
 
-static VALUE		get_var_sym_from_attrs(Attr a, void *encoding);
+static ID		get_var_sym_from_attrs(Attr a, void *encoding);
 static VALUE		get_obj_from_attrs(Attr a, PInfo pi, VALUE base_class);
 static VALUE		get_class_from_attrs(Attr a, PInfo pi, VALUE base_class);
 static VALUE		classname2class(const char *name, PInfo pi, VALUE base_class);
@@ -76,7 +76,7 @@ str2sym(const char *str, void *encoding) {
 inline static ID
 name2var(const char *name, void *encoding) {
     VALUE	*slot;
-    ID		var_id;
+    ID		var_id = 0;
 
     if ('0' <= *name && *name <= '9') {
 	var_id = INT2NUM(atoi(name));
@@ -236,14 +236,14 @@ classname2class(const char *name, PInfo pi, VALUE base_class) {
     return clas;
 }
 
-static VALUE
+static ID
 get_var_sym_from_attrs(Attr a, void *encoding) {
     for (; 0 != a->name; a++) {
 	if ('a' == *a->name && '\0' == *(a->name + 1)) {
 	    return name2var(a->value, encoding);
 	}
     }
-    return Qundef;
+    return 0;
 }
 
 static VALUE
@@ -743,7 +743,7 @@ end_element(PInfo pi, const char *ename) {
 	    case ExceptionCode:
 	    case ObjectCode:
 		if (Qnil != ph->obj) {
-		    if (Qundef == h->var) {
+		    if (0 == h->var) {
 			set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
 			return;
 		    }
@@ -752,7 +752,7 @@ end_element(PInfo pi, const char *ename) {
 		break;
 	    case StructCode:
 #if HAS_RSTRUCT
-		if (Qundef == h->var) {
+		if (0 == h->var) {
 		    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
 		    return;
 		}
@@ -763,19 +763,11 @@ end_element(PInfo pi, const char *ename) {
 #endif
 		break;
 	    case HashCode:
-		if (Qundef == h->var) {
-		    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
-		    return;
-		}
 		// put back h
 		helper_stack_push(&pi->helpers, h->var, h->obj, KeyCode);
 		break;
 	    case RangeCode:
 #if HAS_RSTRUCT
-		if (Qundef == h->var) {
-		    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
-		    return;
-		}
 		if (ox_beg_id == h->var) {
 		    RSTRUCT_SET(ph->obj, 0, h->obj);
 		} else if (ox_end_id == h->var) {
@@ -968,7 +960,7 @@ debug_stack(PInfo pi, const char *comment) {
 
 		clas = rb_class2name(c);
 	    }
-	    if (Qundef != h->var) {
+	    if (0 != h->var) {
 		if (HashCode == h->type) {
 		    VALUE	v;
 		    
