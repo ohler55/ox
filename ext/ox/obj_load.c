@@ -194,7 +194,6 @@ parse_time(const char *text, VALUE clas) {
 	Qnil == (t = parse_xsd_time(text, clas))) {
 	VALUE	    args[1];
 
-	/*printf("**** time parse\n"); */
 	*args = rb_str_new2(text);
 	t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
     }
@@ -788,7 +787,7 @@ end_element(PInfo pi, const char *ename) {
 		    Helper	gh;
 
 		    helper_stack_pop(&pi->helpers);
-		    if (NULL == (gh = helper_stack_peek(&pi->helpers))) {
+		    if (NULL == (gh = helper_stack_peek(&pi->helpers)) || Qundef == ph->obj || Qundef == h->obj) {
 			set_error(&pi->err, "Corrupt parse stack, container is wrong type", pi->str, pi->s);
 			return;
 		    }
@@ -807,11 +806,19 @@ end_element(PInfo pi, const char *ename) {
 		return;
 #endif
 		break;
-	    case RationalCode:
+	    case RationalCode: {
+		if (Qundef == h->obj || RUBY_T_FIXNUM != rb_type(h->obj)) {
+		    set_error(&pi->err, "Invalid object format", pi->str, pi->s);
+		    return;
+		}
 #ifdef T_RATIONAL
 		if (Qundef == ph->obj) {
 		    ph->obj = h->obj;
 		} else {
+		    if (Qundef == ph->obj || RUBY_T_FIXNUM != rb_type(h->obj)) {
+			set_error(&pi->err, "Corrupt parse stack, container is wrong type", pi->str, pi->s);
+			return;
+		    }
 #ifdef RUBINIUS_RUBY
 		    ph->obj = rb_Rational(ph->obj, h->obj);
 #else
@@ -823,6 +830,7 @@ end_element(PInfo pi, const char *ename) {
 		return;
 #endif
 		break;
+	    }
 	    default:
 		set_error(&pi->err, "Corrupt parse stack, container is wrong type", pi->str, pi->s);
 		return;
