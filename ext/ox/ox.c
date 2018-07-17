@@ -39,6 +39,7 @@ ID	ox_attr_value_id;
 ID	ox_attributes_id;
 ID	ox_attrs_done_id;
 ID	ox_beg_id;
+ID	ox_bigdecimal_id;
 ID	ox_cdata_id;
 ID	ox_comment_id;
 ID	ox_den_id;
@@ -645,7 +646,7 @@ to_obj(VALUE self, VALUE ruby_xml) {
 #if HAS_GC_GUARD
     rb_gc_disable();
 #endif
-    obj = ox_parse(xml, ox_obj_callbacks, 0, &options, &err);
+    obj = ox_parse(xml, len - 1, ox_obj_callbacks, 0, &options, &err);
     if (SMALL_XML < len) {
 	xfree(xml);
     }
@@ -686,7 +687,7 @@ to_gen(VALUE self, VALUE ruby_xml) {
 	xml = ALLOCA_N(char, len);
     }
     memcpy(xml, x, len);
-    obj = ox_parse(xml, ox_gen_callbacks, 0, &options, &err);
+    obj = ox_parse(xml, len - 1, ox_gen_callbacks, 0, &options, &err);
     if (SMALL_XML < len) {
 	xfree(xml);
     }
@@ -697,7 +698,7 @@ to_gen(VALUE self, VALUE ruby_xml) {
 }
 
 static VALUE
-load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
+load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
     VALUE		obj;
     struct _Options	options = ox_default_options;
 
@@ -838,29 +839,29 @@ load(char *xml, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
 #if HAS_GC_GUARD
 	rb_gc_disable();
 #endif
-	obj = ox_parse(xml, ox_obj_callbacks, 0, &options, err);
+	obj = ox_parse(xml, len, ox_obj_callbacks, 0, &options, err);
 #if HAS_GC_GUARD
 	RB_GC_GUARD(obj);
 	rb_gc_enable();
 #endif
 	break;
     case GenMode:
-	obj = ox_parse(xml, ox_gen_callbacks, 0, &options, err);
+	obj = ox_parse(xml, len, ox_gen_callbacks, 0, &options, err);
 	break;
     case LimMode:
-	obj = ox_parse(xml, ox_limited_callbacks, 0, &options, err);
+	obj = ox_parse(xml, len, ox_limited_callbacks, 0, &options, err);
 	break;
     case HashMode:
-	obj = ox_parse(xml, ox_hash_callbacks, 0, &options, err);
+	obj = ox_parse(xml, len, ox_hash_callbacks, 0, &options, err);
 	break;
     case HashNoAttrMode:
-	obj = ox_parse(xml, ox_hash_no_attrs_callbacks, 0, &options, err);
+	obj = ox_parse(xml, len, ox_hash_no_attrs_callbacks, 0, &options, err);
 	break;
     case NoMode:
-	obj = ox_parse(xml, ox_nomode_callbacks, 0, &options, err);
+	obj = ox_parse(xml, len, ox_nomode_callbacks, 0, &options, err);
 	break;
     default:
-	obj = ox_parse(xml, ox_gen_callbacks, 0, &options, err);
+	obj = ox_parse(xml, len, ox_gen_callbacks, 0, &options, err);
 	break;
     }
     return obj;
@@ -920,7 +921,8 @@ load_str(int argc, VALUE *argv, VALUE self) {
     encoding = Qnil;
 #endif
     memcpy(xml, StringValuePtr(*argv), len);
-    obj = load(xml, argc - 1, argv + 1, self, encoding, &err);
+    xml[len - 1] = '\0';
+    obj = load(xml, len - 1, argc - 1, argv + 1, self, encoding, &err);
     if (SMALL_XML < len) {
 	xfree(xml);
     }
@@ -980,7 +982,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
 	obj = Qnil;
     } else {
 	xml[len] = '\0';
-	obj = load(xml, argc - 1, argv + 1, self, Qnil, &err);
+	obj = load(xml, len, argc - 1, argv + 1, self, Qnil, &err);
     }
     fclose(f);
     if (SMALL_XML < len) {
@@ -1376,6 +1378,7 @@ void Init_ox() {
     ox_attributes_id = rb_intern("@attributes");
     ox_attrs_done_id = rb_intern("attrs_done");
     ox_beg_id = rb_intern("@beg");
+    ox_bigdecimal_id = rb_intern("BigDecimal");
     ox_cdata_id = rb_intern("cdata");
     ox_comment_id = rb_intern("comment");
     ox_den_id = rb_intern("@den");

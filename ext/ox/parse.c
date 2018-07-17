@@ -108,7 +108,7 @@ mark_pi_cb(void *ptr) {
 }
 
 VALUE
-ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err) {
+ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options, Err err) {
     struct _PInfo	pi;
     int			body_read = 0;
     int			block_given = rb_block_given_p();
@@ -128,6 +128,7 @@ ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err) {
 
     err_init(&pi.err);
     pi.str = xml;
+    pi.end = pi.str + len;
     pi.s = xml;
     pi.pcb = pcb;
     pi.obj = Qnil;
@@ -456,6 +457,9 @@ read_element(PInfo pi) {
     /* read attribute names until the close (/ or >) is reached */
     while (!done) {
 	if ('\0' == c) {
+	    if (pi->end <= pi->s) {
+		break;
+	    }
 	    next_non_white(pi);
 	    c = *pi->s;
 	}
@@ -485,6 +489,7 @@ read_element(PInfo pi) {
 	    hasChildren = 1;
 	    done = 1;
 	    pi->pcb->add_element(pi, ename, attrs.head, hasChildren);
+	    
 	    break;
 	default:
 	    /* Attribute name so it's an element and the attribute will be */

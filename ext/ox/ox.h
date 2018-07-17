@@ -156,17 +156,18 @@ typedef struct _Options {
 struct _PInfo {
     struct _HelperStack	helpers;
     struct _Err		err;
-    char		*str;		/* buffer being read from */
-    char		*s;		/* current position in buffer */
+    char		*str;		//buffer being read from
+    char		*end;		// end of original string
+    char		*s;		// current position in buffer
     VALUE		obj;
     ParseCallbacks	pcb;
     CircArray		circ_array;
-    unsigned long	id;		/* set for text types when cirs_array is set */
+    unsigned long	id;		//set for text types when cirs_array is set
     Options		options;
-    char		last;		/* last character read, rarely set */
+    char		last;		// last character read, rarely set
 };
 
-extern VALUE	ox_parse(char *xml, ParseCallbacks pcb, char **endp, Options options, Err err);
+extern VALUE	ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options, Err err);
 extern void	_ox_raise_error(const char *msg, const char *xml, const char *current, const char* file, int line);
 
 extern void	ox_sax_define(void);
@@ -190,6 +191,7 @@ extern ID	ox_attr_value_id;
 extern ID	ox_attrs_done_id;
 extern ID	ox_attributes_id;
 extern ID	ox_beg_id;
+extern ID	ox_bigdecimal_id;
 extern ID	ox_cdata_id;
 extern ID	ox_comment_id;
 extern ID	ox_den_id;

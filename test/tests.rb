@@ -208,7 +208,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_bigdecimal
     Ox::default_options = $ox_object_options
-    bd = BigDecimal.new('7.123456789')
+    bd = BigDecimal('7.123456789')
     dump_and_load(bd, false)
   end
 

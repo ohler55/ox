@@ -24,7 +24,7 @@ static VALUE	parse_xsd_time(const char *text, VALUE clas);
 static VALUE	parse_double_time(const char *text, VALUE clas);
 static VALUE	parse_regexp(const char *text);
 
-static VALUE		get_var_sym_from_attrs(Attr a, void *encoding);
+static ID		get_var_sym_from_attrs(Attr a, void *encoding);
 static VALUE		get_obj_from_attrs(Attr a, PInfo pi, VALUE base_class);
 static VALUE		get_class_from_attrs(Attr a, PInfo pi, VALUE base_class);
 static VALUE		classname2class(const char *name, PInfo pi, VALUE base_class);
@@ -76,7 +76,7 @@ str2sym(const char *str, void *encoding) {
 inline static ID
 name2var(const char *name, void *encoding) {
     VALUE	*slot;
-    ID		var_id;
+    ID		var_id = 0;
 
     if ('0' <= *name && *name <= '9') {
 	var_id = INT2NUM(atoi(name));
@@ -194,7 +194,6 @@ parse_time(const char *text, VALUE clas) {
 	Qnil == (t = parse_xsd_time(text, clas))) {
 	VALUE	    args[1];
 
-	/*printf("**** time parse\n"); */
 	*args = rb_str_new2(text);
 	t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
     }
@@ -236,14 +235,14 @@ classname2class(const char *name, PInfo pi, VALUE base_class) {
     return clas;
 }
 
-static VALUE
+static ID
 get_var_sym_from_attrs(Attr a, void *encoding) {
     for (; 0 != a->name; a++) {
 	if ('a' == *a->name && '\0' == *(a->name + 1)) {
 	    return name2var(a->value, encoding);
 	}
     }
-    return Qundef;
+    return 0;
 }
 
 static VALUE
@@ -544,7 +543,7 @@ add_text(PInfo pi, char *text, int closed) {
 	break;
     case BigDecimalCode:
 #if HAS_BIGDECIMAL
-	h->obj = rb_funcall(ox_bigdecimal_class, ox_new_id, 1, rb_str_new2(text));
+	h->obj = rb_funcall(rb_cObject, ox_bigdecimal_id, 1, rb_str_new2(text));
 #else
 	h->obj = Qnil;
 #endif
@@ -646,7 +645,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	break;
     case RawCode:
 	if (hasChildren) {
-	    h->obj = ox_parse(pi->s, ox_gen_callbacks, &pi->s, pi->options, &pi->err);
+	    h->obj = ox_parse(pi->s, pi->end - pi->s, ox_gen_callbacks, &pi->s, pi->options, &pi->err);
 	    if (0 != pi->circ_array) {
 		circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
 	    }
@@ -730,6 +729,10 @@ end_element(PInfo pi, const char *ename) {
 	    /* special catch for empty strings */
 	    h->obj = rb_str_new2("");
 	}
+	if (Qundef == h->obj) {
+	    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
+	    return;
+	}
 	pi->obj = h->obj;
 	if (0 != ph) {
 	    switch (ph->type) {
@@ -739,11 +742,19 @@ end_element(PInfo pi, const char *ename) {
 	    case ExceptionCode:
 	    case ObjectCode:
 		if (Qnil != ph->obj) {
+		    if (0 == h->var) {
+			set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
+			return;
+		    }
 		    rb_ivar_set(ph->obj, h->var, h->obj);
 		}
 		break;
 	    case StructCode:
 #if HAS_RSTRUCT
+		if (0 == h->var) {
+		    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
+		    return;
+		}
 		rb_struct_aset(ph->obj, h->var, h->obj);
 #else
 		set_error(&pi->err, "Ruby structs not supported with this verion of Ruby", pi->str, pi->s);
@@ -776,7 +787,7 @@ end_element(PInfo pi, const char *ename) {
 		    Helper	gh;
 
 		    helper_stack_pop(&pi->helpers);
-		    if (NULL == (gh = helper_stack_peek(&pi->helpers))) {
+		    if (NULL == (gh = helper_stack_peek(&pi->helpers)) || Qundef == ph->obj || Qundef == h->obj) {
 			set_error(&pi->err, "Corrupt parse stack, container is wrong type", pi->str, pi->s);
 			return;
 		    }
@@ -795,11 +806,19 @@ end_element(PInfo pi, const char *ename) {
 		return;
 #endif
 		break;
-	    case RationalCode:
+	    case RationalCode: {
+		if (Qundef == h->obj || RUBY_T_FIXNUM != rb_type(h->obj)) {
+		    set_error(&pi->err, "Invalid object format", pi->str, pi->s);
+		    return;
+		}
 #ifdef T_RATIONAL
 		if (Qundef == ph->obj) {
 		    ph->obj = h->obj;
 		} else {
+		    if (Qundef == ph->obj || RUBY_T_FIXNUM != rb_type(h->obj)) {
+			set_error(&pi->err, "Corrupt parse stack, container is wrong type", pi->str, pi->s);
+			return;
+		    }
 #ifdef RUBINIUS_RUBY
 		    ph->obj = rb_Rational(ph->obj, h->obj);
 #else
@@ -811,6 +830,7 @@ end_element(PInfo pi, const char *ename) {
 		return;
 #endif
 		break;
+	    }
 	    default:
 		set_error(&pi->err, "Corrupt parse stack, container is wrong type", pi->str, pi->s);
 		return;
@@ -948,7 +968,7 @@ debug_stack(PInfo pi, const char *comment) {
 
 		clas = rb_class2name(c);
 	    }
-	    if (Qundef != h->var) {
+	    if (0 != h->var) {
 		if (HashCode == h->type) {
 		    VALUE	v;
 		    
