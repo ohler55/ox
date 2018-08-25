@@ -33,6 +33,8 @@ $ox_object_options = {
   :xsd_date=>false,
   :mode=>:object,
   :symbolize_keys=>true,
+  :element_key_mod=>nil,
+  :attr_key_mod=>nil,
   :skip=>:skip_white,
   :smart=>false,
   :convert_special=>true,
@@ -54,6 +56,8 @@ $ox_generic_options = {
   :xsd_date=>false,
   :mode=>:generic,
   :symbolize_keys=>true,
+  :element_key_mod=>nil,
+  :attr_key_mod=>nil,
   :skip=>:skip_white,
   :smart=>false,
   :convert_special=>true,
@@ -89,6 +93,8 @@ class Func < ::Test::Unit::TestCase
       :xsd_date=>true,
       :mode=>:object,
       :symbolize_keys=>true,
+      :element_key_mod=>nil,
+      :attr_key_mod=>nil,
       :skip=>:skip_return,
       :smart=>true,
       :convert_special=>false,
@@ -1688,6 +1694,19 @@ comment -->
                  }, doc)
   end
 
+  def test_key_mod
+    Ox::default_options = $ox_object_options
+    xml = %{<?xml?>
+<ChangeMe x="A"/>
+}
+    ep = lambda { |k| k.downcase }
+    ap = lambda { |k| 'a' + k }
+    doc = Ox.load(xml, mode: :generic, attr_key_mod: ap, element_key_mod: ep )
+    xml2 = Ox.dump(doc)
+    assert_equal(%{
+<changeme ax="A"/>
+}, xml2)
+  end
 
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)

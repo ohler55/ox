@@ -71,7 +71,9 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	volatile VALUE	a;
 	
         for (; 0 != attrs->name; attrs++) {
-	    if (Yes == pi->options->sym_keys) {
+	    if (Qnil != pi->options->attr_key_mod) {
+		key = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
+	    } else if (Yes == pi->options->sym_keys) {
 		key = rb_id2sym(rb_intern(attrs->name));
 	    } else {
 		key = rb_str_new2(attrs->name);
@@ -125,7 +127,9 @@ end_element_core(PInfo pi, const char *ename, bool check_taint) {
     if (NoCode == e->type) {
 	e->obj = Qnil;
     }
-    if (Yes == pi->options->sym_keys) {
+    if (Qnil != pi->options->element_key_mod) {
+	key = rb_funcall(pi->options->element_key_mod, ox_call_id, 1, rb_id2str(e->var));
+    } else if (Yes == pi->options->sym_keys) {
 	key = rb_id2sym(e->var);
     } else {
 	key = rb_id2str(e->var);

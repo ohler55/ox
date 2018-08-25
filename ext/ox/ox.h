@@ -143,6 +143,8 @@ typedef struct _Options {
     char		inv_repl[12];	/* max 10 valid characters, first character is the length */
     char		strip_ns[64];	/* namespace to strip, \0 is no-strip, \* is all, else only matches */
     struct _Hints	*html_hints;	/* html hints */
+    VALUE		attr_key_mod;
+    VALUE		element_key_mod;
 #if HAS_ENCODING_SUPPORT
     rb_encoding		*rb_enc;
 #elif HAS_PRIVATE_ENCODING
@@ -192,6 +194,7 @@ extern ID	ox_attrs_done_id;
 extern ID	ox_attributes_id;
 extern ID	ox_beg_id;
 extern ID	ox_bigdecimal_id;
+extern ID	ox_call_id;
 extern ID	ox_cdata_id;
 extern ID	ox_comment_id;
 extern ID	ox_den_id;

@@ -84,10 +84,10 @@ create_doc(PInfo pi) {
 
 static void
 create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
-    VALUE       doc;
-    VALUE       ah;
-    VALUE       nodes;
-    VALUE	sym;
+    volatile VALUE       doc;
+    volatile VALUE       ah;
+    volatile VALUE       nodes;
+    volatile VALUE	sym;
 
     if (!helper_stack_empty(&pi->helpers)) { /* top level object */
         ox_err_set(&pi->err, rb_eSyntaxError, "Prolog must be the first element in an XML document.\n");
@@ -96,7 +96,10 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
     doc = rb_obj_alloc(ox_document_clas);
     ah = rb_hash_new();
     for (; 0 != attrs->name; attrs++) {
-	if (Yes == pi->options->sym_keys) {
+	if (Qnil != pi->options->attr_key_mod) {
+	    sym = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
+	    rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
+	} else if (Yes == pi->options->sym_keys) {
 #if HAS_ENCODING_SUPPORT
 	    if (0 != pi->options->rb_enc) {
 		VALUE	rstr = rb_str_new2(attrs->name);
@@ -120,7 +123,7 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 #endif
 	    rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
 	} else {
-	    VALUE	rstr = rb_str_new2(attrs->name);
+	    volatile VALUE	rstr = rb_str_new2(attrs->name);
 
 #if HAS_ENCODING_SUPPORT
 	    if (0 != pi->options->rb_enc) {
@@ -291,6 +294,9 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     VALUE       e;
     VALUE       s = rb_str_new2(ename);
 
+    if (Qnil != pi->options->element_key_mod) {
+	s = rb_funcall(pi->options->element_key_mod, ox_call_id, 1, s);
+    }
 #if HAS_ENCODING_SUPPORT
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
@@ -308,7 +314,9 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         for (; 0 != attrs->name; attrs++) {
             volatile VALUE	sym;
 
-	    if (Yes == pi->options->sym_keys) {
+	    if (Qnil != pi->options->attr_key_mod) {
+		sym = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
+	    } else if (Yes == pi->options->sym_keys) {
 		VALUE	*slot;
 
 		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
@@ -415,13 +423,15 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
     if (0 != content) {
 	rb_ivar_set(inst, ox_at_content_id, c);
     } else if (0 != attrs->name) {
-        VALUE   ah = rb_hash_new();
+        volatile VALUE   ah = rb_hash_new();
         
         for (; 0 != attrs->name; attrs++) {
-            VALUE   sym;
-            VALUE   *slot;
+            volatile VALUE	sym;
+	    VALUE		*slot;
 
-	    if (Yes == pi->options->sym_keys) {
+	    if (Qnil != pi->options->attr_key_mod) {
+		sym = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
+	    } else if (Yes == pi->options->sym_keys) {
 		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
 #if HAS_ENCODING_SUPPORT
 		    if (0 != pi->options->rb_enc) {

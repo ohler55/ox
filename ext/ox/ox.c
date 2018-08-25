@@ -40,6 +40,7 @@ ID	ox_attributes_id;
 ID	ox_attrs_done_id;
 ID	ox_beg_id;
 ID	ox_bigdecimal_id;
+ID	ox_call_id;
 ID	ox_cdata_id;
 ID	ox_comment_id;
 ID	ox_den_id;
@@ -109,6 +110,7 @@ Cache	ox_attr_cache = 0;
 
 static VALUE	abort_sym;
 static VALUE	active_sym;
+static VALUE	attr_key_mod_sym;
 static VALUE	auto_define_sym;
 static VALUE	auto_sym;
 static VALUE	block_sym;
@@ -145,6 +147,7 @@ static VALUE	with_dtd_sym;
 static VALUE	with_instruct_sym;
 static VALUE	with_xml_sym;
 static VALUE	xsd_date_sym;
+static VALUE 	element_key_mod_sym;
 
 static ID	encoding_id;
 static ID	has_key_id;
@@ -158,30 +161,32 @@ void		*ox_utf8_encoding = 0;
 #endif
 
 struct _Options	 ox_default_options = {
-    { '\0' },		/* encoding */
-    { '\0' },		/* margin */
-    2,			/* indent */
-    0,			/* trace */
-    0,			/* margin_len */
-    No,			/* with_dtd */
-    No,			/* with_xml */
-    No,			/* with_instruct */
-    No,			/* circular */
-    No,			/* xsd_date */
-    NoMode,		/* mode */
-    StrictEffort,	/* effort */
-    Yes,		/* sym_keys */
-    SpcSkip,		/* skip */
-    No,			/* smart */
-    1,			/* convert_special */
-    No,			/* allow_invalid */
-    { '\0' },		/* inv_repl */
-    { '\0' },		/* strip_ns */
-    NULL,		/* html_hints */
+    { '\0' },		// encoding
+    { '\0' },		// margin
+    2,			// indent
+    0,			// trace
+    0,			// margin_len
+    No,			// with_dtd
+    No,			// with_xml
+    No,			// with_instruct
+    No,			// circular
+    No,			// xsd_date
+    NoMode,		// mode
+    StrictEffort,	// effort
+    Yes,		// sym_keys
+    SpcSkip,		// skip
+    No,			// smart
+    1,			// convert_special
+    No,			// allow_invalid
+    { '\0' },		// inv_repl
+    { '\0' },		// strip_ns
+    NULL,		// html_hints
+    Qnil,		// attr_key_mod;
+    Qnil,		// element_key_mod;
 #if HAS_PRIVATE_ENCODING
-    Qnil		/* rb_enc */
+    Qnil		// rb_enc
 #else
-    0			/* rb_enc */
+    0			// rb_enc
 #endif
 };
 
@@ -197,7 +202,7 @@ static void	parse_dump_options(VALUE ropts, Options copts);
 static char*
 defuse_bom(char *xml, Options options) {
     switch ((uint8_t)*xml) {
-    case 0xEF: /* UTF-8 */
+    case 0xEF: // UTF-8
 	if (0xBB == (uint8_t)xml[1] && 0xBF == (uint8_t)xml[2]) {
 	    options->rb_enc = ox_utf8_encoding;
 	    xml += 3;
@@ -206,7 +211,7 @@ defuse_bom(char *xml, Options options) {
 	}
 	break;
 #if 0
-    case 0xFE: /* UTF-16BE */
+    case 0xFE: // UTF-16BE
 	if (0xFF == (uint8_t)xml[1]) {
 	    options->rb_enc = ox_utf16be_encoding;
 	    xml += 2;
@@ -214,7 +219,7 @@ defuse_bom(char *xml, Options options) {
 	    rb_raise(ox_parse_error_class, "Invalid BOM in XML string.\n");
 	}
 	break;
-    case 0xFF: /* UTF-16LE or UTF-32LE */
+    case 0xFF: // UTF-16LE or UTF-32LE
 	if (0xFE == (uint8_t)xml[1]) {
 	    if (0x00 == (uint8_t)xml[2] && 0x00 == (uint8_t)xml[3]) {
 		options->rb_enc = ox_utf32le_encoding;
@@ -227,7 +232,7 @@ defuse_bom(char *xml, Options options) {
 	    rb_raise(ox_parse_error_class, "Invalid BOM in XML string.\n");
 	}
 	break;
-    case 0x00: /* UTF-32BE */
+    case 0x00: // UTF-32BE
 	if (0x00 == (uint8_t)xml[1] && 0xFE == (uint8_t)xml[2] && 0xFF == (uint8_t)xml[3]) {
 	    options->rb_enc = ox_utf32be_encoding;
 	    xml += 4;
@@ -237,7 +242,8 @@ defuse_bom(char *xml, Options options) {
 	break;
 #endif
     default:
-	/* Let it fail if there is a BOM that is not UTF-8. Other BOM options are not ASCII compatible. */
+	// Let it fail if there is a BOM that is not UTF-8. Other BOM options
+	// are not ASCII compatible.
 	break;
     }
     return xml;
@@ -280,6 +286,8 @@ hints_to_overlay(Hints hints) {
  * - _:mode_ [:object|:generic|:limited|:hash|:hash_no_attrs|nil] load method to use for XML
  * - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
  * - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
+ * - _:element_key_mod_ [Proc|nil] converts element keys on parse if not nil
+ * - _:attr_key_mod_ [Proc|nil] converts attribute keys on parse if not nil
  * - _:skip_ [:skip_none|:skip_return|:skip_white|:skip_off] determines how to handle white space in text
  * - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  * - _:convert_special_ [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
@@ -313,6 +321,8 @@ get_def_opts(VALUE self) {
     rb_hash_aset(opts, circular_sym, (Yes == ox_default_options.circular) ? Qtrue : ((No == ox_default_options.circular) ? Qfalse : Qnil));
     rb_hash_aset(opts, xsd_date_sym, (Yes == ox_default_options.xsd_date) ? Qtrue : ((No == ox_default_options.xsd_date) ? Qfalse : Qnil));
     rb_hash_aset(opts, symbolize_keys_sym, (Yes == ox_default_options.sym_keys) ? Qtrue : ((No == ox_default_options.sym_keys) ? Qfalse : Qnil));
+    rb_hash_aset(opts, attr_key_mod_sym, ox_default_options.attr_key_mod);
+    rb_hash_aset(opts, element_key_mod_sym, ox_default_options.element_key_mod);
     rb_hash_aset(opts, smart_sym, (Yes == ox_default_options.smart) ? Qtrue : ((No == ox_default_options.smart) ? Qfalse : Qnil));
     rb_hash_aset(opts, convert_special_sym, (ox_default_options.convert_special) ? Qtrue : Qfalse);
     switch (ox_default_options.mode) {
@@ -416,6 +426,8 @@ sax_html_overlay(VALUE self) {
  *   - _:mode_ [:object|:generic|:limited|:hash|:hash_no_attrs|nil] load method to use for XML
  *   - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
  *   - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
+ *   - _:element_key_mod_ [Proc|nil] converts element keys on parse if not nil
+ *   - _:attr_key_mod_ [Proc|nil] converts attribute keys on parse if not nil
  *   - _:skip_ [:skip_none|:skip_return|:skip_white|:skip_off] determines how to handle white space in text
  *   - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  *   - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
@@ -611,6 +623,9 @@ set_def_opts(VALUE self, VALUE opts) {
 	    rb_hash_foreach(v, set_overlay, (VALUE)ox_default_options.html_hints);
 	}
     }
+    ox_default_options.element_key_mod = rb_hash_lookup2(opts, element_key_mod_sym, ox_default_options.element_key_mod);
+    ox_default_options.attr_key_mod = rb_hash_lookup2(opts, attr_key_mod_sym, ox_default_options.attr_key_mod);
+    
     return Qnil;
 }
 
@@ -755,6 +770,9 @@ load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, E
 	if (Qnil != (v = rb_hash_lookup(h, symbolize_keys_sym))) {
 	    options.sym_keys = (Qfalse == v) ? No : Yes;
 	}
+	options.element_key_mod = rb_hash_lookup2(h, element_key_mod_sym, options.element_key_mod);
+	options.attr_key_mod = rb_hash_lookup2(h, attr_key_mod_sym, options.attr_key_mod);
+
 	if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
 	    options.convert_special = (Qfalse != v);
 	}
@@ -1379,6 +1397,7 @@ void Init_ox() {
     ox_attrs_done_id = rb_intern("attrs_done");
     ox_beg_id = rb_intern("@beg");
     ox_bigdecimal_id = rb_intern("BigDecimal");
+    ox_call_id = rb_intern("call");
     ox_cdata_id = rb_intern("cdata");
     ox_comment_id = rb_intern("comment");
     ox_den_id = rb_intern("@den");
@@ -1442,12 +1461,14 @@ void Init_ox() {
 
     abort_sym = ID2SYM(rb_intern("abort"));			rb_gc_register_address(&abort_sym);
     active_sym = ID2SYM(rb_intern("active"));			rb_gc_register_address(&active_sym);
+    attr_key_mod_sym = ID2SYM(rb_intern("attr_key_mod"));	rb_gc_register_address(&attr_key_mod_sym);
     auto_define_sym = ID2SYM(rb_intern("auto_define"));		rb_gc_register_address(&auto_define_sym);
     auto_sym = ID2SYM(rb_intern("auto"));			rb_gc_register_address(&auto_sym);
     block_sym = ID2SYM(rb_intern("block"));			rb_gc_register_address(&block_sym);
     circular_sym = ID2SYM(rb_intern("circular"));		rb_gc_register_address(&circular_sym);
     convert_special_sym = ID2SYM(rb_intern("convert_special")); rb_gc_register_address(&convert_special_sym);
     effort_sym = ID2SYM(rb_intern("effort"));			rb_gc_register_address(&effort_sym);
+    element_key_mod_sym = ID2SYM(rb_intern("element_key_mod"));	rb_gc_register_address(&element_key_mod_sym);
     generic_sym = ID2SYM(rb_intern("generic"));			rb_gc_register_address(&generic_sym);
     hash_no_attrs_sym = ID2SYM(rb_intern("hash_no_attrs"));	rb_gc_register_address(&hash_no_attrs_sym);
     hash_sym = ID2SYM(rb_intern("hash"));			rb_gc_register_address(&hash_sym);
