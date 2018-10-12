@@ -20,8 +20,9 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 [Follow @peterohler on Twitter](http://twitter.com/#!/peterohler) for announcements and news about the Ox gem.
 
-## Build Status
+## Support
 
+[Get supported Ox with a Tidelift Subscription.](https://tidelift.com/subscription/pkg/rubygems-ox?utm_source=rubygems-ox&utm_medium=referral&utm_campaign=readme)
 
 ## Links of Interest
 
