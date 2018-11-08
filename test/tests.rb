@@ -1173,6 +1173,20 @@ class Func < ::Test::Unit::TestCase
 }
   end
 
+  def test_remove_children_unmatching_path
+    doc = Ox.parse(easy_xml)
+    doc.remove_children("unmatching_path")
+    assert_equal(doc, Ox.parse(easy_xml))
+  end
+
+  def test_remove_children_all
+    doc = Ox.parse(easy_xml)
+    doc.remove_children("*/Kid")
+    kid_doc = %{<?xml?><Family real="false"><Pete age="58" type="male"/></Family>}
+
+    assert_equal(doc, Ox.parse(kid_doc))
+  end
+
   def test_easy_attribute
     Ox::default_options = $ox_object_options
     doc = Ox.parse(easy_xml)

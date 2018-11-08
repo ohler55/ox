@@ -182,6 +182,20 @@ module Ox
       found
     end
 
+    # Remove all the children matching the path provided
+    #
+    # Examples are:
+    # * <code>element.remove_children("*")</code> removes all children attributes.
+    # * <code>element.remove_children("Family/Kid[@age=32]")</code> removes the Kid elements with an age attribute equal to 32 in the Family Element.
+    #
+    # - +path+ [String] path to the Nodes to locate
+    def remove_children(path)
+      found = locate(path)
+      return self if found.empty?
+      recursive_children_removal(found)
+      self
+    end
+
     # Handles the 'easy' API that allows navigating a simple XML by
     # referencing elements and attributes by name.
     # - +id+ [Symbol] element or attribute name
@@ -309,11 +323,22 @@ module Ox
 
     private
 
+    # Removes recursively children for nodes and sub_nodes
+    #
+    # - +found+ [Array] An array of Ox::Element
+    def recursive_children_removal(found)
+      nodes.tap do |ns|
+        ns.delete_if { |n| found.include?(n) }
+        nodes.each do |n|
+          n.send(:recursive_children_removal, found) if n.is_a?(Ox::Element)
+        end
+      end
+    end
+
     def name_matchs?(pat, id)
       return false unless pat.length == id.length
       pat.length.times { |i| return false unless '_' == id[i] || pat[i] == id[i] }
       true
     end
-
   end # Element
 end # Ox
