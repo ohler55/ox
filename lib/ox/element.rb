@@ -196,6 +196,17 @@ module Ox
       self
     end
 
+    # Remove all the children matching the path provided
+    #
+    # Examples are:
+    # * <code>element.remove_children("*")</code> removes all children attributes.
+    # * <code>element.remove_children("Family/Kid[@age=32]")</code> removes the Kid elements with an age attribute equal to 32 in the Family Element.
+    #
+    # - +path+ [String] path to the Nodes to locate
+    def remove_children_del_locate(path)
+      del_locate(path.split('/')) unless path.nil?
+      self
+    end
     # Handles the 'easy' API that allows navigating a simple XML by
     # referencing elements and attributes by name.
     # - +id+ [Symbol] element or attribute name
@@ -317,6 +328,85 @@ module Ox
           match.each { |n| n.alocate(path[1..-1], found) if n.is_a?(Element) }
         else
           match.each { |n| n.alocate(path[1..-1], found) if n.is_a?(Element) }
+        end
+      end
+    end
+
+    # - +path+ [Array] array of steps in a path
+    def del_locate(path)
+      step = path[0]
+      if step.start_with?('@') # attribute
+        raise InvalidPath.new(path) unless 1 == path.size
+        if instance_variable_defined?(:@attributes)
+          step = step[1..-1]
+          sym_step = step.to_sym
+          @attributes.delete_if { |k,v| '?' == step || k.to_sym == sym_step }
+        end
+      else # element name
+        if (i = step.index('[')).nil? # just name
+          name = step
+          qual = nil
+        else
+          name = step[0..i-1]
+          raise InvalidPath.new(path) unless step.end_with?(']')
+          i += 1
+          qual = step[i..i] # step[i] would be better but some rubies (jruby, ree, rbx) take that as a Fixnum.
+          if '0' <= qual and qual <= '9'
+            qual = '+'
+          else
+            i += 1
+          end
+          index = step[i..-2].to_i
+        end
+        if '?' == name or '*' == name
+          match = nodes
+        elsif '^' == name[0..0] # 1.8.7 thinks name[0] is a fixnum
+          case name[1..-1]
+           when 'Element'
+            match = nodes.select { |e| e.is_a?(Element) }
+           when 'String', 'Text'
+            match = nodes.select { |e| e.is_a?(String) }
+          when 'Comment'
+            match = nodes.select { |e| e.is_a?(Comment) }
+          when 'CData'
+            match = nodes.select { |e| e.is_a?(CData) }
+          when 'DocType'
+            match = nodes.select { |e| e.is_a?(DocType) }
+          else
+            #puts "*** no match on #{name}"
+            match = []
+          end
+        else
+          match = nodes.select { |e| e.is_a?(Element) and name == e.name }
+        end
+        unless qual.nil? or match.empty?
+          case qual
+          when '+'
+            match = index < match.size ? [match[index]] : []
+          when '-'
+            match = index <= match.size ? [match[-index]] : []
+          when '<'
+            match = 0 < index ? match[0..index - 1] : []
+          when '>'
+            match = index <= match.size ? match[index + 1..-1] : []
+          when '@'
+            k,v = step[i..-2].split('=')
+            if v
+              match = match.select { |n| n.is_a?(Element) && (v == n.attributes[k.to_sym] || v == n.attributes[k]) }
+            else
+              match = match.select { |n| n.is_a?(Element) && (n.attributes[k.to_sym] || n.attributes[k]) }
+            end
+          else
+            raise InvalidPath.new(path)
+          end
+        end
+        if (1 == path.size)
+          nodes.delete_if { |n| match.include?(n) }
+        elsif '*' == name
+          match.each { |n| n.del_locate(path) if n.is_a?(Element) }
+          match.each { |n| n.del_locate(path[1..-1]) if n.is_a?(Element) }
+        else
+          match.each { |n| n.del_locate(path[1..-1]) if n.is_a?(Element) }
         end
       end
     end
