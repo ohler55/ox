@@ -1173,31 +1173,49 @@ class Func < ::Test::Unit::TestCase
 }
   end
 
-  def test_remove_children_unmatching_path
+ def test_remove_children_empty
     doc = Ox.parse(easy_xml)
-    doc.remove_children("unmatching_path")
+    doc.remove_children
     assert_equal(doc, Ox.parse(easy_xml))
+  end
+
+  def test_remove_children_single_match
+    root = Ox.parse(easy_xml)
+    kid = root.locate('*/Kid[@age=31]').first
+    root.remove_children(kid)
+
+    expected_doc = %{<?xml?><Family real="false"><Pete age="58" type="male"><Kid age="33"><!-- comment -->Nicole</Kid></Pete></Family>}
+    assert_equal(root, Ox.parse(expected_doc))
   end
 
   def test_remove_children_all
-    doc = Ox.parse(easy_xml)
-    doc.remove_children("*/Kid")
-    kid_doc = %{<?xml?><Family real="false"><Pete age="58" type="male"/></Family>}
+    root = Ox.parse(easy_xml)
+    kids = root.locate("*/Kid")
+    root.remove_children(*kids)
 
-    assert_equal(doc, Ox.parse(kid_doc))
+    kids_doc = %{<?xml?><Family real="false"><Pete age="58" type="male"/></Family>}
+    assert_equal(root, Ox.parse(kids_doc))
   end
 
-  def test_remove_children_del_locate_unmatching_path
+  def test_remove_children_by_path_unmatching_path
     doc = Ox.parse(easy_xml)
-    doc.remove_children_del_locate("unmatching_path")
+    doc.remove_children_by_path("unmatching_path")
     assert_equal(doc, Ox.parse(easy_xml))
   end
 
-  def test_remove_children_del_locate_all
+  def test_remove_children_by_path_single_match
     doc = Ox.parse(easy_xml)
-    doc.remove_children_del_locate("*/Kid")
-    kid_doc = %{<?xml?><Family real="false"><Pete age="58" type="male"/></Family>}
+    doc.remove_children_by_path('*/Kid[@age=31]')
 
+    expected_doc = %{<?xml?><Family real="false"><Pete age="58" type="male"><Kid age="33"><!-- comment -->Nicole</Kid></Pete></Family>}
+    assert_equal(doc, Ox.parse(expected_doc))
+  end
+
+  def test_remove_children_by_path_all
+    doc = Ox.parse(easy_xml)
+    doc.remove_children_by_path("*/Kid")
+
+    kid_doc = %{<?xml?><Family real="false"><Pete age="58" type="male"/></Family>}
     assert_equal(doc, Ox.parse(kid_doc))
   end
 

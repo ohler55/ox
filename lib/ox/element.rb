@@ -185,25 +185,24 @@ module Ox
     # Remove all the children matching the path provided
     #
     # Examples are:
-    # * <code>element.remove_children("*")</code> removes all children attributes.
-    # * <code>element.remove_children("Family/Kid[@age=32]")</code> removes the Kid elements with an age attribute equal to 32 in the Family Element.
+    # * <code>element.remove_children(Ox:Element)</code> removes the element passed as argument if child of the element.
+    # * <code>element.remove_children(Ox:Element, Ox:Element)</code> removes the list of elements passed as argument if children of the element.
     #
-    # - +path+ [String] path to the Nodes to locate
-    def remove_children(path)
-      found = locate(path)
-      return self if found.empty?
-      recursive_children_removal(found)
+    # - +children+ [Array] array of OX
+    def remove_children(*children)
+      return self if children.compact.empty?
+      recursive_children_removal(children.compact.map { |c| c.object_id })
       self
     end
 
     # Remove all the children matching the path provided
     #
     # Examples are:
-    # * <code>element.remove_children("*")</code> removes all children attributes.
-    # * <code>element.remove_children("Family/Kid[@age=32]")</code> removes the Kid elements with an age attribute equal to 32 in the Family Element.
+    # * <code>element.remove_children_by_path("*")</code> removes all children attributes.
+    # * <code>element.remove_children_by_path("Family/Kid[@age=32]")</code> removes the Kid elements with an age attribute equal to 32 in the Family Element.
     #
     # - +path+ [String] path to the Nodes to locate
-    def remove_children_del_locate(path)
+    def remove_children_by_path(path)
       del_locate(path.split('/')) unless path.nil?
       self
     end
@@ -417,8 +416,10 @@ module Ox
     #
     # - +found+ [Array] An array of Ox::Element
     def recursive_children_removal(found)
+      return if found.empty?
       nodes.tap do |ns|
-        ns.delete_if { |n| found.include?(n) }
+        # found.delete(n.object_id) stops looking for an already found object_id
+        ns.delete_if { |n| found.include?(n.object_id) ? found.delete(n.object_id) : false }
         nodes.each do |n|
           n.send(:recursive_children_removal, found) if n.is_a?(Ox::Element)
         end
