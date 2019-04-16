@@ -3,11 +3,11 @@
  * All rights reserved.
  */
 
-#ifndef __OX_SPECIAL_H__
-#define __OX_SPECIAL_H__
+#ifndef OX_SPECIAL_H
+#define OX_SPECIAL_H
 
 #include <stdint.h>
 
 extern char*	ox_ucs_to_utf8_chars(char *text, uint64_t u);
 
-#endif /* __OX_SPECIAL_H__ */
+#endif /* OX_SPECIAL_H */

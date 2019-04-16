@@ -69,7 +69,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
         volatile VALUE	key;
 	volatile VALUE	val;
 	volatile VALUE	a;
-	
+
         for (; 0 != attrs->name; attrs++) {
 	    if (Qnil != pi->options->attr_key_mod) {
 		key = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
@@ -201,7 +201,7 @@ finish(PInfo pi) {
     }
 }
 
-struct _ParseCallbacks   _ox_hash_callbacks = {
+struct _parseCallbacks   _ox_hash_callbacks = {
     NULL,
     NULL,
     NULL,
@@ -214,7 +214,7 @@ struct _ParseCallbacks   _ox_hash_callbacks = {
 
 ParseCallbacks   ox_hash_callbacks = &_ox_hash_callbacks;
 
-struct _ParseCallbacks   _ox_hash_no_attrs_callbacks = {
+struct _parseCallbacks   _ox_hash_no_attrs_callbacks = {
     NULL,
     NULL,
     NULL,

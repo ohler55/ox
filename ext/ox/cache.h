@@ -3,12 +3,12 @@
  * All rights reserved.
  */
 
-#ifndef __OX_CACHE_H__
-#define __OX_CACHE_H__
+#ifndef OX_CACHE_H
+#define OX_CACHE_H
 
 #include "ruby.h"
 
-typedef struct _Cache   *Cache;
+typedef struct _cache   *Cache;
 
 extern void     ox_cache_new(Cache *cache);
 
@@ -16,4 +16,4 @@ extern VALUE    ox_cache_get(Cache cache, const char *key, VALUE **slot, const c
 
 extern void     ox_cache_print(Cache cache);
 
-#endif /* __OX_CACHE_H__ */
+#endif /* OX_CACHE_H */

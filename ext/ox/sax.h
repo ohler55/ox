@@ -3,8 +3,8 @@
  * All rights reserved.
  */
 
-#ifndef __OX_SAX_H__
-#define __OX_SAX_H__
+#ifndef OX_SAX_H
+#define OX_SAX_H
 
 #include <stdbool.h>
 
@@ -14,7 +14,7 @@
 #include "sax_hint.h"
 #include "ox.h"
 
-typedef struct _SaxOptions {
+typedef struct _saxOptions {
     int			symbolize;
     int			convert_special;
     int			smart;
@@ -23,16 +23,16 @@ typedef struct _SaxOptions {
     Hints		hints;
 } *SaxOptions;
 
-typedef struct _SaxDrive {
-    struct _Buf		buf;
-    struct _NStack	stack;	/* element name stack */
+typedef struct _saxDrive {
+    struct _buf		buf;
+    struct _nStack	stack;	/* element name stack */
     VALUE		handler;
     VALUE		value_obj;
-    struct _SaxOptions	options;
+    struct _saxOptions	options;
     int			err;
     int			blocked;
     bool		abort;
-    struct _Has		has;
+    struct _has		has;
 #if HAS_ENCODING_SUPPORT
     rb_encoding *encoding;
 #elif HAS_PRIVATE_ENCODING
@@ -52,4 +52,4 @@ extern VALUE	ox_sax_value_class;
 
 extern VALUE	str2sym(SaxDrive dr, const char *str, const char **strp);
 
-#endif /* __OX_SAX_H__ */
+#endif /* OX_SAX_H */

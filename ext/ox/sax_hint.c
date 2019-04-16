@@ -28,7 +28,7 @@ static const char	*ruby_0[] = { "ruby", 0 };
 static const char	*table_0[] = { "table", 0 };
 static const char	*tr_0[] = { "tr", 0 };
 
-static struct _Hint	html_hint_array[] = {
+static struct _hint	html_hint_array[] = {
     { "!--", false, false, false, ActiveOverlay, NULL }, // comment
     { "a", false, false, false, ActiveOverlay, NULL },
     { "abbr", false, false, false, ActiveOverlay, NULL },
@@ -152,7 +152,7 @@ static struct _Hint	html_hint_array[] = {
     { "video", false, false, false, ActiveOverlay, NULL },
     { "wbr", true, false, false, ActiveOverlay, NULL },
 };
-static struct _Hints	html_hints = {
+static struct _hints	html_hints = {
     "HTML",
     html_hint_array,
     sizeof(html_hint_array) / sizeof(*html_hint_array)
@@ -165,13 +165,13 @@ ox_hints_html() {
 
 Hints
 ox_hints_dup(Hints h) {
-    Hints	nh = ALLOC(struct _Hints);
+    Hints	nh = ALLOC(struct _hints);
 
-    nh->hints = ALLOC_N(struct _Hint, h->size);
-    memcpy(nh->hints, h->hints, sizeof(struct _Hint) * h->size);
+    nh->hints = ALLOC_N(struct _hint, h->size);
+    memcpy(nh->hints, h->hints, sizeof(struct _hint) * h->size);
     nh->size = h->size;
     nh->name = h->name;
-    
+
     return nh;
 }
 

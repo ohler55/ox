@@ -14,7 +14,7 @@
 
 #define MAX_DEPTH	128
 
-typedef struct _Element {
+typedef struct _element {
     char	*name;
     char	buf[64];
     int		len;
@@ -22,13 +22,13 @@ typedef struct _Element {
     bool	non_text_child;
 } *Element;
 
-typedef struct _Builder {
-    struct _Buf		buf;
+typedef struct _builder {
+    struct _buf		buf;
     int			indent;
     char		encoding[64];
     int			depth;
     FILE		*file;
-    struct _Element	stack[MAX_DEPTH];
+    struct _element	stack[MAX_DEPTH];
     long		line;
     long		col;
     long		pos;
@@ -348,7 +348,7 @@ to_s(Builder b) {
  */
 static VALUE
 builder_new(int argc, VALUE *argv, VALUE self) {
-    Builder	b = ALLOC(struct _Builder);
+    Builder	b = ALLOC(struct _builder);
     int		indent = ox_default_options.indent;
     long	buf_size = 0;
 
@@ -403,7 +403,7 @@ builder_new(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE
 builder_file(int argc, VALUE *argv, VALUE self) {
-    Builder	b = ALLOC(struct _Builder);
+    Builder	b = ALLOC(struct _builder);
     int		indent = ox_default_options.indent;
     long	buf_size = 0;
     FILE	*f;
@@ -465,7 +465,7 @@ builder_file(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE
 builder_io(int argc, VALUE *argv, VALUE self) {
-    Builder		b = ALLOC(struct _Builder);
+    Builder		b = ALLOC(struct _builder);
     int			indent = ox_default_options.indent;
     long		buf_size = 0;
     int			fd;

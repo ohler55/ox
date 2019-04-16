@@ -3,8 +3,8 @@
  * All rights reserved.
  */
 
-#ifndef __OX_H__
-#define __OX_H__
+#ifndef OX_H
+#define OX_H
 
 #if defined(__cplusplus)
 extern "C" {
@@ -102,9 +102,9 @@ typedef enum {
     SpcSkip  = 's',
 } SkipMode;
 
-typedef struct _PInfo	*PInfo;
+typedef struct _pInfo	*PInfo;
 
-typedef struct _ParseCallbacks {
+typedef struct _parseCallbacks {
     void	(*instruct)(PInfo pi, const char *target, Attr attrs, const char *content);
     void	(*add_doctype)(PInfo pi, const char *docType);
     void	(*add_comment)(PInfo pi, const char *comment);
@@ -115,14 +115,14 @@ typedef struct _ParseCallbacks {
     void	(*finish)(PInfo pi);
 } *ParseCallbacks;
 
-typedef struct _CircArray {
+typedef struct _circArray {
     VALUE		obj_array[1024];
     VALUE		*objs;
     unsigned long	size; /* allocated size or initial array size */
     unsigned long	cnt;
 } *CircArray;
 
-typedef struct _Options {
+typedef struct _options {
     char		encoding[64];	/* encoding, stored in the option to avoid GC invalidation in default values */
     char		margin[128];	/* left margin for dumping */
     int			indent;		/* indention for dump, default 2 */
@@ -142,7 +142,7 @@ typedef struct _Options {
     char		allow_invalid;	/* YesNo */
     char		inv_repl[12];	/* max 10 valid characters, first character is the length */
     char		strip_ns[64];	/* namespace to strip, \0 is no-strip, \* is all, else only matches */
-    struct _Hints	*html_hints;	/* html hints */
+    struct _hints	*html_hints;	/* html hints */
     VALUE		attr_key_mod;
     VALUE		element_key_mod;
 #if HAS_ENCODING_SUPPORT
@@ -155,9 +155,9 @@ typedef struct _Options {
 } *Options;
 
 /* parse information structure */
-struct _PInfo {
-    struct _HelperStack	helpers;
-    struct _Err		err;
+struct _pInfo {
+    struct _helperStack	helpers;
+    struct _err		err;
     char		*str;		//buffer being read from
     char		*end;		// end of original string
     char		*s;		// current position in buffer
@@ -177,7 +177,7 @@ extern void	ox_sax_define(void);
 extern char*	ox_write_obj_to_str(VALUE obj, Options copts);
 extern void	ox_write_obj_to_file(VALUE obj, const char *path, Options copts);
 
-extern struct _Options	ox_default_options;
+extern struct _options	ox_default_options;
 
 extern VALUE	Ox;
 
@@ -276,4 +276,4 @@ extern void	ox_init_builder(VALUE ox);
 #endif
 }  /* extern "C" { */
 #endif
-#endif /* __OX_H__ */
+#endif /* OX_H */

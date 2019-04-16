@@ -138,7 +138,7 @@ str2sym(SaxDrive dr, const char *str, const char **strp) {
 
 void
 ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
-    struct _SaxDrive    dr;
+    struct _saxDrive    dr;
     int			line = 0;
 
     sax_drive_init(&dr, handler, io, options);
@@ -676,7 +676,7 @@ read_cdata(SaxDrive dr) {
     int			pos = dr->buf.pos - 9;
     int			line = dr->buf.line;
     int			col = dr->buf.col - 9;
-    struct _CheckPt	cp = CHECK_PT_INIT;
+    struct _checkPt	cp = CHECK_PT_INIT;
     Nv			parent = stack_peek(&dr->stack);
 
     // TBD check parent overlay
@@ -771,7 +771,7 @@ read_comment(SaxDrive dr) {
     int			pos = dr->buf.pos - 4;
     int			line = dr->buf.line;
     int			col = dr->buf.col - 4;
-    struct _CheckPt	cp = CHECK_PT_INIT;
+    struct _checkPt	cp = CHECK_PT_INIT;
 
     buf_backup(&dr->buf); /* back up to the start in case the cdata is empty */
     buf_protect(&dr->buf);
@@ -821,7 +821,7 @@ read_comment(SaxDrive dr) {
         VALUE	args[1];
 	Nv	parent = stack_peek(&dr->stack);
 	Hint	h = ox_hint_find(dr->options.hints, "!--");
-	
+
 	if (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay ||
 	    (NULL != h && (ActiveOverlay == h->overlay || ActiveOverlay == h->overlay))) {
 
@@ -1025,7 +1025,7 @@ read_element_end(SaxDrive dr) {
     int		col = dr->buf.col - 1;
     Nv		nv;
     Hint	h = NULL;
-    
+
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
     }
@@ -1241,7 +1241,7 @@ read_text(SaxDrive dr) {
 
 static int
 read_jump_term(Buf buf, const char *pat) {
-    struct _CheckPt	cp;
+    struct _checkPt	cp;
 
     buf_checkpoint(buf, &cp); // right after <
     if ('/' != buf_next_non_white(buf)) {

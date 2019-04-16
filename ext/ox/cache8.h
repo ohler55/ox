@@ -3,13 +3,13 @@
  * All rights reserved.
  */
 
-#ifndef __OX_CACHE8_H__
-#define __OX_CACHE8_H__
+#ifndef OX_CACHE8_H
+#define OX_CACHE8_H
 
 #include "ruby.h"
 #include "stdint.h"
 
-typedef struct _Cache8	*Cache8;
+typedef struct _cache8	*Cache8;
 typedef uint64_t	slot_t;
 typedef uint64_t	sid_t;
 
@@ -20,4 +20,4 @@ extern slot_t	ox_cache8_get(Cache8 cache, sid_t key, slot_t **slot);
 
 //extern void	ox_cache8_print(Cache8 cache);
 
-#endif /* __OX_CACHE8_H__ */
+#endif /* OX_CACHE8_H */

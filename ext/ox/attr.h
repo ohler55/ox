@@ -3,20 +3,20 @@
  * All rights reserved.
  */
 
-#ifndef __OX_ATTR_H__
-#define __OX_ATTR_H__
+#ifndef OX_ATTR_H
+#define OX_ATTR_H
 
 #include "ox.h"
 
 #define ATTR_STACK_INC	8
 
-typedef struct _Attr {
+typedef struct _attr {
     const char	*name;
     const char	*value;
 } *Attr;
 
-typedef struct _AttrStack {
-    struct _Attr	base[ATTR_STACK_INC];
+typedef struct _attrStack {
+    struct _attr	base[ATTR_STACK_INC];
     Attr		head;	/* current stack */
     Attr		end;	/* stack end */
     Attr		tail;	/* pointer to one past last element name on stack */
@@ -25,7 +25,7 @@ typedef struct _AttrStack {
 inline static void
 attr_stack_init(AttrStack stack) {
     stack->head = stack->base;
-    stack->end = stack->base + sizeof(stack->base) / sizeof(struct _Attr);
+    stack->end = stack->base + sizeof(stack->base) / sizeof(struct _attr);
     stack->tail = stack->head;
     stack->head->name = 0;
 }
@@ -50,10 +50,10 @@ attr_stack_push(AttrStack stack, const char *name, const char *value) {
 	size_t	toff = stack->tail - stack->head;
 
 	if (stack->base == stack->head) {
-	    stack->head = ALLOC_N(struct _Attr, len + ATTR_STACK_INC);
-	    memcpy(stack->head, stack->base, sizeof(struct _Attr) * len);
+	    stack->head = ALLOC_N(struct _attr, len + ATTR_STACK_INC);
+	    memcpy(stack->head, stack->base, sizeof(struct _attr) * len);
 	} else {
-	    REALLOC_N(stack->head, struct _Attr, len + ATTR_STACK_INC);
+	    REALLOC_N(stack->head, struct _attr, len + ATTR_STACK_INC);
 	}
 	stack->tail = stack->head + toff;
 	stack->end = stack->head + len + ATTR_STACK_INC;
@@ -81,4 +81,4 @@ attr_stack_pop(AttrStack stack) {
     return 0;
 }
 
-#endif /* __OX_ATTR_H__ */
+#endif /* OX_ATTR_H */

@@ -3,14 +3,14 @@
  * All rights reserved.
  */
 
-#ifndef __OX_ERR_H__
-#define __OX_ERR_H__
+#ifndef OX_ERR_H
+#define OX_ERR_H
 
 #include "ruby.h"
 
 #define set_error(err, msg, xml, current) _ox_err_set_with_location(err, msg, xml, current, __FILE__, __LINE__)
 
-typedef struct _Err {
+typedef struct _err {
     VALUE	clas;
     char	msg[128];
 } *Err;
@@ -33,4 +33,4 @@ err_has(Err e) {
     return (Qnil != e->clas);
 }
 
-#endif /* __OX_ERR_H__ */
+#endif /* OX_ERR_H */

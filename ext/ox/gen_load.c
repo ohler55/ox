@@ -26,7 +26,7 @@ static void	add_instruct(PInfo pi, const char *name, Attr attrs, const char *con
 
 extern ParseCallbacks   ox_obj_callbacks;
 
-struct _ParseCallbacks   _ox_gen_callbacks = {
+struct _parseCallbacks   _ox_gen_callbacks = {
     instruct, /* instruct, */
     add_doctype,
     add_comment,
@@ -39,7 +39,7 @@ struct _ParseCallbacks   _ox_gen_callbacks = {
 
 ParseCallbacks   ox_gen_callbacks = &_ox_gen_callbacks;
 
-struct _ParseCallbacks   _ox_limited_callbacks = {
+struct _parseCallbacks   _ox_limited_callbacks = {
     0,
     0,
     0,
@@ -52,7 +52,7 @@ struct _ParseCallbacks   _ox_limited_callbacks = {
 
 ParseCallbacks   ox_limited_callbacks = &_ox_limited_callbacks;
 
-struct _ParseCallbacks   _ox_nomode_callbacks = {
+struct _parseCallbacks   _ox_nomode_callbacks = {
     nomode_instruct,
     add_doctype,
     add_comment,
@@ -310,7 +310,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     rb_ivar_set(e, ox_at_value_id, s);
     if (0 != attrs->name) {
         volatile VALUE	ah = rb_hash_new();
-        
+
         for (; 0 != attrs->name; attrs++) {
             volatile VALUE	sym;
 
@@ -424,7 +424,7 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 	rb_ivar_set(inst, ox_at_content_id, c);
     } else if (0 != attrs->name) {
         volatile VALUE   ah = rb_hash_new();
-        
+
         for (; 0 != attrs->name; attrs++) {
             volatile VALUE	sym;
 	    VALUE		*slot;

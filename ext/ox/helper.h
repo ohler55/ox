@@ -3,21 +3,21 @@
  * All rights reserved.
  */
 
-#ifndef __OX_HELPER_H__
-#define __OX_HELPER_H__
+#ifndef OX_HELPER_H
+#define OX_HELPER_H
 
 #include "type.h"
 
 #define HELPER_STACK_INC	16
 
-typedef struct _Helper {
+typedef struct _helper {
     ID		var;	/* Object var ID */
     VALUE	obj;	/* object created or Qundef if not appropriate */
     Type	type;	/* type of object in obj */
 } *Helper;
 
-typedef struct _HelperStack {
-    struct _Helper	base[HELPER_STACK_INC];
+typedef struct _helperStack {
+    struct _helper	base[HELPER_STACK_INC];
     Helper		head;	/* current stack */
     Helper		end;	/* stack end */
     Helper		tail;	/* pointer to one past last element name on stack */
@@ -26,7 +26,7 @@ typedef struct _HelperStack {
 inline static void
 helper_stack_init(HelperStack stack) {
     stack->head = stack->base;
-    stack->end = stack->base + sizeof(stack->base) / sizeof(struct _Helper);
+    stack->end = stack->base + sizeof(stack->base) / sizeof(struct _helper);
     stack->tail = stack->head;
 }
 
@@ -55,10 +55,10 @@ helper_stack_push(HelperStack stack, ID var, VALUE obj, Type type) {
 	size_t	toff = stack->tail - stack->head;
 
 	if (stack->base == stack->head) {
-	    stack->head = ALLOC_N(struct _Helper, len + HELPER_STACK_INC);
-	    memcpy(stack->head, stack->base, sizeof(struct _Helper) * len);
+	    stack->head = ALLOC_N(struct _helper, len + HELPER_STACK_INC);
+	    memcpy(stack->head, stack->base, sizeof(struct _helper) * len);
 	} else {
-	    REALLOC_N(stack->head, struct _Helper, len + HELPER_STACK_INC);
+	    REALLOC_N(stack->head, struct _helper, len + HELPER_STACK_INC);
 	}
 	stack->tail = stack->head + toff;
 	stack->end = stack->head + len + HELPER_STACK_INC;
@@ -88,4 +88,4 @@ helper_stack_pop(HelperStack stack) {
     return 0;
 }
 
-#endif /* __OX_HELPER_H__ */
+#endif /* OX_HELPER_H */

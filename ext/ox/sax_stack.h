@@ -3,22 +3,22 @@
  * All rights reserved.
  */
 
-#ifndef __OX_SAX_STACK_H__
-#define __OX_SAX_STACK_H__
+#ifndef OX_SAX_STACK_H
+#define OX_SAX_STACK_H
 
 #include "sax_hint.h"
 
 #define STACK_INC	32
 
-typedef struct _Nv {
+typedef struct _nv {
     const char	*name;
     VALUE	val;
     int		childCnt;
     Hint	hint;
 } *Nv;
 
-typedef struct _NStack {
-    struct _Nv	base[STACK_INC];
+typedef struct _nStack {
+    struct _nv	base[STACK_INC];
     Nv		head;	/* current stack */
     Nv		end;	/* stack end */
     Nv		tail;	/* pointer to one past last element name on stack */
@@ -27,7 +27,7 @@ typedef struct _NStack {
 inline static void
 stack_init(NStack stack) {
     stack->head = stack->base;
-    stack->end = stack->base + sizeof(stack->base) / sizeof(struct _Nv);
+    stack->end = stack->base + sizeof(stack->base) / sizeof(struct _nv);
     stack->tail = stack->head;
 }
 
@@ -50,10 +50,10 @@ stack_push(NStack stack, const char *name, VALUE val, Hint hint) {
 	size_t	toff = stack->tail - stack->head;
 
 	if (stack->base == stack->head) {
-	    stack->head = ALLOC_N(struct _Nv, len + STACK_INC);
-	    memcpy(stack->head, stack->base, sizeof(struct _Nv) * len);
+	    stack->head = ALLOC_N(struct _nv, len + STACK_INC);
+	    memcpy(stack->head, stack->base, sizeof(struct _nv) * len);
 	} else {
-	    REALLOC_N(stack->head, struct _Nv, len + STACK_INC);
+	    REALLOC_N(stack->head, struct _nv, len + STACK_INC);
 	}
 	stack->tail = stack->head + toff;
 	stack->end = stack->head + len + STACK_INC;
@@ -82,4 +82,4 @@ stack_pop(NStack stack) {
     return 0;
 }
 
-#endif /* __OX_SAX_STACK_H__ */
+#endif /* OX_SAX_STACK_H */

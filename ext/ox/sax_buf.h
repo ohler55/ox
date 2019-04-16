@@ -3,10 +3,10 @@
  * All rights reserved.
  */
 
-#ifndef __OX_SAX_BUF_H__
-#define __OX_SAX_BUF_H__
+#ifndef OX_SAX_BUF_H
+#define OX_SAX_BUF_H
 
-typedef struct _Buf {
+typedef struct _buf {
     char	base[0x00001000];
     char	*head;
     char	*end;
@@ -20,16 +20,16 @@ typedef struct _Buf {
     int		pro_pos;
     int		pro_line;
     int		pro_col;
-    int		(*read_func)(struct _Buf *buf);
+    int		(*read_func)(struct _buf *buf);
     union {
         int     	fd;
         VALUE   	io;
 	const char	*str;
     } in;
-    struct _SaxDrive	*dr;
+    struct _saxDrive	*dr;
 } *Buf;
 
-typedef struct _CheckPt {
+typedef struct _checkPt {
     int		pro_dif;
     int		pos;
     int		line;
@@ -219,4 +219,4 @@ buf_collapse_white(char *str) {
     *back = '\0';
 }
 
-#endif /* __OX_SAX_BUF_H__ */
+#endif /* OX_SAX_BUF_H */

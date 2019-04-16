@@ -9,7 +9,7 @@
 #include <strings.h>
 #include <sys/types.h>
 #if NEEDS_UIO
-#include <sys/uio.h>    
+#include <sys/uio.h>
 #endif
 #include <unistd.h>
 #include <time.h>
@@ -24,7 +24,7 @@ parse_double_time(const char *text) {
     long        v2 = 0;
     const char  *dot = 0;
     char        c;
-    
+
     for (; '.' != *text; text++) {
         c = *text;
         if (c < '0' || '9' < c) {
@@ -50,7 +50,7 @@ parse_double_time(const char *text) {
 #endif
 }
 
-typedef struct _Tp {
+typedef struct _tp {
     int         cnt;
     char        end;
     char        alt;
@@ -63,7 +63,7 @@ parse_xsd_time(const char *text) {
     long        v;
     int         i;
     char        c = '\0';
-    struct _Tp  tpa[10] = { { 4, '-', '-' },
+    struct _tp  tpa[10] = { { 4, '-', '-' },
                            { 2, '-', '-' },
                            { 2, 'T', ' ' },
                            { 2, ':', ':' },

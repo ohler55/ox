@@ -3,8 +3,8 @@
  * All rights reserved.
  */
 
-#ifndef __BASE64_H__
-#define __BASE64_H__
+#ifndef BASE64_H
+#define BASE64_H
 
 typedef unsigned char	uchar;
 
@@ -15,4 +15,4 @@ extern unsigned long    b64_orig_size(const char *text);
 extern void	        to_base64(const uchar *src, int len, char *b64);
 extern void             from_base64(const char *b64, uchar *str);
 
-#endif /* __BASE64_H__ */
+#endif /* BASE64_H */

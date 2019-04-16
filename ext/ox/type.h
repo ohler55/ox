@@ -3,8 +3,8 @@
  * All rights reserved.
  */
 
-#ifndef __OX_TYPE_H__
-#define __OX_TYPE_H__
+#ifndef OX_TYPE_H
+#define OX_TYPE_H
 
 typedef enum {
     NoCode	   = 0,
@@ -36,4 +36,4 @@ typedef enum {
     NilClassCode   = 'z',
 } Type;
 
-#endif /* __OX_TYPE_H__ */
+#endif /* OX_TYPE_H */

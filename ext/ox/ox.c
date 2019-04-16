@@ -18,7 +18,7 @@
 #define SMALL_XML		4096
 #define WITH_CACHE_TESTS	0
 
-typedef struct _YesNoOpt {
+typedef struct _yesNoOpt {
     VALUE	sym;
     char	*attr;
 } *YesNoOpt;
@@ -160,7 +160,7 @@ VALUE		ox_utf8_encoding = Qnil;
 void		*ox_utf8_encoding = 0;
 #endif
 
-struct _Options	 ox_default_options = {
+struct _options	 ox_default_options = {
     { '\0' },		// encoding
     { '\0' },		// margin
     2,			// indent
@@ -255,7 +255,7 @@ hints_to_overlay(Hints hints) {
     Hint		h;
     int			i;
     VALUE		ov;
-    
+
     for (i = hints->size, h = hints->hints; 0 < i; i--, h++) {
 	switch (h->overlay) {
 	case InactiveOverlay:	ov = inactive_sym;	break;
@@ -267,7 +267,7 @@ hints_to_overlay(Hints hints) {
 	default:		ov = active_sym;	break;
 	}
 	rb_hash_aset(overlay, rb_str_new2(h->name), ov);
-    }    
+    }
     return overlay;
 }
 
@@ -300,7 +300,7 @@ hints_to_overlay(Hints hints) {
  *   - _:block_ - block this and all children callbacks
  *   - _:off_ - block this element and it's children unless the child element is active
  *   - _:abort_ - abort the html processing and return
- * 
+ *
  * *return* [Hash] all current option settings.
  *
  * Note that an indent of less than zero will result in a tight one line output
@@ -373,7 +373,7 @@ static int
 set_overlay(VALUE key, VALUE value, VALUE ctx) {
     Hints	hints = (Hints)ctx;
     Hint	hint;
-    
+
     if (NULL != (hint = ox_hint_find(hints, StringValuePtr(key)))) {
 	if (active_sym == value) {
 	    hint->overlay = ActiveOverlay;
@@ -444,7 +444,7 @@ sax_html_overlay(VALUE self) {
  */
 static VALUE
 set_def_opts(VALUE self, VALUE opts) {
-    struct _YesNoOpt	ynos[] = {
+    struct _yesNoOpt	ynos[] = {
 	{ with_xml_sym, &ox_default_options.with_xml },
 	{ with_dtd_sym, &ox_default_options.with_dtd },
 	{ with_instruct_sym, &ox_default_options.with_instruct },
@@ -456,7 +456,7 @@ set_def_opts(VALUE self, VALUE opts) {
     };
     YesNoOpt	o;
     VALUE	v;
-    
+
     Check_Type(opts, T_HASH);
 
     v = rb_hash_aref(opts, ox_encoding_sym);
@@ -625,7 +625,7 @@ set_def_opts(VALUE self, VALUE opts) {
     }
     ox_default_options.element_key_mod = rb_hash_lookup2(opts, element_key_mod_sym, ox_default_options.element_key_mod);
     ox_default_options.attr_key_mod = rb_hash_lookup2(opts, attr_key_mod_sym, ox_default_options.attr_key_mod);
-    
+
     return Qnil;
 }
 
@@ -644,8 +644,8 @@ to_obj(VALUE self, VALUE ruby_xml) {
     char		*xml, *x;
     size_t		len;
     VALUE		obj;
-    struct _Options	options = ox_default_options;
-    struct _Err		err;
+    struct _options	options = ox_default_options;
+    struct _err		err;
 
     err_init(&err);
     Check_Type(ruby_xml, T_STRING);
@@ -688,8 +688,8 @@ to_gen(VALUE self, VALUE ruby_xml) {
     char		*xml, *x;
     size_t		len;
     VALUE		obj;
-    struct _Options	options = ox_default_options;
-    struct _Err		err;
+    struct _options	options = ox_default_options;
+    struct _err		err;
 
     err_init(&err);
     Check_Type(ruby_xml, T_STRING);
@@ -715,12 +715,12 @@ to_gen(VALUE self, VALUE ruby_xml) {
 static VALUE
 load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
     VALUE		obj;
-    struct _Options	options = ox_default_options;
+    struct _options	options = ox_default_options;
 
     if (1 == argc && rb_cHash == rb_obj_class(*argv)) {
 	VALUE	h = *argv;
 	VALUE	v;
-	
+
 	if (Qnil != (v = rb_hash_lookup(h, mode_sym))) {
 	    if (object_sym == v) {
 		options.mode = ObjMode;
@@ -916,7 +916,7 @@ load_str(int argc, VALUE *argv, VALUE self) {
     size_t	len;
     VALUE	obj;
     VALUE	encoding;
-    struct _Err	err;
+    struct _err	err;
 
     err_init(&err);
     Check_Type(*argv, T_STRING);
@@ -979,7 +979,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
     FILE	*f;
     size_t	len;
     VALUE	obj;
-    struct _Err	err;
+    struct _err	err;
 
     err_init(&err);
     Check_Type(*argv, T_STRING);
@@ -1027,7 +1027,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE
 sax_parse(int argc, VALUE *argv, VALUE self) {
-    struct _SaxOptions	options;
+    struct _saxOptions	options;
 
     options.symbolize = (No != ox_default_options.sym_keys);
     options.convert_special = ox_default_options.convert_special;
@@ -1035,14 +1035,14 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
     options.skip = ox_default_options.skip;
     options.hints = NULL;
     strcpy(options.strip_ns, ox_default_options.strip_ns);
-    
+
     if (argc < 2) {
 	rb_raise(ox_parse_error_class, "Wrong number of arguments to sax_parse.\n");
     }
     if (3 <= argc && rb_cHash == rb_obj_class(argv[2])) {
 	VALUE	h = argv[2];
 	VALUE	v;
-	
+
 	if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
 	    options.convert_special = (Qtrue == v);
 	}
@@ -1108,9 +1108,9 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE
 sax_html(int argc, VALUE *argv, VALUE self) {
-    struct _SaxOptions	options;
+    struct _saxOptions	options;
     bool		free_hints = false;
-    
+
     options.symbolize = (No != ox_default_options.sym_keys);
     options.convert_special = ox_default_options.convert_special;
     options.smart = true;
@@ -1120,14 +1120,14 @@ sax_html(int argc, VALUE *argv, VALUE self) {
 	options.hints = ox_hints_html();
     }
     *options.strip_ns = '\0';
-    
+
     if (argc < 2) {
 	rb_raise(ox_parse_error_class, "Wrong number of arguments to sax_html.\n");
     }
     if (3 <= argc && rb_cHash == rb_obj_class(argv[2])) {
 	volatile VALUE	h = argv[2];
 	volatile VALUE	v;
-	
+
 	if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
 	    options.convert_special = (Qtrue == v);
 	}
@@ -1147,7 +1147,7 @@ sax_html(int argc, VALUE *argv, VALUE self) {
 	}
 	if (Qnil != (v = rb_hash_lookup(h, overlay_sym))) {
 	    int	cnt;
-	    
+
 	    Check_Type(v, T_HASH);
 	    cnt = (int)RHASH_SIZE(v);
 	    if (0 == cnt) {
@@ -1168,7 +1168,7 @@ sax_html(int argc, VALUE *argv, VALUE self) {
 
 static void
 parse_dump_options(VALUE ropts, Options copts) {
-    struct _YesNoOpt	ynos[] = {
+    struct _yesNoOpt	ynos[] = {
 	{ with_xml_sym, &copts->with_xml },
 	{ with_dtd_sym, &copts->with_dtd },
 	{ with_instruct_sym, &copts->with_instruct },
@@ -1177,10 +1177,10 @@ parse_dump_options(VALUE ropts, Options copts) {
 	{ Qnil, 0 }
     };
     YesNoOpt	o;
-    
+
     if (rb_cHash == rb_obj_class(ropts)) {
 	VALUE	v;
-	
+
 	if (Qnil != (v = rb_hash_lookup(ropts, ox_indent_sym))) {
 #ifdef RUBY_INTEGER_UNIFICATION
 	    if (rb_cInteger != rb_obj_class(v) && T_FIXNUM != rb_type(v)) {
@@ -1251,7 +1251,7 @@ parse_dump_options(VALUE ropts, Options copts) {
 	    copts->margin[sizeof(copts->margin) - 1] = '\0';
 	    copts->margin_len = (char)slen;
 	}
-	
+
 	for (o = ynos; 0 != o->attr; o++) {
 	    if (Qnil != (v = rb_hash_lookup(ropts, o->sym))) {
 		VALUE	    c = rb_obj_class(v);
@@ -1286,9 +1286,9 @@ parse_dump_options(VALUE ropts, Options copts) {
 static VALUE
 dump(int argc, VALUE *argv, VALUE self) {
     char		*xml;
-    struct _Options	copts = ox_default_options;
+    struct _options	copts = ox_default_options;
     VALUE		rstr;
-    
+
     if (2 == argc) {
 	parse_dump_options(argv[1], &copts);
     }
@@ -1328,8 +1328,8 @@ dump(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE
 to_file(int argc, VALUE *argv, VALUE self) {
-    struct _Options	copts = ox_default_options;
-    
+    struct _options	copts = ox_default_options;
+
     if (3 == argc) {
 	parse_dump_options(argv[2], &copts);
     }
@@ -1376,9 +1376,9 @@ void Init_ox() {
     rb_define_module_function(Ox, "to_file", to_file, -1);
 
     rb_define_module_function(Ox, "sax_html_overlay", sax_html_overlay, 0);
-    
+
     ox_init_builder(Ox);
-    
+
     rb_require("time");
     rb_require("date");
     rb_require("bigdecimal");
@@ -1529,7 +1529,7 @@ void Init_ox() {
     rb_define _module_function(Ox, "cache_test", cache_test, 0);
     rb_define _module_function(Ox, "cache8_test", cache8_test, 0);
 #endif
-    
+
 #if HAS_ENCODING_SUPPORT
     ox_utf8_encoding = rb_enc_find("UTF-8");
 #elif HAS_PRIVATE_ENCODING

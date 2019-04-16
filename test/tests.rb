@@ -781,7 +781,7 @@ class Func < ::Test::Unit::TestCase
   def test_nameerror
     Ox::default_options = $ox_object_options
     begin
-      "x".foo
+      raise StandardError.new("An error message,")
     rescue Exception => e
       xml = Ox.dump(e, :effort => :tolerant)
       o = Ox.load(xml, :mode => :object)

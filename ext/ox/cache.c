@@ -13,13 +13,13 @@
 
 #include "cache.h"
 
-struct _Cache {
+struct _cache {
     /* The key is a length byte followed by the key as a string. If the key is longer than 254 characters then the
        length is 255. The key can be for a premature value and in that case the length byte is greater than the length
        of the key. */
     char                *key;
     VALUE               value;
-    struct _Cache       *slots[16];
+    struct _cache       *slots[16];
 };
 
 static void     slot_print(Cache cache, unsigned int depth);
@@ -36,7 +36,7 @@ static char* form_key(const char *s) {
 
 void
 ox_cache_new(Cache *cache) {
-    *cache = ALLOC(struct _Cache);
+    *cache = ALLOC(struct _cache);
     (*cache)->key = 0;
     (*cache)->value = Qundef;
     memset((*cache)->slots, 0, sizeof((*cache)->slots));
@@ -63,7 +63,7 @@ ox_cache_get(Cache cache, const char *key, VALUE **slot, const char **keyp) {
 	    int	depth = (int)(k - (unsigned char*)key + 1);
 
 	    cache = *cp;
-	    
+
 	    if ('\0' == *(k + 1)) { /* exact match */
 		if (0 == cache->key) { /* nothing in this spot so take it */
 		    cache->key = form_key(key);
@@ -73,7 +73,7 @@ ox_cache_get(Cache cache, const char *key, VALUE **slot, const char **keyp) {
 		} else { /* have to move the current premature key/value deeper */
 		    unsigned char	*ck = (unsigned char*)(cache->key + depth + 1);
                     Cache		orig = *cp;
-		    
+
                     cp = (*cp)->slots + (*ck >> 4);
                     ox_cache_new(cp);
                     cp = (*cp)->slots + (*ck & 0x0F);
@@ -90,7 +90,7 @@ ox_cache_get(Cache cache, const char *key, VALUE **slot, const char **keyp) {
 		    } else {
 			unsigned char	*ck = (unsigned char*)(cache->key + depth + 1);
 			Cache		orig = *cp;
-		    
+
 			cp = (*cp)->slots + (*ck >> 4);
 			ox_cache_new(cp);
 			cp = (*cp)->slots + (*ck & 0x0F);

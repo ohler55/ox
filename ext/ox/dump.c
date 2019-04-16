@@ -18,24 +18,24 @@
 
 typedef unsigned long	ulong;
 
-typedef struct _Str {
+typedef struct _str {
     const char	*str;
     size_t	len;
 } *Str;
 
-typedef struct _Element {
-    struct _Str		clas;
-    struct _Str		attr;
+typedef struct _element {
+    struct _str		clas;
+    struct _str		attr;
     unsigned long	id;
     int			indent; /* < 0 indicates no \n */
     int			closed;
     char		type;
 } *Element;
 
-typedef struct _Out {
-    void		(*w_start)(struct _Out *out, Element e);
-    void		(*w_end)(struct _Out *out, Element e);
-    void		(*w_time)(struct _Out *out, VALUE obj);
+typedef struct _out {
+    void		(*w_start)(struct _out *out, Element e);
+    void		(*w_end)(struct _out *out, Element e);
+    void		(*w_time)(struct _out *out, VALUE obj);
     char		*buf;
     char		*end;
     char		*cur;
@@ -235,7 +235,7 @@ check_circular(Out out, VALUE obj, Element e) {
     slot_t	*slot;
     slot_t	id;
     int		result;
-    
+
     if (0 == (id = ox_cache8_get(out->circ_cache, obj, &slot))) {
 	out->circ_cnt++;
 	id = out->circ_cnt;
@@ -256,7 +256,7 @@ static void
 grow(Out out, size_t len) {
     size_t  size = out->end - out->buf;
     long    pos = out->cur - out->buf;
-	
+
     size *= 2;
     if (size <= len * 2 + pos) {
 	size += len;
@@ -297,7 +297,7 @@ dump_start(Out out, Element e) {
 	char		buf[32];
 	char		*end = buf + sizeof(buf) - 1;
 	const char	*s = ulong2str(e->id, end);
-	
+
 	fill_attr(out, 'i', s, end - s);
     }
     if (e->closed) {
@@ -341,7 +341,7 @@ dump_value(Out out, const char *value, size_t size) {
 inline static void
 dump_str_value(Out out, const char *value, size_t size, const char *table) {
     size_t	xsize = xml_str_len((const uchar*)value, size, table);
-    
+
     if (out->end - out->cur <= (long)xsize) {
 	grow(out, xsize);
     }
@@ -591,7 +591,7 @@ dump_first_obj(VALUE obj, Out out) {
 
 static void
 dump_obj(ID aid, VALUE obj, int depth, Out out) {
-    struct _Element	e;
+    struct _element	e;
     VALUE		prev_obj = out->obj;
     char		value_buf[64];
     int			cnt;
@@ -660,7 +660,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	out->w_start(out, &e);
 	if (0 < cnt) {
 	    unsigned int	od = out->depth;
-	    
+
 	    out->depth = depth + 1;
 	    rb_hash_foreach(obj, dump_hash, (VALUE)out);
 	    out->depth = od;
@@ -938,7 +938,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
     case T_BIGNUM:
     {
 	volatile VALUE	rs = rb_big2str(obj, 10);
-	
+
 	e.type = BignumCode;
 	out->w_start(out, &e);
 	dump_value(out, StringValuePtr(rs), RSTRING_LEN(rs));
@@ -1018,7 +1018,7 @@ static int
 dump_hash(VALUE key, VALUE value, Out out) {
     dump_obj(0, key, out->depth, out);
     dump_obj(0, value, out->depth, out);
-    
+
     return ST_CONTINUE;
 }
 
@@ -1069,7 +1069,7 @@ dump_gen_element(VALUE obj, int depth, Out out) {
     long		nlen = RSTRING_LEN(rname);
     size_t		size;
     int			indent;
-    
+
     if (0 > out->indent) {
 	indent = -1;
     } else if (0 == out->indent) {
@@ -1093,7 +1093,7 @@ dump_gen_element(VALUE obj, int depth, Out out) {
     }
     if (Qnil != nodes && 0 < RARRAY_LEN(nodes)) {
 	int	do_indent;
-	
+
 	*out->cur++ = '>';
 	do_indent = dump_gen_nodes(nodes, depth, out);
 	if (out->end - out->cur <= (long)size) {
@@ -1122,7 +1122,7 @@ dump_gen_instruct(VALUE obj, int depth, Out out) {
     long		nlen = RSTRING_LEN(rname);
     long		clen = 0;
     size_t		size;
-    
+
     if (T_STRING == rb_type(rcontent)) {
 	content = StringValuePtr(rcontent);
 	clen = RSTRING_LEN(rcontent);
@@ -1150,7 +1150,7 @@ static int
 dump_gen_nodes(VALUE obj, int depth, Out out) {
     long	cnt = RARRAY_LEN(obj);
     int		indent_needed = 1;
-    
+
     if (0 < cnt) {
 	const VALUE	*np = RARRAY_PTR(obj);
 	VALUE		clas;
@@ -1295,17 +1295,17 @@ dump_obj_to_xml(VALUE obj, Options copts, Out out) {
 
 char*
 ox_write_obj_to_str(VALUE obj, Options copts) {
-    struct _Out out;
-    
+    struct _out out;
+
     dump_obj_to_xml(obj, copts, &out);
     return out.buf;
 }
 
 void
 ox_write_obj_to_file(VALUE obj, const char *path, Options copts) {
-    struct _Out out;
+    struct _out out;
     size_t	size;
-    FILE	*f;    
+    FILE	*f;
 
     dump_obj_to_xml(obj, copts, &out);
     size = out.cur - out.buf;

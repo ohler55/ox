@@ -38,7 +38,7 @@ static void		debug_stack(PInfo pi, const char *comment);
 static void		fill_indent(PInfo pi, char *buf, size_t size);
 
 
-struct _ParseCallbacks	 _ox_obj_callbacks = {
+struct _parseCallbacks	 _ox_obj_callbacks = {
     instruct, /* instruct, */
     0, /* add_doctype, */
     0, /* add_comment, */
@@ -57,7 +57,7 @@ extern ParseCallbacks	ox_gen_callbacks;
 inline static VALUE
 str2sym(const char *str, void *encoding) {
     VALUE	sym;
-    
+
 #ifdef HAVE_RUBY_ENCODING_H
     if (0 != encoding) {
 	VALUE	rstr = rb_str_new2(str);
@@ -85,7 +85,7 @@ name2var(const char *name, void *encoding) {
 	if (0 != encoding) {
 	    volatile VALUE	rstr = rb_str_new2(name);
 	    volatile VALUE	sym;
-	    
+
 	    rb_enc_associate(rstr, (rb_encoding*)encoding);
 	    sym = rb_funcall(rstr, ox_to_sym_id, 0);
 	    // Needed for Ruby 2.2 to get around the GC of symbols
@@ -135,7 +135,7 @@ resolve_classname(VALUE mod, const char *class_name, Effort effort, VALUE base_c
 inline static VALUE
 classname2obj(const char *name, PInfo pi, VALUE base_class) {
     VALUE   clas = classname2class(name, pi, base_class);
-    
+
     if (Qundef == clas) {
 	return Qnil;
     } else {
@@ -204,7 +204,7 @@ static VALUE
 classname2class(const char *name, PInfo pi, VALUE base_class) {
     VALUE	*slot;
     VALUE	clas;
-	    
+
     if (Qundef == (clas = ox_cache_get(ox_class_cache, name, &slot, 0))) {
 	char		class_name[1024];
 	char		*s;
@@ -284,7 +284,7 @@ get_id_from_attrs(PInfo pi, Attr a) {
 	    unsigned long	id = 0;
 	    const char		*text = a->value;
 	    char		c;
-	    
+
 	    for (; '\0' != *text; text++) {
 		c = *text;
 		if ('0' <= c && c <= '9') {
@@ -303,12 +303,12 @@ get_id_from_attrs(PInfo pi, Attr a) {
 static CircArray
 circ_array_new() {
     CircArray	ca;
-    
-    ca = ALLOC(struct _CircArray);
+
+    ca = ALLOC(struct _circArray);
     ca->objs = ca->obj_array;
     ca->size = sizeof(ca->obj_array) / sizeof(VALUE);
     ca->cnt = 0;
-    
+
     return ca;
 }
 
@@ -361,7 +361,7 @@ static VALUE
 parse_regexp(const char *text) {
     const char	*te;
     int		options = 0;
-	    
+
     te = text + strlen(text) - 1;
 #if HAS_ONIG
     for (; text < te && '/' != *te; te--) {
@@ -491,7 +491,7 @@ add_text(PInfo pi, char *text, int closed) {
 	unsigned long	str_size = b64_orig_size(text);
 	VALUE		v;
 	char		*str = ALLOCA_N(char, str_size + 1);
-	
+
 	from_base64(text, (uchar*)str);
 	v = rb_str_new(str, str_size);
 #if HAS_ENCODING_SUPPORT
@@ -515,7 +515,7 @@ add_text(PInfo pi, char *text, int closed) {
 	VALUE		*slot;
 	unsigned long	str_size = b64_orig_size(text);
 	char		*str = ALLOCA_N(char, str_size + 1);
-	
+
 	from_base64(text, (uchar*)str);
 	if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, 0))) {
 	    sym = str2sym(str, (void*)pi->options->rb_enc);
@@ -533,7 +533,7 @@ add_text(PInfo pi, char *text, int closed) {
 	} else {
 	    unsigned long	str_size = b64_orig_size(text);
 	    char		*str = ALLOCA_N(char, str_size + 1);
-	
+
 	    from_base64(text, (uchar*)str);
 	    h->obj = parse_regexp(str);
 	}
@@ -709,7 +709,7 @@ static void
 end_element(PInfo pi, const char *ename) {
     if (TRACE <= pi->options->trace) {
 	char	indent[128];
-	
+
 	if (DEBUG <= pi->options->trace) {
 	    char    buf[1024];
 
@@ -853,7 +853,7 @@ parse_double_time(const char *text, VALUE clas) {
     long	v2 = 0;
     const char	*dot = 0;
     char	c;
-    
+
     for (; '.' != *text; text++) {
 	c = *text;
 	if (c < '0' || '9' < c) {
@@ -879,7 +879,7 @@ parse_double_time(const char *text, VALUE clas) {
 #endif
 }
 
-typedef struct _Tp {
+typedef struct _tp {
     int		cnt;
     char	end;
     char	alt;
@@ -892,7 +892,7 @@ parse_xsd_time(const char *text, VALUE clas) {
     long	v;
     int		i;
     char	c;
-    struct _Tp	tpa[10] = { { 4, '-', '-' },
+    struct _tp	tpa[10] = { { 4, '-', '-' },
 			   { 2, '-', '-' },
 			   { 2, 'T', 'T' },
 			   { 2, ':', ':' },
@@ -971,7 +971,7 @@ debug_stack(PInfo pi, const char *comment) {
 	    if (0 != h->var) {
 		if (HashCode == h->type) {
 		    VALUE	v;
-		    
+
 		    v = rb_funcall2(h->var, rb_intern("to_s"), 0, 0);
 		    key = StringValuePtr(v);
 		} else if (ObjectCode == (h - 1)->type || ExceptionCode == (h - 1)->type || RangeCode == (h - 1)->type || StructCode == (h - 1)->type) {

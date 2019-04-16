@@ -109,11 +109,11 @@ mark_pi_cb(void *ptr) {
 
 VALUE
 ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options, Err err) {
-    struct _PInfo	pi;
+    struct _pInfo	pi;
     int			body_read = 0;
     int			block_given = rb_block_given_p();
     volatile VALUE	wrap;
-    
+
     if (0 == xml) {
 	set_error(err, "Invalid arg, xml string can not be null", xml, 0);
 	return Qnil;
@@ -234,7 +234,7 @@ gather_content(const char *src, char *content, size_t len) {
 static void
 read_instruction(PInfo pi) {
     char		content[1024];
-    struct _AttrStack	attrs;
+    struct _attrStack	attrs;
     char		*attr_name;
     char		*attr_value;
     char		*target;
@@ -384,7 +384,7 @@ read_comment(PInfo pi) {
     char	*s;
     char	*comment;
     int		done = 0;
-    
+
     next_non_white(pi);
     comment = pi->s;
     end = strstr(pi->s, "-->");
@@ -418,7 +418,7 @@ read_comment(PInfo pi) {
  */
 static char*
 read_element(PInfo pi) {
-    struct _AttrStack	attrs;
+    struct _attrStack	attrs;
     const char		*attr_name;
     const char		*attr_value;
     char		*name;
@@ -489,7 +489,7 @@ read_element(PInfo pi) {
 	    hasChildren = 1;
 	    done = 1;
 	    pi->pcb->add_element(pi, ename, attrs.head, hasChildren);
-	    
+
 	    break;
 	default:
 	    /* Attribute name so it's an element and the attribute will be */
@@ -539,7 +539,7 @@ read_element(PInfo pi) {
     if (hasChildren) {
 	char	*start;
 	int	first = 1;
-	
+
 	done = 0;
 	/* read children */
 	while (!done) {
@@ -609,7 +609,7 @@ read_element(PInfo pi) {
 			case CrSkip: {
 			    char	*s = start;
 			    char	*e = start;
-			
+
 			    for (; '\0' != *e; e++) {
 				if ('\r' != *e) {
 				    *s++ = *e;
@@ -708,7 +708,7 @@ read_text(PInfo pi) {
 	default:
 	    if (end <= (b + (('&' == c) ? 7 : 0))) { /* extra 8 for special just in case it is sequence of bytes */
 		unsigned long	size;
-		
+
 		if (0 == alloc_buf) {
 		    size = sizeof(buf) * 2;
 		    alloc_buf = ALLOC_N(char, size);
@@ -748,7 +748,7 @@ read_text(PInfo pi) {
 			    }
 			} else {
 			    *b++ = c;
-			}			
+			}
 			break;
 		    case NoSkip:
 		    case OffSkip:
@@ -803,7 +803,7 @@ read_reduced_text(PInfo pi) {
 	default:
 	    if (end <= (b + spc + (('&' == c) ? 7 : 0))) { /* extra 8 for special just in case it is sequence of bytes */
 		unsigned long	size;
-		
+
 		if (0 == alloc_buf) {
 		    size = sizeof(buf) * 2;
 		    alloc_buf = ALLOC_N(char, size);
@@ -905,10 +905,10 @@ read_cdata(PInfo pi) {
 static char*
 read_quoted_value(PInfo pi) {
     char	*value = 0;
-    
+
     if ('"' == *pi->s || '\'' == *pi->s) {
         char	term = *pi->s;
-        
+
         pi->s++;	/* skip quote character */
         value = pi->s;
         for (; *pi->s != term; pi->s++) {
@@ -1014,7 +1014,7 @@ read_coded_chars(PInfo pi, char *text) {
 	*text++ = '&';
     } else if ('#' == *buf) {
 	uint64_t	u = 0;
-	
+
 	b = buf + 1;
 	if ('x' == *b || 'X' == *b) {
 	    b = read_hex_uint64(b + 1, &u);
@@ -1085,7 +1085,7 @@ collapse_special(PInfo pi, char *str) {
 	if ('&' == *s) {
 	    int		c;
 	    char	*end;
-	    
+
 	    s++;
 	    if ('#' == *s) {
 		uint64_t	u = 0;

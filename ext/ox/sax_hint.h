@@ -3,8 +3,8 @@
  * All rights reserved.
  */
 
-#ifndef __OX_HINT_H__
-#define __OX_HINT_H__
+#ifndef OX_HINT_H
+#define OX_HINT_H
 
 #include <stdbool.h>
 
@@ -17,7 +17,7 @@ typedef enum {
     NestOverlay		= 'n', // nest flag is ignored
 } Overlay;
 
-typedef struct _Hint {
+typedef struct _hint {
     const char	*name;
     char	empty;	// must be closed or close auto it, not error
     char	nest;	// nesting allowed
@@ -26,7 +26,7 @@ typedef struct _Hint {
     const char	**parents;
 } *Hint;
 
-typedef struct _Hints {
+typedef struct _hints {
     const char	*name;
     Hint	hints; // array of hints
     int		size;
@@ -37,4 +37,4 @@ extern Hint	ox_hint_find(Hints hints, const char *name);
 extern Hints	ox_hints_dup(Hints h);
 extern void	ox_hints_destroy(Hints h);
 
-#endif /* __OX_HINT_H__ */
+#endif /* OX_HINT_H */

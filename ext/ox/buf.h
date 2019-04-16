@@ -1,21 +1,21 @@
 /* buf.h
  * Copyright (c) 2014, Peter Ohler
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  *  - Redistributions of source code must retain the above copyright notice, this
  *    list of conditions and the following disclaimer.
- * 
+ *
  *  - Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- * 
+ *
  *  - Neither the name of Peter Ohler nor the names of its contributors may be
  *    used to endorse or promote products derived from this software without
  *    specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -28,13 +28,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __OX_BUF_H__
-#define __OX_BUF_H__
+#ifndef OX_BUF_H
+#define OX_BUF_H
 
 #include <stdbool.h>
 #include <unistd.h>
 
-typedef struct _Buf {
+typedef struct _buf {
     char	*head;
     char	*end;
     char	*tail;
@@ -108,7 +108,7 @@ buf_append_string(Buf buf, const char *s, size_t slen) {
     }
     buf->tail += slen;
 }
-    
+
 inline static void
 buf_append(Buf buf, char c) {
     if (buf->err) {
@@ -157,4 +157,4 @@ buf_finish(Buf buf) {
     }
 }
 
-#endif /* __OX_BUF_H__ */
+#endif /* OX_BUF_H */

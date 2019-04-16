@@ -3,10 +3,10 @@
  * All rights reserved.
  */
 
-#ifndef __OX_SAX_HAS_H__
-#define __OX_SAX_HAS_H__
+#ifndef OX_SAX_HAS_H
+#define OX_SAX_HAS_H
 
-typedef struct _Has {
+typedef struct _has {
     int         instruct;
     int         end_instruct;
     int         attr;
@@ -50,4 +50,4 @@ has_init(Has has, VALUE handler) {
     has->column = (Qtrue == rb_ivar_defined(handler, ox_at_column_id));
 }
 
-#endif /* __OX_SAX_HAS_H__ */
+#endif /* OX_SAX_HAS_H */
