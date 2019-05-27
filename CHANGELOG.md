@@ -1,4 +1,8 @@
 
+## 2.10.1 - May 27, 2019
+
+  - Remove extra space from doctype dump.
+
 ## 2.10.0 - August 26, 2018
 
   - `:element_key_mod` and `:attr_key_mod` options were added to allow keys to

@@ -552,7 +552,7 @@ class Func < ::Test::Unit::TestCase
 <ps>after thought</ps>
 }
     expected = %{
-<!DOCTYPE HTML >
+<!DOCTYPE HTML>
 <html lang="en">
   <head garbage="trash">
     <bad attr="some&amp;#xthing">
@@ -583,7 +583,7 @@ class Func < ::Test::Unit::TestCase
 </hTml>
 }
     expected = %{
-<!DOCTYPE HTML >
+<!DOCTYPE HTML>
 <html lang="en">
   <head>
     <nonsense/>
