@@ -102,6 +102,7 @@ VALUE	ox_instruct_clas;
 VALUE	ox_parse_error_class;
 VALUE	ox_stringio_class;
 VALUE	ox_struct_class;
+VALUE	ox_syntax_error_class;
 VALUE	ox_time_class;
 
 Cache	ox_symbol_cache = 0;
@@ -1454,6 +1455,7 @@ void Init_ox() {
     ox_time_class = rb_const_get(rb_cObject, rb_intern("Time"));
     ox_date_class = rb_const_get(rb_cObject, rb_intern("Date"));
     ox_parse_error_class = rb_const_get_at(Ox, rb_intern("ParseError"));
+    ox_syntax_error_class = rb_const_get_at(Ox, rb_intern("SyntaxError"));
     ox_arg_error_class = rb_const_get_at(Ox, rb_intern("ArgError"));
     ox_struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
     ox_stringio_class = rb_const_get(rb_cObject, rb_intern("StringIO"));

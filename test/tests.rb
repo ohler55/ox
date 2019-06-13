@@ -301,6 +301,19 @@ class Func < ::Test::Unit::TestCase
     assert_equal('Test', loaded);
   end
 
+  def test_dump_invalid_character
+    assert_raise(Ox::SyntaxError) { Ox.dump("foo\x19bar") }
+  end
+
+  def test_unsupported_ox_version
+    assert_raise(Ox::SyntaxError) { Ox.parse(%{<?ox version="10"?><s>foobar</s>})}
+  end
+
+  def test_prolog_syntax_error
+    xml = %{<blah><?xml version="1.0" ?><s>Test</s></blah>}
+    assert_raise(Ox::SyntaxError) { Ox.parse(xml) }
+  end
+
   def test_xml_instruction
     Ox::default_options = $ox_object_options
     xml = Ox.dump("test", :mode => :object, :with_xml => false)

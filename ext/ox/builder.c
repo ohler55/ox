@@ -167,7 +167,7 @@ append_string(Builder b, const char *str, size_t size, const char *table, bool s
 		default:
 		    // Must be one of the invalid characters.
 		    if (!strip_invalid_chars) {
-			rb_raise(rb_eSyntaxError, "'\\#x%02x' is not a valid XML character.", *str);
+			rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *str);
 		    }
 		    break;
 		}

@@ -388,7 +388,7 @@ dump_str_value(Out out, const char *value, size_t size, const char *table) {
 	    default:
 		// Must be one of the invalid characters.
 		if (StrictEffort == out->opts->effort) {
-		    rb_raise(rb_eSyntaxError, "'\\#x%02x' is not a valid XML character.", *value);
+		    rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *value);
 		}
 		if (Yes == out->opts->allow_invalid) {
 		    *out->cur++ = '&';

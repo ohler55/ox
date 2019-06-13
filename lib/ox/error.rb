@@ -13,6 +13,10 @@ module Ox
   class ArgError < Error
   end # ArgError
 
+  # An Exception that is raised as a result of invalid XML syntax.
+  class SyntaxError < Error
+  end
+
   # An Exception raised if a path is not valid.
   class InvalidPath < Error
     # Create a new instance with the +path+ specified.
