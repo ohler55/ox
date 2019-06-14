@@ -978,7 +978,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
     char	*path;
     char	*xml;
     FILE	*f;
-    size_t	len;
+    off_t	len;
     VALUE	obj;
     struct _err	err;
 
@@ -989,7 +989,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
 	rb_raise(rb_eIOError, "%s\n", strerror(errno));
     }
     fseek(f, 0, SEEK_END);
-    len = ftell(f);
+    len = ftello(f);
     if (SMALL_XML < len) {
 	xml = ALLOC_N(char, len + 1);
     } else {

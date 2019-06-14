@@ -6,6 +6,8 @@
 #ifndef OX_SAX_BUF_H
 #define OX_SAX_BUF_H
 
+#include <stdio.h>
+
 typedef struct _buf {
     char	base[0x00001000];
     char	*head;
@@ -14,12 +16,12 @@ typedef struct _buf {
     char	*read_end;      /* one past last character read */
     char       	*pro;           /* protection start, buffer can not slide past this point */
     char        *str;           /* start of current string being read */
-    int		pos;
-    int		line;
-    int		col;
-    int		pro_pos;
-    int		pro_line;
-    int		pro_col;
+    off_t	pos;
+    off_t	line;
+    off_t	col;
+    off_t	pro_pos;
+    off_t	pro_line;
+    off_t	pro_col;
     int		(*read_func)(struct _buf *buf);
     union {
         int     	fd;
@@ -30,10 +32,10 @@ typedef struct _buf {
 } *Buf;
 
 typedef struct _checkPt {
-    int		pro_dif;
-    int		pos;
-    int		line;
-    int		col;
+    off_t	pro_dif;
+    off_t	pos;
+    off_t	line;
+    off_t	col;
     char	c;
 } *CheckPt;
 
