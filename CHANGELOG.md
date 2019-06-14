@@ -1,6 +1,6 @@
 # Changelog
 
-A changes to the Ox gem are documented here. Releases follow semantic versioning.
+All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
 ## [Unreleased]
 
