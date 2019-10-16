@@ -22,7 +22,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Support
 
-[Get supported Ox with a Tidelift Subscription.](https://tidelift.com/subscription/pkg/rubygems-ox?utm_source=rubygems-ox&utm_medium=referral&utm_campaign=readme)
+[Get supported Ox with a Tidelift Subscription.](https://tidelift.com/subscription/pkg/rubygems-ox?utm_source=rubygems-ox&utm_medium=referral&utm_campaign=readme) Security updates are [supported](https://tidelift.com/security).
 
 ## Links of Interest
 
