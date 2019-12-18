@@ -301,7 +301,14 @@ dump_start(Out out, Element e) {
 	fill_attr(out, 'i', s, end - s);
     }
     if (e->closed) {
-	*out->cur++ = '/';
+	if (out->opts->no_empty) {
+	    *out->cur++ = '>';
+	    *out->cur++ = '<';
+	    *out->cur++ = '/';
+	    *out->cur++ = e->type;
+	} else {
+	    *out->cur++ = '/';
+	}
     }
     *out->cur++ = '>';
     *out->cur = '\0';
@@ -1102,6 +1109,11 @@ dump_gen_element(VALUE obj, int depth, Out out) {
 	if (do_indent) {
 	    fill_indent(out, indent);
 	}
+	*out->cur++ = '<';
+	*out->cur++ = '/';
+	fill_value(out, name, nlen);
+    } else if (out->opts->no_empty) {
+	*out->cur++ = '>';
 	*out->cur++ = '<';
 	*out->cur++ = '/';
 	fill_value(out, name, nlen);
