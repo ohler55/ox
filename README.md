@@ -22,7 +22,7 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 ## Support
 
-[Get supported Ox with a Tidelift Subscription.](https://tidelift.com/subscription/pkg/rubygems-ox?utm_source=rubygems-ox&utm_medium=referral&utm_campaign=readme)
+[Get supported Ox with a Tidelift Subscription.](https://tidelift.com/subscription/pkg/rubygems-ox?utm_source=rubygems-ox&utm_medium=referral&utm_campaign=readme) Security updates are [supported](https://tidelift.com/security).
 
 ## Links of Interest
 
@@ -108,7 +108,13 @@ obj2 = Ox.parse_obj(xml)
 ```ruby
 require 'ox'
 
-doc = Ox::Document.new(:version => '1.0')
+doc = Ox::Document.new
+
+instruct = Ox::Instruct.new(:xml)
+instruct[:version] = '1.0'
+instruct[:encoding] = 'UTF-8'
+instruct[:standalone] = 'yes'
+doc << instruct
 
 top = Ox::Element.new('top')
 top[:name] = 'sample'
@@ -120,20 +126,31 @@ top << mid
 
 bot = Ox::Element.new('bottom')
 bot[:name] = 'third'
+bot << 'text at bottom'
 mid << bot
+
+other_elements = Ox::Element.new('otherElements')
+other_elements << Ox::CData.new('<sender>John Smith</sender>')
+other_elements << Ox::Comment.new('Director\'s commentary')
+# other_elements << Ox::DocType.new('content')
+other_elements << Ox::Raw.new('<warning>Be carefull with this! Direct inject into XML!</warning>')
+top << other_elements
+
 
 xml = Ox.dump(doc)
 
 # xml =
+# <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 # <top name="sample">
 #   <middle name="second">
-#     <bottom name="third"/>
+#     <bottom name="third">text at bottom</bottom>
 #   </middle>
+#   <otherElements>
+#     <![CDATA[<sender>John Smith</sender>]]>
+#     <!-- Director's commentary -->
+#     <warning>Be carefull with this! Direct inject into XML!</warning>
+#   </otherElements>
 # </top>
-
-doc2 = Ox.parse(xml)
-puts "Same? #{doc == doc2}"
-# true
 ```
 
 ### HTML Parsing:

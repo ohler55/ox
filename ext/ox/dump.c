@@ -395,7 +395,7 @@ dump_str_value(Out out, const char *value, size_t size, const char *table) {
 	    default:
 		// Must be one of the invalid characters.
 		if (StrictEffort == out->opts->effort) {
-		    rb_raise(rb_eSyntaxError, "'\\#x%02x' is not a valid XML character.", *value);
+		    rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *value);
 		}
 		if (Yes == out->opts->allow_invalid) {
 		    *out->cur++ = '&';
@@ -1188,7 +1188,7 @@ dump_gen_nodes(VALUE obj, int depth, Out out) {
 	    } else if (ox_cdata_clas == clas) {
 		dump_gen_val_node(*np, d2, "<![CDATA[", 9, "]]>", 3, out);
 	    } else if (ox_doctype_clas == clas) {
-		dump_gen_val_node(*np, d2, "<!DOCTYPE ", 10, " >", 2, out);
+		dump_gen_val_node(*np, d2, "<!DOCTYPE ", 10, ">", 1, out);
 	    } else {
 		rb_raise(rb_eTypeError, "Unexpected class, %s, while dumping generic XML\n", rb_class2name(clas));
 	    }

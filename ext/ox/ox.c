@@ -102,6 +102,7 @@ VALUE	ox_instruct_clas;
 VALUE	ox_parse_error_class;
 VALUE	ox_stringio_class;
 VALUE	ox_struct_class;
+VALUE	ox_syntax_error_class;
 VALUE	ox_time_class;
 
 Cache	ox_symbol_cache = 0;
@@ -995,7 +996,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
     char	*path;
     char	*xml;
     FILE	*f;
-    size_t	len;
+    off_t	len;
     VALUE	obj;
     struct _err	err;
 
@@ -1006,7 +1007,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
 	rb_raise(rb_eIOError, "%s\n", strerror(errno));
     }
     fseek(f, 0, SEEK_END);
-    len = ftell(f);
+    len = ftello(f);
     if (SMALL_XML < len) {
 	xml = ALLOC_N(char, len + 1);
     } else {
@@ -1476,6 +1477,7 @@ void Init_ox() {
     ox_time_class = rb_const_get(rb_cObject, rb_intern("Time"));
     ox_date_class = rb_const_get(rb_cObject, rb_intern("Date"));
     ox_parse_error_class = rb_const_get_at(Ox, rb_intern("ParseError"));
+    ox_syntax_error_class = rb_const_get_at(Ox, rb_intern("SyntaxError"));
     ox_arg_error_class = rb_const_get_at(Ox, rb_intern("ArgError"));
     ox_struct_class = rb_const_get(rb_cObject, rb_intern("Struct"));
     ox_stringio_class = rb_const_get(rb_cObject, rb_intern("StringIO"));

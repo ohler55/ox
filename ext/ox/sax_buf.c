@@ -9,7 +9,7 @@
 #include <strings.h>
 #include <sys/types.h>
 #if NEEDS_UIO
-#include <sys/uio.h>    
+#include <sys/uio.h>
 #endif
 #include <unistd.h>
 #include <time.h>
@@ -84,7 +84,7 @@ ox_sax_buf_read(Buf buf) {
         if (0 >= shift) { /* no space left so allocate more */
             char        *old = buf->head;
             size_t      size = buf->end - buf->head + BUF_PAD;
-        
+
             if (buf->head == buf->base) {
                 buf->head = ALLOC_N(char, size * 2);
                 memcpy(buf->head, old, size);
@@ -126,7 +126,7 @@ rescue_cb(VALUE rbuf, VALUE err) {
 	Buf	buf = (Buf)rbuf;
 
         //ox_sax_drive_cleanup(buf->dr); called after exiting protect
-        rb_raise(err, "at line %d, column %d\n", buf->line, buf->col);
+        rb_raise(err, "at line %ld, column %ld\n", (long)buf->line, (long)buf->col);
     }
     return Qfalse;
 }
@@ -225,4 +225,3 @@ read_from_str(Buf buf) {
 
     return 0;
 }
-
