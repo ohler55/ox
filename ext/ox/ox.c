@@ -1014,7 +1014,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
 	xml = ALLOCA_N(char, len + 1);
     }
     fseek(f, 0, SEEK_SET);
-    if (len != fread(xml, 1, len, f)) {
+    if ((size_t)len != fread(xml, 1, len, f)) {
 	ox_err_set(&err, rb_eLoadError, "Failed to read %ld bytes from %s.\n", (long)len, path);
 	obj = Qnil;
     } else {

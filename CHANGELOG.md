@@ -4,6 +4,10 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ## [Unreleased]
 
+## [2.12.0] - 2019-12-18
+
+- Add `no_empty` option to not allow <xyz/> and use <xyz></xyz> instead.
+
 ## [2.11.0] - 2019-06-14
 
 ### Changed
