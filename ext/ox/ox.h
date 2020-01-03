@@ -123,26 +123,27 @@ typedef struct _circArray {
 } *CircArray;
 
 typedef struct _options {
-    char		encoding[64];	/* encoding, stored in the option to avoid GC invalidation in default values */
-    char		margin[128];	/* left margin for dumping */
-    int			indent;		/* indention for dump, default 2 */
-    int			trace;		/* trace level */
-    char		margin_len;	/* margin length */
-    char		with_dtd;	/* YesNo */
-    char		with_xml;	/* YesNo */
-    char		with_instruct;	/* YesNo */
-    char		circular;	/* YesNo */
-    char		xsd_date;	/* YesNo */
-    char		mode;		/* LoadMode */
-    char		effort;		/* Effort */
-    char		sym_keys;	/* symbolize keys */
-    char		skip;		/* skip mode */
-    char		smart;		/* YesNo sax smart mode */
-    char		convert_special;/* boolean true or false */
-    char		allow_invalid;	/* YesNo */
-    char		inv_repl[12];	/* max 10 valid characters, first character is the length */
-    char		strip_ns[64];	/* namespace to strip, \0 is no-strip, \* is all, else only matches */
-    struct _hints	*html_hints;	/* html hints */
+    char		encoding[64];	// encoding, stored in the option to avoid GC invalidation in default values
+    char		margin[128];	// left margin for dumping
+    int			indent;		// indention for dump, default 2
+    int			trace;		// trace level
+    char		margin_len;	// margin length
+    char		with_dtd;	// YesNo
+    char		with_xml;	// YesNo
+    char		with_instruct;	// YesNo
+    char		circular;	// YesNo
+    char		xsd_date;	// YesNo
+    char		mode;		// LoadMode
+    char		effort;		// Effort
+    char		sym_keys;	// symbolize keys
+    char		skip;		// skip mode
+    char		smart;		// YesNo sax smart mode
+    char		convert_special;// boolean true or false
+    char		allow_invalid;	// YesNo
+    char		no_empty;	// boolean - no empty elements when dumping
+    char		inv_repl[12];	// max 10 valid characters, first character is the length
+    char		strip_ns[64];	// namespace to strip, \0 is no-strip, \* is all, else only matches
+    struct _hints	*html_hints;	// html hints
     VALUE		attr_key_mod;
     VALUE		element_key_mod;
 #if HAS_ENCODING_SUPPORT
@@ -158,13 +159,13 @@ typedef struct _options {
 struct _pInfo {
     struct _helperStack	helpers;
     struct _err		err;
-    char		*str;		//buffer being read from
+    char		*str;		// buffer being read from
     char		*end;		// end of original string
     char		*s;		// current position in buffer
     VALUE		obj;
     ParseCallbacks	pcb;
     CircArray		circ_array;
-    unsigned long	id;		//set for text types when cirs_array is set
+    unsigned long	id;		// set for text types when cirs_array is set
     Options		options;
     char		last;		// last character read, rarely set
 };

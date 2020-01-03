@@ -39,6 +39,7 @@ $ox_object_options = {
   :smart=>false,
   :convert_special=>true,
   :effort=>:strict,
+  :no_empty=>false,
   :invalid_replace=>'',
   :strip_namespace=>false,
   :overlay=>nil,
@@ -62,6 +63,7 @@ $ox_generic_options = {
   :smart=>false,
   :convert_special=>true,
   :effort=>:strict,
+  :no_empty=>false,
   :invalid_replace=>'',
   :strip_namespace=>false,
   :overlay=>nil,
@@ -99,6 +101,7 @@ class Func < ::Test::Unit::TestCase
       :smart=>true,
       :convert_special=>false,
       :effort=>:tolerant,
+      :no_empty=>true,
       :invalid_replace=>'*',
       :strip_namespace=>'spaced',
       :overlay=>nil,
@@ -803,6 +806,15 @@ class Func < ::Test::Unit::TestCase
       return
     end
     assert(false)
+  end
+
+  def test_no_empty
+    Ox::default_options = $ox_generic_options
+    h = {}
+    x = Ox.dump(h, no_empty: true)
+    assert_equal(x, "<h></h>\n")
+    x = Ox.dump(Ox::Element.new('empty'), no_empty: true)
+    assert_equal(x, "\n<empty></empty>\n")
   end
 
   def test_mutex

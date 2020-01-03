@@ -127,6 +127,7 @@ static VALUE	limited_sym;
 static VALUE	margin_sym;
 static VALUE	mode_sym;
 static VALUE	nest_ok_sym;
+static VALUE	no_empty_sym;
 static VALUE	object_sym;
 static VALUE	off_sym;
 static VALUE	opt_format_sym;
@@ -177,8 +178,9 @@ struct _options	 ox_default_options = {
     Yes,		// sym_keys
     SpcSkip,		// skip
     No,			// smart
-    1,			// convert_special
+    true,		// convert_special
     No,			// allow_invalid
+    false,		// no_empty
     { '\0' },		// inv_repl
     { '\0' },		// strip_ns
     NULL,		// html_hints
@@ -293,6 +295,7 @@ hints_to_overlay(Hints hints) {
  * - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  * - _:convert_special_ [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
  * - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ * - _:no_empty_ [true|false|nil] flag indicating there should be no empty elements in a dump
  * - _:strip_namespace_ [String|true|false] false or "" results in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  * - _:overlay_ [Hash] a Hash of keys that match html element names and values that are one of
  *   - _:active_ - make the normal callback for the element
@@ -326,6 +329,7 @@ get_def_opts(VALUE self) {
     rb_hash_aset(opts, element_key_mod_sym, ox_default_options.element_key_mod);
     rb_hash_aset(opts, smart_sym, (Yes == ox_default_options.smart) ? Qtrue : ((No == ox_default_options.smart) ? Qfalse : Qnil));
     rb_hash_aset(opts, convert_special_sym, (ox_default_options.convert_special) ? Qtrue : Qfalse);
+    rb_hash_aset(opts, no_empty_sym, (ox_default_options.no_empty) ? Qtrue : Qfalse);
     switch (ox_default_options.mode) {
     case ObjMode:		rb_hash_aset(opts, mode_sym, object_sym);		break;
     case GenMode:		rb_hash_aset(opts, mode_sym, generic_sym);		break;
@@ -540,6 +544,17 @@ set_def_opts(VALUE self, VALUE opts) {
 	ox_default_options.convert_special = 0;
     } else {
 	rb_raise(ox_parse_error_class, ":convert_special must be true or false.\n");
+    }
+
+    v = rb_hash_lookup(opts, no_empty_sym);
+    if (Qnil == v) {
+	// no change
+    } else if (Qtrue == v) {
+	ox_default_options.no_empty = 1;
+    } else if (Qfalse == v) {
+	ox_default_options.no_empty = 0;
+    } else {
+	rb_raise(ox_parse_error_class, ":no_empty must be true or false.\n");
     }
 
     v = rb_hash_aref(opts, invalid_replace_sym);
@@ -777,6 +792,9 @@ load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, E
 	if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
 	    options.convert_special = (Qfalse != v);
 	}
+	if (Qnil != (v = rb_hash_lookup(h, no_empty_sym))) {
+	    options.no_empty = (Qfalse != v);
+	}
 
 	v = rb_hash_lookup(h, invalid_replace_sym);
 	if (Qnil == v) {
@@ -996,7 +1014,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
 	xml = ALLOCA_N(char, len + 1);
     }
     fseek(f, 0, SEEK_SET);
-    if (len != fread(xml, 1, len, f)) {
+    if ((size_t)len != fread(xml, 1, len, f)) {
 	ox_err_set(&err, rb_eLoadError, "Failed to read %ld bytes from %s.\n", (long)len, path);
 	obj = Qnil;
     } else {
@@ -1208,6 +1226,9 @@ parse_dump_options(VALUE ropts, Options copts) {
 	    }
 	    strncpy(copts->encoding, StringValuePtr(v), sizeof(copts->encoding) - 1);
 	}
+	if (Qnil != (v = rb_hash_lookup(ropts, no_empty_sym))) {
+	    copts->no_empty = (v == Qtrue);
+	}
 	if (Qnil != (v = rb_hash_lookup(ropts, effort_sym))) {
 	    if (auto_define_sym == v) {
 		copts->effort = AutoEffort;
@@ -1275,6 +1296,7 @@ parse_dump_options(VALUE ropts, Options copts) {
  * - +obj+ [Object] Object to serialize as an XML document String
  * - +options+ [Hash] formating options
  *   - *:indent* [Fixnum] format expected
+ *   - *:no_empty* [true|false] if true don't output empty elements
  *   - *:xsd_date* [true|false] use XSD date format if true, default: false
  *   - *:circular* [true|false] allow circular references, default: false
  *   - *:strict|:tolerant]* [ :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
@@ -1480,6 +1502,7 @@ void Init_ox() {
     margin_sym = ID2SYM(rb_intern("margin"));			rb_gc_register_address(&margin_sym);
     mode_sym = ID2SYM(rb_intern("mode"));			rb_gc_register_address(&mode_sym);
     nest_ok_sym = ID2SYM(rb_intern("nest_ok"));			rb_gc_register_address(&nest_ok_sym);
+    no_empty_sym = ID2SYM(rb_intern("no_empty")); 		rb_gc_register_address(&no_empty_sym);
     object_sym = ID2SYM(rb_intern("object"));			rb_gc_register_address(&object_sym);
     off_sym = ID2SYM(rb_intern("off"));				rb_gc_register_address(&off_sym);
     opt_format_sym = ID2SYM(rb_intern("opt_format"));		rb_gc_register_address(&opt_format_sym);
