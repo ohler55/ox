@@ -2,23 +2,27 @@ os:
   - linux
   - osx
 
-language: ruby
+sudo: false
+env:
+  global:
+    - MAKE="make -j 2"
 
+language: ruby
 rvm:
+  - 2.3.8
   - 2.4.9
   - 2.5.7
   - 2.6.5
   - 2.7.0
 
-install: gem install test-unit
-
-before_script:
-  - gem build ox.gemspec
-  - gem install ox-*
-  - cd ext/ox
-  - ruby extconf.rb && make clean all
-  - cd ../..
-
-script:
-  - ./test/tests.rb
-  - ./test/sax/sax_test.rb
+matrix:
+  fast_finish: true
+  exclude:
+    - os: osx
+      rvm: 2.3.8
+    - os: osx
+      rvm: 2.4.9
+    - os: osx
+      rvm: 2.5.7
+    - os: osx
+      rvm: 2.6.5
