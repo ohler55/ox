@@ -17,7 +17,7 @@
 typedef struct _element {
     char	*name;
     char	buf[64];
-    int		len;
+    long	len;
     bool	has_child;
     bool	non_text_child;
 } *Element;
@@ -124,7 +124,7 @@ append_string(Builder b, const char *str, size_t size, const char *table, bool s
 	char	buf[256];
 	char	*end = buf + sizeof(buf) - 1;
 	char	*bp = buf;
-	int	i = size;
+	size_t	i = size;
 	int	fcnt;
 
 	for (; '\0' != *str && 0 < i; i--, str++) {
@@ -183,7 +183,7 @@ append_string(Builder b, const char *str, size_t size, const char *table, bool s
 static void
 append_sym_str(Builder b, VALUE v) {
     const char	*s;
-    int		len;
+    long	len;
 
     switch (rb_type(v)) {
     case T_STRING:
@@ -219,7 +219,9 @@ i_am_a_child(Builder b, bool is_text) {
 }
 
 static int
-append_attr(VALUE key, VALUE value, Builder b) {
+append_attr(VALUE key, VALUE value, VALUE bv) {
+    Builder	b = (Builder)bv;
+
     buf_append(&b->buf, ' ');
     b->col++;
     b->pos++;
@@ -600,7 +602,7 @@ builder_element(int argc, VALUE *argv, VALUE self) {
     Builder		b = (Builder)DATA_PTR(self);
     Element		e;
     const char		*name;
-    int			len;
+    long		len;
 
     if (1 > argc) {
 	rb_raise(ox_arg_error_class, "missing element name");
@@ -662,7 +664,7 @@ static VALUE
 builder_void_element(int argc, VALUE *argv, VALUE self) {
     Builder	b = (Builder)DATA_PTR(self);
     const char	*name;
-    int		len;
+    long	len;
 
     if (1 > argc) {
 	rb_raise(ox_arg_error_class, "missing element name");

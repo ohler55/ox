@@ -55,7 +55,7 @@ static char		read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml,
 static char		read_name_token(SaxDrive dr);
 static char		read_quoted_value(SaxDrive dr);
 
-static void		end_element_cb(SaxDrive dr, VALUE name, int pos, int line, int col, Hint h);
+static void		end_element_cb(SaxDrive dr, VALUE name, long pos, long line, long col, Hint h);
 
 static void		hint_clear_empty(SaxDrive dr);
 static Nv		hint_try_close(SaxDrive dr, const char *name);
@@ -221,7 +221,7 @@ ox_sax_drive_cleanup(SaxDrive dr) {
 }
 
 static void
-ox_sax_drive_error_at(SaxDrive dr, const char *msg, int pos, int line, int col) {
+ox_sax_drive_error_at(SaxDrive dr, const char *msg, off_t pos, off_t line, off_t col) {
     if (dr->has.error) {
         VALUE   args[3];
 
@@ -301,11 +301,11 @@ parse(SaxDrive dr) {
 		    }
 		    c = read_comment(dr);
 		} else {
-		    int	i;
-		    int	spaced = 0;
-		    int	pos = dr->buf.pos + 1;
-		    int	line = dr->buf.line;
-		    int	col = dr->buf.col + 1;
+		    int		i;
+		    int		spaced = 0;
+		    off_t	pos = dr->buf.pos + 1;
+		    off_t	line = dr->buf.line;
+		    off_t	col = dr->buf.col + 1;
 
 		    if (is_white(c)) {
 			spaced = 1;
@@ -359,9 +359,9 @@ parse(SaxDrive dr) {
 		parent = stack_peek(&dr->stack);
 		if (0 != parent && 0 == parent->childCnt && dr->has.text && !dr->blocked) {
 		    VALUE	args[1];
-		    int		pos = dr->buf.pos;
-		    int		line = dr->buf.line;
-		    int		col = dr->buf.col - 1;
+		    off_t	pos = dr->buf.pos;
+		    off_t	line = dr->buf.line;
+		    off_t	col = dr->buf.col - 1;
 
 		    args[0] = rb_str_new2("");
 #if HAS_ENCODING_SUPPORT
@@ -479,9 +479,9 @@ read_instruction(SaxDrive dr) {
     int		coff;
     VALUE	target = Qnil;
     int		is_xml;
-    int		pos = dr->buf.pos - 1;
-    int		line = dr->buf.line;
-    int		col = dr->buf.col - 1;
+    off_t	pos = dr->buf.pos - 1;
+    off_t	line = dr->buf.line;
+    off_t	col = dr->buf.col - 1;
 
     buf_protect(&dr->buf);
     if ('\0' == (c = read_name_token(dr))) {
@@ -511,7 +511,7 @@ read_instruction(SaxDrive dr) {
     line = dr->buf.line;
     col = dr->buf.col;
     read_content(dr, content, sizeof(content) - 1);
-    coff = dr->buf.tail - dr->buf.head;
+    coff = (int)(dr->buf.tail - dr->buf.head);
     buf_reset(&dr->buf);
     dr->err = 0;
     c = read_attrs(dr, c, '?', '?', is_xml, 1, NULL);
@@ -523,7 +523,7 @@ read_instruction(SaxDrive dr) {
 	    VALUE   args[1];
 
 	    if (dr->options.convert_special) {
-		ox_sax_collapse_special(dr, content, pos, line, col);
+		ox_sax_collapse_special(dr, content, (int)pos, (int)line, (int)col);
 	    }
 	    args[0] = rb_str_new2(content);
 #if HAS_ENCODING_SUPPORT
@@ -627,9 +627,9 @@ read_delimited(SaxDrive dr, char end) {
  */
 static char
 read_doctype(SaxDrive dr) {
-    int		pos = dr->buf.pos - 9;
-    int		line = dr->buf.line;
-    int		col = dr->buf.col - 9;
+    long	pos = (long)(dr->buf.pos - 9);
+    long	line = (long)(dr->buf.line);
+    long	col = (long)(dr->buf.col - 9);
     char	*s;
     Nv		parent = stack_peek(&dr->stack);
 
@@ -673,9 +673,9 @@ read_cdata(SaxDrive dr) {
     char        	c;
     char        	zero = '\0';
     int         	end = 0;
-    int			pos = dr->buf.pos - 9;
-    int			line = dr->buf.line;
-    int			col = dr->buf.col - 9;
+    long		pos = (long)(dr->buf.pos - 9);
+    long		line = (long)(dr->buf.line);
+    long		col = (long)(dr->buf.col - 9);
     struct _checkPt	cp = CHECK_PT_INIT;
     Nv			parent = stack_peek(&dr->stack);
 
@@ -768,9 +768,9 @@ read_comment(SaxDrive dr) {
     char        	c;
     char        	zero = '\0';
     int         	end = 0;
-    int			pos = dr->buf.pos - 4;
-    int			line = dr->buf.line;
-    int			col = dr->buf.col - 4;
+    long		pos = (long)(dr->buf.pos - 4);
+    long		line = (long)(dr->buf.line);
+    long		col = (long)(dr->buf.col - 4);
     struct _checkPt	cp = CHECK_PT_INIT;
 
     buf_backup(&dr->buf); /* back up to the start in case the cdata is empty */
@@ -864,9 +864,9 @@ read_element_start(SaxDrive dr) {
     volatile VALUE	name = Qnil;
     char        	c;
     int			closed;
-    int			pos = dr->buf.pos;
-    int			line = dr->buf.line;
-    int			col = dr->buf.col;
+    long		pos = (long)(dr->buf.pos);
+    long		line = (long)(dr->buf.line);
+    long		col = (long)(dr->buf.col);
     Hint		h = NULL;
     int			stackless = 0;
     Nv			parent = stack_peek(&dr->stack);
@@ -1020,9 +1020,9 @@ static char
 read_element_end(SaxDrive dr) {
     VALUE       name = Qnil;
     char        c;
-    int		pos = dr->buf.pos - 1;
-    int		line = dr->buf.line;
-    int		col = dr->buf.col - 1;
+    long	pos = (long)(dr->buf.pos - 1);
+    long	line = (long)(dr->buf.line);
+    long	col = (long)(dr->buf.col - 1);
     Nv		nv;
     Hint	h = NULL;
 
@@ -1118,9 +1118,9 @@ static char
 read_text(SaxDrive dr) {
     VALUE	args[1];
     char        c;
-    int		pos = dr->buf.pos;
-    int		line = dr->buf.line;
-    int		col = dr->buf.col - 1;
+    long	pos = (long)(dr->buf.pos);
+    long	line = (long)(dr->buf.line);
+    long	col = (long)(dr->buf.col - 1);
     Nv		parent = stack_peek(&dr->stack);
     int		allWhite = 1;
 
@@ -1266,9 +1266,9 @@ static char
 read_jump(SaxDrive dr, const char *pat) {
     VALUE	args[1];
     char        c;
-    int		pos = dr->buf.pos;
-    int		line = dr->buf.line;
-    int		col = dr->buf.col - 1;
+    long	pos = (long)(dr->buf.pos);
+    long	line = (long)(dr->buf.line);
+    long	col = (long)(dr->buf.col - 1);
     Nv		parent = stack_peek(&dr->stack);
 
     buf_protect(&dr->buf);
@@ -1330,9 +1330,9 @@ static char
 read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req, Hint h) {
     VALUE       name = Qnil;
     int         is_encoding = 0;
-    int		pos;
-    int		line;
-    int		col;
+    off_t	pos;
+    off_t	line;
+    off_t	col;
     char	*attr_value;
 
     // already protected by caller
@@ -1580,7 +1580,7 @@ read_10_uint64(char *b, uint64_t *up) {
 }
 
 int
-ox_sax_collapse_special(SaxDrive dr, char *str, int pos, int line, int col) {
+ox_sax_collapse_special(SaxDrive dr, char *str, long pos, long line, long col) {
     char        *s = str;
     char        *b = str;
 
@@ -1731,7 +1731,7 @@ hint_try_close(SaxDrive dr, const char *name) {
 }
 
 static void
-end_element_cb(SaxDrive dr, VALUE name, int pos, int line, int col, Hint h) {
+end_element_cb(SaxDrive dr, VALUE name, long pos, long line, long col, Hint h) {
     if (dr->has.end_element && 0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
 	if (dr->has.pos) {
 	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));

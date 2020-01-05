@@ -54,7 +54,7 @@ static void	dump_obj(ID aid, VALUE obj, int depth, Out out);
 static void	dump_gen_doc(VALUE obj, int depth, Out out);
 static void	dump_gen_element(VALUE obj, int depth, Out out);
 static void	dump_gen_instruct(VALUE obj, int depth, Out out);
-static int	dump_gen_attr(VALUE key, VALUE value, Out out);
+static int	dump_gen_attr(VALUE key, VALUE value, VALUE ov);
 static int	dump_gen_nodes(VALUE obj, int depth, Out out);
 static void	dump_gen_val_node(VALUE obj, int depth,
 				  const char *pre, size_t plen,
@@ -67,12 +67,12 @@ static void	grow(Out out, size_t len);
 
 static void	dump_value(Out out, const char *value, size_t size);
 static void	dump_str_value(Out out, const char *value, size_t size, const char *table);
-static int	dump_var(ID key, VALUE value, Out out);
+static int	dump_var(ID key, VALUE value, VALUE ov);
 static void	dump_num(Out out, VALUE obj);
 static void	dump_date(Out out, VALUE obj);
 static void	dump_time_thin(Out out, VALUE obj);
 static void	dump_time_xsd(Out out, VALUE obj);
-static int	dump_hash(VALUE key, VALUE value, Out out);
+static int	dump_hash(VALUE key, VALUE value, VALUE ov);
 
 static int	is_xml_friendly(const uchar *str, int len, const char *table);
 
@@ -1005,7 +1005,9 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 }
 
 static int
-dump_var(ID key, VALUE value, Out out) {
+dump_var(ID key, VALUE value, VALUE ov) {
+    Out	out = (Out)ov;
+
     if (T_DATA == rb_type(value) && key == ox_mesg_id) {
 	/* There is a secret recipe that keeps Exception mesg attributes as a
 	 * T_DATA until it is needed. The safe way around this hack is to call
@@ -1022,7 +1024,9 @@ dump_var(ID key, VALUE value, Out out) {
 }
 
 static int
-dump_hash(VALUE key, VALUE value, Out out) {
+dump_hash(VALUE key, VALUE value, VALUE ov) {
+    Out	out = (Out)ov;
+
     dump_obj(0, key, out->depth, out);
     dump_obj(0, value, out->depth, out);
 
@@ -1198,7 +1202,9 @@ dump_gen_nodes(VALUE obj, int depth, Out out) {
 }
 
 static int
-dump_gen_attr(VALUE key, VALUE value, Out out) {
+dump_gen_attr(VALUE key, VALUE value, VALUE ov) {
+    Out	out = (Out)ov;
+
     const char	*ks;
     size_t	klen;
     size_t	size;

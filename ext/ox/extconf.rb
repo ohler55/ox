@@ -20,7 +20,7 @@ dflags = {
   'RUBY_VERSION_MICRO' => version[2],
   'HAS_RB_TIME_TIMESPEC' => ('ruby' == type && ('1.9.3' == RUBY_VERSION)) ? 1 : 0,
   #'HAS_RB_TIME_TIMESPEC' => ('ruby' == type && ('1.9.3' == RUBY_VERSION || '2' <= version[0])) ? 1 : 0,
-  'HAS_TM_GMTOFF' => ('ruby' == type && (('1' == version[0] && '9' == version[1]) || '2' <= version[0]) && 
+  'HAS_TM_GMTOFF' => ('ruby' == type && (('1' == version[0] && '9' == version[1]) || '2' <= version[0]) &&
                       !(platform.include?('cygwin') || platform.include?('solaris') || platform.include?('linux') || RUBY_PLATFORM =~ /(win|w)32$/)) ? 1 : 0,
   'HAS_ENCODING_SUPPORT' => (('ruby' == type || 'rubinius' == type || 'macruby' == type) &&
                              (('1' == version[0] && '9' == version[1]) || '2' <= version[0])) ? 1 : 0,
@@ -62,6 +62,10 @@ dflags.each do |k,v|
 end
 $CPPFLAGS += ' -Wall'
 #puts "*** $CPPFLAGS: #{$CPPFLAGS}"
+CONFIG['warnflags'].slice!(/ -Wsuggest-attribute=format/)
+CONFIG['warnflags'].slice!(/ -Wdeclaration-after-statement/)
+CONFIG['warnflags'].slice!(/ -Wmissing-noreturn/)
+
 create_makefile(extension_name)
 
 %x{make clean}
