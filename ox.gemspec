@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.homepage = "http://www.ohler.com/ox"
   s.summary = "A fast XML parser and object serializer."
   s.description = %{A fast XML parser and object serializer that uses only standard C lib.
-            
+
 Optimized XML (Ox), as the name implies was written to provide speed optimized
 XML handling. It was designed to be an alternative to Nokogiri and other Ruby
 XML parsers for generic XML parsing and as an alternative to Marshal for Object
@@ -27,6 +27,4 @@ serialization. }
 
   s.extra_rdoc_files = ['README.md', 'CHANGELOG.md']
   s.rdoc_options = ['--main', 'README.md', '--title', 'Ox Documentation', '--exclude', 'extconf.rb']
-  
-  s.rubyforge_project = 'ox'
 end
