@@ -121,7 +121,7 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
     if (DEBUG <= options->trace) {
 	printf("Parsing xml:\n%s\n", xml);
     }
-    /* initialize parse info */
+    // initialize parse info
     helper_stack_init(&pi.helpers);
     // Protect against GC
     wrap = Data_Wrap_Struct(rb_cObject, mark_pi_cb, NULL, &pi);
@@ -134,8 +134,11 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
     pi.obj = Qnil;
     pi.circ_array = 0;
     pi.options = options;
+    pi.marked = NULL;
+    pi.mark_size = 0;
+    pi.mark_cnt = 0;
     while (1) {
-	next_non_white(&pi);	/* skip white space */
+	next_non_white(&pi);	// skip white space
 	if ('\0' == *pi.s) {
 	    break;
 	}
@@ -143,31 +146,31 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
 	    *endp = pi.s;
 	    break;
 	}
-	if ('<' != *pi.s) {		/* all top level entities start with < */
+	if ('<' != *pi.s) {		// all top level entities start with <
 	    set_error(err, "invalid format, expected <", pi.str, pi.s);
 	    helper_stack_cleanup(&pi.helpers);
 	    return Qnil;
 	}
-	pi.s++;		/* past < */
+	pi.s++;		// past <
 	switch (*pi.s) {
-	case '?':	/* processing instruction */
+	case '?':	// processing instruction
 	    pi.s++;
 	    read_instruction(&pi);
 	    break;
-	case '!':	/* comment or doctype */
+	case '!':	// comment or doctype
 	    pi.s++;
 	    if ('\0' == *pi.s) {
 		set_error(err, "invalid format, DOCTYPE or comment not terminated", pi.str, pi.s);
 		helper_stack_cleanup(&pi.helpers);
 		return Qnil;
 	    } else if ('-' == *pi.s) {
-		pi.s++;	/* skip - */
+		pi.s++;	// skip -
 		if ('-' != *pi.s) {
 		    set_error(err, "invalid format, bad comment format", pi.str, pi.s);
 		    helper_stack_cleanup(&pi.helpers);
 		    return Qnil;
 		} else {
-		    pi.s++;	/* skip second - */
+		    pi.s++;	// skip second -
 		    read_comment(&pi);
 		}
 	    } else if ((TolerantEffort == options->effort) ? 0 == strncasecmp("DOCTYPE", pi.s, 7) : 0 == strncmp("DOCTYPE", pi.s, 7)) {
@@ -229,8 +232,7 @@ gather_content(const char *src, char *content, size_t len) {
     return 0;
 }
 
-/* Entered after the "<?" sequence. Ready to read the rest.
- */
+// Entered after the "<?" sequence. Ready to read the rest.
 static void
 read_instruction(PInfo pi) {
     char		content[1024];
@@ -255,7 +257,7 @@ read_instruction(PInfo pi) {
     }
     next_non_white(pi);
     c = *pi->s;
-    *end = '\0'; /* terminate name */
+    *end = '\0'; // terminate name
     if ('?' != c) {
 	while ('?' != c) {
 	    pi->last = 0;
@@ -275,8 +277,8 @@ read_instruction(PInfo pi) {
 		attrs_ok = 0;
 		break;
 	    }
-	    *end = '\0'; /* terminate name */
-	    /* read value */
+	    *end = '\0'; // terminate name
+	    // read value
 	    next_non_white(pi);
 	    if (0 == (attr_value = read_quoted_value(pi))) {
 		attr_stack_cleanup(&attrs);
@@ -355,9 +357,8 @@ read_delimited(PInfo pi, char end) {
     }
 }
 
-/* Entered after the "<!DOCTYPE" sequence plus the first character after
- * that. Ready to read the rest.
- */
+// Entered after the "<!DOCTYPE" sequence plus the first character after
+// that. Ready to read the rest.
 static void
 read_doctype(PInfo pi) {
     char	*docType;
@@ -376,8 +377,7 @@ read_doctype(PInfo pi) {
     }
 }
 
-/* Entered after "<!--". Returns error code.
- */
+// Entered after "<!--". Returns error code.
 static void
 read_comment(PInfo pi) {
     char	*end;
@@ -406,16 +406,15 @@ read_comment(PInfo pi) {
 	    break;
 	}
     }
-    *end = '\0'; /* in case the comment was blank */
+    *end = '\0'; // in case the comment was blank
     pi->s = end + 3;
     if (0 != pi->pcb->add_comment) {
 	pi->pcb->add_comment(pi, comment);
     }
 }
 
-/* Entered after the '<' and the first character after that. Returns status
- * code.
- */
+// Entered after the '<' and the first character after that. Returns stat
+// code.
 static char*
 read_element(PInfo pi) {
     struct _attrStack	attrs;
@@ -439,7 +438,7 @@ read_element(PInfo pi) {
     c = *pi->s;
     *end = '\0';
     if ('/' == c) {
-	/* empty element, no attributes and no children */
+	// empty element, no attributes and no children
 	pi->s++;
 	if ('>' != *pi->s) {
 	    /*printf("*** '%s' ***\n", pi->s); */

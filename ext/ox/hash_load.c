@@ -13,17 +13,64 @@
 #include "ruby.h"
 #include "ox.h"
 
+#define MARK_INC	256
+
 // The approach taken for the hash and has_no_attrs parsing is to push just
 // the key on to the stack and then decide what to do on the way up/out.
 
 static VALUE
 create_top(PInfo pi) {
-    volatile VALUE       top = rb_hash_new();;
+    volatile VALUE       top = rb_hash_new();
 
     helper_stack_push(&pi->helpers, 0, top, HashCode);
     pi->obj = top;
 
     return top;
+}
+
+static void
+mark_value(PInfo pi, VALUE val) {
+    if (NULL == pi->marked) {
+	pi->marked = ALLOC_N(VALUE, MARK_INC);
+	pi->mark_size = MARK_INC;
+    } else if (pi->mark_size <= pi->mark_cnt) {
+	pi->mark_size += MARK_INC;
+	pi->marked = REALLOC_N(pi->marked, VALUE, pi->mark_size);
+    }
+    pi->marked[pi->mark_cnt] = val;
+    pi->mark_cnt++;
+}
+
+static bool
+marked(PInfo pi, VALUE val) {
+    if (NULL != pi->marked) {
+	VALUE	*vp = pi->marked + pi->mark_cnt - 1;
+
+	for (; pi->marked <= vp; vp--) {
+	    if (val == *vp) {
+		return true;
+	    }
+	}
+    }
+    return false;
+}
+
+static void
+unmark(PInfo pi, VALUE val) {
+    if (NULL != pi->marked) {
+	VALUE	*vp = pi->marked + pi->mark_cnt - 1;
+	int		i;
+
+	for (i = 0; pi->marked <= vp; vp--, i++) {
+	    if (val == *vp) {
+		for (; 0 < i; i--, vp++) {
+		    *vp = *(vp + 1);
+		}
+		pi->mark_cnt--;
+		break;
+	    }
+	}
+    }
 }
 
 static void
@@ -92,7 +139,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	}
 	a = rb_ary_new();
 	rb_ary_push(a, h);
-	rb_obj_taint(a); // flag indicating it is a unit, kind of a hack but it works
+	mark_value(pi, a);
 	helper_stack_push(&pi->helpers, rb_intern(ename), a, ArrayCode);
     } else {
 	helper_stack_push(&pi->helpers, rb_intern(ename), Qnil, NoCode);
@@ -108,15 +155,14 @@ add_element_no_attrs(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 }
 
 static int
-untaint_hash_cb(VALUE key, VALUE value, VALUE x) {
-    if (Qtrue == rb_obj_tainted(value)) {
-	rb_obj_untaint(value);
-    }
+umark_hash_cb(VALUE key, VALUE value, VALUE x) {
+    unmark((PInfo)x, value);
+
     return ST_CONTINUE;
 }
 
 static void
-end_element_core(PInfo pi, const char *ename, bool check_taint) {
+end_element_core(PInfo pi, const char *ename, bool check_marked) {
     Helper		e = helper_stack_pop(&pi->helpers);
     Helper		parent = helper_stack_peek(&pi->helpers);
     volatile VALUE	pobj = parent->obj;
@@ -161,8 +207,8 @@ end_element_core(PInfo pi, const char *ename, bool check_taint) {
     if (Qundef == found) {
 	rb_hash_aset(pobj, key, e->obj);
     } else if (RUBY_T_ARRAY == rb_type(found)) {
-	if (check_taint && Qtrue == rb_obj_tainted(found)) {
-	    rb_obj_untaint(found);
+	if (check_marked && marked(pi, found)) {
+	    unmark(pi, found);
 	    a = rb_ary_new();
 	    rb_ary_push(a, found);
 	    rb_ary_push(a, e->obj);
@@ -171,16 +217,16 @@ end_element_core(PInfo pi, const char *ename, bool check_taint) {
 	    rb_ary_push(found, e->obj);
 	}
     } else { // something there other than an array
-	if (check_taint && Qtrue == rb_obj_tainted(e->obj)) {
-	    rb_obj_untaint(e->obj);
+	if (check_marked && marked(pi, e->obj)) {
+	    unmark(pi, e->obj);
 	}
 	a = rb_ary_new();
 	rb_ary_push(a, found);
 	rb_ary_push(a, e->obj);
 	rb_hash_aset(pobj, key, a);
     }
-    if (check_taint && RUBY_T_HASH == rb_type(e->obj)) {
-	rb_hash_foreach(e->obj, untaint_hash_cb, Qnil);
+    if (check_marked && NULL != pi->marked && RUBY_T_HASH == rb_type(e->obj)) {
+	rb_hash_foreach(e->obj, umark_hash_cb, (VALUE)pi);
     }
 }
 
@@ -196,9 +242,7 @@ end_element_no_attrs(PInfo pi, const char *ename) {
 
 static void
 finish(PInfo pi) {
-    if (Qnil != pi->obj && RUBY_T_HASH == rb_type(pi->obj)) {
-	rb_hash_foreach(pi->obj, untaint_hash_cb, Qnil);
-    }
+    xfree(pi->marked);
 }
 
 struct _parseCallbacks   _ox_hash_callbacks = {

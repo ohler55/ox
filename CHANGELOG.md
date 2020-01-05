@@ -4,7 +4,17 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ## [Unreleased]
 
+## [2.12.1] - 2020-01-05
+
+Ruby 2.7.0
+
+### Fixed
+
+- Updated for Ruby 2.7.0. More strict type checking. Function signature changes, and `Object#taint` deprecated.
+
 ## [2.12.0] - 2019-12-18
+
+### Added
 
 - Add `no_empty` option to not allow <xyz/> and use <xyz></xyz> instead.
 

@@ -155,7 +155,7 @@ typedef struct _options {
 #endif
 } *Options;
 
-/* parse information structure */
+// parse information structure
 struct _pInfo {
     struct _helperStack	helpers;
     struct _err		err;
@@ -167,6 +167,9 @@ struct _pInfo {
     CircArray		circ_array;
     unsigned long	id;		// set for text types when cirs_array is set
     Options		options;
+    VALUE		*marked;
+    int			mark_size;	// allocated size
+    int			mark_cnt;
     char		last;		// last character read, rarely set
 };
 
