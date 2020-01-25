@@ -1153,16 +1153,30 @@ collapse_special(PInfo pi, char *str) {
 		    *b++ = '&';
 		    continue;
 		} else {
-		    c = '?';
+		    char	key[16];
+		    char	*k = key;
+		    char	*kend = key + sizeof(key) - 1;
+
+		    *k++ = *s;
 		    while (';' != *s++) {
 			if ('\0' == *s) {
 			    set_error(&pi->err, "Invalid format, special character does not end with a semicolon", pi->str, pi->s);
 			    return EDOM;
 			}
+			if (kend <= k) {
+			    k = key;
+			    break;
+			}
+			*k++ = *s;
 		    }
-		    s++;
-		    set_error(&pi->err, "Invalid format, invalid special character sequence", pi->str, pi->s);
-		    return 0;
+		    k--;
+		    *k = '\0';
+		    if ('\0' == *key || NULL == (b = ox_entity_lookup(b, key))) {
+			set_error(&pi->err, "Invalid format, invalid special character sequence", pi->str, pi->s);
+			c = '?';
+			return 0;
+		    }
+		    continue;
 		}
 		*b++ = (char)c;
 	    }

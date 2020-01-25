@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# encoding: UTF-8
+# encoding: utf-8
 
 # Ubuntu does not accept arguments to ruby when called using env. To get warnings to show up the -w options is
 # required. That can be set in the RUBYOPT environment variable.
@@ -439,10 +439,10 @@ encoding = "UTF-8" ?>},
 
   def test_sax_special
     Ox::default_options = $ox_sax_options
-    parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
+    parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; &pi; text.</top>},
                   [[:start_element, :top],
                    [:attr, :name, 'A&Z'],
-                   [:text, "This is <some> text."],
+                   [:text, "This is <some> \u03c0 text."],
                    [:end_element, :top]
                   ], AllSax, :convert_special => true)
   end
@@ -1181,11 +1181,11 @@ this is not part of the xml document
                   [:end_element, :two],
                   [:end_element, :one]], handler.calls)
   end
-  
+
   def test_sax_html_inactive
     Ox::default_options = $ox_sax_options
     handler = AllSax.new()
-    
+
     Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => {'hr'=>:inactive})
     assert_equal([[:start_element, :html],
                   [:start_element, :h1],
@@ -1299,7 +1299,7 @@ this is not part of the xml document
                   [:end_element, :tr],
                   [:end_element, :html]], handler.calls)
   end
-  
+
 
   def test_sax_html_abort
     Ox::default_options = $ox_sax_options

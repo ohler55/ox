@@ -427,6 +427,13 @@ class Func < ::Test::Unit::TestCase
     assert_equal('<@test>', doc.attributes[:name])
   end
 
+  def test_escape_special
+    Ox::default_options = $ox_object_options
+    xml = %{\n<top name="&pi;"/>\n}
+    doc = Ox.parse(xml)
+    assert_equal('π', doc.attributes[:name].force_encoding('UTF-8'))
+  end
+
   def test_escape_dump_tolerant
     Ox::default_options = $ox_object_options
     dumped_xml = Ox.dump("tab\tamp&backspace\b.", :effort => :tolerant)

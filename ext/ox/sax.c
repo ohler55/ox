@@ -1668,8 +1668,28 @@ ox_sax_collapse_special(SaxDrive dr, char *str, long pos, long line, long col) {
                 c = '\'';
                 s += 5;
             } else {
-		ox_sax_drive_error_at(dr, INVALID_FORMAT "Invalid special character sequence", pos, line, col);
-		c = '&';
+		char	key[16];
+		char	*k = key;
+		char	*kend = key + sizeof(key) - 1;
+		char	*bn;
+		char	*s2 = s;
+
+		for (; ';' != *s2 && '\0' != *s2; s2++, k++) {
+		    if (kend <= k) {
+			k = key;
+			break;
+		    }
+		    *k = *s2;
+		}
+		*k = '\0';
+		if ('\0' == *key || NULL == (bn = ox_entity_lookup(b, key))) {
+		    ox_sax_drive_error_at(dr, INVALID_FORMAT "Invalid special character sequence", pos, line, col);
+		    c = '&';
+		} else {
+		    b = bn;
+		    s = s2 + 1;
+		    continue;
+		}
             }
             *b++ = (char)c;
 	    col++;
