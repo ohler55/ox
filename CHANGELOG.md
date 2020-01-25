@@ -4,6 +4,14 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ## [Unreleased]
 
+## [2.13.0] - 2020-01-25
+
+HTML Escape Sequences
+
+### Added
+
+- All HTML 4 escape sequences are now parsed.
+
 ## [2.12.1] - 2020-01-05
 
 Ruby 2.7.0
