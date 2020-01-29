@@ -1000,11 +1000,13 @@ read_coded_chars(PInfo pi, char *text) {
     char	*b, buf[32];
     char	*end = buf + sizeof(buf) - 1;
     char	*s;
+    long	blen = 0;
 
     for (b = buf, s = pi->s; b < end; b++, s++) {
 	*b = *s;
 	if (';' == *s) {
 	    *(b + 1) = '\0';
+	    blen = b - buf;
 	    s++;
 	    break;
 	}
@@ -1047,30 +1049,20 @@ read_coded_chars(PInfo pi, char *text) {
 	    } else {
 		/*set_error(&pi->err, "Invalid encoding, need UTF-8 or UTF-16 encoding to parse &#nnnn; character sequences.", pi->str, pi->s); */
 		set_error(&pi->err, "Invalid encoding, need UTF-8 encoding to parse &#nnnn; character sequences.", pi->str, pi->s);
-		return 0;
+		return NULL;
 	    }
 	    pi->s = s;
 	}
-    } else if (0 == strcasecmp(buf, "nbsp;")) {
-	pi->s = s;
-	*text++ = ' ';
-    } else if (0 == strcasecmp(buf, "lt;")) {
-	pi->s = s;
-	*text++ = '<';
-    } else if (0 == strcasecmp(buf, "gt;")) {
-	pi->s = s;
-	*text++ = '>';
-    } else if (0 == strcasecmp(buf, "amp;")) {
-	pi->s = s;
-	*text++ = '&';
-    } else if (0 == strcasecmp(buf, "quot;")) {
-	pi->s = s;
-	*text++ = '"';
-    } else if (0 == strcasecmp(buf, "apos;")) {
-	pi->s = s;
-	*text++ = '\'';
     } else {
-	*text++ = '&';
+	char	*t2;
+
+	buf[blen] = '\0';
+	if (NULL == (t2 = ox_entity_lookup(text, buf))) {
+	    *text++ = '&';
+	} else {
+	    text = t2;
+	    pi->s = s;
+	}
     }
     return text;
 }

@@ -429,7 +429,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_escape_special
     Ox::default_options = $ox_object_options
-    xml = %{\n<top name="&pi;"/>\n}
+    xml = %{\n<top name="&pi;">&pi;</top>\n}
     doc = Ox.parse(xml)
     assert_equal('π', doc.attributes[:name].force_encoding('UTF-8'))
   end
