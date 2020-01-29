@@ -44,6 +44,7 @@ module Ox
       @nodes = []
     end
     alias name value
+    alias name= value=
 
     # Returns the Element's nodes array. These are the sub-elements of this
     # Element.
