@@ -70,7 +70,7 @@ typedef struct _cache {
 static struct _cache	entity_cache;
 static bool		inited = false;
 
-// HTML entities such as &amp;. This is a complete list from the HTML 4 spec.
+// HTML entities such as &amp;. This is a complete list from the HTML 5 spec.
 static struct _slot	entities[] = {
     { "AElig", 198 },	// latin capital letter AE
     { "Aacute", 193 },	// latin capital letter A with acute
@@ -136,11 +136,12 @@ static struct _slot	entities[] = {
     { "acute", 180 },	// acute accent = spacing acute
     { "aelig", 230 },	// latin small letter ae
     { "agrave", 224 },	// latin small letter a with grave
-    { "alefsym", 8501 },	// alef symbol = first transfinite cardinal
+    { "alefsym", 8501 },// alef symbol = first transfinite cardinal
     { "alpha", 945 },	// greek small letter alpha
     { "amp", 38 },	// -- ampersand, U+0026 ISOnum
     { "and", 8743 },	// logical and = wedge, U+2227 ISOtech
     { "ang", 8736 },	// angle, U+2220 ISOamso
+    { "apos", 39 },	// -- single quote
     { "aring", 229 },	// latin small letter a with ring above
     { "asymp", 8776 },	// almost equal to = asymptotic to
     { "atilde", 227 },	// latin small letter a with tilde
@@ -301,7 +302,7 @@ static struct _slot	entities[] = {
     { "tau", 964 },	// greek small letter tau, U+03C4 ISOgrk3
     { "there4", 8756 },	// therefore, U+2234 ISOtech
     { "theta", 952 },	// greek small letter theta
-    { "thetasym", 977 },	// greek small letter theta symbol
+    { "thetasym", 977 },// greek small letter theta symbol
     { "thinsp", 8201 },	// thin space, U+2009 ISOpub
     { "thorn", 254 },	// latin small letter thorn
     { "tilde", 732 },	// - small tilde, U+02DC ISOdia

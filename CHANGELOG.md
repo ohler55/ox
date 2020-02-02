@@ -4,6 +4,16 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ## [Unreleased]
 
+## [2.13.2] - 2020-02-02
+
+Skip and missed sequence
+
+### Fixed
+
+- Add &apos; sequence.
+
+- `:skip_off` no longer misses spaces between elements.
+
 ## [2.13.1] - 2020-01-30
 
 HTML Sequences

@@ -544,6 +544,12 @@ read_element(PInfo pi) {
 	while (!done) {
 	    start = pi->s;
 	    next_non_white(pi);
+	    if (OffSkip == pi->options->skip && start < pi->s && '<' == *pi->s) {
+		c = *pi->s;
+		*pi->s = '\0';
+		pi->pcb->add_text(pi, start, 1);
+		*pi->s = c;
+	    }
 	    c = *pi->s++;
 	    if ('\0' == c) {
 		attr_stack_cleanup(&attrs);
