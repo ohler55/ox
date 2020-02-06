@@ -4,7 +4,7 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ## [Unreleased]
 
-## [2.13.2] - 2020-02-02
+## [2.13.2] - 2020-02-05
 
 Skip and missed sequence
 
