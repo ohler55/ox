@@ -1333,7 +1333,28 @@ dump(int argc, VALUE *argv, VALUE self) {
     return rstr;
 }
 
-/* call-seq: to_file(file_path, obj, options)
+/* call-seq: to_xml(obj, options) => xml-string
+ *
+ * Dumps an Object (obj) to a string.
+ * - +obj+ [Object] Object to serialize as an XML document String
+ * - +options+ [Hash] formating options
+ *   - *:indent* [Fixnum] format expected
+ *   - *:no_empty* [true|false] if true don't output empty elements
+ *   - *:xsd_date* [true|false] use XSD date format if true, default: false
+ *   - *:circular* [true|false] allow circular references, default: false
+ *   - *:strict|:tolerant]* [ :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
+ *     - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
+ *     - _:tolerant_ - replaces undumplable objects with nil
+ *
+ * Note that an indent of less than zero will result in a tight one line output
+ * unless the text in the XML fields contain new line characters.
+ */
+static VALUE
+to_xml(int argc, VALUE *argv, VALUE self) {
+    return dump(argc, argv, self);
+}
+
+/* call-seq: to_file(file_path, obj, options) => Object
  *
  * Dumps an Object to the specified file.
  * - +file_path+ [String] file path to write the XML document to
@@ -1392,7 +1413,7 @@ void Init_ox() {
     rb_define_module_function(Ox, "sax_parse", sax_parse, -1);
     rb_define_module_function(Ox, "sax_html", sax_html, -1);
 
-    rb_define_module_function(Ox, "to_xml", dump, -1);
+    rb_define_module_function(Ox, "to_xml", to_xml, -1);
     rb_define_module_function(Ox, "dump", dump, -1);
 
     rb_define_module_function(Ox, "load_file", load_file, -1);
