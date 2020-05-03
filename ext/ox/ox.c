@@ -1354,7 +1354,7 @@ to_xml(int argc, VALUE *argv, VALUE self) {
     return dump(argc, argv, self);
 }
 
-/* call-seq: to_file(file_path, obj, options) => Object
+/* call-seq: to_file(file_path, obj, options)
  *
  * Dumps an Object to the specified file.
  * - +file_path+ [String] file path to write the XML document to
