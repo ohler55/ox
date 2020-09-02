@@ -16,20 +16,15 @@ extern "C" {
 #define RSTRING_NOT_MODIFIED
 
 #include "ruby.h"
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 #include "ruby/encoding.h"
 #endif
 
-#ifdef RUBINIUS_RUBY
-#undef T_COMPLEX
-enum st_retval {ST_CONTINUE = 0, ST_STOP = 1, ST_DELETE = 2, ST_CHECK};
-#else
-#if HAS_TOP_LEVEL_ST_H
-/* Only on travis, local is where it is for all others. Seems to vary depending on the travis machine picked up. */
-#include "st.h"
-#else
+#if HAVE_RUBY_ST_H
 #include "ruby/st.h"
-#endif
+#else
+// Only on travis, local is where it is for all others. Seems to vary depending on the travis machine picked up.
+#include "st.h"
 #endif
 
 #include "cache.h"
@@ -146,10 +141,8 @@ typedef struct _options {
     struct _hints	*html_hints;	// html hints
     VALUE		attr_key_mod;
     VALUE		element_key_mod;
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
     rb_encoding		*rb_enc;
-#elif HAS_PRIVATE_ENCODING
-    VALUE		rb_enc;
 #else
     void		*rb_enc;
 #endif
@@ -236,10 +229,8 @@ extern ID	ox_tv_nsec_id;
 extern ID	ox_tv_usec_id;
 extern ID	ox_value_id;
 
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 extern rb_encoding	*ox_utf8_encoding;
-#elif HAS_PRIVATE_ENCODING
-extern VALUE		ox_utf8_encoding;
 #else
 extern void		*ox_utf8_encoding;
 #endif

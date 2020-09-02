@@ -10,6 +10,9 @@
 #include <stdarg.h>
 
 #include "ruby.h"
+#if HAVE_RB_ENC_ASSOCIATE
+#include "ruby/encoding.h"
+#endif
 #include "ox.h"
 
 static void     instruct(PInfo pi, const char *target, Attr attrs, const char *content);
@@ -72,7 +75,7 @@ create_doc(PInfo pi) {
 
     helper_stack_init(&pi->helpers);
     doc = rb_obj_alloc(ox_document_clas);
-#if HAS_GC_GUARD
+#ifdef RB_GC_GUARD
     RB_GC_GUARD(doc);
 #endif
     nodes = rb_ary_new();
@@ -100,7 +103,7 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 	    sym = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
 	    rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
 	} else if (Yes == pi->options->sym_keys) {
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != pi->options->rb_enc) {
 		VALUE	rstr = rb_str_new2(attrs->name);
 
@@ -109,40 +112,20 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 	    } else {
 		sym = ID2SYM(rb_intern(attrs->name));
 	    }
-#elif HAS_PRIVATE_ENCODING
-	    if (Qnil != pi->options->rb_enc) {
-		VALUE	rstr = rb_str_new2(attrs->name);
-
-		rb_funcall(rstr, ox_force_encoding_id, 1, pi->options->rb_enc);
-		sym = rb_funcall(rstr, ox_to_sym_id, 0);
-	    } else {
-		sym = ID2SYM(rb_intern(attrs->name));
-	    }
-#else
 	    sym = ID2SYM(rb_intern(attrs->name));
 #endif
 	    rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
 	} else {
 	    volatile VALUE	rstr = rb_str_new2(attrs->name);
 
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != pi->options->rb_enc) {
 		rb_enc_associate(rstr, pi->options->rb_enc);
 	    }
-#elif HAS_PRIVATE_ENCODING
-	    if (Qnil != pi->options->rb_enc) {
-		rb_funcall(rstr, ox_force_encoding_id, 1, pi->options->rb_enc);
-	    }
-#endif
 	    rb_hash_aset(ah, rstr, rb_str_new2(attrs->value));
 	}
-#if HAS_ENCODING_SUPPORT
 	if (0 == strcmp("encoding", attrs->name)) {
 	    pi->options->rb_enc = rb_enc_find(attrs->value);
-	}
-#elif HAS_PRIVATE_ENCODING
-	if (0 == strcmp("encoding", attrs->name)) {
-	    pi->options->rb_enc = rb_str_new2(attrs->value);
 	}
 #endif
     }
@@ -212,13 +195,9 @@ add_doctype(PInfo pi, const char *docType) {
     VALUE       n = rb_obj_alloc(ox_doctype_clas);
     VALUE       s = rb_str_new2(docType);
 
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
-    }
-#elif HAS_PRIVATE_ENCODING
-    if (Qnil != pi->options->rb_enc) {
-	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
@@ -233,13 +212,9 @@ add_comment(PInfo pi, const char *comment) {
     VALUE       n = rb_obj_alloc(ox_comment_clas);
     VALUE       s = rb_str_new2(comment);
 
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
-    }
-#elif HAS_PRIVATE_ENCODING
-    if (Qnil != pi->options->rb_enc) {
-	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
@@ -254,13 +229,9 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
     VALUE       n = rb_obj_alloc(ox_cdata_clas);
     VALUE       s = rb_str_new2(cdata);
 
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
-    }
-#elif HAS_PRIVATE_ENCODING
-    if (Qnil != pi->options->rb_enc) {
-	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
@@ -274,13 +245,9 @@ static void
 add_text(PInfo pi, char *text, int closed) {
     VALUE       s = rb_str_new2(text);
 
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
-    }
-#elif HAS_PRIVATE_ENCODING
-    if (Qnil != pi->options->rb_enc) {
-	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
     }
 #endif
     if (helper_stack_empty(&pi->helpers)) { /* top level object */
@@ -297,13 +264,9 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     if (Qnil != pi->options->element_key_mod) {
 	s = rb_funcall(pi->options->element_key_mod, ox_call_id, 1, s);
     }
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
-    }
-#elif HAS_PRIVATE_ENCODING
-    if (Qnil != pi->options->rb_enc) {
-	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
     }
 #endif
     e = rb_obj_alloc(ox_element_clas);
@@ -320,7 +283,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		VALUE	*slot;
 
 		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 		    if (0 != pi->options->rb_enc) {
 			VALUE	rstr = rb_str_new2(attrs->name);
 
@@ -329,16 +292,6 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		    } else {
 			sym = ID2SYM(rb_intern(attrs->name));
 		    }
-#elif HAS_PRIVATE_ENCODING
-		    if (Qnil != pi->options->rb_enc) {
-			VALUE	rstr = rb_str_new2(attrs->name);
-
-			rb_funcall(rstr, ox_force_encoding_id, 1, pi->options->rb_enc);
-			sym = rb_funcall(rstr, ox_to_sym_id, 0);
-		    } else {
-			sym = ID2SYM(rb_intern(attrs->name));
-		    }
-#else
 		    sym = ID2SYM(rb_intern(attrs->name));
 #endif
 		    // Needed for Ruby 2.2 to get around the GC of symbols
@@ -348,24 +301,16 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		}
 	    } else {
 		sym = rb_str_new2(attrs->name);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 		if (0 != pi->options->rb_enc) {
 		    rb_enc_associate(sym, pi->options->rb_enc);
-		}
-#elif HAS_PRIVATE_ENCODING
-		if (Qnil != pi->options->rb_enc) {
-		    rb_funcall(sym, ox_force_encoding_id, 1, pi->options->rb_enc);
 		}
 #endif
 	    }
             s = rb_str_new2(attrs->value);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
             if (0 != pi->options->rb_enc) {
                 rb_enc_associate(s, pi->options->rb_enc);
-            }
-#elif HAS_PRIVATE_ENCODING
-            if (Qnil != pi->options->rb_enc) {
-		rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
             }
 #endif
             rb_hash_aset(ah, sym, s);
@@ -403,18 +348,11 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
     if (0 != content) {
 	c = rb_str_new2(content);
     }
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
 	if (0 != content) {
 	    rb_enc_associate(c, pi->options->rb_enc);
-	}
-    }
-#elif HAS_PRIVATE_ENCODING
-    if (Qnil != pi->options->rb_enc) {
-	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
-	if (0 != content) {
-	    rb_funcall(c, ox_force_encoding_id, 1, pi->options->rb_enc);
 	}
     }
 #endif
@@ -433,20 +371,11 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 		sym = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
 	    } else if (Yes == pi->options->sym_keys) {
 		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 		    if (0 != pi->options->rb_enc) {
 			VALUE	rstr = rb_str_new2(attrs->name);
 
 			rb_enc_associate(rstr, pi->options->rb_enc);
-			sym = rb_funcall(rstr, ox_to_sym_id, 0);
-		    } else {
-			sym = ID2SYM(rb_intern(attrs->name));
-		    }
-#elif HAS_PRIVATE_ENCODING
-		    if (Qnil != pi->options->rb_enc) {
-			VALUE	rstr = rb_str_new2(attrs->name);
-
-			rb_funcall(rstr, ox_force_encoding_id, 1, pi->options->rb_enc);
 			sym = rb_funcall(rstr, ox_to_sym_id, 0);
 		    } else {
 			sym = ID2SYM(rb_intern(attrs->name));
@@ -461,25 +390,17 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 		}
 	    } else {
 		sym = rb_str_new2(attrs->name);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 		if (0 != pi->options->rb_enc) {
 		    rb_enc_associate(sym, pi->options->rb_enc);
-		}
-#elif HAS_PRIVATE_ENCODING
-		if (Qnil != pi->options->rb_enc) {
-		    rb_funcall(sym, ox_force_encoding_id, 1, pi->options->rb_enc);
 		}
 #endif
 	    }
             s = rb_str_new2(attrs->value);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
             if (0 != pi->options->rb_enc) {
                 rb_enc_associate(s, pi->options->rb_enc);
             }
-#elif HAS_PRIVATE_ENCODING
-	    if (Qnil != pi->options->rb_enc) {
-		rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
-	    }
 #endif
             rb_hash_aset(ah, sym, s);
         }
