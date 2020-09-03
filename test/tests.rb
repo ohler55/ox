@@ -851,32 +851,24 @@ class Func < ::Test::Unit::TestCase
 
   def test_encoding
     Ox::default_options = $ox_object_options
-    if RUBY_VERSION.start_with?('1.8')# || 'rubinius' == $ruby
-      assert(true)
-    else
-      s = 'ピーター'
-      xml = Ox.dump(s, :with_xml => true, :encoding => 'UTF-8')
-      #puts xml
-      #puts xml.encoding.to_s
-      assert_equal('UTF-8', xml.encoding.to_s)
-      obj = Ox.load(xml, :mode => :object)
-      assert_equal(s, obj)
-    end
+    s = 'ピーター'
+    xml = Ox.dump(s, :with_xml => true, :encoding => 'UTF-8')
+    #puts xml
+    #puts xml.encoding.to_s
+    assert_equal('UTF-8', xml.encoding.to_s)
+    obj = Ox.load(xml, :mode => :object)
+    assert_equal(s, obj)
   end
 
   def test_full_encoding
     Ox::default_options = $ox_generic_options
-    if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
-      assert(true)
-    else
-      xml = %{<?xml version="1.0" encoding="UTF-8"?>
+    xml = %{<?xml version="1.0" encoding="UTF-8"?>
 <いち name="ピーター" つま="まきえ">ピーター</いち>
 }
-      obj = Ox.load(xml)
-      dumped = Ox.dump(obj, :with_xml => true)
-      assert_equal('UTF-8', dumped.encoding.to_s)
-      assert_equal(xml, dumped)
-    end
+    obj = Ox.load(xml)
+    dumped = Ox.dump(obj, :with_xml => true)
+    assert_equal('UTF-8', dumped.encoding.to_s)
+    assert_equal(xml, dumped)
   end
 
   def test_obj_encoding

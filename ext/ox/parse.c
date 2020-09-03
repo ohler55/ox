@@ -441,7 +441,6 @@ read_element(PInfo pi) {
 	// empty element, no attributes and no children
 	pi->s++;
 	if ('>' != *pi->s) {
-	    /*printf("*** '%s' ***\n", pi->s); */
 	    attr_stack_cleanup(&attrs);
 	    set_error(&pi->err, "invalid format, element not closed", pi->str, pi->s);
 	    return 0;
@@ -479,8 +478,8 @@ read_element(PInfo pi) {
 	    pi->s++;
 	    pi->pcb->add_element(pi, ename, attrs.head, hasChildren);
 	    pi->pcb->end_element(pi, ename);
-
 	    attr_stack_cleanup(&attrs);
+
 	    return 0;
 	case '>':
 	    /* has either children or a value */

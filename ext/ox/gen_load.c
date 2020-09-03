@@ -292,6 +292,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		    } else {
 			sym = ID2SYM(rb_intern(attrs->name));
 		    }
+#else
 		    sym = ID2SYM(rb_intern(attrs->name));
 #endif
 		    // Needed for Ruby 2.2 to get around the GC of symbols
