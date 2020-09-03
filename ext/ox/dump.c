@@ -825,7 +825,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	} else {
 	    char	num_buf[16];
 	    int		d2 = depth + 1;
-#if UNIFY_FIXNUM_AND_BIGNUM
+#ifdef RUBY_INTEGER_UNIFICATION
 		long i;
 		long cnt = NUM2LONG(rb_struct_size(obj));
 #else // UNIFY_FIXNUM_AND_INTEGER

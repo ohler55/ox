@@ -17,9 +17,6 @@ dflags = {
   'RUBY_VERSION_MAJOR' => version[0],
   'RUBY_VERSION_MINOR' => version[1],
   'RUBY_VERSION_MICRO' => version[2],
-
-  # Not sure what else to look for.
-  'UNIFY_FIXNUM_AND_BIGNUM' => ('ruby' == type && '2' == version[0] && '4' <= version[1]) ? 1 : 0,
 }
 
 dflags.each do |k,v|
