@@ -455,17 +455,14 @@ static void
 dump_time_thin(Out out, VALUE obj) {
     char		buf[64];
     char		*b = buf + sizeof(buf) - 1;
-#if HAS_RB_TIME_TIMESPEC
+#if HAVE_RB_TIME_TIMESPEC
     struct timespec	ts = rb_time_timespec(obj);
     time_t		sec = ts.tv_sec;
     long		nsec = ts.tv_nsec;
 #else
     time_t		sec = NUM2LONG(rb_funcall2(obj, ox_tv_sec_id, 0, 0));
-#if HAS_NANO_TIME
     long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_nsec_id, 0, 0));
-#else
-    long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0)) * 1000;
-#endif
+    //long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0)) * 1000;
 #endif
     char		*dot = b - 10;
     long		size;
@@ -520,11 +517,8 @@ dump_time_xsd(Out out, VALUE obj) {
     long		nsec = ts.tv_nsec;
 #else
     time_t		sec = NUM2LONG(rb_funcall2(obj, ox_tv_sec_id, 0, 0));
-#if HAS_NANO_TIME
     long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_nsec_id, 0, 0));
-#else
-    long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0)) * 1000;
-#endif
+    //long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0)) * 1000;
 #endif
     int			tzhour, tzmin;
     char		tzsign = '+';
@@ -809,7 +803,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
     }
     case T_STRUCT:
     {
-#if HAS_RSTRUCT
+#ifdef RSTRUCT_GET
 	VALUE	clas;
 
 	if (0 != out->circ_cache && check_circular(out, obj, &e)) {
@@ -831,7 +825,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	} else {
 	    char	num_buf[16];
 	    int		d2 = depth + 1;
-#if UNIFY_FIXNUM_AND_BIGNUM
+#ifdef RUBY_INTEGER_UNIFICATION
 		long i;
 		long cnt = NUM2LONG(rb_struct_size(obj));
 #else // UNIFY_FIXNUM_AND_INTEGER
@@ -877,7 +871,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	    dump_gen_element(obj, depth + 1, out);
 	    out->w_end(out, &e);
 	} else { /* Object */
-#if HAS_IVAR_HELPERS
+#if HAVE_RB_IVAR_FOREACH
 	    e.type = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
 	    cnt = (int)rb_ivar_count(obj);
 	    e.closed = (0 >= cnt);
@@ -1209,11 +1203,6 @@ dump_gen_attr(VALUE key, VALUE value, VALUE ov) {
     size_t	klen;
     size_t	size;
 
-#if HAS_PRIVATE_ENCODING
-    // There seems to be a bug in jruby for converting symbols to strings and preserving the encoding. This is a work
-    // around.
-    ks = rb_str_ptr(rb_String(key));
-#else
     switch (rb_type(key)) {
     case T_SYMBOL:
 	ks = rb_id2name(SYM2ID(key));
@@ -1226,7 +1215,6 @@ dump_gen_attr(VALUE key, VALUE value, VALUE ov) {
 	ks = StringValuePtr(key);
 	break;
     }
-#endif
     klen = strlen(ks);
     value = rb_String(value);
     size = 4 + klen + RSTRING_LEN(value);

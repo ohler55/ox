@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <strings.h>
 #include <sys/types.h>
-#if NEEDS_UIO
+#if HAVE_SYS_UIO_H
 #include <sys/uio.h>
 #endif
 #include <unistd.h>

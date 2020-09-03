@@ -9,13 +9,16 @@
 #include <stdio.h>
 #include <strings.h>
 #include <sys/types.h>
-#if NEEDS_UIO
+#if HAVE_SYS_UIO_H
 #include <sys/uio.h>
 #endif
 #include <unistd.h>
 #include <time.h>
 
 #include "ruby.h"
+#if HAVE_RB_ENC_ASSOCIATE
+#include "ruby/encoding.h"
+#endif
 #include "ox.h"
 #include "sax.h"
 #include "sax_stack.h"
@@ -68,9 +71,9 @@ static VALUE protect_parse(VALUE drp) {
     return Qnil;
 }
 
-#if HAS_ENCODING_SUPPORT || HAS_PRIVATE_ENCODING
+#if HAVE_RB_ENC_ASSOCIATE
 static int
-strIsAscii(const char *s) {
+str_is_ascii(const char *s) {
     for (; '\0' != *s; s++) {
 	if (*s < ' ' || '~' < *s) {
 	    return 0;
@@ -87,27 +90,13 @@ str2sym(SaxDrive dr, const char *str, const char **strp) {
 
     if (dr->options.symbolize) {
 	if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, strp))) {
-#if HAS_ENCODING_SUPPORT
-	    if (0 != dr->encoding && !strIsAscii(str)) {
+#if HAVE_RB_ENC_ASSOCIATE
+	    if (0 != dr->encoding && !str_is_ascii(str)) {
 		VALUE	rstr = rb_str_new2(str);
 
 		// TBD if sym can be pinned down then use this all the time
 		rb_enc_associate(rstr, dr->encoding);
 		sym = rb_funcall(rstr, ox_to_sym_id, 0);
-		*slot = Qundef;
-	    } else {
-		sym = ID2SYM(rb_intern(str));
-		*slot = sym;
-	    }
-#elif HAS_PRIVATE_ENCODING
-	    if (Qnil != dr->encoding && !strIsAscii(str)) {
-		VALUE	rstr = rb_str_new2(str);
-
-		rb_funcall(rstr, ox_force_encoding_id, 1, dr->encoding);
-		sym = rb_funcall(rstr, ox_to_sym_id, 0);
-		// Needed for Ruby 2.2 to get around the GC of symbols created
-		// with to_sym which is needed for encoded symbols.
-		rb_ary_push(ox_sym_bank, sym);
 		*slot = Qundef;
 	    } else {
 		sym = ID2SYM(rb_intern(str));
@@ -120,13 +109,9 @@ str2sym(SaxDrive dr, const char *str, const char **strp) {
 	}
     } else {
 	sym = rb_str_new2(str);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 	if (0 != dr->encoding) {
 	    rb_enc_associate(sym, dr->encoding);
-	}
-#elif HAS_PRIVATE_ENCODING
-	if (Qnil != dr->encoding) {
-	    rb_funcall(sym, ox_force_encoding_id, 1, dr->encoding);
 	}
 #endif
 	if (0 != strp) {
@@ -182,7 +167,7 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
     dr->blocked = 0;
     dr->abort = false;
     has_init(&dr->has, handler);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_FIND
     if ('\0' == *ox_default_options.encoding) {
 	VALUE	encoding;
 
@@ -195,18 +180,6 @@ sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
 	}
     } else {
         dr->encoding = rb_enc_find(ox_default_options.encoding);
-    }
-#elif HAS_PRIVATE_ENCODING
-    if ('\0' == *ox_default_options.encoding) {
-	VALUE	encoding;
-
-	if (rb_respond_to(io, ox_external_encoding_id) && Qnil != (encoding = rb_funcall(io, ox_external_encoding_id, 0))) {
-	    dr->encoding = encoding;
-	} else {
-	    dr->encoding = Qnil;
-	}
-    } else {
-        dr->encoding = rb_str_new2(ox_default_options.encoding);
     }
 #else
     dr->encoding = 0;
@@ -255,9 +228,7 @@ skipBOM(SaxDrive dr) {
 
     if (0xEF == (uint8_t)c) { /* only UTF8 is supported */
 	if (0xBB == (uint8_t)buf_get(&dr->buf) && 0xBF == (uint8_t)buf_get(&dr->buf)) {
-#if HAS_ENCODING_SUPPORT
-	    dr->encoding = ox_utf8_encoding;
-#elif HAS_PRIVATE_ENCODING
+#if HAVE_RB_ENC_FIND
 	    dr->encoding = ox_utf8_encoding;
 #else
 	    dr->encoding = UTF8_STR;
@@ -364,13 +335,9 @@ parse(SaxDrive dr) {
 		    off_t	col = dr->buf.col - 1;
 
 		    args[0] = rb_str_new2("");
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 		    if (0 != dr->encoding) {
 			rb_enc_associate(args[0], dr->encoding);
-		    }
-#elif HAS_PRIVATE_ENCODING
-		    if (Qnil != dr->encoding) {
-			rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
 		    }
 #endif
 		    if (dr->has.pos) {
@@ -526,13 +493,9 @@ read_instruction(SaxDrive dr) {
 		ox_sax_collapse_special(dr, content, (int)pos, (int)line, (int)col);
 	    }
 	    args[0] = rb_str_new2(content);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
-	    }
-#elif HAS_PRIVATE_ENCODING
-	    if (Qnil != dr->encoding) {
-		rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
 	    }
 #endif
 	    if (dr->has.line) {
@@ -732,13 +695,9 @@ read_cdata(SaxDrive dr) {
 	    VALUE       args[1];
 
 	    args[0] = rb_str_new2(dr->buf.str);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
-	    }
-#elif HAS_PRIVATE_ENCODING
-	    if (Qnil != dr->encoding) {
-		rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
 	    }
 #endif
 	    if (dr->has.pos) {
@@ -826,13 +785,9 @@ read_comment(SaxDrive dr) {
 	    (NULL != h && (ActiveOverlay == h->overlay || ActiveOverlay == h->overlay))) {
 
 	    args[0] = rb_str_new2(dr->buf.str);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
-	    }
-#elif HAS_PRIVATE_ENCODING
-	    if (Qnil != dr->encoding) {
-		rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
 	    }
 #endif
 	    if (dr->has.pos) {
@@ -1158,13 +1113,9 @@ read_text(SaxDrive dr) {
 	    ((NoSkip == dr->options.skip && !isEnd) ||
 	     (OffSkip == dr->options.skip))) {
 	    args[0] = rb_str_new2(dr->buf.str);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
-	    }
-#elif HAS_PRIVATE_ENCODING
-	    if (Qnil != dr->encoding) {
-		rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
 	    }
 #endif
 	    if (dr->has.pos) {
@@ -1213,13 +1164,9 @@ read_text(SaxDrive dr) {
 		break;
 	    }
 	    args[0] = rb_str_new2(dr->buf.str);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
-	    }
-#elif HAS_PRIVATE_ENCODING
-	    if (Qnil != dr->encoding) {
-		rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
 	    }
 #endif
 	    if (dr->has.pos) {
@@ -1299,13 +1246,9 @@ read_jump(SaxDrive dr, const char *pat) {
     // TBD check parent overlay
     if (dr->has.text && !dr->blocked) {
         args[0] = rb_str_new2(dr->buf.str);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
-        }
-#elif HAS_PRIVATE_ENCODING
-        if (Qnil != dr->encoding) {
-	    rb_funcall(args[0], ox_force_encoding_id, 1, dr->encoding);
         }
 #endif
 	if (dr->has.pos) {
@@ -1377,10 +1320,8 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req, 
 	    c = read_quoted_value(dr);
 	    attr_value = dr->buf.str;
 	    if (is_encoding) {
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_FIND
 		dr->encoding = rb_enc_find(dr->buf.str);
-#elif HAS_PRIVATE_ENCODING
-		dr->encoding = rb_str_new2(dr->buf.str);
 #else
 		dr->encoding = dr->buf.str;
 #endif
@@ -1411,13 +1352,9 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req, 
 		    ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
 		}
 		args[1] = rb_str_new2(attr_value);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 		if (0 != dr->encoding) {
 		    rb_enc_associate(args[1], dr->encoding);
-		}
-#elif HAS_PRIVATE_ENCODING
-		if (Qnil != dr->encoding) {
-		    rb_funcall(args[1], ox_force_encoding_id, 1, dr->encoding);
 		}
 #endif
 		if (dr->has.pos) {
@@ -1614,17 +1551,10 @@ ox_sax_collapse_special(SaxDrive dr, char *str, long pos, long line, long col) {
 		}
 		if (u <= 0x000000000000007FULL) {
 		    *b++ = (char)u;
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_FIND
 		} else if (ox_utf8_encoding == dr->encoding) {
 		    b = ox_ucs_to_utf8_chars(b, u);
 		} else if (0 == dr->encoding) {
-		    dr->encoding = ox_utf8_encoding;
-		    b = ox_ucs_to_utf8_chars(b, u);
-#elif HAS_PRIVATE_ENCODING
-		} else if (ox_utf8_encoding == dr->encoding ||
-			   0 == strcasecmp(rb_str_ptr(rb_String(ox_utf8_encoding)), rb_str_ptr(rb_String(dr->encoding)))) {
-		    b = ox_ucs_to_utf8_chars(b, u);
-		} else if (Qnil == dr->encoding) {
 		    dr->encoding = ox_utf8_encoding;
 		    b = ox_ucs_to_utf8_chars(b, u);
 #else
