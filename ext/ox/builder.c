@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "ruby.h"
 #if HAVE_RB_ENC_ASSOCIATE
 #include "ruby/encoding.h"
 #endif
