@@ -441,7 +441,6 @@ read_element(PInfo pi) {
 	// empty element, no attributes and no children
 	pi->s++;
 	if ('>' != *pi->s) {
-	    /*printf("*** '%s' ***\n", pi->s); */
 	    attr_stack_cleanup(&attrs);
 	    set_error(&pi->err, "invalid format, element not closed", pi->str, pi->s);
 	    return 0;
@@ -479,8 +478,8 @@ read_element(PInfo pi) {
 	    pi->s++;
 	    pi->pcb->add_element(pi, ename, attrs.head, hasChildren);
 	    pi->pcb->end_element(pi, ename);
-
 	    attr_stack_cleanup(&attrs);
+
 	    return 0;
 	case '>':
 	    /* has either children or a value */
@@ -1033,18 +1032,9 @@ read_coded_chars(PInfo pi, char *text) {
 	} else {
 	    if (u <= 0x000000000000007FULL) {
 		*text++ = (char)u;
-#if HAS_PRIVATE_ENCODING
-	    } else if (ox_utf8_encoding == pi->options->rb_enc ||
-		       0 == strcasecmp(rb_str_ptr(rb_String(ox_utf8_encoding)), rb_str_ptr(rb_String(pi->options->rb_enc)))) {
-#else
 	    } else if (ox_utf8_encoding == pi->options->rb_enc) {
-#endif
 		text = ox_ucs_to_utf8_chars(text, u);
-#if HAS_PRIVATE_ENCODING
-	    } else if (Qnil == pi->options->rb_enc) {
-#else
 	    } else if (0 == pi->options->rb_enc) {
-#endif
 		pi->options->rb_enc = ox_utf8_encoding;
 		text = ox_ucs_to_utf8_chars(text, u);
 	    } else if (TolerantEffort == pi->options->effort) {
@@ -1110,19 +1100,10 @@ collapse_special(PInfo pi, char *str) {
 		}
 		if (u <= 0x000000000000007FULL) {
 		    *b++ = (char)u;
-#if HAS_PRIVATE_ENCODING
-		} else if (ox_utf8_encoding == pi->options->rb_enc ||
-			   0 == strcasecmp(rb_str_ptr(rb_String(ox_utf8_encoding)), rb_str_ptr(rb_String(pi->options->rb_enc)))) {
-#else
 		} else if (ox_utf8_encoding == pi->options->rb_enc) {
-#endif
 		    b = ox_ucs_to_utf8_chars(b, u);
 		    /* TBD support UTF-16 */
-#if HAS_PRIVATE_ENCODING
-		} else if (Qnil == pi->options->rb_enc) {
-#else
 		} else if (0 == pi->options->rb_enc) {
-#endif
 		    pi->options->rb_enc = ox_utf8_encoding;
 		    b = ox_ucs_to_utf8_chars(b, u);
 		} else {

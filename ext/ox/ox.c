@@ -154,10 +154,8 @@ static VALUE 	element_key_mod_sym;
 static ID	encoding_id;
 static ID	has_key_id;
 
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 rb_encoding	*ox_utf8_encoding = 0;
-#elif HAS_PRIVATE_ENCODING
-VALUE		ox_utf8_encoding = Qnil;
 #else
 void		*ox_utf8_encoding = 0;
 #endif
@@ -186,11 +184,7 @@ struct _options	 ox_default_options = {
     NULL,		// html_hints
     Qnil,		// attr_key_mod;
     Qnil,		// element_key_mod;
-#if HAS_PRIVATE_ENCODING
-    Qnil		// rb_enc
-#else
     0			// rb_enc
-#endif
 };
 
 extern ParseCallbacks	ox_obj_callbacks;
@@ -470,11 +464,8 @@ set_def_opts(VALUE self, VALUE opts) {
     } else {
 	Check_Type(v, T_STRING);
 	strncpy(ox_default_options.encoding, StringValuePtr(v), sizeof(ox_default_options.encoding) - 1);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_FIND
 	ox_default_options.rb_enc = rb_enc_find(ox_default_options.encoding);
-#elif HAS_PRIVATE_ENCODING
-	ox_default_options.rb_enc = rb_str_new2(ox_default_options.encoding);
-	rb_gc_register_address(&ox_default_options.rb_enc);
 #endif
     }
 
@@ -674,14 +665,14 @@ to_obj(VALUE self, VALUE ruby_xml) {
 	xml = ALLOCA_N(char, len);
     }
     memcpy(xml, x, len);
-#if HAS_GC_GUARD
+#ifdef RB_GC_GUARD
     rb_gc_disable();
 #endif
     obj = ox_parse(xml, len - 1, ox_obj_callbacks, 0, &options, &err);
     if (SMALL_XML < len) {
 	xfree(xml);
     }
-#if HAS_GC_GUARD
+#ifdef RB_GC_GUARD
     RB_GC_GUARD(obj);
     rb_gc_enable();
 #endif
@@ -848,7 +839,7 @@ load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, E
 	    options.margin_len = strlen(options.margin);
 	}
     }
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_FIND
     if ('\0' == *options.encoding) {
 	if (Qnil != encoding) {
 	    options.rb_enc = rb_enc_from_index(rb_enc_get_index(encoding));
@@ -858,26 +849,15 @@ load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, E
     } else if (0 == options.rb_enc) {
 	options.rb_enc = rb_enc_find(options.encoding);
     }
-#elif HAS_PRIVATE_ENCODING
-    if ('\0' == *options.encoding) {
-	if (Qnil != encoding) {
-	    options.rb_enc = encoding;
-	} else {
-	    options.rb_enc = Qnil;
-	}
-    } else if (0 == options.rb_enc) {
-	options.rb_enc = rb_str_new2(options.encoding);
-	rb_gc_register_address(&options.rb_enc);
-    }
 #endif
     xml = defuse_bom(xml, &options);
     switch (options.mode) {
     case ObjMode:
-#if HAS_GC_GUARD
+#ifdef RB_GC_GUARD
 	rb_gc_disable();
 #endif
 	obj = ox_parse(xml, len, ox_obj_callbacks, 0, &options, err);
-#if HAS_GC_GUARD
+#ifdef RB_GC_GUARD
 	RB_GC_GUARD(obj);
 	rb_gc_enable();
 #endif
@@ -946,14 +926,8 @@ load_str(int argc, VALUE *argv, VALUE self) {
     } else {
 	xml = ALLOCA_N(char, len);
     }
-#if HAS_ENCODING_SUPPORT
-#ifdef MACRUBY_RUBY
-    encoding = rb_funcall(*argv, encoding_id, 0);
-#else
+#if HAVE_RB_OBJ_ENCODING
     encoding = rb_obj_encoding(*argv);
-#endif
-#elif HAS_PRIVATE_ENCODING
-    encoding = rb_funcall(*argv, encoding_id, 0);
 #else
     encoding = Qnil;
 #endif
@@ -1319,13 +1293,9 @@ dump(int argc, VALUE *argv, VALUE self) {
 	rb_raise(rb_eNoMemError, "Not enough memory.\n");
     }
     rstr = rb_str_new2(xml);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
     if ('\0' != *copts.encoding) {
 	rb_enc_associate(rstr, rb_enc_find(copts.encoding));
-    }
-#elif HAS_PRIVATE_ENCODING
-    if ('\0' != *copts.encoding) {
-	rb_funcall(rstr, ox_force_encoding_id, 1, rb_str_new2(copts.encoding));
     }
 #endif
     xfree(xml);
@@ -1576,11 +1546,8 @@ void Init_ox() {
     rb_define _module_function(Ox, "cache8_test", cache8_test, 0);
 #endif
 
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_FIND
     ox_utf8_encoding = rb_enc_find("UTF-8");
-#elif HAS_PRIVATE_ENCODING
-    ox_utf8_encoding = rb_str_new2("UTF-8");
-    rb_gc_register_address(&ox_utf8_encoding);
 #endif
 }
 
@@ -1601,7 +1568,7 @@ _ox_raise_error(const char *msg, const char *xml, const char *current, const cha
 	    xline++;
 	}
     }
-#if HAS_GC_GUARD
+#ifdef RB_GC_GUARD
     rb_gc_enable();
 #endif
     rb_raise(ox_parse_error_class, "%s at line %d, column %d [%s:%d]\n", msg, xline, col, file, line);

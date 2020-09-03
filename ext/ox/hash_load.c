@@ -79,13 +79,9 @@ add_text(PInfo pi, char *text, int closed) {
     volatile VALUE	s = rb_str_new2(text);
     volatile VALUE	a;
 
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
-    }
-#elif HAS_PRIVATE_ENCODING
-    if (Qnil != pi->options->rb_enc) {
-	rb_funcall(s, ox_force_encoding_id, 1, pi->options->rb_enc);
     }
 #endif
     switch (parent->type) {
@@ -126,13 +122,9 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		key = rb_str_new2(attrs->name);
 	    }
 	    val = rb_str_new2(attrs->value);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != pi->options->rb_enc) {
 		rb_enc_associate(val, pi->options->rb_enc);
-	    }
-#elif HAS_PRIVATE_ENCODING
-	    if (Qnil != pi->options->rb_enc) {
-		rb_funcall(val, ox_force_encoding_id, 1, pi->options->rb_enc);
 	    }
 #endif
 	    rb_hash_aset(h, key, val);

@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <strings.h>
 #include <sys/types.h>
-#if NEEDS_UIO
+#if HAVE_SYS_UIO_H
 #include <sys/uio.h>
 #endif
 #include <unistd.h>
@@ -136,13 +136,9 @@ sax_value_as_s(VALUE self) {
 	break;
     }
     rs = rb_str_new2(dr->buf.str);
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
     if (0 != dr->encoding) {
 	rb_enc_associate(rs, dr->encoding);
-    }
-#elif HAS_PRIVATE_ENCODING
-    if (Qnil != dr->encoding) {
-	rb_funcall(rs, ox_force_encoding_id, 1, dr->encoding);
     }
 #endif
     return rs;

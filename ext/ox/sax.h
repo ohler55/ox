@@ -33,10 +33,8 @@ typedef struct _saxDrive {
     int			blocked;
     bool		abort;
     struct _has		has;
-#if HAS_ENCODING_SUPPORT
+#if HAVE_RB_ENC_ASSOCIATE
     rb_encoding *encoding;
-#elif HAS_PRIVATE_ENCODING
-    VALUE	encoding;
 #else
     const char	*encoding;
 #endif
