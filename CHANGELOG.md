@@ -4,6 +4,12 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ## [Unreleased]
 
+## [2.13.3] - 2020-09-03
+
+### Changed
+
+- mkmf have macros used instead of ad-hoc determinations.
+
 ## [2.13.2] - 2020-02-05
 
 Skip and missed sequence
