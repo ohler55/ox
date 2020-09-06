@@ -4,6 +4,12 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ## [Unreleased]
 
+## [2.13.4] - 2020-09-07
+
+### Fixed
+
+- Fixed one crash that occurred when a corrupted object encoded string was provided.
+
 ## [2.13.3] - 2020-09-03
 
 ### Changed

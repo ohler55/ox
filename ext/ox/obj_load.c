@@ -237,6 +237,7 @@ static ID
 get_var_sym_from_attrs(Attr a, void *encoding) {
     for (; 0 != a->name; a++) {
 	if ('a' == *a->name && '\0' == *(a->name + 1)) {
+	    name2var(a->value, encoding);
 	    return name2var(a->value, encoding);
 	}
     }
@@ -715,8 +716,12 @@ end_element(PInfo pi, const char *ename) {
 	    case ExceptionCode:
 	    case ObjectCode:
 		if (Qnil != ph->obj) {
-		    if (0 == h->var) {
+		    if (0 == h->var || NULL == rb_id2name(h->var )) {
 			set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
+			return;
+		    }
+		    if (RUBY_T_OBJECT != rb_type(ph->obj)) {
+			set_error(&pi->err, "Corrupt object encoding", pi->str, pi->s);
 			return;
 		    }
 		    rb_ivar_set(ph->obj, h->var, h->obj);
