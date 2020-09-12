@@ -4,7 +4,7 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ## [Unreleased]
 
-## [2.13.4] - 2020-09-07
+## [2.13.4] - 2020-09-11
 
 ### Fixed
 
