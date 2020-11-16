@@ -115,17 +115,8 @@ module Ox
     # matching name will be yielded to. If the cond is a Hash then the
     # keys-value pairs in the cond must match the child attribute values with
     # the same keys. Any other cond type will yield to nothing.
-    def each(cond=nil)
-      if cond.nil?
-        nodes.each { |n| yield(n) }
-      else
-        cond = cond.to_s if cond.is_a?(Symbol)
-        if cond.is_a?(String)
-          nodes.each { |n| yield(n) if n.is_a?(Element) && cond == n.name }
-        elsif cond.is_a?(Hash)
-          nodes.each { |n| yield(n) if n.is_a?(Element) && n.attr_match(cond) }
-        end
-      end
+    def each(cond=nil, &block)
+      build_enumerator(cond).each(&block)
     end
 
     # Returns an array of Nodes or Strings that correspond to the locations
@@ -412,6 +403,24 @@ module Ox
     end
 
     private
+
+    # Builds an enumerator for use in `#each` call
+    #
+    # - +cond+ [Hash, String, nil] an element filter
+    def build_enumerator(cond)
+      if cond.nil?
+        nodes.each
+      else
+        cond = cond.to_s if cond.is_a?(Symbol)
+        Enumerator.new do |yielder|
+          if cond.is_a?(String)
+            nodes.each { |n| yielder.yield(n) if n.is_a?(Element) && cond == n.name }
+          elsif cond.is_a?(Hash)
+            nodes.each { |n| yielder.yield(n) if n.is_a?(Element) && n.attr_match(cond) }
+          end
+        end
+      end
+    end
 
     # Removes recursively children for nodes and sub_nodes
     #
