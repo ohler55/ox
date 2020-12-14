@@ -40,6 +40,7 @@ $ox_object_options = {
   :convert_special=>true,
   :effort=>:strict,
   :no_empty=>false,
+  :with_cdata=>false,
   :invalid_replace=>'',
   :strip_namespace=>false,
   :overlay=>nil,
@@ -64,6 +65,7 @@ $ox_generic_options = {
   :convert_special=>true,
   :effort=>:strict,
   :no_empty=>false,
+  :with_cdata=>false,
   :invalid_replace=>'',
   :strip_namespace=>false,
   :overlay=>nil,
@@ -78,7 +80,7 @@ class Func < ::Test::Unit::TestCase
   def test_get_options
     Ox::default_options = $ox_object_options
     opts = Ox.default_options()
-    assert_equal(opts, $ox_object_options)
+    assert_equal($ox_object_options, opts)
   end
 
   def test_set_options
@@ -102,6 +104,7 @@ class Func < ::Test::Unit::TestCase
       :convert_special=>false,
       :effort=>:tolerant,
       :no_empty=>true,
+      :with_cdata=>true,
       :invalid_replace=>'*',
       :strip_namespace=>'spaced',
       :overlay=>nil,

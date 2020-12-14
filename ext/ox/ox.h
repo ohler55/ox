@@ -136,6 +136,7 @@ typedef struct _options {
     char		convert_special;// boolean true or false
     char		allow_invalid;	// YesNo
     char		no_empty;	// boolean - no empty elements when dumping
+    char		with_cdata;	// boolean - hash_load should include cdata
     char		inv_repl[12];	// max 10 valid characters, first character is the length
     char		strip_ns[64];	// namespace to strip, \0 is no-strip, \* is all, else only matches
     struct _hints	*html_hints;	// html hints

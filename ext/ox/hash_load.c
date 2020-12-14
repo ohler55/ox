@@ -74,9 +74,8 @@ unmark(PInfo pi, VALUE val) {
 }
 
 static void
-add_text(PInfo pi, char *text, int closed) {
+add_str(PInfo pi, VALUE s) {
     Helper		parent = helper_stack_peek(&pi->helpers);
-    volatile VALUE	s = rb_str_new2(text);
     volatile VALUE	a;
 
 #if HAVE_RB_ENC_ASSOCIATE
@@ -100,6 +99,16 @@ add_text(PInfo pi, char *text, int closed) {
 	parent->type = ArrayCode;
 	break;
     }
+}
+
+static void
+add_text(PInfo pi, char *text, int closed) {
+    add_str(pi, rb_str_new2(text));
+}
+
+static void
+add_cdata(PInfo pi, const char *text, size_t len) {
+    add_str(pi, rb_str_new(text, len));
 }
 
 static void
@@ -250,6 +259,19 @@ struct _parseCallbacks   _ox_hash_callbacks = {
 
 ParseCallbacks   ox_hash_callbacks = &_ox_hash_callbacks;
 
+struct _parseCallbacks   _ox_hash_cdata_callbacks = {
+    NULL,
+    NULL,
+    NULL,
+    add_cdata,
+    add_text,
+    add_element,
+    end_element,
+    finish,
+};
+
+ParseCallbacks   ox_hash_cdata_callbacks = &_ox_hash_cdata_callbacks;
+
 struct _parseCallbacks   _ox_hash_no_attrs_callbacks = {
     NULL,
     NULL,
@@ -262,3 +284,16 @@ struct _parseCallbacks   _ox_hash_no_attrs_callbacks = {
 };
 
 ParseCallbacks   ox_hash_no_attrs_callbacks = &_ox_hash_no_attrs_callbacks;
+
+struct _parseCallbacks   _ox_hash_no_attrs_cdata_callbacks = {
+    NULL,
+    NULL,
+    NULL,
+    add_cdata,
+    add_text,
+    add_element_no_attrs,
+    end_element_no_attrs,
+    NULL,
+};
+
+ParseCallbacks   ox_hash_no_attrs_cdata_callbacks = &_ox_hash_no_attrs_cdata_callbacks;
