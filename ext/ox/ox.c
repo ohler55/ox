@@ -145,6 +145,7 @@ static VALUE	symbolize_keys_sym;
 static VALUE	symbolize_sym;
 static VALUE	tolerant_sym;
 static VALUE	trace_sym;
+static VALUE	with_cdata_sym;
 static VALUE	with_dtd_sym;
 static VALUE	with_instruct_sym;
 static VALUE	with_xml_sym;
@@ -179,6 +180,7 @@ struct _options	 ox_default_options = {
     true,		// convert_special
     No,			// allow_invalid
     false,		// no_empty
+    false,		// with_cdata
     { '\0' },		// inv_repl
     { '\0' },		// strip_ns
     NULL,		// html_hints
@@ -192,7 +194,9 @@ extern ParseCallbacks	ox_gen_callbacks;
 extern ParseCallbacks	ox_limited_callbacks;
 extern ParseCallbacks	ox_nomode_callbacks;
 extern ParseCallbacks	ox_hash_callbacks;
+extern ParseCallbacks	ox_hash_cdata_callbacks;
 extern ParseCallbacks	ox_hash_no_attrs_callbacks;
+extern ParseCallbacks	ox_hash_no_attrs_cdata_callbacks;
 
 static void	parse_dump_options(VALUE ropts, Options copts);
 
@@ -290,6 +294,7 @@ hints_to_overlay(Hints hints) {
  * - _:convert_special_ [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
  * - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  * - _:no_empty_ [true|false|nil] flag indicating there should be no empty elements in a dump
+ * - _:with_cdata_ [true|false] includes cdata in hash_load results
  * - _:strip_namespace_ [String|true|false] false or "" results in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  * - _:overlay_ [Hash] a Hash of keys that match html element names and values that are one of
  *   - _:active_ - make the normal callback for the element
@@ -324,6 +329,7 @@ get_def_opts(VALUE self) {
     rb_hash_aset(opts, smart_sym, (Yes == ox_default_options.smart) ? Qtrue : ((No == ox_default_options.smart) ? Qfalse : Qnil));
     rb_hash_aset(opts, convert_special_sym, (ox_default_options.convert_special) ? Qtrue : Qfalse);
     rb_hash_aset(opts, no_empty_sym, (ox_default_options.no_empty) ? Qtrue : Qfalse);
+    rb_hash_aset(opts, with_cdata_sym, (ox_default_options.with_cdata) ? Qtrue : Qfalse);
     switch (ox_default_options.mode) {
     case ObjMode:		rb_hash_aset(opts, mode_sym, object_sym);		break;
     case GenMode:		rb_hash_aset(opts, mode_sym, generic_sym);		break;
@@ -431,6 +437,7 @@ sax_html_overlay(VALUE self) {
  *   - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  *   - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  *   - _:strip_namespace_ [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ * - _:with_cdata_ [true|false] includes cdata in hash_load results
  * - _:overlay_ [Hash] a Hash of keys that match html element names and values that are one of
  *   - _:active_ - make the normal callback for the element
  *   - _:nest_ok_ - active but ignore nest check
@@ -630,6 +637,10 @@ set_def_opts(VALUE self, VALUE opts) {
 	    rb_hash_foreach(v, set_overlay, (VALUE)ox_default_options.html_hints);
 	}
     }
+    if (Qnil != (v = rb_hash_lookup(opts, with_cdata_sym))) {
+	ox_default_options.with_cdata = (Qtrue == v);
+    }
+
     ox_default_options.element_key_mod = rb_hash_lookup2(opts, element_key_mod_sym, ox_default_options.element_key_mod);
     ox_default_options.attr_key_mod = rb_hash_lookup2(opts, attr_key_mod_sym, ox_default_options.attr_key_mod);
 
@@ -838,6 +849,9 @@ load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, E
 	    options.margin[sizeof(options.margin) - 1] = '\0';
 	    options.margin_len = strlen(options.margin);
 	}
+	if (Qnil != (v = rb_hash_lookup(h, with_cdata_sym))) {
+	    options.with_cdata = (Qtrue == v);
+	}
     }
 #if HAVE_RB_ENC_FIND
     if ('\0' == *options.encoding) {
@@ -869,10 +883,18 @@ load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, E
 	obj = ox_parse(xml, len, ox_limited_callbacks, 0, &options, err);
 	break;
     case HashMode:
-	obj = ox_parse(xml, len, ox_hash_callbacks, 0, &options, err);
+	if (options.with_cdata) {
+	    obj = ox_parse(xml, len, ox_hash_cdata_callbacks, 0, &options, err);
+	} else {
+	    obj = ox_parse(xml, len, ox_hash_callbacks, 0, &options, err);
+	}
 	break;
     case HashNoAttrMode:
-	obj = ox_parse(xml, len, ox_hash_no_attrs_callbacks, 0, &options, err);
+	if (options.with_cdata) {
+	    obj = ox_parse(xml, len, ox_hash_no_attrs_cdata_callbacks, 0, &options, err);
+	} else {
+	    obj = ox_parse(xml, len, ox_hash_no_attrs_callbacks, 0, &options, err);
+	}
 	break;
     case NoMode:
 	obj = ox_parse(xml, len, ox_nomode_callbacks, 0, &options, err);
@@ -908,6 +930,7 @@ load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, E
  *   - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
  *   - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  *   - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
+ *   - *:with_cdata* [true|false] if true cdata is included in hash_load output otherwise it is not.
  */
 static VALUE
 load_str(int argc, VALUE *argv, VALUE self) {
@@ -1516,6 +1539,7 @@ void Init_ox() {
     symbolize_sym = ID2SYM(rb_intern("symbolize"));		rb_gc_register_address(&symbolize_sym);
     tolerant_sym = ID2SYM(rb_intern("tolerant"));		rb_gc_register_address(&tolerant_sym);
     trace_sym = ID2SYM(rb_intern("trace"));			rb_gc_register_address(&trace_sym);
+    with_cdata_sym = ID2SYM(rb_intern("with_cdata"));		rb_gc_register_address(&with_cdata_sym);
     with_dtd_sym = ID2SYM(rb_intern("with_dtd"));		rb_gc_register_address(&with_dtd_sym);
     with_instruct_sym = ID2SYM(rb_intern("with_instructions")); rb_gc_register_address(&with_instruct_sym);
     with_xml_sym = ID2SYM(rb_intern("with_xml"));		rb_gc_register_address(&with_xml_sym);

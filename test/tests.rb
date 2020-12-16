@@ -40,6 +40,7 @@ $ox_object_options = {
   :convert_special=>true,
   :effort=>:strict,
   :no_empty=>false,
+  :with_cdata=>false,
   :invalid_replace=>'',
   :strip_namespace=>false,
   :overlay=>nil,
@@ -64,6 +65,7 @@ $ox_generic_options = {
   :convert_special=>true,
   :effort=>:strict,
   :no_empty=>false,
+  :with_cdata=>false,
   :invalid_replace=>'',
   :strip_namespace=>false,
   :overlay=>nil,
@@ -78,7 +80,7 @@ class Func < ::Test::Unit::TestCase
   def test_get_options
     Ox::default_options = $ox_object_options
     opts = Ox.default_options()
-    assert_equal(opts, $ox_object_options)
+    assert_equal($ox_object_options, opts)
   end
 
   def test_set_options
@@ -102,6 +104,7 @@ class Func < ::Test::Unit::TestCase
       :convert_special=>false,
       :effort=>:tolerant,
       :no_empty=>true,
+      :with_cdata=>true,
       :invalid_replace=>'*',
       :strip_namespace=>'spaced',
       :overlay=>nil,
@@ -685,31 +688,19 @@ class Func < ::Test::Unit::TestCase
   def test_array_multi
     Ox::default_options = $ox_object_options
     t = Time.local(2012, 1, 5, 23, 58, 7)
-    if RUBY_VERSION.start_with?('1.8')
-      dump_and_load([nil, true, false, 3, 'z', 7.9, 'a&b', :xyz, t], false)
-    else
-      dump_and_load([nil, true, false, 3, 'z', 7.9, 'a&b', :xyz, t, (-1..7)], false)
-    end
+    dump_and_load([nil, true, false, 3, 'z', 7.9, 'a&b', :xyz, t, (-1..7)], false)
   end
 
   def test_hash_multi
     Ox::default_options = $ox_object_options
     t = Time.local(2012, 1, 5, 23, 58, 7)
-    if RUBY_VERSION.start_with?('1.8')
-      dump_and_load({ nil => nil, true => true, false => false, 3 => 3, 'z' => 'z', 7.9 => 7.9, 'a&b' => 'a&b', :xyz => :xyz, t => t }, false)
-    else
-      dump_and_load({ nil => nil, true => true, false => false, 3 => 3, 'z' => 'z', 7.9 => 7.9, 'a&b' => 'a&b', :xyz => :xyz, t => t, (-1..7) => (-1..7) }, false)
-    end
+    dump_and_load({ nil => nil, true => true, false => false, 3 => 3, 'z' => 'z', 7.9 => 7.9, 'a&b' => 'a&b', :xyz => :xyz, t => t, (-1..7) => (-1..7) }, false)
   end
 
   def test_object_multi
     Ox::default_options = $ox_object_options
     t = Time.local(2012, 1, 5, 23, 58, 7)
-    if RUBY_VERSION.start_with?('1.8')
-      dump_and_load(Bag.new(:@a => nil, :@b => true, :@c => false, :@d => 3, :@e => 'z', :@f => 7.9, :@g => 'a&b', :@h => :xyz, :@i => t), false)
-    else
-      dump_and_load(Bag.new(:@a => nil, :@b => true, :@c => false, :@d => 3, :@e => 'z', :@f => 7.9, :@g => 'a&b', :@h => :xyz, :@i => t, :@j => (-1..7)), false)
-    end
+    dump_and_load(Bag.new(:@a => nil, :@b => true, :@c => false, :@d => 3, :@e => 'z', :@f => 7.9, :@g => 'a&b', :@h => :xyz, :@i => t, :@j => (-1..7)), false)
   end
 
   def test_complex
@@ -1676,6 +1667,24 @@ comment -->
 }
     doc = Ox.load(xml, :mode => :hash)
     assert_equal({top: {one: 'This is a one.', mid: {a: 'alpha', b: 'bravo'}}}, doc)
+  end
+
+  def test_hash_mode_simple_cdata
+    Ox::default_options = $ox_generic_options
+    xml = %{<?xml version="1.0"?>
+<top>
+  <one>This is a one.</one>
+  <mid>
+    <a><![CDATA[alpha]]></a>
+    <b><![CDATA[bravo]]></b>
+  </mid>
+</top>
+}
+    doc = Ox.load(xml, mode: :hash, with_cdata: true)
+    assert_equal({top: {one: 'This is a one.', mid: {a: 'alpha', b: 'bravo'}}}, doc)
+
+    doc = Ox.load(xml, mode: :hash, with_cdata: false)
+    assert_equal({top: {one: 'This is a one.', mid: {a: nil, b: nil}}}, doc)
   end
 
   def test_hash_mode_multi_text
