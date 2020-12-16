@@ -4,6 +4,12 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ## [Unreleased]
 
+## [2.14.0] - 2020-12-15
+
+### Added
+
+- The `:with_cdata` option added for the hash_load() function.
+
 ## [2.13.4] - 2020-09-11
 
 ### Fixed
