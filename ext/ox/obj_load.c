@@ -739,15 +739,38 @@ end_element(PInfo pi, const char *ename) {
 		helper_stack_push(&pi->helpers, h->var, h->obj, KeyCode);
 		break;
 	    case RangeCode:
-		if (ox_beg_id == h->var) {
-		    RSTRUCT_SET(ph->obj, 0, h->obj);
-		} else if (ox_end_id == h->var) {
-		    RSTRUCT_SET(ph->obj, 1, h->obj);
-		} else if (ox_excl_id == h->var) {
-		    RSTRUCT_SET(ph->obj, 2, h->obj);
-		} else {
-		    set_error(&pi->err, "Invalid range attribute", pi->str, pi->s);
-		    return;
+		{
+		    VALUE begin, end;
+		    int excl;
+
+		    rb_range_values(ph->obj, &begin, &end, &excl);
+		    if (ox_beg_id == h->var) {
+			begin = h->obj;
+		    } else if (ox_end_id == h->var) {
+			end = h->obj;
+		    } else if (ox_excl_id == h->var) {
+			excl = RTEST(h->obj);
+		    } else {
+			set_error(&pi->err, "Invalid range attribute", pi->str, pi->s);
+			return;
+		    }
+
+		    if ((!FIXNUM_P(begin) || !FIXNUM_P(end)) && !NIL_P(begin) && !NIL_P(end)) {
+			VALUE v;
+
+			v = rb_funcall(begin, rb_intern("<=>"), 1, end);
+			if (NIL_P(v)) {
+			  if (ox_zero_fixnum == begin) { begin = end; }
+			  else if (ox_zero_fixnum == end) { end = begin; }
+			  else {
+			    set_error(&pi->err, "Invalid range attribute", pi->str, pi->s);
+			    return;
+			  }
+			}
+		    }
+
+		    ph->obj = rb_range_new(begin, end, excl);
+
 		}
 		break;
 	    case KeyCode:
