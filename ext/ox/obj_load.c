@@ -42,10 +42,10 @@ static void		fill_indent(PInfo pi, char *buf, size_t size);
 
 
 struct _parseCallbacks	 _ox_obj_callbacks = {
-    instruct, /* instruct, */
-    0, /* add_doctype, */
-    0, /* add_comment, */
-    0, /* add_cdata, */
+    instruct,	// instruct,
+    0,		// add_doctype,
+    0,		// add_comment,
+    0,		// add_cdata,
     add_text,
     add_element,
     end_element,
@@ -128,7 +128,7 @@ resolve_classname(VALUE mod, const char *class_name, Effort effort, VALUE base_c
 	break;
     case StrictEffort:
     default:
-	/* raise an error if name is not defined */
+	// raise an error if name is not defined
 	clas = rb_const_get_at(mod, ci);
 	break;
     }
@@ -183,7 +183,7 @@ parse_ulong(const char *s, PInfo pi) {
     return ULONG2NUM(n);
 }
 
-/* 2010-07-09T10:47:45.895826162+09:00 */
+// 2010-07-09T10:47:45.895826162+09:00
 inline static VALUE
 parse_time(const char *text, VALUE clas) {
     VALUE	t;
@@ -559,7 +559,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	    printf("%s%s\n", indent, buf);
 	}
     }
-    if (helper_stack_empty(&pi->helpers)) { /* top level object */
+    if (helper_stack_empty(&pi->helpers)) { // top level object
 	if (0 != (id = get_id_from_attrs(pi, attrs))) {
 	    pi->circ_array = circ_array_new();
 	}
@@ -580,7 +580,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	h->obj = Qfalse;
 	break;
     case StringCode:
-	/* h->obj will be replaced by add_text if it is called */
+	// h->obj will be replaced by add_text if it is called
 	h->obj = ox_empty_string;
 	if (0 != pi->circ_array) {
 	    pi->id = get_id_from_attrs(pi, attrs);
@@ -597,8 +597,8 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     case ComplexCode:
     case DateCode:
     case TimeCode:
-    case RationalCode: /* sub elements read next */
-	/* value will be read in the following add_text */
+    case RationalCode: // sub elements read next
+	// value will be read in the following add_text
 	h->obj = Qundef;
 	break;
     case String64Code:
@@ -620,7 +620,7 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	}
 	break;
     case RangeCode:
-	h->obj = rb_range_new(ox_zero_fixnum, ox_zero_fixnum, Qfalse);
+	h->obj = rb_ary_new_from_args(3, Qnil, Qnil, Qfalse);
 	break;
     case RawCode:
 	if (hasChildren) {
@@ -700,12 +700,15 @@ end_element(PInfo pi, const char *ename) {
 	Helper	ph = helper_stack_peek(&pi->helpers);
 
 	if (ox_empty_string == h->obj) {
-	    /* special catch for empty strings */
+	    // special catch for empty strings
 	    h->obj = rb_str_new2("");
-	}
-	if (Qundef == h->obj) {
+	} else if (Qundef == h->obj) {
 	    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
 	    return;
+	} else if (RangeCode == h->type) { // Expect an array of 3 elements.
+	    const VALUE	*ap = RARRAY_PTR(h->obj);
+
+	    h->obj = rb_range_new(*ap, *(ap + 1), Qtrue == *(ap + 2));
 	}
 	pi->obj = h->obj;
 	if (0 != ph) {
@@ -740,11 +743,11 @@ end_element(PInfo pi, const char *ename) {
 		break;
 	    case RangeCode:
 		if (ox_beg_id == h->var) {
-		    RSTRUCT_SET(ph->obj, 0, h->obj);
+		    rb_ary_store(ph->obj, 0, h->obj);
 		} else if (ox_end_id == h->var) {
-		    RSTRUCT_SET(ph->obj, 1, h->obj);
+		    rb_ary_store(ph->obj, 1, h->obj);
 		} else if (ox_excl_id == h->var) {
-		    RSTRUCT_SET(ph->obj, 2, h->obj);
+		    rb_ary_store(ph->obj, 2, h->obj);
 		} else {
 		    set_error(&pi->err, "Invalid range attribute", pi->str, pi->s);
 		    return;
@@ -903,7 +906,7 @@ parse_xsd_time(const char *text, VALUE clas) {
 #endif
 }
 
-/* debug functions */
+// debug functions
 static void
 fill_indent(PInfo pi, char *buf, size_t size) {
     size_t	cnt;
