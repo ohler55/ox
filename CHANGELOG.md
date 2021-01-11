@@ -4,6 +4,12 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ## [Unreleased]
 
+## [2.14.1] - 2021-01-11
+
+### Fixed
+
+- In Ruby 3.0 Range objects are frozen. This version allows Ranges to be created on load.
+
 ## [2.14.0] - 2020-12-15
 
 ### Added

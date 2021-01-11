@@ -16,10 +16,6 @@ A fast XML parser and Object marshaller as a Ruby gem.
 
 *RubyGems* *repo*: https://rubygems.org/gems/ox
 
-## Follow @oxgem on Twitter
-
-[Follow @peterohler on Twitter](http://twitter.com/#!/peterohler) for announcements and news about the Ox gem.
-
 ## Support
 
 [Get supported Ox with a Tidelift Subscription.](https://tidelift.com/subscription/pkg/rubygems-ox?utm_source=rubygems-ox&utm_medium=referral&utm_campaign=readme) Security updates are [supported](https://tidelift.com/security).
@@ -78,7 +74,7 @@ callbacks. Unlike Nokogiri and LibXML, Ox can be tuned to use only the SAX
 callbacks that are of interest to the caller. (See the perf_sax.rb file for an
 example.)
 
-Ox is compatible with Ruby 1.8.7, 1.9.3, 2.1.2, 2.2.0 and RBX.
+Ox is compatible with Ruby 2.3, 2.4, 2.5, 2.6, 2.7, 3.0.
 
 ### Object Dump Sample:
 
