@@ -838,7 +838,7 @@ dump_obj(ID aid, VALUE obj, int depth, Out out) {
 	    out->w_start(out, &e);
 
 	    for (i = 0; i < cnt; i++) {
-	        VALUE v = RSTRUCT_GET(obj, i);
+	        VALUE v = RSTRUCT_GET(obj, (int)(i));
 	        dump_obj(rb_intern(ulong2str(i, num_buf + sizeof(num_buf) - 1)), v, d2, out);
 	    }
 	    out->w_end(out, &e);
