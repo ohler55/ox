@@ -1,8 +1,8 @@
 # https://www.appveyor.com/docs/lang/ruby/
 
-version: 3.3.2-{build}-{branch}
+version: '{branch}-{build}'
 
-image: Visual Studio 2015
+image: Visual Studio 2019
 
 cache:
   - vendor/bundle
@@ -19,7 +19,7 @@ environment:
   APPVEYOR_RDP_PASSWORD: fixm3-wtf
   PATH: c:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
   matrix:
-    - RUBY_VERSION: 26-x64
+    - RUBY_VERSION: 27-x64
 
 build: off
 
