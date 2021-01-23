@@ -26,6 +26,9 @@ build: off
 before_build:
   - gem update --system
   - ruby -v
+  - echo %PATH%
+  - ls C:\Ruby%RUBY_VERSION%\DevKit\bin
+  - ls C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1
   - make -v
   #- bundle -v
 
