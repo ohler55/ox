@@ -17,7 +17,8 @@ platform:
 
 environment:
   APPVEYOR_RDP_PASSWORD: fixm3-wtf
-  PATH: c:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
+  #PATH: c:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
+  PATH: C:\Ruby%RUBY_VERSION%\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
   matrix:
     - RUBY_VERSION: 27-x64
 
@@ -27,7 +28,6 @@ before_build:
   - gem update --system
   - ruby -v
   - echo %PATH%
-  - ls C:\Ruby%RUBY_VERSION%\DevKit\bin
   - ls C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1
   - make -v
   #- bundle -v
