@@ -34,8 +34,10 @@ before_build:
      {
        rvm get stable
        rvm install ruby-3.0.0
+       rvm use ruby-3.0.0
      }
 
+  - which ruby
   - gem update --system
   - ruby -v
   - make -v
