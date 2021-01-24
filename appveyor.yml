@@ -18,10 +18,10 @@ environment:
   matrix:
     - RUBY_VERSION: ruby-3.0.0
     - RUBY_VERSION: ruby-2.7.2
-    - RUBY_VERSION: ruby-2.6.5
-    - RUBY_VERSION: ruby-2.5.7
-    - RUBY_VERSION: ruby-2.4.9
-    - RUBY_VERSION: ruby-2.3.8
+    #- RUBY_VERSION: ruby-2.6.5
+    #- RUBY_VERSION: ruby-2.5.7
+    #- RUBY_VERSION: ruby-2.4.9
+    #- RUBY_VERSION: ruby-2.3.8
 
 build: off
 
@@ -34,7 +34,7 @@ before_build:
      if ($env:RUBY_VERSION -eq "ruby-3.0.0" -or $env:RUBY_VERSION -eq "ruby-2.7.2")
      {
        rvm get stable
-       rvm install $RUBY_VERSION
+       rvm install $env:RUBY_VERSION
      }
   - sh: export MY_RUBY_HOME=/home/appveyor/.rvm/rubies/$RUBY_VERSION
   - sh: rvm reload
