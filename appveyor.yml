@@ -20,15 +20,17 @@ platform:
 
 environment:
   matrix:
-  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-    APPVEYOR_RDP_PASSWORD: fixm3-wtf
-    #PATH: c:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
-    PATH: C:\Ruby%RUBY_VERSION%\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
-    RUBY_VERSION: 27-x64
-  - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
-    RUBY_VERSION: 27-x64
-  - APPVEYOR_BUILD_WORKER_IMAGE: macOS
-    RUBY_VERSION: 27-x64
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+      RUBY_VERSION: 27-x64
+
+    - APPVEYOR_BUILD_WORKER_IMAGE: macOS
+      RUBY_VERSION: 27-x64
+
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      APPVEYOR_RDP_PASSWORD: fixm3-wtf
+      #PATH: c:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
+      PATH: C:\Ruby%RUBY_VERSION%\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
+      RUBY_VERSION: 27-x64
 
 build: off
 
