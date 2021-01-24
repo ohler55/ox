@@ -34,7 +34,7 @@ before_build:
      {
        rvm get stable
        rvm install ruby-3.0.0
-       rvm use ruby-3.0.0
+       rvm --default use ruby-3.0.0
      }
 
   - which ruby
