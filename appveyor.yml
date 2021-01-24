@@ -29,9 +29,7 @@ environment:
 build: off
 
 before_build:
-  if ($env:RUBY_VERSION -eq "30") {
-    rvm install 3.0.0
-  }
+  -ps: if ($env:RUBY_VERSION -eq "30") { rvm install 3.0.0 }
   - gem update --system
   - ruby -v
   - make -v
