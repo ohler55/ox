@@ -4,7 +4,7 @@ version: '{branch}-{build}'
 
 image:
   - Ubuntu
-  #- macOS
+  - macOS
   #- Visual Studio 2019
 
 cache:
@@ -18,10 +18,10 @@ environment:
   matrix:
     - RUBY_VERSION: ruby-3.0.0
     - RUBY_VERSION: ruby-2.7.2
-    #- RUBY_VERSION: ruby-2.6.5
-    #- RUBY_VERSION: ruby-2.5.7
-    #- RUBY_VERSION: ruby-2.4.9
-    #- RUBY_VERSION: ruby-2.3.8
+    - RUBY_VERSION: ruby-2.6.5
+    - RUBY_VERSION: ruby-2.5.7
+    - RUBY_VERSION: ruby-2.4.9
+    - RUBY_VERSION: ruby-2.3.8
 
 build: off
 
