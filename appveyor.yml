@@ -32,7 +32,8 @@ before_build:
   - ps: |
      if ($env:RUBY_VERSION -eq "30")
      {
-       rvm install 3.0.0
+       rvm get stable
+       rvm install ruby-3.0.0
      }
 
   - gem update --system
