@@ -1,7 +1,7 @@
 # Ox gem
 A fast XML parser and Object marshaller as a Ruby gem.
 
-[![Build Status](https://secure.travis-ci.org/ohler55/ox.svg?branch=master)](http://travis-ci.org/ohler55/ox) [![TideLift](https://tidelift.com/badges/github/ohler55/ox)](https://tidelift.com/subscription/pkg/rubygems-ox?utm_source=rubygems-ox&utm_medium=referral&utm_campaign=readme)
+[![Build status](https://ci.appveyor.com/api/projects/status/pg2w4wspbrflbi8c?svg=true)](https://ci.appveyor.com/project/ohler55/ox) [![TideLift](https://tidelift.com/badges/github/ohler55/ox)](https://tidelift.com/subscription/pkg/rubygems-ox?utm_source=rubygems-ox&utm_medium=referral&utm_campaign=readme)
 
 ## Installation
     gem install ox
