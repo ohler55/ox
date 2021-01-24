@@ -4,7 +4,7 @@ version: '{branch}-{build}'
 
 image:
   - Ubuntu
-  #- macOS
+  - macOS
   #- Visual Studio 2019
 
 cache:
@@ -20,26 +20,13 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
       RUBY_VERSION: 27-x64
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
-      RUBY_VERSION: 26-x64
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
-      RUBY_VERSION: 25-x64
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
-      RUBY_VERSION: 24-x64
+      RUBY_VERSION: 265-x64
 
 build: off
 
 before_build:
-  - ps: |
-     if ($env:RUBY_VERSION -eq "30")
-     {
-       rvm get stable
-       rvm install ruby-3.0.0
-       rvm --default use ruby-3.0.0
-     }
-
-  - which ruby
-  - gem update --system
   - ruby -v
+  - gem update --system
   - make -v
   #- bundle -v
 
