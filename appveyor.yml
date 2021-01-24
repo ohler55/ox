@@ -2,7 +2,10 @@
 
 version: '{branch}-{build}'
 
-image: Visual Studio 2019
+image:
+  - Ubuntu
+  - macOS
+  - Visual Studio 2019
 
 cache:
   - vendor/bundle
@@ -20,15 +23,18 @@ environment:
   #PATH: c:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
   PATH: C:\Ruby%RUBY_VERSION%\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
   matrix:
-    - RUBY_VERSION: 27-x64
+  - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    RUBY_VERSION: 27-x64
+  - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+    RUBY_VERSION: 27-x64
+  - APPVEYOR_BUILD_WORKER_IMAGE: macOS
+    RUBY_VERSION: 27-x64
 
 build: off
 
 before_build:
   - gem update --system
   - ruby -v
-  - echo %PATH%
-  - ls C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1
   - make -v
   #- bundle -v
 
