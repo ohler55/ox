@@ -1,0 +1,53 @@
+# https://www.appveyor.com/docs/lang/ruby/
+
+version: '{branch}-{build}'
+
+image:
+  - Ubuntu
+  - macOS
+  #- Visual Studio 2019
+
+cache:
+  - vendor/bundle
+
+platform:
+  - x86
+
+environment:
+  APPVEYOR_SSH_KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHWyDxNhnbg8dpJeFO+V8t+sNdDe79AU2IHkoFliINFQ
+  matrix:
+    - RUBY_VERSION: ruby-3.0.0
+    - RUBY_VERSION: ruby-2.7.2
+    - RUBY_VERSION: ruby-2.6.5
+    - RUBY_VERSION: ruby-2.5.7
+    - RUBY_VERSION: ruby-2.4.9
+    - RUBY_VERSION: ruby-2.3.8
+
+build: off
+
+on_finish:
+  #- sh: export APPVEYOR_SSH_BLOCK=true
+  #- sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
+
+before_build:
+  - ps: |
+     if ($env:RUBY_VERSION -eq "ruby-3.0.0" -or $env:RUBY_VERSION -eq "ruby-2.7.2")
+     {
+       rvm get stable
+       rvm install $env:RUBY_VERSION
+     }
+  - sh: export MY_RUBY_HOME=/home/appveyor/.rvm/rubies/$RUBY_VERSION
+  - sh: rvm reload
+  - sh: rvm use $RUBY_VERSION
+  - ruby -v
+
+build_script:
+  - cd ~/projects/ox/ext/ox
+  - ruby extconf.rb
+  - make
+  - cd ~/projects/ox/test
+  - ruby tests.rb
+  - ruby sax/sax_test.rb
+
+matrix:
+  fast_finish: true
