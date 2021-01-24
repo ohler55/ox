@@ -34,6 +34,7 @@ before_build:
        rvm install ruby-3.0.0
      }
   - sh: export MY_RUBY_HOME=/home/appveyor/.rvm/rubies/$RUBY_VERSION
+  - sh: rvm reload
   - sh: rvm use $RUBY_VERSION
   - which ruby
   - ruby -v
