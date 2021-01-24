@@ -13,21 +13,25 @@ cache:
 platform:
   - x86
 
-# environment:
-#   matrix:
-#     - RUBY_VERSION: 200
-#     - RUBY_VERSION: 193
-
 environment:
   matrix:
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+      RUBY_VERSION: 30
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
       RUBY_VERSION: 27-x64
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
       RUBY_VERSION: 26-x64
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+      RUBY_VERSION: 25-x64
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+      RUBY_VERSION: 24-x64
 
 build: off
 
 before_build:
+  if ($env:RUBY_VERSION -eq "30") {
+    rvm install 3.0.0
+  }
   - gem update --system
   - ruby -v
   - make -v
