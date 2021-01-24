@@ -15,12 +15,9 @@ platform:
 
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
-      RUBY_VERSION: 30
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
-      RUBY_VERSION: 27-x64
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
-      RUBY_VERSION: 265-x64
+    - RUBY_VERSION: 30
+    - RUBY_VERSION: 27-x64
+    - RUBY_VERSION: 265-x64
 
 build: off
 
