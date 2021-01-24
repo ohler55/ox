@@ -4,8 +4,8 @@ version: '{branch}-{build}'
 
 image:
   - Ubuntu
-  - macOS
-  - Visual Studio 2019
+  #- macOS
+  #- Visual Studio 2019
 
 cache:
   - vendor/bundle
@@ -42,6 +42,8 @@ before_build:
 
 build_script:
   - echo %PATH%
+  - pwd
+  - ls
   - cd C:\projects\ox\ext\ox
   - ruby extconf.rb
   - make
