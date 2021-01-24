@@ -4,7 +4,7 @@ version: '{branch}-{build}'
 
 image:
   - Ubuntu
-  - macOS
+  #- macOS
   #- Visual Studio 2019
 
 cache:
@@ -14,14 +14,20 @@ platform:
   - x86
 
 environment:
+  APPVEYOR_SSH_KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHWyDxNhnbg8dpJeFO+V8t+sNdDe79AU2IHkoFliINFQ
   matrix:
     - RUBY_VERSION: 30
-    - RUBY_VERSION: 27-x64
-    - RUBY_VERSION: 265
+    #- RUBY_VERSION: 27-x64
+    #- RUBY_VERSION: 265
 
 build: off
 
+on_finish:
+  - sh: export APPVEYOR_SSH_BLOCK=true
+  - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
+
 before_build:
+  - which ruby
   - ruby -v
   - gem update --system
   - make -v
