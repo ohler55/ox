@@ -5,7 +5,7 @@ skip_tags: true
 
 image:
   - Ubuntu
-  #- macOS
+  - macOS
   #- Visual Studio 2019
 
 cache:
@@ -20,12 +20,16 @@ environment:
   # fails for Ubuntu and macOS so a second variable ise used to
   # specify the rvm version.
   matrix:
-    #- RUBY_VERSION: ruby-3.0.0
-    #- RUBY_VERSION: ruby-2.7.2
+    - RUBY_VERSION: 30-x64
+      RVM_NAME: ruby-3.0.0
+    - RUBY_VERSION: 27-x64
+      RVM_NAME: ruby-2.7.2
     - RUBY_VERSION: 26-x64
       RVM_NAME: ruby-2.6.5
-    #- RUBY_VERSION: ruby-2.5.7
-    #- RUBY_VERSION: ruby-2.4.9
+    - RUBY_VERSION: 25-x64
+      RVM_NAME: ruby-2.5.7
+    - RUBY_VERSION: 24-x64
+      RVM_NAME: ruby-2.4.9
 
 build: off
 test: off
@@ -36,7 +40,7 @@ matrix:
 install:
   #- PATH: C:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
   - sh: |
-     if [ $RUBY_VERSION -eq "ruby-3.0.0" ] || [ $RUBY_VERSION -eq "ruby-2" ];
+     if [ $RUBY_VERSION -eq "30-x64" ] || [ $RUBY_VERSION -eq "27-x64" ];
      then
        rvm get stable
        rvm install $RVM_NAME
@@ -46,9 +50,7 @@ install:
   - sh: rvm use $RVM_NAME
 
 before_build:
-  - env
-  #- sh: rvm use $RUBY_VERSION
-  - sh: rvm use $RVM_NAME
+  #- env
   - ruby -v
 
 build_script:
