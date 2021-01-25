@@ -4,7 +4,7 @@ version: '{branch}-{build}'
 skip_tags: true
 
 image:
-  - Ubuntu
+  #- Ubuntu
   #- macOS
   - Visual Studio 2019
 
@@ -15,14 +15,14 @@ platform:
   - x86
 
 environment:
-  APPVEYOR_SSH_KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHWyDxNhnbg8dpJeFO+V8t+sNdDe79AU2IHkoFliINFQ
+  - rdevkit
+  #APPVEYOR_SSH_KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHWyDxNhnbg8dpJeFO+V8t+sNdDe79AU2IHkoFliINFQ
   matrix:
     - RUBY_VERSION: ruby-3.0.0
     #- RUBY_VERSION: ruby-2.7.2
     #- RUBY_VERSION: ruby-2.6.5
     #- RUBY_VERSION: ruby-2.5.7
     #- RUBY_VERSION: ruby-2.4.9
-    #- RUBY_VERSION: ruby-2.3.8
 
 build: off
 test: off
@@ -31,6 +31,7 @@ matrix:
   fast_finish: true
 
 install:
+  - set PATH=C:\Ruby%RUBY_VERSION%\bin;%PATH%;C:\msys64\mingw64\bin;C:\msys64\usr\bin
   - ps: |
      if ($env:RUBY_VERSION -eq "ruby-3.0.0" -or $env:RUBY_VERSION -eq "ruby-2.7.2")
      {
