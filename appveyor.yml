@@ -15,6 +15,10 @@ platform:
   - x86
 
 environment:
+
+  # RUBY_VERSION is set to match what is expected for windows but that
+  # fails for Ubuntu and macOS so a second variable ise used to
+  # specify the rvm version.
   matrix:
     #- RUBY_VERSION: ruby-3.0.0
     #- RUBY_VERSION: ruby-2.7.2
@@ -31,28 +35,21 @@ matrix:
 
 install:
   #- PATH: C:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
-  - ps: |
-     if ($env:RUBY_VERSION -eq "ruby-3.0.0" -or $env:RUBY_VERSION -eq "ruby-2.7.2")
+  - sh: |
+     if ($env:RUBY_VERSION -eq "30-x64" -or $env:RUBY_VERSION -eq "27-x64")
      {
        rvm get stable
-       rvm install $env:RUBY_VERSION
+       rvm install $RVM_NAME
      }
+  - sh: rvm list
+  - sh: rvm use $RVM_NAME
 
 before_build:
   - env
-  - sh: |
-     if [ $RUBY_VERSION == "ruby-3.0.0" ]
-     then
-       rvm reload
-       rvm list
-       rvm use $RUBY_VERSION
-     else
-       echo "Not 3.0.0"
-     fi
 
-  #- sh: rvm list
+  - sh: rvm list
   #- sh: rvm use $RUBY_VERSION
-  #- sh: rvm use $RVM_NAME
+  - sh: rvm use $RVM_NAME
   - ruby -v
 
 build_script:
