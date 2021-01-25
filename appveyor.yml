@@ -6,7 +6,7 @@ skip_tags: true
 image:
   - Ubuntu
   #- macOS
-  #- Visual Studio 2019
+  - Visual Studio 2019
 
 cache:
   - vendor/bundle
@@ -39,19 +39,18 @@ install:
      }
 
 before_build:
-  #- sh: export MY_RUBY_HOME=/home/appveyor/.rvm/rubies/$RUBY_VERSION
   - sh: rvm reload
   - sh: rvm use $RUBY_VERSION
   - ruby -v
   - env
 
 build_script:
-  - cd ~/projects/ox/ext/ox
+  - cd $APPVEYOR_BUILD_FOLDER/ext/ox
   - ruby extconf.rb
   - make
 
 test_script:
-  - cd ~/projects/ox/test
+  - cd $APPVEYOR_BUILD_FOLDER/test
   - ruby tests.rb
   - ruby sax/sax_test.rb
 
