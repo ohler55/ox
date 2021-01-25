@@ -16,7 +16,6 @@ platform:
 
 environment:
   - rdevkit
-  #APPVEYOR_SSH_KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHWyDxNhnbg8dpJeFO+V8t+sNdDe79AU2IHkoFliINFQ
   matrix:
     - RUBY_VERSION: ruby-3.0.0
     #- RUBY_VERSION: ruby-2.7.2
