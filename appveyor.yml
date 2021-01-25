@@ -41,18 +41,12 @@ install:
   #- PATH: C:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
   - env
   - sh: |
-     if [ $RUBY_VERSION -eq "30-x64" ] || [ $RUBY_VERSION -eq "27-x64" ];
+     if [ $RUBY_VERSION == "30-x64" ] || [ $RUBY_VERSION == "27-x64" ];
      then
        rvm get stable
        rvm install $RVM_NAME
      fi
 
-  - sh: |
-     if [ $RUBY_VERSION -eq "30-x64" ]
-     then
-       rvm get stable
-       rvm install $RVM_NAME
-     fi
   - sh: rvm list
   - sh: rvm reload
   - sh: rvm use $RVM_NAME
