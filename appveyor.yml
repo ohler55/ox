@@ -15,7 +15,6 @@ platform:
   - x86
 
 environment:
-  - rdevkit
   matrix:
     - RUBY_VERSION: ruby-3.0.0
     #- RUBY_VERSION: ruby-2.7.2
