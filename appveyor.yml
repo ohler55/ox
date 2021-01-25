@@ -39,12 +39,13 @@ install:
 
 before_build:
   - sh: rvm reload
-  - sh: rvm use $RUBY_VERSION
+  #- sh: rvm use $RUBY_VERSION
+  - ps: rvm use %RUBY_VERSION%
   - ruby -v
   - env
 
 build_script:
-  - cd $APPVEYOR_BUILD_FOLDER/ext/ox
+  - cd $APPVEYOR_BUILD_FOLDER\ext\ox
   - ruby extconf.rb
   - make
 
