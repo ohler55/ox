@@ -36,18 +36,17 @@ matrix:
 install:
   #- PATH: C:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
   - sh: |
-     if ($env:RUBY_VERSION -eq "30-x64" -or $env:RUBY_VERSION -eq "27-x64")
-     {
+     if [ $RUBY_VERSION -eq "ruby-3.0.0" ] || [ $RUBY_VERSION -eq "ruby-2" ];
+     then
        rvm get stable
        rvm install $RVM_NAME
-     }
+     fi
   - sh: rvm list
+  - sh: rvm reload
   - sh: rvm use $RVM_NAME
 
 before_build:
   - env
-
-  - sh: rvm list
   #- sh: rvm use $RUBY_VERSION
   - sh: rvm use $RVM_NAME
   - ruby -v
