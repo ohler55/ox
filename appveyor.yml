@@ -40,10 +40,19 @@ install:
 
 before_build:
   - env
-  - sh: rvm reload
-  - sh: rvm list
+  - sh: |
+     if [ $RUBY_VERSION == "ruby-3.0.0" ]
+     then
+       rvm reload
+       rvm list
+       rvm use $RUBY_VERSION
+     else
+       echo "Not 3.0.0"
+     fi
+
+  #- sh: rvm list
   #- sh: rvm use $RUBY_VERSION
-  - sh: rvm use $RVM_NAME
+  #- sh: rvm use $RVM_NAME
   - ruby -v
 
 build_script:
