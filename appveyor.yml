@@ -15,6 +15,7 @@ platform:
   - x86
 
 environment:
+  PATH: C:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
   matrix:
     #- RUBY_VERSION: ruby-3.0.0
     #- RUBY_VERSION: ruby-2.7.2
@@ -29,7 +30,7 @@ matrix:
   fast_finish: true
 
 install:
-  - set PATH=C:\Ruby%RUBY_VERSION%\bin;%PATH%;C:\msys64\mingw64\bin;C:\msys64\usr\bin
+  #- set PATH=C:\Ruby%RUBY_VERSION%\bin;%PATH%;C:\msys64\mingw64\bin;C:\msys64\usr\bin
   - ps: |
      if ($env:RUBY_VERSION -eq "ruby-3.0.0" -or $env:RUBY_VERSION -eq "ruby-2.7.2")
      {
