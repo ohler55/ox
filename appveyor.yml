@@ -40,7 +40,7 @@ install:
 before_build:
   - sh: rvm reload
   #- sh: rvm use $RUBY_VERSION
-  - ps: rvm use %RUBY_VERSION%
+  - sh: rvm use %RUBY_VERSION%
   - ruby -v
   - env
 
