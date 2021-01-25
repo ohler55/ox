@@ -19,6 +19,7 @@ environment:
     #- RUBY_VERSION: ruby-3.0.0
     #- RUBY_VERSION: ruby-2.7.2
     - RUBY_VERSION: 26-x64
+      RVM_NAME: ruby-2.6.6
     #- RUBY_VERSION: ruby-2.5.7
     #- RUBY_VERSION: ruby-2.4.9
 
@@ -39,7 +40,8 @@ install:
 
 before_build:
   - sh: rvm reload
-  - sh: rvm use $RUBY_VERSION
+  #- sh: rvm use $RUBY_VERSION
+  - sh: rvm use $RVM_NAME
   - ruby -v
   - env
 
