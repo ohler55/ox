@@ -45,14 +45,14 @@ before_build:
   - env
 
 build_script:
-  - cd $APPVEYOR_BUILD_FOLDER\ext\ox
+  - cd %APPVEYOR_BUILD_FOLDER%\ext\ox
   - ruby extconf.rb
   - make
 
 test_script:
-  - cd $APPVEYOR_BUILD_FOLDER/test
+  - cd %APPVEYOR_BUILD_FOLDER%\test
   - ruby tests.rb
-  - ruby sax/sax_test.rb
+  - ruby sax\sax_test.rb
 
 on_finish:
   #- sh: export APPVEYOR_SSH_BLOCK=true
