@@ -4,9 +4,9 @@ version: '{branch}-{build}'
 skip_tags: true
 
 image:
-  #- Ubuntu
+  - Ubuntu
   #- macOS
-  - Visual Studio 2019
+  #- Visual Studio 2019
 
 cache:
   - vendor/bundle
@@ -15,12 +15,10 @@ platform:
   - x86
 
 environment:
-  PATH: C:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
   matrix:
     #- RUBY_VERSION: ruby-3.0.0
     #- RUBY_VERSION: ruby-2.7.2
     - RUBY_VERSION: 26-x64
-    - RUBY_VERSION: ruby-2.6.5
     #- RUBY_VERSION: ruby-2.5.7
     #- RUBY_VERSION: ruby-2.4.9
 
@@ -31,7 +29,7 @@ matrix:
   fast_finish: true
 
 install:
-  #- set PATH=C:\Ruby%RUBY_VERSION%\bin;%PATH%;C:\msys64\mingw64\bin;C:\msys64\usr\bin
+  #- PATH: C:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
   - ps: |
      if ($env:RUBY_VERSION -eq "ruby-3.0.0" -or $env:RUBY_VERSION -eq "ruby-2.7.2")
      {
@@ -41,20 +39,19 @@ install:
 
 before_build:
   - sh: rvm reload
-  #- sh: rvm use $RUBY_VERSION
-  - sh: rvm use %RUBY_VERSION%
+  - sh: rvm use $RUBY_VERSION
   - ruby -v
   - env
 
 build_script:
-  - cd %APPVEYOR_BUILD_FOLDER%\ext\ox
+  - cd $APPVEYOR_BUILD_FOLDER/ext/ox
   - ruby extconf.rb
   - make
 
 test_script:
-  - cd %APPVEYOR_BUILD_FOLDER%\test
+  - cd $APPVEYOR_BUILD_FOLDER/test
   - ruby tests.rb
-  - ruby sax\sax_test.rb
+  - ruby sax/sax_test.rb
 
 on_finish:
   #- sh: export APPVEYOR_SSH_BLOCK=true
