@@ -76,4 +76,4 @@ require 'ox/document'
 require 'ox/bag'
 require 'ox/sax'
 
-require 'ox/ox' # C extension
+require 'ox.so' # C extension
