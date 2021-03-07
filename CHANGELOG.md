@@ -2,7 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
-## [Unreleased]
+## [2.14.2] - 2021-03-07
+
+### Fixed
+
+- Attribute keys for setting attributes no longer create seemily
+  duplicates if symbol and string keys are mixed.
 
 ## [2.14.1] - 2021-01-11
 
