@@ -1,0 +1,68 @@
+# https://www.appveyor.com/docs/lang/ruby/
+
+version: '{branch}-{build}'
+skip_tags: true
+
+image:
+  - Ubuntu
+  - macOS
+  #- Visual Studio 2019
+
+cache:
+  - vendor/bundle
+
+platform:
+  - x86
+
+environment:
+
+  # RUBY_VERSION is set to match what is expected for windows but that
+  # fails for Ubuntu and macOS so a second variable ise used to
+  # specify the rvm version.
+  matrix:
+    - RUBY_VERSION: 30-x64
+      RVM_NAME: ruby-3.0.0
+    - RUBY_VERSION: 27-x64
+      RVM_NAME: ruby-2.7.2
+    - RUBY_VERSION: 26-x64
+      RVM_NAME: ruby-2.6.5
+    - RUBY_VERSION: 25-x64
+      RVM_NAME: ruby-2.5.7
+    - RUBY_VERSION: 24-x64
+      RVM_NAME: ruby-2.4.9
+
+build: off
+test: off
+
+matrix:
+  fast_finish: true
+
+install:
+  #- PATH: C:\Ruby%RUBY_VERSION%\DevKit\mingw\bin;C:\Ruby%RUBY_VERSION%\bin;C:\Ruby%RUBY_VERSION%\DevKit\bin;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1;%PATH%
+  - sh: |
+     if [ $RUBY_VERSION == "30-x64" ] || [ $RUBY_VERSION == "27-x64" ];
+     then
+       rvm get stable
+       rvm install $RVM_NAME
+     fi
+  - sh: rvm list
+  - sh: rvm reload
+  - sh: rvm use $RVM_NAME
+
+before_build:
+  #- env
+  - ruby -v
+
+build_script:
+  - cd $APPVEYOR_BUILD_FOLDER/ext/ox
+  - ruby extconf.rb
+  - make
+
+test_script:
+  - cd $APPVEYOR_BUILD_FOLDER/test
+  - ruby tests.rb
+  - ruby sax/sax_test.rb
+
+on_finish:
+  #- sh: export APPVEYOR_SSH_BLOCK=true
+  #- sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -

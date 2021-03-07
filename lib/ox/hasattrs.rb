@@ -13,7 +13,7 @@ module Ox
       @attributes = { } if !instance_variable_defined?(:@attributes) or @attributes.nil?
       @attributes
     end
-    
+
     # Returns the value of an attribute.
     # - +attr+ [Symbol|String] attribute name or key to return the value for
     def [](attr)
@@ -27,9 +27,16 @@ module Ox
     def []=(attr, value)
       raise "argument to [] must be a Symbol or a String." unless attr.is_a?(Symbol) or attr.is_a?(String)
       @attributes = { } if !instance_variable_defined?(:@attributes) or @attributes.nil?
+      a_str = attr.to_s
+      a_sym = attr.to_sym
+      if @attributes.has_key?(a_str)
+	attr = a_str
+      elsif @attributes.has_key?(a_sym)
+	attr = a_sym
+      end
       @attributes[attr] = value.to_s
     end
-    
+
     # Handles the 'easy' API that allows navigating a simple XML by
     # referencing attributes by name.
     # - +id+ [Symbol] element or attribute name

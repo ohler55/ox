@@ -522,6 +522,17 @@ class Func < ::Test::Unit::TestCase
     xml = %{<top name="Pete"/>}
     doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false)
     assert_equal(['name'], doc.attributes.keys)
+
+    # Verify :name and 'name' are the same as far as attribute keys go.
+    assert_equal('Pete', doc[:name])
+    assert_equal('Pete', doc['name'])
+    doc[:name] = 'Peter'
+    assert_equal('Peter', doc[:name])
+    assert_equal('Peter', doc['name'])
+    doc['name'] = 'Pete'
+    assert_equal('Pete', doc[:name])
+    assert_equal('Pete', doc['name'])
+    assert_equal(['name'], doc.attributes.keys)
   end
 
   def test_single_quote
