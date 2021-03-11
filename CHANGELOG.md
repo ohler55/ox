@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.3] - 2021-03-22
+
+### Fixed
+
+- Code issue around HAVE_RB_ENC_ASSOCIATE fixed.
+
 ## [2.14.2] - 2021-03-07
 
 ### Fixed
