@@ -1806,6 +1806,14 @@ comment -->
 }, xml2)
   end
 
+  def test_encoding_ascii
+    Ox::default_options = $ox_generic_options
+    xml = '<?xml version="1.0" encoding="UTF-8" ?><text>H&#233;ra&#239;dios</text>'.force_encoding(Encoding::ASCII_8BIT)
+    text = Ox.load(xml).root.text
+    assert_equal('Héraïdios', text)
+    assert_equal(Encoding::UTF_8, text.encoding)
+  end
+
   def dump_and_load(obj, trace=false, circular=false)
     xml = Ox.dump(obj, :indent => $indent, :circular => circular)
     puts xml if trace

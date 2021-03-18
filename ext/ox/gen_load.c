@@ -123,10 +123,10 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 		rb_enc_associate(rstr, pi->options->rb_enc);
 	    }
 	    rb_hash_aset(ah, rstr, rb_str_new2(attrs->value));
-	    if (0 == strcmp("encoding", attrs->name)) {
-		pi->options->rb_enc = rb_enc_find(attrs->value);
-	    }
 #endif
+	}
+	if (0 == strcmp("encoding", attrs->name)) {
+	    pi->options->rb_enc = rb_enc_find(attrs->value);
 	}
     }
     nodes = rb_ary_new();
