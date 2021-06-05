@@ -15,6 +15,7 @@ platform:
   - x86
 
 environment:
+  APPVEYOR_SSH_KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHWyDxNhnbg8dpJeFO+V8t+sNdDe79AU2IHkoFliINFQ
 
   # RUBY_VERSION is set to match what is expected for windows but that
   # fails for Ubuntu and macOS so a second variable ise used to
