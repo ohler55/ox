@@ -22,10 +22,15 @@ environment:
   # specify the rvm version.
   matrix:
     - RUBY_VERSION: 30-x64
+      RVM_NAME: ruby-3.0.0
     - RUBY_VERSION: 27-x64
+      RVM_NAME: ruby-2.7
     - RUBY_VERSION: 26-x64
+      RVM_NAME: ruby-2.6
     - RUBY_VERSION: 25-x64
+      RVM_NAME: ruby-2.5
     - RUBY_VERSION: 24-x64
+      RVM_NAME: ruby-2.4
 
 build: off
 test: off
@@ -60,5 +65,5 @@ test_script:
   - ruby sax/sax_test.rb
 
 on_finish:
-  - sh: export APPVEYOR_SSH_BLOCK=true
-  - sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
+  #- sh: export APPVEYOR_SSH_BLOCK=true
+  #- sh: curl -sflL 'https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-ssh.sh' | bash -e -
