@@ -15,14 +15,13 @@ platform:
   - x86
 
 environment:
-  APPVEYOR_SSH_KEY: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHWyDxNhnbg8dpJeFO+V8t+sNdDe79AU2IHkoFliINFQ
 
   # RUBY_VERSION is set to match what is expected for windows but that
   # fails for Ubuntu and macOS so a second variable ise used to
   # specify the rvm version.
   matrix:
     - RUBY_VERSION: 30-x64
-      RVM_NAME: ruby-3.0.0
+      RVM_NAME: ruby-3
     - RUBY_VERSION: 27-x64
       RVM_NAME: ruby-2.7
     - RUBY_VERSION: 26-x64
