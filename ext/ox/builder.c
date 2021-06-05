@@ -898,8 +898,7 @@ builder_pos(VALUE self) {
  *
  * Closes the current element.
  */
-static VALUE
-builder_pop(VALUE self) {
+static VALUE builder_pop(VALUE self) {
     pop((Builder)DATA_PTR(self));
 
     return Qnil;
@@ -921,7 +920,12 @@ builder_close(VALUE self) {
  *
  * An XML builder.
  */
-void ox_init_builder(VALUE ox) {
+void
+ox_init_builder(VALUE ox) {
+#if 0
+    // Just for rdoc.
+    ox = rb_define_module("Ox");
+#endif
     builder_class = rb_define_class_under(ox, "Builder", rb_cObject);
     rb_define_module_function(builder_class, "new", builder_new, -1);
     rb_define_module_function(builder_class, "file", builder_file, -1);

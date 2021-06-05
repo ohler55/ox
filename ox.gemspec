@@ -26,5 +26,5 @@ serialization. }
   s.require_paths = ["lib", "ext"]
 
   s.extra_rdoc_files = ['README.md', 'CHANGELOG.md']
-  s.rdoc_options = ['--main', 'README.md', '--title', 'Ox Documentation', '--exclude', 'extconf.rb']
+  s.rdoc_options = ['--main', 'README.md', '--title', 'Ox', '--exclude', 'extconf.rb', 'lib', 'ext/ox', 'README.md']
 end

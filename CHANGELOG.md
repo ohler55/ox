@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.5] - 2021-06-04
+
+### Fixed
+
+- Fixed RDoc for for Ox::Builder.
+
 ## [2.14.4] - 2021-03-19
 
 ### Fixed
