@@ -3,7 +3,7 @@
 
 require 'ox'
 module Ox
-  module Builder
+  module XBuilder
     # args = attributes and/or children in any order, multiple appearance is possible
     # @overload build(name,attributes,children)
     #   @param [String] name name of the Element

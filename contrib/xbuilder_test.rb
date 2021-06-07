@@ -3,18 +3,17 @@
 
 # Contributed by Notezen
 
-$: << File.join(File.dirname(__FILE__), "../../lib")
-$: << File.join(File.dirname(__FILE__), "../../ext")
-$: << File.join(File.dirname(__FILE__), "../")
+$: << File.join(File.dirname(__FILE__), "../lib")
+$: << File.join(File.dirname(__FILE__), "../ext")
 $: << File.join(File.dirname(__FILE__), ".")
 
 require 'test/unit'
 require 'ox'
-require 'builder'
+require 'xbuilder'
 
-class BuilderTest < ::Test::Unit::TestCase
-  include Ox::Builder
-  
+class XBuilderTest < ::Test::Unit::TestCase
+  include Ox::XBuilder
+
   def test_build
     xml =
       '<parent>
