@@ -30,11 +30,10 @@ jobs:
             ruby: '3.0'
 
     env:
-      BUNDLE_GEMFILE: gemfiles/${{ matrix.gemfile }}.gemfile
       MAKE: make -j 2
     runs-on: ${{ matrix.os }}-latest
     continue-on-error: ${{ matrix.ruby == '3.0' || matrix.ruby == 'head'}}
-    name: Ruby ${{ matrix.ruby }} (${{ matrix.os }}${{ matrix.gemfile != 'no_rails' && ', ' || '' }}${{ matrix.gemfile != 'no_rails' && matrix.gemfile || '' }})
+    name: Ruby ${{ matrix.ruby }} (${{ matrix.os }})
     steps:
       - uses: actions/checkout@v2
       - uses: ruby/setup-ruby@v1
