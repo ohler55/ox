@@ -3,9 +3,9 @@ name: CI
 on:
   push:
     branches:
+      - action
       - develop
       - master
-      - action
   pull_request:
 
 jobs:
