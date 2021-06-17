@@ -40,4 +40,9 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-      - run: test/tests.rb
+      - run: |
+          cd ext/oj
+          ruby extconf.rb
+          make
+          cd ../../test
+          ./tests.rb
