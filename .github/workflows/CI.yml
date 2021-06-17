@@ -42,12 +42,12 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
       - name: build
         run: |
-          pwd
-          cd ext/oj
+          echo `pwd`
+          cd ./ext/oj
           ruby extconf.rb
           make
       - name: test
         run: |
-          pwd
+          echo `pwd`
           cd test
           ./tests.rb
