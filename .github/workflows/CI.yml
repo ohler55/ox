@@ -3,8 +3,8 @@ name: CI
 on:
   push:
     branches:
-      - action
       - develop
+      - action
       - master
   pull_request:
 
