@@ -43,6 +43,7 @@ jobs:
       - name: build
         run: |
           echo `pwd`
+          ls
           cd ./ext/oj
           ruby extconf.rb
           make
