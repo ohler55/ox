@@ -23,12 +23,11 @@ jobs:
         os:
           - ubuntu
           - macos
-          #- windows Tests are failing with Windows for now.
+          - windows
+          # Tests are failing with Windows for now.
         exclude:
           - os: macos
             ruby: head
-          - os: macos
-            ruby: '3.0'
 
     env:
       MAKE: make -j 2
