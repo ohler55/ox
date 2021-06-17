@@ -24,10 +24,6 @@ jobs:
           - ubuntu
           - macos
           - windows
-          # Tests are failing with Windows for now.
-        exclude:
-          - os: macos
-            ruby: head
 
     env:
       MAKE: make -j 2
