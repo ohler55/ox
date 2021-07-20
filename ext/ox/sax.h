@@ -16,6 +16,7 @@
 
 typedef struct _saxOptions {
     int			symbolize;
+    int			intern_strings;
     int			convert_special;
     int			smart;
     SkipMode		skip;

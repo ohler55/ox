@@ -131,6 +131,7 @@ typedef struct _options {
     char		mode;		// LoadMode
     char		effort;		// Effort
     char		sym_keys;	// symbolize keys
+    char		intern_strings; // intern String keys and Values
     char		skip;		// skip mode
     char		smart;		// YesNo sax smart mode
     char		convert_special;// boolean true or false

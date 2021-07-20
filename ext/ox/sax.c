@@ -92,10 +92,14 @@ str2sym(SaxDrive dr, const char *str, const char **strp) {
 	if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, strp))) {
 #if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != dr->encoding && !str_is_ascii(str)) {
+#if HAVE_RB_ENC_INTERNED_STR_CSTR
+		VALUE   rstr = rb_enc_interned_str_cstr(str, dr->encoding);
+#else
 		VALUE	rstr = rb_str_new2(str);
 
 		// TBD if sym can be pinned down then use this all the time
 		rb_enc_associate(rstr, dr->encoding);
+#endif
 		sym = rb_funcall(rstr, ox_to_sym_id, 0);
 		*slot = Qundef;
 	    } else {
@@ -108,11 +112,23 @@ str2sym(SaxDrive dr, const char *str, const char **strp) {
 #endif
 	}
     } else {
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+        if (Yes == dr->options.intern_strings) {
+            if (0 != dr->encoding) {
+                sym = rb_enc_interned_str_cstr(str, dr->encoding);
+            } else {
+                sym = rb_interned_str_cstr(str);
+        }
+    } else {
+#endif
 	sym = rb_str_new2(str);
 #if HAVE_RB_ENC_ASSOCIATE
 	if (0 != dr->encoding) {
 	    rb_enc_associate(sym, dr->encoding);
 	}
+#endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    }
 #endif
 	if (0 != strp) {
 	    *strp = StringValuePtr(sym);
@@ -198,7 +214,11 @@ ox_sax_drive_error_at(SaxDrive dr, const char *msg, off_t pos, off_t line, off_t
     if (dr->has.error) {
         VALUE   args[3];
 
+#if HAVE_RB_INTERNED_STR_CSTR
+        args[0] = rb_interned_str_cstr(msg);
+#else
         args[0] = rb_str_new2(msg);
+#endif
         args[1] = LONG2NUM(line);
         args[2] = LONG2NUM(col);
 	if (dr->has.pos) {
@@ -334,11 +354,19 @@ parse(SaxDrive dr) {
 		    off_t	line = dr->buf.line;
 		    off_t	col = dr->buf.col - 1;
 
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+		    if (0 != dr->encoding) {
+		        args[0] = rb_enc_interned_str_cstr("", dr->encoding);
+		    } else {
+		        args[0] = rb_interned_str_cstr("");
+		    }
+#else
 		    args[0] = rb_str_new2("");
 #if HAVE_RB_ENC_ASSOCIATE
 		    if (0 != dr->encoding) {
 			rb_enc_associate(args[0], dr->encoding);
 		    }
+#endif
 #endif
 		    if (dr->has.pos) {
 			rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
@@ -456,7 +484,11 @@ read_instruction(SaxDrive dr) {
     }
     is_xml = (0 == (dr->options.smart ? strcasecmp("xml", dr->buf.str) : strcmp("xml", dr->buf.str)));
     if (dr->has.instruct || dr->has.end_instruct) {
+#if HAVE_RB_INTERNED_STR_CSTR
+	target = rb_interned_str_cstr(dr->buf.str);
+#else
 	target = rb_str_new2(dr->buf.str);
+#endif
     }
     if (dr->has.instruct) {
         VALUE       args[1];
@@ -492,11 +524,19 @@ read_instruction(SaxDrive dr) {
 	    if (dr->options.convert_special) {
 		ox_sax_collapse_special(dr, content, (int)pos, (int)line, (int)col);
 	    }
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	    if (0 != dr->encoding) {
+	        args[0] = rb_enc_interned_str_cstr(dr->buf.str, dr->encoding);
+	    } else {
+	        args[0] = rb_interned_str_cstr(dr->buf.str);
+	    }
+#else
 	    args[0] = rb_str_new2(content);
 #if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
 	    }
+#endif
 #endif
 	    if (dr->has.line) {
 		rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
@@ -621,7 +661,11 @@ read_doctype(SaxDrive dr) {
 	if (dr->has.column) {
 	    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
 	}
+#if HAVE_RB_INTERNED_STR_CSTR
+        args[0] = rb_interned_str_cstr(dr->buf.str);
+#else
         args[0] = rb_str_new2(dr->buf.str);
+#endif
         rb_funcall2(dr->handler, ox_doctype_id, 1, args);
     }
     dr->buf.str = 0;
@@ -694,11 +738,19 @@ read_cdata(SaxDrive dr) {
 	if (dr->has.cdata) {
 	    VALUE       args[1];
 
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	    if (0 != dr->encoding) {
+	        args[0] = rb_enc_interned_str_cstr(dr->buf.str, dr->encoding);
+	    } else {
+	        args[0] = rb_interned_str_cstr(dr->buf.str);
+	    }
+#else
 	    args[0] = rb_str_new2(dr->buf.str);
 #if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
 	    }
+#endif
 #endif
 	    if (dr->has.pos) {
 		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
@@ -784,11 +836,19 @@ read_comment(SaxDrive dr) {
 	if (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay ||
 	    (NULL != h && (ActiveOverlay == h->overlay || ActiveOverlay == h->overlay))) {
 
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	    if (0 != dr->encoding) {
+	        args[0] = rb_enc_interned_str_cstr(dr->buf.str, dr->encoding);
+	    } else {
+	        args[0] = rb_interned_str_cstr(dr->buf.str);
+	    }
+#else
 	    args[0] = rb_str_new2(dr->buf.str);
 #if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
 	    }
+#endif
 #endif
 	    if (dr->has.pos) {
 		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
@@ -1112,11 +1172,19 @@ read_text(SaxDrive dr) {
 	if (dr->has.text &&
 	    ((NoSkip == dr->options.skip && !isEnd) ||
 	     (OffSkip == dr->options.skip))) {
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	    if (0 != dr->encoding) {
+	        args[0] = rb_enc_interned_str_cstr(dr->buf.str, dr->encoding);
+	    } else {
+	        args[0] = rb_interned_str_cstr(dr->buf.str);
+	    }
+#else
 	    args[0] = rb_str_new2(dr->buf.str);
 #if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
 	    }
+#endif
 #endif
 	    if (dr->has.pos) {
 		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
@@ -1163,11 +1231,19 @@ read_text(SaxDrive dr) {
 	    default:
 		break;
 	    }
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	    if (0 != dr->encoding) {
+	        args[0] = rb_enc_interned_str_cstr(dr->buf.str, dr->encoding);
+	    } else {
+	        args[0] = rb_interned_str_cstr(dr->buf.str);
+	    }
+#else
 	    args[0] = rb_str_new2(dr->buf.str);
 #if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != dr->encoding) {
 		rb_enc_associate(args[0], dr->encoding);
 	    }
+#endif
 #endif
 	    if (dr->has.pos) {
 		rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
@@ -1245,11 +1321,19 @@ read_jump(SaxDrive dr, const char *pat) {
     }
     // TBD check parent overlay
     if (dr->has.text && !dr->blocked) {
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+        if (0 != dr->encoding) {
+            args[0] = rb_enc_interned_str_cstr(dr->buf.str, dr->encoding);
+        } else {
+            args[0] = rb_interned_str_cstr(dr->buf.str);
+        }
+#else
         args[0] = rb_str_new2(dr->buf.str);
 #if HAVE_RB_ENC_ASSOCIATE
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
         }
+#endif
 #endif
 	if (dr->has.pos) {
 	    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
@@ -1351,11 +1435,19 @@ read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req, 
 		if (dr->options.convert_special) {
 		    ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
 		}
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+		if (0 != dr->encoding) {
+		    args[1] = rb_enc_interned_str_cstr(attr_value, dr->encoding);
+		} else {
+		    args[1] = rb_interned_str_cstr(attr_value);
+		}
+#else
 		args[1] = rb_str_new2(attr_value);
 #if HAVE_RB_ENC_ASSOCIATE
 		if (0 != dr->encoding) {
 		    rb_enc_associate(args[1], dr->encoding);
 		}
+#endif
 #endif
 		if (dr->has.pos) {
 		    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));

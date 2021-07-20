@@ -123,6 +123,7 @@ static VALUE	hash_no_attrs_sym;
 static VALUE	hash_sym;
 static VALUE	inactive_sym;
 static VALUE	invalid_replace_sym;
+static VALUE	intern_strings_sym;
 static VALUE	limited_sym;
 static VALUE	margin_sym;
 static VALUE	mode_sym;
@@ -175,6 +176,7 @@ struct _options	 ox_default_options = {
     NoMode,		// mode
     StrictEffort,	// effort
     Yes,		// sym_keys
+    No,			// intern_strings
     SpcSkip,		// skip
     No,			// smart
     true,		// convert_special
@@ -267,7 +269,11 @@ hints_to_overlay(Hints hints) {
 	case ActiveOverlay:
 	default:		ov = active_sym;	break;
 	}
+#if HAVE_RB_INTERNED_STR_CSTR
+	rb_hash_aset(overlay, rb_interned_str_cstr(h->name), ov);
+#else
 	rb_hash_aset(overlay, rb_str_new2(h->name), ov);
+#endif
     }
     return overlay;
 }
@@ -287,6 +293,7 @@ hints_to_overlay(Hints hints) {
  * - _:mode_ [:object|:generic|:limited|:hash|:hash_no_attrs|nil] load method to use for XML
  * - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
  * - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
+ * - _:intern_strings_ [true|false|nil] intern (freeze and deduplicate) `String` attribute keys and `Ox::Value.as_s`
  * - _:element_key_mod_ [Proc|nil] converts element keys on parse if not nil
  * - _:attr_key_mod_ [Proc|nil] converts attribute keys on parse if not nil
  * - _:skip_ [:skip_none|:skip_return|:skip_white|:skip_off] determines how to handle white space in text
@@ -314,8 +321,16 @@ get_def_opts(VALUE self) {
     VALUE	opts = rb_hash_new();
     int		elen = (int)strlen(ox_default_options.encoding);
 
+#if HAVE_RB_INTERNED_STR
+    rb_hash_aset(opts, ox_encoding_sym, (0 == elen) ? Qnil : rb_interned_str(ox_default_options.encoding, elen));
+#else
     rb_hash_aset(opts, ox_encoding_sym, (0 == elen) ? Qnil : rb_str_new(ox_default_options.encoding, elen));
+#endif
+#if HAVE_RB_INTERNED_STR
+    rb_hash_aset(opts, margin_sym, rb_interned_str(ox_default_options.margin, ox_default_options.margin_len));
+#else
     rb_hash_aset(opts, margin_sym, rb_str_new(ox_default_options.margin, ox_default_options.margin_len));
+#endif
     rb_hash_aset(opts, ox_indent_sym, INT2FIX(ox_default_options.indent));
     rb_hash_aset(opts, trace_sym, INT2FIX(ox_default_options.trace));
     rb_hash_aset(opts, with_dtd_sym, (Yes == ox_default_options.with_dtd) ? Qtrue : ((No == ox_default_options.with_dtd) ? Qfalse : Qnil));
@@ -324,6 +339,7 @@ get_def_opts(VALUE self) {
     rb_hash_aset(opts, circular_sym, (Yes == ox_default_options.circular) ? Qtrue : ((No == ox_default_options.circular) ? Qfalse : Qnil));
     rb_hash_aset(opts, xsd_date_sym, (Yes == ox_default_options.xsd_date) ? Qtrue : ((No == ox_default_options.xsd_date) ? Qfalse : Qnil));
     rb_hash_aset(opts, symbolize_keys_sym, (Yes == ox_default_options.sym_keys) ? Qtrue : ((No == ox_default_options.sym_keys) ? Qfalse : Qnil));
+    rb_hash_aset(opts, intern_strings_sym, (Yes == ox_default_options.intern_strings) ? Qtrue : ((No == ox_default_options.intern_strings) ? Qfalse : Qnil));
     rb_hash_aset(opts, attr_key_mod_sym, ox_default_options.attr_key_mod);
     rb_hash_aset(opts, element_key_mod_sym, ox_default_options.element_key_mod);
     rb_hash_aset(opts, smart_sym, (Yes == ox_default_options.smart) ? Qtrue : ((No == ox_default_options.smart) ? Qfalse : Qnil));
@@ -356,14 +372,22 @@ get_def_opts(VALUE self) {
     if (Yes == ox_default_options.allow_invalid) {
 	rb_hash_aset(opts, invalid_replace_sym, Qnil);
     } else {
+#if HAVE_RB_INTERNED_STR_CSTR
+	rb_hash_aset(opts, invalid_replace_sym, rb_interned_str(ox_default_options.inv_repl + 1, (int)*ox_default_options.inv_repl));
+#else
 	rb_hash_aset(opts, invalid_replace_sym, rb_str_new(ox_default_options.inv_repl + 1, (int)*ox_default_options.inv_repl));
+#endif
     }
     if ('\0' == *ox_default_options.strip_ns) {
 	rb_hash_aset(opts, strip_namespace_sym, Qfalse);
     } else if ('*' == *ox_default_options.strip_ns && '\0' == ox_default_options.strip_ns[1]) {
 	rb_hash_aset(opts, strip_namespace_sym, Qtrue);
     } else {
+#if HAVE_RB_INTERNED_STR_CSTR
+	rb_hash_aset(opts, strip_namespace_sym, rb_interned_str(ox_default_options.strip_ns, strlen(ox_default_options.strip_ns)));
+#else
 	rb_hash_aset(opts, strip_namespace_sym, rb_str_new(ox_default_options.strip_ns, strlen(ox_default_options.strip_ns)));
+#endif
     }
     if (NULL == ox_default_options.html_hints) {
 	//rb_hash_aset(opts, overlay_sym, hints_to_overlay(ox_hints_html()));
@@ -431,6 +455,7 @@ sax_html_overlay(VALUE self) {
  *   - _:mode_ [:object|:generic|:limited|:hash|:hash_no_attrs|nil] load method to use for XML
  *   - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
  *   - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
+ *   - _:intern_strings_ [true|false|nil] intern (freeze and deduplicate) `String` attribute keys and `Ox::Value.as_s`
  *   - _:element_key_mod_ [Proc|nil] converts element keys on parse if not nil
  *   - _:attr_key_mod_ [Proc|nil] converts attribute keys on parse if not nil
  *   - _:skip_ [:skip_none|:skip_return|:skip_white|:skip_off] determines how to handle white space in text
@@ -457,6 +482,7 @@ set_def_opts(VALUE self, VALUE opts) {
 	{ xsd_date_sym, &ox_default_options.xsd_date },
 	{ circular_sym, &ox_default_options.circular },
 	{ symbolize_keys_sym, &ox_default_options.sym_keys },
+	{ intern_strings_sym, &ox_default_options.intern_strings },
 	{ smart_sym, &ox_default_options.smart },
 	{ Qnil, 0 }
     };
@@ -788,6 +814,9 @@ load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, E
 	if (Qnil != (v = rb_hash_lookup(h, symbolize_keys_sym))) {
 	    options.sym_keys = (Qfalse == v) ? No : Yes;
 	}
+	if (Qnil != (v = rb_hash_lookup(h, intern_strings_sym))) {
+	    options.intern_strings = (Qfalse == v) ? No : Yes;
+	}
 	options.element_key_mod = rb_hash_lookup2(h, element_key_mod_sym, options.element_key_mod);
 	options.attr_key_mod = rb_hash_lookup2(h, attr_key_mod_sym, options.attr_key_mod);
 
@@ -928,6 +957,7 @@ load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, E
  *     - _:auto_define_ - auto define missing classes and modules
  *   - *:trace* [Fixnum] trace level as a Fixnum, default: 0 (silent)
  *   - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
+ *   - *:intern_strings* [true|false|nil] intern (freeze and deduplicate) `String` attribute keys and `Ox::Value.as_s`
  *   - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  *   - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  *   - *:with_cdata* [true|false] if true cdata is included in hash_load output otherwise it is not.
@@ -985,6 +1015,7 @@ load_str(int argc, VALUE *argv, VALUE self) {
  *     - _:auto_define_ - auto define missing classes and modules
  *   - *:trace* [Fixnum] trace level as a Fixnum, default: 0 (silent)
  *   - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
+ *   - *:intern_strings* [true|false|nil] intern (freeze and deduplicate) `String` attribute keys and `Ox::Value.as_s`
  *   - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
  *   - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
@@ -1037,6 +1068,7 @@ load_file(int argc, VALUE *argv, VALUE self) {
  * - +options+ [Hash] options parse options
  *   - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
  *   - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
+ *   - *:intern_strings* [true|false] intern (freeze and deduplicate) `String` attribute keys and `Ox::Value.as_s`
  *   - *:smart* [true|false] flag indicating the parser uses hints if available (use with html)
  *   - *:skip* [:skip_none|:skip_return|:skip_white|:skip_off] flag indicating the parser skips \\r or collpase white space into a single space. Default (skip space)
  *   - *:strip_namespace* [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
@@ -1046,6 +1078,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
     struct _saxOptions	options;
 
     options.symbolize = (No != ox_default_options.sym_keys);
+    options.intern_strings = (No != ox_default_options.intern_strings);
     options.convert_special = ox_default_options.convert_special;
     options.smart = (Yes == ox_default_options.smart);
     options.skip = ox_default_options.skip;
@@ -1067,6 +1100,9 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
 	}
 	if (Qnil != (v = rb_hash_lookup(h, symbolize_sym))) {
 	    options.symbolize = (Qtrue == v);
+	}
+	if (Qnil != (v = rb_hash_lookup(h, intern_strings_sym))) {
+	    options.intern_strings = (Qtrue == v);
 	}
 	if (Qnil != (v = rb_hash_lookup(h, skip_sym))) {
 	    if (skip_return_sym == v) {
@@ -1113,6 +1149,7 @@ sax_parse(int argc, VALUE *argv, VALUE self) {
  * - +options+ [Hash] options parse options
  *   - *:convert_special* [true|false] flag indicating special characters like &lt; are converted
  *   - *:symbolize* [true|false] flag indicating the parser symbolize element and attribute names
+ *   - *:intern_strings* [true|false] flag indicating Strings are frozen and interned (deduplicated)
  *   - *:skip* [:skip_none|:skip_return|:skip_white|:skip_off] flag indicating the parser skips \\r or collapse white space into a single space. Default (skip space)
  *   - *:overlay* [Hash] a Hash of keys that match html element names and values that are one of
  *     - _:active_ - make the normal callback for the element
@@ -1128,6 +1165,7 @@ sax_html(int argc, VALUE *argv, VALUE self) {
     bool		free_hints = false;
 
     options.symbolize = (No != ox_default_options.sym_keys);
+    options.intern_strings = (No != ox_default_options.intern_strings);
     options.convert_special = ox_default_options.convert_special;
     options.smart = true;
     options.skip = ox_default_options.skip;
@@ -1149,6 +1187,9 @@ sax_html(int argc, VALUE *argv, VALUE self) {
 	}
 	if (Qnil != (v = rb_hash_lookup(h, symbolize_sym))) {
 	    options.symbolize = (Qtrue == v);
+	}
+	if (Qnil != (v = rb_hash_lookup(h, intern_strings_sym))) {
+	    options.intern_strings = (Qtrue == v);
 	}
 	if (Qnil != (v = rb_hash_lookup(h, skip_sym))) {
 	    if (skip_return_sym == v) {
@@ -1189,6 +1230,7 @@ parse_dump_options(VALUE ropts, Options copts) {
 	{ with_dtd_sym, &copts->with_dtd },
 	{ with_instruct_sym, &copts->with_instruct },
 	{ xsd_date_sym, &copts->xsd_date },
+	{ intern_strings_sym, &copts->intern_strings },
 	{ circular_sym, &copts->circular },
 	{ Qnil, 0 }
     };
@@ -1295,6 +1337,7 @@ parse_dump_options(VALUE ropts, Options copts) {
  *   - *:indent* [Fixnum] format expected
  *   - *:no_empty* [true|false] if true don't output empty elements
  *   - *:xsd_date* [true|false] use XSD date format if true, default: false
+ *   - *:intern_strings* [true|false] intern (freeze and deduplicate) return Strings
  *   - *:circular* [true|false] allow circular references, default: false
  *   - *:strict|:tolerant]* [ :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
  *     - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
@@ -1315,11 +1358,28 @@ dump(int argc, VALUE *argv, VALUE self) {
     if (0 == (xml = ox_write_obj_to_str(*argv, &copts))) {
 	rb_raise(rb_eNoMemError, "Not enough memory.\n");
     }
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    if (Yes == copts.intern_strings) {
+        if ('\0' != *copts.encoding) {
+            rstr = rb_enc_interned_str_cstr(xml, rb_enc_find(copts.encoding));
+        } else {
+            rstr = rb_interned_str_cstr(xml);
+        }
+    } else {
+        rstr = rb_str_new2(xml);
+#if HAVE_RB_ENC_ASSOCIATE
+        if ('\0' != *copts.encoding) {
+            rb_enc_associate(rstr, rb_enc_find(copts.encoding));
+        }
+    }
+#endif
+#else
     rstr = rb_str_new2(xml);
 #if HAVE_RB_ENC_ASSOCIATE
     if ('\0' != *copts.encoding) {
 	rb_enc_associate(rstr, rb_enc_find(copts.encoding));
     }
+#endif
 #endif
     xfree(xml);
 
@@ -1334,6 +1394,7 @@ dump(int argc, VALUE *argv, VALUE self) {
  *   - *:indent* [Fixnum] format expected
  *   - *:no_empty* [true|false] if true don't output empty elements
  *   - *:xsd_date* [true|false] use XSD date format if true, default: false
+ *   - *:intern_strings* [true|false] intern (freeze and deduplicate) return Strings, default: false
  *   - *:circular* [true|false] allow circular references, default: false
  *   - *:strict|:tolerant]* [ :effort effort to use when an undumpable object (e.g., IO) is encountered, default: :strict
  *     - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
@@ -1366,6 +1427,9 @@ to_xml(int argc, VALUE *argv, VALUE self) {
 static VALUE
 to_file(int argc, VALUE *argv, VALUE self) {
     struct _options	copts = ox_default_options;
+
+    // enable String interning by default here since the return value is going straight into an IO
+    copts.intern_strings = true;
 
     if (3 == argc) {
 	parse_dump_options(argv[2], &copts);
@@ -1512,6 +1576,7 @@ void Init_ox() {
     hash_sym = ID2SYM(rb_intern("hash"));			rb_gc_register_address(&hash_sym);
     inactive_sym = ID2SYM(rb_intern("inactive"));		rb_gc_register_address(&inactive_sym);
     invalid_replace_sym = ID2SYM(rb_intern("invalid_replace"));	rb_gc_register_address(&invalid_replace_sym);
+    intern_strings_sym = ID2SYM(rb_intern("intern_strings"));	rb_gc_register_address(&intern_strings_sym);
     limited_sym = ID2SYM(rb_intern("limited"));			rb_gc_register_address(&limited_sym);
     margin_sym = ID2SYM(rb_intern("margin"));			rb_gc_register_address(&margin_sym);
     mode_sym = ID2SYM(rb_intern("mode"));			rb_gc_register_address(&mode_sym);
@@ -1545,7 +1610,11 @@ void Init_ox() {
     with_xml_sym = ID2SYM(rb_intern("with_xml"));		rb_gc_register_address(&with_xml_sym);
     xsd_date_sym = ID2SYM(rb_intern("xsd_date"));		rb_gc_register_address(&xsd_date_sym);
 
+#if HAVE_RB_INTERNED_STR_CSTR
+    ox_empty_string = rb_interned_str_cstr("");		rb_gc_register_address(&ox_empty_string);
+#else
     ox_empty_string = rb_str_new2("");				rb_gc_register_address(&ox_empty_string);
+#endif
     ox_zero_fixnum = INT2NUM(0);				rb_gc_register_address(&ox_zero_fixnum);
     ox_sym_bank = rb_ary_new();					rb_gc_register_address(&ox_sym_bank);
 

@@ -135,10 +135,22 @@ sax_value_as_s(VALUE self) {
     default:
 	break;
     }
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    if (dr->options.intern_strings) {
+        if (0 != dr->encoding) {
+            rs = rb_enc_interned_str_cstr(dr->buf.str, dr->encoding);
+        } else {
+            rs = rb_interned_str_cstr(dr->buf.str);
+        }
+    } else {
+#endif
     rs = rb_str_new2(dr->buf.str);
 #if HAVE_RB_ENC_ASSOCIATE
     if (0 != dr->encoding) {
 	rb_enc_associate(rs, dr->encoding);
+    }
+#endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
     }
 #endif
     return rs;
@@ -223,7 +235,11 @@ sax_value_as_time(VALUE self) {
         VALUE       args[1];
 
         /*printf("**** time parse\n"); */
+#if HAVE_RB_INTERNED_STR_CSTR
+        *args = rb_interned_str_cstr(str);
+#else
         *args = rb_str_new2(str);
+#endif
         t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
     }
     return t;

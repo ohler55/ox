@@ -78,11 +78,6 @@ add_str(PInfo pi, VALUE s) {
     Helper		parent = helper_stack_peek(&pi->helpers);
     volatile VALUE	a;
 
-#if HAVE_RB_ENC_ASSOCIATE
-    if (0 != pi->options->rb_enc) {
-        rb_enc_associate(s, pi->options->rb_enc);
-    }
-#endif
     switch (parent->type) {
     case NoCode:
 	parent->obj = s;
@@ -103,12 +98,48 @@ add_str(PInfo pi, VALUE s) {
 
 static void
 add_text(PInfo pi, char *text, int closed) {
-    add_str(pi, rb_str_new2(text));
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    if (Yes == pi->options->intern_strings) {
+        if (0 != pi->options->rb_enc) {
+            add_str(pi, rb_enc_interned_str_cstr(text, pi->options->rb_enc));
+        } else {
+            add_str(pi, rb_interned_str_cstr(text));
+        }
+    } else {
+#endif
+    VALUE s = rb_str_new2(text);
+#if HAVE_RB_ENC_ASSOCIATE
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
+    }
+#endif
+    add_str(pi, s);
+#if HAVE_RB_ENC_INTERNED_STR && HAVE_RB_INTERNED_STR
+    }
+#endif
 }
 
 static void
 add_cdata(PInfo pi, const char *text, size_t len) {
-    add_str(pi, rb_str_new(text, len));
+#if HAVE_RB_ENC_INTERNED_STR && HAVE_RB_INTERNED_STR
+    if (Yes == pi->options->intern_strings) {
+        if (0 != pi->options->rb_enc) {
+            add_str(pi, rb_enc_interned_str(text, len, pi->options->rb_enc));
+        } else {
+            add_str(pi, rb_interned_str(text, len));
+        }
+    } else {
+#endif
+    VALUE s = rb_str_new(text, len);
+#if HAVE_RB_ENC_ASSOCIATE
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
+    }
+#endif
+    add_str(pi, s);
+#if HAVE_RB_ENC_INTERNED_STR && HAVE_RB_INTERNED_STR
+    }
+#endif
 }
 
 static void
@@ -127,14 +158,30 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		key = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
 	    } else if (Yes == pi->options->sym_keys) {
 		key = rb_id2sym(rb_intern(attrs->name));
+#if HAVE_RB_INTERNED_STR_CSTR
+	    } else if (Yes == pi->options->intern_strings) {
+		key = rb_interned_str_cstr(attrs->name);
+#endif
 	    } else {
 		key = rb_str_new2(attrs->name);
 	    }
+#if HAVE_RB_INTERNED_STR_CSTR && HAVE_RB_ENC_INTERNED_STR_CSTR
+        if (Yes == pi->options->intern_strings) {
+            if (0 != pi->options->rb_enc) {
+                val = rb_enc_interned_str_cstr(attrs->value, pi->options->rb_enc);
+            } else {
+                val = rb_interned_str_cstr(attrs->value);
+            }
+        } else {
+#endif
 	    val = rb_str_new2(attrs->value);
 #if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != pi->options->rb_enc) {
 		rb_enc_associate(val, pi->options->rb_enc);
 	    }
+#if HAVE_RB_INTERNED_STR_CSTR && HAVE_RB_ENC_INTERNED_STR_CSTR
+        }
+#endif
 #endif
 	    rb_hash_aset(h, key, val);
 	}

@@ -105,24 +105,56 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 	} else if (Yes == pi->options->sym_keys) {
 #if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != pi->options->rb_enc) {
+#if HAVE_RB_ENC_INTERNED_STR_CSTR
+		VALUE	rstr = rb_enc_interned_str_cstr(attrs->name, pi->options->rb_enc);
+#else
 		VALUE	rstr = rb_str_new2(attrs->name);
 
 		rb_enc_associate(rstr, pi->options->rb_enc);
+#endif
 		sym = rb_funcall(rstr, ox_to_sym_id, 0);
 	    } else {
 		sym = ID2SYM(rb_intern(attrs->name));
 	    }
 	    sym = ID2SYM(rb_intern(attrs->name));
+#endif  // HAVE_RB_ENC_ASSOCIATE
+#if HAVE_RB_INTERNED_STR_CSTR
+	    if (Yes == pi->options->intern_strings) {
+		rb_hash_aset(ah, sym, rb_interned_str_cstr(attrs->value));
+	    } else {
 #endif
 	    rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
+#if HAVE_RB_INTERNED_STR_CSTR
+	    }
+#endif
 	} else {
 #if HAVE_RB_ENC_ASSOCIATE
+#if HAVE_ENC_RB_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	    if (Yes == pi->options->intern_strings) {
+	        if (0 != pi->options->rb_enc) {
+	            volatile VALUE  rstr = rb_enc_interned_str_cstr(attrs->name, pi->options->rb_enc);
+	        } else {
+	            volatile VALUE  rstr = rb_interned_str_cstr(attrs->name);
+	        }
+	    } else {
+#endif
 	    volatile VALUE	rstr = rb_str_new2(attrs->name);
 
 	    if (0 != pi->options->rb_enc) {
 		rb_enc_associate(rstr, pi->options->rb_enc);
 	    }
+#if HAVE_ENC_RB_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	    }
+#endif
+#if HAVE_RB_INTERNED_STR_CSTR
+	    if (Yes == pi->options->intern_strings) {
+	        rb_hash_aset(ah, rstr, rb_interned_str_cstr(attrs->value));
+	    } else {
+#endif
 	    rb_hash_aset(ah, rstr, rb_str_new2(attrs->value));
+#if HAVE_RB_INTERNED_STR_CSTR
+	    }
+#endif
 #endif
 	}
 	if (0 == strcmp("encoding", attrs->name)) {
@@ -193,11 +225,24 @@ nomode_instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
 static void
 add_doctype(PInfo pi, const char *docType) {
     VALUE       n = rb_obj_alloc(ox_doctype_clas);
-    VALUE       s = rb_str_new2(docType);
+    VALUE       s;
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    if (Yes == pi->options->intern_strings) {
+        if (0 != pi->options->rb_enc) {
+            s = rb_enc_interned_str_cstr(docType, pi->options->rb_enc);
+        } else {
+            s = rb_interned_str_cstr(docType);
+        }
+    } else {
+#endif
+    s = rb_str_new2(docType);
 
 #if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
+    }
+#endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
@@ -210,11 +255,24 @@ add_doctype(PInfo pi, const char *docType) {
 static void
 add_comment(PInfo pi, const char *comment) {
     VALUE       n = rb_obj_alloc(ox_comment_clas);
-    VALUE       s = rb_str_new2(comment);
+    VALUE       s;
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    if (Yes == pi->options->intern_strings) {
+        if (0 != pi->options->rb_enc) {
+            s = rb_enc_interned_str_cstr(comment, pi->options->rb_enc);
+        } else {
+            s = rb_interned_str_cstr(comment);
+        }
+    } else {
+#endif
+    s = rb_str_new2(comment);
 
 #if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
+    }
+#endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
@@ -227,11 +285,24 @@ add_comment(PInfo pi, const char *comment) {
 static void
 add_cdata(PInfo pi, const char *cdata, size_t len) {
     VALUE       n = rb_obj_alloc(ox_cdata_clas);
-    VALUE       s = rb_str_new2(cdata);
+    VALUE       s;
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    if (Yes == pi->options->intern_strings) {
+        if (0 != pi->options->rb_enc) {
+            s = rb_enc_interned_str_cstr(cdata, pi->options->rb_enc);
+        } else {
+            s = rb_interned_str_cstr(cdata);
+        }
+    } else {
+#endif
+    s = rb_str_new2(cdata);
 
 #if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
+    }
+#endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
     }
 #endif
     rb_ivar_set(n, ox_at_value_id, s);
@@ -243,11 +314,24 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
 
 static void
 add_text(PInfo pi, char *text, int closed) {
-    VALUE       s = rb_str_new2(text);
+    VALUE       s;
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    if (Yes == pi->options->intern_strings) {
+        if (0 != pi->options->rb_enc) {
+            s = rb_enc_interned_str_cstr(text, pi->options->rb_enc);
+        } else {
+            s = rb_interned_str_cstr(text);
+        }
+    } else {
+#endif
+    s = rb_str_new2(text);
 
 #if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
+    }
+#endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
     }
 #endif
     if (helper_stack_empty(&pi->helpers)) { /* top level object */
@@ -285,9 +369,13 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
 #if HAVE_RB_ENC_ASSOCIATE
 		    if (0 != pi->options->rb_enc) {
+#if HAVE_RB_ENC_INTERNED_STR_CSTR
+			VALUE	rstr = rb_enc_interned_str_cstr(attrs->name, pi->options->rb_enc);
+#else
 			VALUE	rstr = rb_str_new2(attrs->name);
 
 			rb_enc_associate(rstr, pi->options->rb_enc);
+#endif
 			sym = rb_funcall(rstr, ox_to_sym_id, 0);
 		    } else {
 			sym = ID2SYM(rb_intern(attrs->name));
@@ -301,18 +389,42 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		    *slot = sym;
 		}
 	    } else {
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+		if (Yes == pi->options->intern_strings) {
+		    if (0 != pi->options->rb_enc) {
+		        sym = rb_enc_interned_str_cstr(attrs->name, pi->options->rb_enc);
+		    } else {
+		        sym = rb_interned_str_cstr(attrs->name);
+		    }
+		} else {
+#endif
 		sym = rb_str_new2(attrs->name);
 #if HAVE_RB_ENC_ASSOCIATE
 		if (0 != pi->options->rb_enc) {
 		    rb_enc_associate(sym, pi->options->rb_enc);
 		}
 #endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+		}
+#endif
 	    }
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	    if (Yes == pi->options->intern_strings) {
+	        if (0 != pi->options->rb_enc) {
+	            s = rb_enc_interned_str_cstr(attrs->value, pi->options->rb_enc);
+	        } else {
+	            s = rb_interned_str_cstr(attrs->value);
+	        }
+	    } else {
+#endif
             s = rb_str_new2(attrs->value);
 #if HAVE_RB_ENC_ASSOCIATE
             if (0 != pi->options->rb_enc) {
                 rb_enc_associate(s, pi->options->rb_enc);
             }
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	    }
+#endif
 #endif
             rb_hash_aset(ah, sym, s);
         }
@@ -343,8 +455,24 @@ end_element(PInfo pi, const char *ename) {
 static void
 add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
     VALUE       inst;
-    VALUE       s = rb_str_new2(name);
-    VALUE       c = Qnil;
+    VALUE       s;
+    VALUE       c;
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    if (Yes == pi->options->intern_strings) {
+        if (0 != pi->options->rb_enc && 0 != content) {
+            s = rb_enc_interned_str_cstr(name, pi->options->rb_enc);
+            c = rb_enc_interned_str_cstr(content, pi->options->rb_enc);
+        } else if (0 != content) {
+            s = rb_interned_str_cstr(name);
+            c = rb_interned_str_cstr(content);
+        } else {
+            s = rb_interned_str_cstr(name);
+            c = Qnil;
+        }
+    } else {
+        c = Qnil;
+#endif
+    s = rb_str_new2(name);
 
     if (0 != content) {
 	c = rb_str_new2(content);
@@ -355,6 +483,9 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 	if (0 != content) {
 	    rb_enc_associate(c, pi->options->rb_enc);
 	}
+    }
+#endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
     }
 #endif
     inst = rb_obj_alloc(ox_instruct_clas);
@@ -374,9 +505,13 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
 #if HAVE_RB_ENC_ASSOCIATE
 		    if (0 != pi->options->rb_enc) {
+#if HAVE_RB_ENC_INTERNED_STR_CSTR
+			VALUE	rstr = rb_enc_interned_str_cstr(attrs->name, pi->options->rb_enc);
+#else
 			VALUE	rstr = rb_str_new2(attrs->name);
 
 			rb_enc_associate(rstr, pi->options->rb_enc);
+#endif
 			sym = rb_funcall(rstr, ox_to_sym_id, 0);
 		    } else {
 			sym = ID2SYM(rb_intern(attrs->name));
@@ -390,18 +525,42 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 		    *slot = sym;
 		}
 	    } else {
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+            if (Yes == pi->options->intern_strings) {
+                if (0 != pi->options->rb_enc) {
+                    sym = rb_enc_interned_str_cstr(attrs->name, pi->options->rb_enc);
+                } else {
+                    sym = rb_interned_str_cstr(attrs->name);
+                }
+            } else {
+#endif
 		sym = rb_str_new2(attrs->name);
 #if HAVE_RB_ENC_ASSOCIATE
 		if (0 != pi->options->rb_enc) {
 		    rb_enc_associate(sym, pi->options->rb_enc);
 		}
 #endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+            }
+#endif
 	    }
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	    if (Yes == pi->options->intern_strings) {
+	        if (0 != pi->options->rb_enc) {
+	            s = rb_enc_interned_str_cstr(attrs->value, pi->options->rb_enc);
+	        } else {
+	            s = rb_interned_str_cstr(attrs->value);
+	        }
+	    } else {
+#endif
             s = rb_str_new2(attrs->value);
 #if HAVE_RB_ENC_ASSOCIATE
             if (0 != pi->options->rb_enc) {
                 rb_enc_associate(s, pi->options->rb_enc);
             }
+#endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	    }
 #endif
             rb_hash_aset(ah, sym, s);
         }

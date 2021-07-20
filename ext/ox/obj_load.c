@@ -61,7 +61,15 @@ inline static VALUE
 str2sym(const char *str, void *encoding) {
     VALUE	sym;
 
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    VALUE	rstr;
+    if (0 != encoding) {
+        rstr = rb_enc_interned_str_cstr(str, (rb_encoding*)encoding);
+    } else {
+        rstr = rb_interned_str_cstr(str);
+    }
+    sym = rb_funcall(rstr, ox_to_sym_id, 0);
+#elif HAVE_RUBY_ENCODING_H
     if (0 != encoding) {
 	VALUE	rstr = rb_str_new2(str);
 
@@ -84,7 +92,17 @@ name2var(const char *name, void *encoding) {
     if ('0' <= *name && *name <= '9') {
 	var_id = INT2NUM(atoi(name));
     } else if (Qundef == (var_id = ox_cache_get(ox_attr_cache, name, &slot, 0))) {
-#ifdef HAVE_RUBY_ENCODING_H
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    volatile VALUE	rstr;
+    volatile VALUE	sym;
+    if (0 != encoding) {
+        rstr = rb_enc_interned_str_cstr(name, (rb_encoding*)encoding);
+    } else {
+        rstr = rb_interned_str_cstr(name);
+    }
+    sym = rb_funcall(rstr, ox_to_sym_id, 0);
+    var_id = SYM2ID(sym);
+#elif HAVE_RUBY_ENCODING_H
 	if (0 != encoding) {
 	    volatile VALUE	rstr = rb_str_new2(name);
 	    volatile VALUE	sym;
@@ -192,7 +210,11 @@ parse_time(const char *text, VALUE clas) {
 	Qnil == (t = parse_xsd_time(text, clas))) {
 	VALUE	    args[1];
 
+#if HAVE_RB_INTERNED_STR_CSTR
+	*args = rb_interned_str_cstr(text);
+#else
 	*args = rb_str_new2(text);
+#endif
 	t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
     }
     return t;
@@ -407,11 +429,23 @@ add_text(PInfo pi, char *text, int closed) {
     switch (h->type) {
     case NoCode:
     case StringCode:
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    if (Yes == pi->options->intern_strings) {
+        if (0 != pi->options->rb_enc) {
+            h->obj = rb_enc_interned_str_cstr(text, pi->options->rb_enc);
+        } else {
+            h->obj = rb_interned_str_cstr(text);
+        }
+    } else {
+#endif
 	h->obj = rb_str_new2(text);
 #if HAVE_RB_ENC_ASSOCIATE
 	if (0 != pi->options->rb_enc) {
 	    rb_enc_associate(h->obj, pi->options->rb_enc);
 	}
+#endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+    }
 #endif
 	if (0 != pi->circ_array) {
 	    circ_array_set(pi->circ_array, h->obj, (unsigned long)pi->id);
@@ -480,10 +514,22 @@ add_text(PInfo pi, char *text, int closed) {
 	char		*str = ALLOCA_N(char, str_size + 1);
 
 	from_base64(text, (uchar*)str);
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
+	if (Yes == pi->options->intern_strings) {
+	    if (0 != pi->options->rb_enc) {
+	        v = rb_enc_interned_str_cstr(str, pi->options->rb_enc);
+	    } else {
+	        v = rb_interned_str_cstr(str);
+	    }
+	} else {
+#endif
 	v = rb_str_new(str, str_size);
 #if HAVE_RB_ENC_ASSOCIATE
 	if (0 != pi->options->rb_enc) {
 	    rb_enc_associate(v, pi->options->rb_enc);
+	}
+#endif
+#if HAVE_RB_ENC_INTERNED_STR_CSTR && HAVE_RB_INTERNED_STR_CSTR
 	}
 #endif
 	if (0 != pi->circ_array) {
@@ -525,7 +571,11 @@ add_text(PInfo pi, char *text, int closed) {
 	h->obj = rb_cstr_to_inum(text, 10, 1);
 	break;
     case BigDecimalCode:
+#if HAVE_RB_INTERNED_STR_CSTR
+	h->obj = rb_funcall(rb_cObject, ox_bigdecimal_id, 1, rb_interned_str_cstr(text));
+#else
 	h->obj = rb_funcall(rb_cObject, ox_bigdecimal_id, 1, rb_str_new2(text));
+#endif
 	break;
     default:
 	h->obj = Qnil;
@@ -701,7 +751,15 @@ end_element(PInfo pi, const char *ename) {
 
 	if (ox_empty_string == h->obj) {
 	    // special catch for empty strings
+#if HAVE_RB_INTERNED_STR_CSTR
+	    if (Yes == pi->options->intern_strings) {
+	        h->obj = rb_interned_str_cstr("");
+	    } else {
+#endif
 	    h->obj = rb_str_new2("");
+#if HAVE_RB_INTERNED_STR_CSTR
+	    }
+#endif
 	} else if (Qundef == h->obj) {
 	    set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
 	    return;

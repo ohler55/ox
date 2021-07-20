@@ -44,6 +44,7 @@ $ox_object_options = {
   :invalid_replace=>'',
   :strip_namespace=>false,
   :overlay=>nil,
+  :intern_strings=>false,
 }
 
 $ox_generic_options = {
@@ -69,6 +70,7 @@ $ox_generic_options = {
   :invalid_replace=>'',
   :strip_namespace=>false,
   :overlay=>nil,
+  :intern_strings=>false,
 }
 
 class Func < ::Test::Unit::TestCase
@@ -108,6 +110,7 @@ class Func < ::Test::Unit::TestCase
       :invalid_replace=>'*',
       :strip_namespace=>'spaced',
       :overlay=>nil,
+      :intern_strings=>false,
     }
     o3 = { :xsd_date=>false }
     Ox.default_options = o2
@@ -434,7 +437,11 @@ class Func < ::Test::Unit::TestCase
     Ox::default_options = $ox_object_options
     xml = %{\n<top name="&pi;">&pi;</top>\n}
     doc = Ox.parse(xml)
-    assert_equal('π', doc.attributes[:name].force_encoding('UTF-8'))
+    if $ox_object_options['intern_strings']
+      assert_equal('π', doc.attributes[:name].dup.force_encoding('UTF-8'))
+    else
+      assert_equal('π', doc.attributes[:name].force_encoding('UTF-8'))
+    end
   end
 
   def test_escape_dump_tolerant
