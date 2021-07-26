@@ -1395,6 +1395,9 @@ cache8_test(VALUE self) {
 #endif
 
 void Init_ox() {
+#if HAVE_RB_EXT_RACTOR_SAFE
+    rb_ext_ractor_safe(true);
+#endif
     Ox = rb_define_module("Ox");
 
     rb_define_module_function(Ox, "default_options", get_def_opts, 0);
