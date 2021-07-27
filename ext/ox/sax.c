@@ -123,6 +123,9 @@ str2sym(SaxDrive dr, const char *str, const char **strp) {
 
 void
 ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
+#if HAVE_RB_EXT_RACTOR_SAFE
+    rb_ext_ractor_safe(true);
+#endif
     struct _saxDrive    dr;
     int			line = 0;
 
