@@ -286,7 +286,7 @@ pop(Builder b) {
 	    append_indent(b);
 	}
 	buf_append_string(&b->buf, "</", 2);
-	buf_append_string(&b->buf, e->name, e->len);
+	append_string(b, e->name, e->len, xml_element_chars, false);
 	buf_append(&b->buf, '>');
 	b->col += e->len + 3;
 	b->pos += e->len + 3;
