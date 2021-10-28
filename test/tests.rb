@@ -517,6 +517,14 @@ class Func < ::Test::Unit::TestCase
     }
   end
 
+  def test_escape_open_close_tag_names
+    Ox::default_options = $ox_object_options
+    b = Ox::Builder.new
+    b.element(%(/><script></script>)) { b.text('xss') }
+    s = b.to_s
+    assert_equal(%(</&gt;&lt;script&gt;&lt;/script&gt;>xss<//&gt;&lt;script&gt;&lt;/script&gt;>\n), s)
+  end
+
   def test_attr_as_string
     Ox::default_options = $ox_object_options
     xml = %{<top name="Pete"/>}
