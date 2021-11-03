@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.6] - 2021-11-03
+
+### Fixed
+
+- Closing tags in builder are now escapped correctly thanks to ezekg.
+
 ## [2.14.5] - 2021-06-04
 
 ### Fixed
