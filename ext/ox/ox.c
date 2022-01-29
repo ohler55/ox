@@ -1562,6 +1562,38 @@ void Init_ox() {
     ox_cdata_clas = rb_const_get_at(Ox, rb_intern("CData"));
     ox_bag_clas = rb_const_get_at(Ox, rb_intern("Bag"));
 
+    // Classes can move in more recent versions so register them all.
+    rb_gc_register_address(&Ox);
+    rb_gc_register_address(&ox_arg_error_class);
+    rb_gc_register_address(&ox_bag_clas);
+    rb_gc_register_address(&ox_bag_clas);
+    rb_gc_register_address(&ox_bigdecimal_class);
+    rb_gc_register_address(&ox_cdata_clas);
+    rb_gc_register_address(&ox_cdata_clas);
+    rb_gc_register_address(&ox_comment_clas);
+    rb_gc_register_address(&ox_comment_clas);
+    rb_gc_register_address(&ox_date_class);
+    rb_gc_register_address(&ox_doctype_clas);
+    rb_gc_register_address(&ox_doctype_clas);
+    rb_gc_register_address(&ox_document_clas);
+    rb_gc_register_address(&ox_document_clas);
+    rb_gc_register_address(&ox_element_clas);
+    rb_gc_register_address(&ox_element_clas);
+    rb_gc_register_address(&ox_encoding_sym);
+    rb_gc_register_address(&ox_indent_sym);
+    rb_gc_register_address(&ox_instruct_clas);
+    rb_gc_register_address(&ox_instruct_clas);
+    rb_gc_register_address(&ox_parse_error_class);
+    rb_gc_register_address(&ox_raw_clas);
+    rb_gc_register_address(&ox_raw_clas);
+    rb_gc_register_address(&ox_size_sym);
+    rb_gc_register_address(&ox_standalone_sym);
+    rb_gc_register_address(&ox_stringio_class);
+    rb_gc_register_address(&ox_struct_class);
+    rb_gc_register_address(&ox_syntax_error_class);
+    rb_gc_register_address(&ox_time_class);
+    rb_gc_register_address(&ox_version_sym);
+
     ox_cache_new(&ox_symbol_cache);
     ox_cache_new(&ox_class_cache);
     ox_cache_new(&ox_attr_cache);
