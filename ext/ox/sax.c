@@ -96,7 +96,6 @@ void ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
     printf("    has_end_instruct = %s\n", dr.has.end_instruct ? "true" : "false");
     printf("    has_attr = %s\n", dr.has.attr ? "true" : "false");
     printf("    has_attr_value = %s\n", dr.has.attr_value ? "true" : "false");
-    printf("    has_attrs_done = %s\n", dr.has.attrs_done ? "true" : "false");
     printf("    has_doctype = %s\n", dr.has.doctype ? "true" : "false");
     printf("    has_comment = %s\n", dr.has.comment ? "true" : "false");
     printf("    has_cdata = %s\n", dr.has.cdata ? "true" : "false");
@@ -105,16 +104,67 @@ void ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
     printf("    has_start_element = %s\n", dr.has.start_element ? "true" : "false");
     printf("    has_end_element = %s\n", dr.has.end_element ? "true" : "false");
     printf("    has_error = %s\n", dr.has.error ? "true" : "false");
-    printf("    has_pos = %s\n", dr.has.pos ? "true" : "false");
-    printf("    has_line = %s\n", dr.has.line ? "true" : "false");
-    printf("    has_column = %s\n", dr.has.column ? "true" : "false");
 #endif
-    // parse(&dr);
     rb_protect(protect_parse, (VALUE)&dr, &line);
     ox_sax_drive_cleanup(&dr);
     if (0 != line) {
         rb_jump_tag(line);
     }
+}
+
+static void set_long_noop(VALUE handler, long pos) {
+}
+
+static void set_pos(VALUE handler, long pos) {
+    rb_ivar_set(handler, ox_at_pos_id, LONG2NUM(pos));
+}
+
+static void set_line(VALUE handler, long line) {
+    rb_ivar_set(handler, ox_at_line_id, LONG2NUM(line));
+}
+
+static void set_col(VALUE handler, long col) {
+    rb_ivar_set(handler, ox_at_column_id, LONG2NUM(col));
+}
+
+static void attrs_done_noop(VALUE handler) {
+}
+
+static void attrs_done(VALUE handler) {
+    rb_funcall(handler, ox_attrs_done_id, 0);
+}
+
+static VALUE instruct_noop(SaxDrive dr, const char *target, long pos, long line, long col) {
+    return Qnil;
+}
+
+static VALUE instruct(SaxDrive dr, const char *target, long pos, long line, long col) {
+    VALUE args[1];
+
+    args[0] = rb_str_new2(target);
+    dr->set_pos(dr->handler, pos);
+    dr->set_line(dr->handler, line);
+    dr->set_col(dr->handler, col);
+    rb_funcall2(dr->handler, ox_instruct_id, 1, args);
+
+    return args[0];
+}
+
+static VALUE instruct_just_value(SaxDrive dr, const char *target, long pos, long line, long col) {
+    return rb_str_new2(target);
+}
+
+static void end_instruct_noop(SaxDrive dr, VALUE target, long pos, long line, long col) {
+}
+
+static void end_instruct(SaxDrive dr, VALUE target, long pos, long line, long col) {
+    VALUE args[1];
+
+    args[0] = target;
+    dr->set_pos(dr->handler, pos);
+    dr->set_line(dr->handler, line);
+    dr->set_col(dr->handler, col);
+    rb_funcall2(dr->handler, ox_end_instruct_id, 1, args);
 }
 
 static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
@@ -128,7 +178,28 @@ static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions opti
     dr->err     = 0;
     dr->blocked = 0;
     dr->abort   = false;
-    has_init(&dr->has, handler);
+
+    dr->set_pos  = (Qtrue == rb_ivar_defined(handler, ox_at_pos_id)) ? set_pos : set_long_noop;
+    dr->set_line = (Qtrue == rb_ivar_defined(handler, ox_at_line_id)) ? set_line : set_long_noop;
+    dr->set_col  = (Qtrue == rb_ivar_defined(handler, ox_at_column_id)) ? set_col : set_long_noop;
+    dr->attrs_done  = rb_respond_to(handler, ox_attrs_done_id) ? attrs_done : attrs_done_noop;
+    dr->instruct  = rb_respond_to(handler, ox_instruct_id) ? instruct : instruct_noop;
+    dr->end_instruct  = rb_respond_to(handler, ox_end_instruct_id) ? end_instruct : end_instruct_noop;
+    if (rb_respond_to(handler, ox_end_instruct_id) && !rb_respond_to(handler, ox_instruct_id)) {
+	dr->instruct  = instruct_just_value;
+    }
+
+    dr->has.attr = respond_to(handler, ox_attr_id);
+    dr->has.attr_value = respond_to(handler, ox_attr_value_id);
+    dr->has.doctype = respond_to(handler, ox_doctype_id);
+    dr->has.comment = respond_to(handler, ox_comment_id);
+    dr->has.cdata = respond_to(handler, ox_cdata_id);
+    dr->has.text = respond_to(handler, ox_text_id);
+    dr->has.value = respond_to(handler, ox_value_id);
+    dr->has.start_element = respond_to(handler, ox_start_element_id);
+    dr->has.end_element = respond_to(handler, ox_end_element_id);
+    dr->has.error = respond_to(handler, ox_error_id);
+
     if ('\0' == *ox_default_options.encoding) {
         VALUE encoding;
 
@@ -164,18 +235,9 @@ static void ox_sax_drive_error_at(SaxDrive dr, const char *msg, off_t pos, off_t
         args[0] = rb_str_new2(msg);
         args[1] = LONG2NUM(line);
         args[2] = LONG2NUM(col);
-        if (dr->has.pos) {
-            rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-        }
-        if (dr->has.pos) {
-            rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-        }
-        if (dr->has.line) {
-            rb_ivar_set(dr->handler, ox_at_line_id, args[1]);
-        }
-        if (dr->has.column) {
-            rb_ivar_set(dr->handler, ox_at_column_id, args[2]);
-        }
+        dr->set_pos(dr->handler, pos);
+        dr->set_line(dr->handler, line);
+        dr->set_col(dr->handler, col);
         rb_funcall2(dr->handler, ox_error_id, 3, args);
     }
 }
@@ -288,25 +350,13 @@ static void parse(SaxDrive dr) {
                 parent = stack_peek(&dr->stack);
                 if (0 != parent && 0 == parent->childCnt && dr->has.text && !dr->blocked) {
                     VALUE args[1];
-                    off_t pos  = dr->buf.pos;
-                    off_t line = dr->buf.line;
-                    off_t col  = dr->buf.col - 1;
-
                     args[0] = rb_str_new2("");
-#if HAVE_RB_ENC_ASSOCIATE
                     if (0 != dr->encoding) {
                         rb_enc_associate(args[0], dr->encoding);
                     }
-#endif
-                    if (dr->has.pos) {
-                        rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-                    }
-                    if (dr->has.line) {
-                        rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-                    }
-                    if (dr->has.column) {
-                        rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-                    }
+                    dr->set_pos(dr->handler, dr->buf.pos);
+                    dr->set_line(dr->handler, dr->buf.line);
+                    dr->set_col(dr->handler, dr->buf.col);
                     rb_funcall2(dr->handler, ox_text_id, 1, args);
                 }
                 c = read_element_end(dr);
@@ -340,15 +390,9 @@ DONE:
         char msg[256];
         Nv   sp;
 
-        if (dr->has.pos) {
-            rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(dr->buf.pos));
-        }
-        if (dr->has.line) {
-            rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(dr->buf.line));
-        }
-        if (dr->has.column) {
-            rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(dr->buf.col));
-        }
+        dr->set_pos(dr->handler, dr->buf.pos);
+        dr->set_line(dr->handler, dr->buf.line);
+        dr->set_col(dr->handler, dr->buf.col);
         for (sp = dr->stack.tail - 1; dr->stack.head <= sp; sp--) {
             snprintf(msg, sizeof(msg) - 1, "%selement '%s' not closed", EL_MISMATCH, sp->name);
             ox_sax_drive_error_at(dr, msg, dr->buf.pos, dr->buf.line, dr->buf.col);
@@ -410,24 +454,8 @@ static char read_instruction(SaxDrive dr) {
         return c;
     }
     is_xml = (0 == (dr->options.smart ? strcasecmp("xml", dr->buf.str) : strcmp("xml", dr->buf.str)));
-    if (dr->has.instruct || dr->has.end_instruct) {
-        target = rb_str_new2(dr->buf.str);
-    }
-    if (dr->has.instruct) {
-        VALUE args[1];
 
-        if (dr->has.pos) {
-            rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-        }
-        if (dr->has.line) {
-            rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-        }
-        if (dr->has.column) {
-            rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-        }
-        args[0] = target;
-        rb_funcall2(dr->handler, ox_instruct_id, 1, args);
-    }
+    target = dr->instruct(dr, dr->buf.str, pos, line, col);
     buf_protect(&dr->buf);
     pos  = dr->buf.pos;
     line = dr->buf.line;
@@ -437,9 +465,7 @@ static char read_instruction(SaxDrive dr) {
     buf_reset(&dr->buf);
     dr->err = 0;
     c       = read_attrs(dr, c, '?', '?', is_xml, 1, NULL);
-    if (dr->has.attrs_done) {
-        rb_funcall(dr->handler, ox_attrs_done_id, 0);
-    }
+    dr->attrs_done(dr->handler);
     if (dr->err) {
         if (dr->has.text) {
             VALUE args[1];
@@ -448,20 +474,12 @@ static char read_instruction(SaxDrive dr) {
                 ox_sax_collapse_special(dr, content, (int)pos, (int)line, (int)col);
             }
             args[0] = rb_str_new2(content);
-#if HAVE_RB_ENC_ASSOCIATE
             if (0 != dr->encoding) {
                 rb_enc_associate(args[0], dr->encoding);
             }
-#endif
-            if (dr->has.line) {
-                rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-            }
-            if (dr->has.pos) {
-                rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-            }
-            if (dr->has.column) {
-                rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-            }
+            dr->set_pos(dr->handler, pos);
+            dr->set_line(dr->handler, line);
+            dr->set_col(dr->handler, col);
             rb_funcall2(dr->handler, ox_text_id, 1, args);
         }
         dr->buf.tail = dr->buf.head + coff;
@@ -480,22 +498,8 @@ static char read_instruction(SaxDrive dr) {
             }
         }
     }
-    if (dr->has.end_instruct) {
-        VALUE args[1];
-
-        if (dr->has.pos) {
-            rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-        }
-        if (dr->has.line) {
-            rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-        }
-        if (dr->has.column) {
-            rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-        }
-        args[0] = target;
-        rb_funcall2(dr->handler, ox_end_instruct_id, 1, args);
-    }
-    dr->buf.str = 0;
+    dr->end_instruct(dr, target, pos, line, col);
+    dr->buf.str = NULL;
 
     return c;
 }
@@ -555,15 +559,9 @@ static char read_doctype(SaxDrive dr) {
     if (dr->has.doctype) {
         VALUE args[1];
 
-        if (dr->has.pos) {
-            rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-        }
-        if (dr->has.line) {
-            rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-        }
-        if (dr->has.column) {
-            rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-        }
+        dr->set_pos(dr->handler, pos);
+        dr->set_line(dr->handler, line);
+        dr->set_col(dr->handler, col);
         args[0] = rb_str_new2(dr->buf.str);
         rb_funcall2(dr->handler, ox_doctype_id, 1, args);
     }
@@ -635,20 +633,12 @@ CB:
             VALUE args[1];
 
             args[0] = rb_str_new2(dr->buf.str);
-#if HAVE_RB_ENC_ASSOCIATE
             if (0 != dr->encoding) {
                 rb_enc_associate(args[0], dr->encoding);
             }
-#endif
-            if (dr->has.pos) {
-                rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-            }
-            if (dr->has.line) {
-                rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-            }
-            if (dr->has.column) {
-                rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-            }
+            dr->set_pos(dr->handler, pos);
+            dr->set_line(dr->handler, line);
+            dr->set_col(dr->handler, col);
             rb_funcall2(dr->handler, ox_cdata_id, 1, args);
         }
     }
@@ -721,20 +711,12 @@ CB:
         if (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay ||
             (NULL != h && (ActiveOverlay == h->overlay || ActiveOverlay == h->overlay))) {
             args[0] = rb_str_new2(dr->buf.str);
-#if HAVE_RB_ENC_ASSOCIATE
             if (0 != dr->encoding) {
                 rb_enc_associate(args[0], dr->encoding);
             }
-#endif
-            if (dr->has.pos) {
-                rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-            }
-            if (dr->has.line) {
-                rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-            }
-            if (dr->has.column) {
-                rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-            }
+            dr->set_pos(dr->handler, pos);
+            dr->set_line(dr->handler, line);
+            dr->set_col(dr->handler, col);
             rb_funcall2(dr->handler, ox_comment_id, 1, args);
         }
     }
@@ -855,15 +837,9 @@ static char read_element_start(SaxDrive dr) {
         (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
         VALUE args[1];
 
-        if (dr->has.pos) {
-            rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-        }
-        if (dr->has.line) {
-            rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-        }
-        if (dr->has.column) {
-            rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-        }
+        dr->set_pos(dr->handler, pos);
+        dr->set_line(dr->handler, line);
+        dr->set_col(dr->handler, col);
         args[0] = name;
         rb_funcall2(dr->handler, ox_start_element_id, 1, args);
     }
@@ -879,9 +855,9 @@ static char read_element_start(SaxDrive dr) {
         }
         closed = ('/' == c);
     }
-    if (dr->has.attrs_done && 0 >= dr->blocked &&
+    if (0 >= dr->blocked &&
         (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
-        rb_funcall(dr->handler, ox_attrs_done_id, 0);
+	dr->attrs_done(dr->handler);
     }
     if (closed) {
         c    = buf_next_non_white(&dr->buf);
@@ -954,7 +930,7 @@ static char read_element_end(SaxDrive dr) {
             h = ox_hint_find(dr->options.hints, dr->buf.str);
             if (NULL != h && h->empty) {
                 // Just close normally
-                name = str2sym(dr, dr->buf.str, dr->buf.tail - dr->buf.str - 1, 0);
+                name = str2sym(dr, dr->buf.str, dr->buf.tail - dr->buf.str - 2, 0);
                 snprintf(msg,
                          sizeof(msg) - 1,
                          "%selement '%s' should not have a separate close element",
@@ -965,20 +941,14 @@ static char read_element_end(SaxDrive dr) {
             } else {
                 snprintf(msg, sizeof(msg) - 1, "%selement '%s' closed but not opened", EL_MISMATCH, dr->buf.str);
                 ox_sax_drive_error_at(dr, msg, pos, line, col);
-                name = str2sym(dr, dr->buf.str, dr->buf.tail - dr->buf.str - 1, 0);
+                name = str2sym(dr, dr->buf.str, dr->buf.tail - dr->buf.str - 2, 0);
                 if (dr->has.start_element && 0 >= dr->blocked &&
                     (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
                     VALUE args[1];
 
-                    if (dr->has.pos) {
-                        rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-                    }
-                    if (dr->has.line) {
-                        rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-                    }
-                    if (dr->has.column) {
-                        rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-                    }
+                    dr->set_pos(dr->handler, pos);
+                    dr->set_line(dr->handler, line);
+                    dr->set_col(dr->handler, col);
                     args[0] = name;
                     rb_funcall2(dr->handler, ox_start_element_id, 1, args);
                 }
@@ -1001,15 +971,9 @@ static char read_element_end(SaxDrive dr) {
                          dr->buf.str,
                          nv->name);
                 ox_sax_drive_error_at(dr, msg, pos, line, col);
-                if (dr->has.pos) {
-                    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-                }
-                if (dr->has.line) {
-                    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-                }
-                if (dr->has.column) {
-                    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-                }
+                dr->set_pos(dr->handler, pos);
+                dr->set_line(dr->handler, line);
+                dr->set_col(dr->handler, col);
                 for (nv = stack_pop(&dr->stack); match < nv; nv = stack_pop(&dr->stack)) {
                     if (dr->has.end_element && 0 >= dr->blocked &&
                         (NULL == nv->hint || ActiveOverlay == nv->hint->overlay || NestOverlay == nv->hint->overlay)) {
@@ -1067,20 +1031,12 @@ END_OF_BUF:
         buf_backup(&dr->buf);
         if (dr->has.text && ((NoSkip == dr->options.skip && !isEnd) || (OffSkip == dr->options.skip))) {
             args[0] = rb_str_new2(dr->buf.str);
-#if HAVE_RB_ENC_ASSOCIATE
             if (0 != dr->encoding) {
                 rb_enc_associate(args[0], dr->encoding);
             }
-#endif
-	    if (dr->has.pos) {
-                rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-            }
-            if (dr->has.line) {
-                rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-            }
-            if (dr->has.column) {
-                rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-            }
+            dr->set_pos(dr->handler, pos);
+            dr->set_line(dr->handler, line);
+            dr->set_col(dr->handler, col);
             rb_funcall2(dr->handler, ox_text_id, 1, args);
         }
         if (!isEnd || 0 == parent || 0 < parent->childCnt) {
@@ -1092,15 +1048,9 @@ END_OF_BUF:
     }
     if (!dr->blocked && (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay)) {
         if (dr->has.value) {
-            if (dr->has.pos) {
-                rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-            }
-            if (dr->has.line) {
-                rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-            }
-            if (dr->has.column) {
-                rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-            }
+            dr->set_pos(dr->handler, pos);
+            dr->set_line(dr->handler, line);
+            dr->set_col(dr->handler, col);
             *args = dr->value_obj;
             rb_funcall2(dr->handler, ox_value_id, 1, args);
         } else if (dr->has.text) {
@@ -1113,20 +1063,12 @@ END_OF_BUF:
             default: break;
             }
             args[0] = rb_str_new2(dr->buf.str);
-#if HAVE_RB_ENC_ASSOCIATE
             if (0 != dr->encoding) {
                 rb_enc_associate(args[0], dr->encoding);
             }
-#endif
-            if (dr->has.pos) {
-                rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-            }
-            if (dr->has.line) {
-                rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-            }
-            if (dr->has.column) {
-                rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-            }
+            dr->set_pos(dr->handler, pos);
+            dr->set_line(dr->handler, line);
+            dr->set_col(dr->handler, col);
             rb_funcall2(dr->handler, ox_text_id, 1, args);
         }
     }
@@ -1192,20 +1134,12 @@ END_OF_BUF:
     // TBD check parent overlay
     if (dr->has.text && !dr->blocked) {
         args[0] = rb_str_new2(dr->buf.str);
-#if HAVE_RB_ENC_ASSOCIATE
         if (0 != dr->encoding) {
             rb_enc_associate(args[0], dr->encoding);
         }
-#endif
-        if (dr->has.pos) {
-            rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-        }
-        if (dr->has.line) {
-            rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-        }
-        if (dr->has.column) {
-            rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-        }
+        dr->set_pos(dr->handler, pos);
+        dr->set_line(dr->handler, line);
+        dr->set_col(dr->handler, col);
         rb_funcall2(dr->handler, ox_text_id, 1, args);
     }
     dr->buf.str = 0;
@@ -1277,15 +1211,9 @@ static char read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, 
             if (dr->has.attr_value) {
                 VALUE args[2];
 
-                if (dr->has.pos) {
-                    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-                }
-                if (dr->has.line) {
-                    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-                }
-                if (dr->has.column) {
-                    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-                }
+		dr->set_pos(dr->handler, pos);
+		dr->set_line(dr->handler, line);
+		dr->set_col(dr->handler, col);
                 args[0] = name;
                 args[1] = dr->value_obj;
                 rb_funcall2(dr->handler, ox_attr_value_id, 2, args);
@@ -1297,20 +1225,12 @@ static char read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, 
                     ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
                 }
                 args[1] = rb_str_new2(attr_value);
-#if HAVE_RB_ENC_ASSOCIATE
                 if (0 != dr->encoding) {
                     rb_enc_associate(args[1], dr->encoding);
                 }
-#endif
-                if (dr->has.pos) {
-                    rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-                }
-                if (dr->has.line) {
-                    rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-                }
-                if (dr->has.column) {
-                    rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-                }
+		dr->set_pos(dr->handler, pos);
+		dr->set_line(dr->handler, line);
+		dr->set_col(dr->handler, col);
                 rb_funcall2(dr->handler, ox_attr_id, 2, args);
             }
         }
@@ -1615,15 +1535,9 @@ static Nv hint_try_close(SaxDrive dr, const char *name) {
 static void end_element_cb(SaxDrive dr, VALUE name, long pos, long line, long col, Hint h) {
     if (dr->has.end_element && 0 >= dr->blocked &&
         (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
-        if (dr->has.pos) {
-            rb_ivar_set(dr->handler, ox_at_pos_id, LONG2NUM(pos));
-        }
-        if (dr->has.line) {
-            rb_ivar_set(dr->handler, ox_at_line_id, LONG2NUM(line));
-        }
-        if (dr->has.column) {
-            rb_ivar_set(dr->handler, ox_at_column_id, LONG2NUM(col));
-        }
+	dr->set_pos(dr->handler, pos);
+	dr->set_line(dr->handler, line);
+	dr->set_col(dr->handler, col);
         rb_funcall(dr->handler, ox_end_element_id, 1, name);
     }
     if (NULL != h && BlockOverlay == h->overlay && 0 < dr->blocked) {

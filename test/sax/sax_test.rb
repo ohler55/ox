@@ -57,7 +57,7 @@ class SaxBaseTest < ::Test::Unit::TestCase
     assert_equal([[:start_element, :top],
                   [:end_element, :top]], handler.calls)
   end
-=begin
+
   def test_sax_file
     Ox::default_options = $ox_sax_options
     handler = AllSax.new()
@@ -192,6 +192,7 @@ encoding = "UTF-8" ?>},
                    [:error, "Start End Mismatch: element 'top' not closed", 1, 25],
                    [:end_element, :top]])
   end
+
   def test_sax_element_start_end
     Ox::default_options = $ox_sax_options
     parse_compare(%{<top></top>},
@@ -1315,5 +1316,5 @@ this is not part of the xml document
                   [:abort, :table],
                  ], handler.calls)
   end
-=end
+
 end

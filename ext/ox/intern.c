@@ -53,8 +53,7 @@ static VALUE form_str(const char *str, size_t len) {
 }
 
 static VALUE form_sym(const char *str, size_t len) {
-    // Symbols are always ASCII and encoding can not be set.
-    return rb_to_symbol(rb_str_freeze(rb_str_new(str, len)));
+    return rb_to_symbol(rb_str_freeze(rb_utf8_str_new(str, len)));
 }
 
 static VALUE form_attr(const char *str, size_t len) {

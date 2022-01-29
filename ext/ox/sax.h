@@ -33,6 +33,9 @@ typedef struct _saxDrive {
     void (*set_pos)(VALUE handler, long pos);
     void (*set_line)(VALUE handler, long line);
     void (*set_col)(VALUE handler, long col);
+    void (*attrs_done)(VALUE handler);
+    VALUE (*instruct)(struct _saxDrive *dr, const char *target, long pos, long line, long col);
+    void (*end_instruct)(struct _saxDrive *dr, VALUE target, long pos, long line, long col);
 
     struct _has has;
     rb_encoding *encoding;
