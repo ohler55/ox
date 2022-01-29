@@ -57,8 +57,6 @@ static char read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, 
 static char read_name_token(SaxDrive dr);
 static char read_quoted_value(SaxDrive dr);
 
-static void end_element_cb(SaxDrive dr, VALUE name, long pos, long line, long col, Hint h);
-
 static void hint_clear_empty(SaxDrive dr);
 static Nv   hint_try_close(SaxDrive dr, const char *name);
 
@@ -90,21 +88,6 @@ void ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
     int              line = 0;
 
     sax_drive_init(&dr, handler, io, options);
-#if 0
-    printf("*** sax_parse with these flags\n");
-    printf("    has_instruct = %s\n", dr.has.instruct ? "true" : "false");
-    printf("    has_end_instruct = %s\n", dr.has.end_instruct ? "true" : "false");
-    printf("    has_attr = %s\n", dr.has.attr ? "true" : "false");
-    printf("    has_attr_value = %s\n", dr.has.attr_value ? "true" : "false");
-    printf("    has_doctype = %s\n", dr.has.doctype ? "true" : "false");
-    printf("    has_comment = %s\n", dr.has.comment ? "true" : "false");
-    printf("    has_cdata = %s\n", dr.has.cdata ? "true" : "false");
-    printf("    has_text = %s\n", dr.has.text ? "true" : "false");
-    printf("    has_value = %s\n", dr.has.value ? "true" : "false");
-    printf("    has_start_element = %s\n", dr.has.start_element ? "true" : "false");
-    printf("    has_end_element = %s\n", dr.has.end_element ? "true" : "false");
-    printf("    has_error = %s\n", dr.has.error ? "true" : "false");
-#endif
     rb_protect(protect_parse, (VALUE)&dr, &line);
     ox_sax_drive_cleanup(&dr);
     if (0 != line) {
@@ -139,15 +122,14 @@ static VALUE instruct_noop(SaxDrive dr, const char *target, long pos, long line,
 }
 
 static VALUE instruct(SaxDrive dr, const char *target, long pos, long line, long col) {
-    VALUE args[1];
+    VALUE arg = rb_str_new2(target);
 
-    args[0] = rb_str_new2(target);
     dr->set_pos(dr->handler, pos);
     dr->set_line(dr->handler, line);
     dr->set_col(dr->handler, col);
-    rb_funcall2(dr->handler, ox_instruct_id, 1, args);
+    rb_funcall(dr->handler, ox_instruct_id, 1, arg);
 
-    return args[0];
+    return arg;
 }
 
 static VALUE instruct_just_value(SaxDrive dr, const char *target, long pos, long line, long col) {
@@ -158,13 +140,85 @@ static void end_instruct_noop(SaxDrive dr, VALUE target, long pos, long line, lo
 }
 
 static void end_instruct(SaxDrive dr, VALUE target, long pos, long line, long col) {
-    VALUE args[1];
-
-    args[0] = target;
     dr->set_pos(dr->handler, pos);
     dr->set_line(dr->handler, line);
     dr->set_col(dr->handler, col);
-    rb_funcall2(dr->handler, ox_end_instruct_id, 1, args);
+    rb_funcall(dr->handler, ox_end_instruct_id, 1, target);
+}
+
+static void dr_loc_noop(SaxDrive dr, long pos, long line, long col) {
+}
+
+static void comment(SaxDrive dr, long pos, long line, long col) {
+    if (!dr->blocked) {
+        Nv    parent = stack_peek(&dr->stack);
+        Hint  h      = ox_hint_find(dr->options.hints, "!--");
+
+        if (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay ||
+            (NULL != h && (ActiveOverlay == h->overlay || ActiveOverlay == h->overlay))) {
+
+	    VALUE arg = rb_str_new2(dr->buf.str);
+
+            if (0 != dr->encoding) {
+                rb_enc_associate(arg, dr->encoding);
+            }
+            dr->set_pos(dr->handler, pos);
+            dr->set_line(dr->handler, line);
+            dr->set_col(dr->handler, col);
+            rb_funcall(dr->handler, ox_comment_id, 1, arg);
+        }
+    }
+}
+
+static void cdata(SaxDrive dr, long pos, long line, long col) {
+    Nv    parent = stack_peek(&dr->stack);
+
+    if (!dr->blocked && (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay)) {
+	VALUE arg = rb_str_new2(dr->buf.str);
+
+	if (0 != dr->encoding) {
+	    rb_enc_associate(arg, dr->encoding);
+	}
+	dr->set_pos(dr->handler, pos);
+	dr->set_line(dr->handler, line);
+	dr->set_col(dr->handler, col);
+	rb_funcall(dr->handler, ox_cdata_id, 1, arg);
+    }
+}
+
+static void doctype(SaxDrive dr, long pos, long line, long col) {
+    dr->set_pos(dr->handler, pos);
+    dr->set_line(dr->handler, line);
+    dr->set_col(dr->handler, col);
+    rb_funcall(dr->handler, ox_doctype_id, 1, rb_str_new2(dr->buf.str));
+}
+
+static void error_noop(SaxDrive dr, const char *msg, long pos, long line, long col) {
+}
+
+static void error(SaxDrive dr, const char *msg, long pos, long line, long col) {
+    VALUE args[3];
+
+    args[0] = rb_str_new2(msg);
+    args[1] = LONG2NUM(line);
+    args[2] = LONG2NUM(col);
+    dr->set_pos(dr->handler, pos);
+    dr->set_line(dr->handler, line);
+    dr->set_col(dr->handler, col);
+    rb_funcall2(dr->handler, ox_error_id, 3, args);
+}
+
+static void end_element_cb(SaxDrive dr, VALUE name, long pos, long line, long col, Hint h) {
+    if (dr->has.end_element && 0 >= dr->blocked &&
+        (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
+	dr->set_pos(dr->handler, pos);
+	dr->set_line(dr->handler, line);
+	dr->set_col(dr->handler, col);
+        rb_funcall(dr->handler, ox_end_element_id, 1, name);
+    }
+    if (NULL != h && BlockOverlay == h->overlay && 0 < dr->blocked) {
+        dr->blocked--;
+    }
 }
 
 static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions options) {
@@ -188,17 +242,17 @@ static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions opti
     if (rb_respond_to(handler, ox_end_instruct_id) && !rb_respond_to(handler, ox_instruct_id)) {
 	dr->instruct  = instruct_just_value;
     }
+    dr->doctype  = rb_respond_to(handler, ox_doctype_id) ? doctype : dr_loc_noop;
+    dr->comment  = rb_respond_to(handler, ox_comment_id) ? comment : dr_loc_noop;
+    dr->cdata  = rb_respond_to(handler, ox_cdata_id) ? cdata : dr_loc_noop;
+    dr->error  = rb_respond_to(handler, ox_error_id) ? error : error_noop;
 
     dr->has.attr = respond_to(handler, ox_attr_id);
     dr->has.attr_value = respond_to(handler, ox_attr_value_id);
-    dr->has.doctype = respond_to(handler, ox_doctype_id);
-    dr->has.comment = respond_to(handler, ox_comment_id);
-    dr->has.cdata = respond_to(handler, ox_cdata_id);
     dr->has.text = respond_to(handler, ox_text_id);
     dr->has.value = respond_to(handler, ox_value_id);
     dr->has.start_element = respond_to(handler, ox_start_element_id);
     dr->has.end_element = respond_to(handler, ox_end_element_id);
-    dr->has.error = respond_to(handler, ox_error_id);
 
     if ('\0' == *ox_default_options.encoding) {
         VALUE encoding;
@@ -229,17 +283,7 @@ void ox_sax_drive_cleanup(SaxDrive dr) {
 }
 
 static void ox_sax_drive_error_at(SaxDrive dr, const char *msg, off_t pos, off_t line, off_t col) {
-    if (dr->has.error) {
-        VALUE args[3];
-
-        args[0] = rb_str_new2(msg);
-        args[1] = LONG2NUM(line);
-        args[2] = LONG2NUM(col);
-        dr->set_pos(dr->handler, pos);
-        dr->set_line(dr->handler, line);
-        dr->set_col(dr->handler, col);
-        rb_funcall2(dr->handler, ox_error_id, 3, args);
-    }
+    dr->error(dr, msg, pos, line, col);
 }
 
 void ox_sax_drive_error(SaxDrive dr, const char *msg) {
@@ -390,22 +434,10 @@ DONE:
         char msg[256];
         Nv   sp;
 
-        dr->set_pos(dr->handler, dr->buf.pos);
-        dr->set_line(dr->handler, dr->buf.line);
-        dr->set_col(dr->handler, dr->buf.col);
         for (sp = dr->stack.tail - 1; dr->stack.head <= sp; sp--) {
             snprintf(msg, sizeof(msg) - 1, "%selement '%s' not closed", EL_MISMATCH, sp->name);
             ox_sax_drive_error_at(dr, msg, dr->buf.pos, dr->buf.line, dr->buf.col);
-            if (dr->has.end_element && 0 >= dr->blocked &&
-                (NULL == sp->hint || ActiveOverlay == sp->hint->overlay || NestOverlay == sp->hint->overlay)) {
-                VALUE args[1];
-
-                args[0] = sp->val;
-                rb_funcall2(dr->handler, ox_end_element_id, 1, args);
-            }
-            if (dr->blocked && NULL != sp->hint && BlockOverlay == sp->hint->overlay) {
-                dr->blocked--;
-            }
+	    end_element_cb(dr, sp->val, dr->buf.pos, dr->buf.line, dr->buf.col, sp->hint);
         }
     }
 }
@@ -556,15 +588,7 @@ static char read_doctype(SaxDrive dr) {
     if (0 != parent) {
         parent->childCnt++;
     }
-    if (dr->has.doctype) {
-        VALUE args[1];
-
-        dr->set_pos(dr->handler, pos);
-        dr->set_line(dr->handler, line);
-        dr->set_col(dr->handler, col);
-        args[0] = rb_str_new2(dr->buf.str);
-        rb_funcall2(dr->handler, ox_doctype_id, 1, args);
-    }
+    dr->doctype(dr, pos, line, col);
     dr->buf.str = 0;
 
     return buf_get(&dr->buf);
@@ -628,20 +652,7 @@ static char read_cdata(SaxDrive dr) {
         }
     }
 CB:
-    if (!dr->blocked && (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay)) {
-        if (dr->has.cdata) {
-            VALUE args[1];
-
-            args[0] = rb_str_new2(dr->buf.str);
-            if (0 != dr->encoding) {
-                rb_enc_associate(args[0], dr->encoding);
-            }
-            dr->set_pos(dr->handler, pos);
-            dr->set_line(dr->handler, line);
-            dr->set_col(dr->handler, col);
-            rb_funcall2(dr->handler, ox_cdata_id, 1, args);
-        }
-    }
+    dr->cdata(dr, pos, line, col);
     if ('\0' != zero) {
         *(dr->buf.tail - 1) = zero;
     }
@@ -703,23 +714,7 @@ static char read_comment(SaxDrive dr) {
         }
     }
 CB:
-    if (dr->has.comment && !dr->blocked) {
-        VALUE args[1];
-        Nv    parent = stack_peek(&dr->stack);
-        Hint  h      = ox_hint_find(dr->options.hints, "!--");
-
-        if (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay ||
-            (NULL != h && (ActiveOverlay == h->overlay || ActiveOverlay == h->overlay))) {
-            args[0] = rb_str_new2(dr->buf.str);
-            if (0 != dr->encoding) {
-                rb_enc_associate(args[0], dr->encoding);
-            }
-            dr->set_pos(dr->handler, pos);
-            dr->set_line(dr->handler, line);
-            dr->set_col(dr->handler, col);
-            rb_funcall2(dr->handler, ox_comment_id, 1, args);
-        }
-    }
+    dr->comment(dr, pos, line, col);
     if ('\0' != zero) {
         *(dr->buf.tail - 1) = zero;
     }
@@ -861,10 +856,8 @@ static char read_element_start(SaxDrive dr) {
     }
     if (closed) {
         c    = buf_next_non_white(&dr->buf);
-        pos  = dr->buf.pos;
-        line = dr->buf.line;
-        col  = dr->buf.col;
-        end_element_cb(dr, name, pos, line, col, h);
+
+        end_element_cb(dr, name, dr->buf.pos, dr->buf.line, dr->buf.col, h);
     } else if (stackless) {
         end_element_cb(dr, name, pos, line, col, h);
     } else if (NULL != h && h->jump) {
@@ -971,17 +964,8 @@ static char read_element_end(SaxDrive dr) {
                          dr->buf.str,
                          nv->name);
                 ox_sax_drive_error_at(dr, msg, pos, line, col);
-                dr->set_pos(dr->handler, pos);
-                dr->set_line(dr->handler, line);
-                dr->set_col(dr->handler, col);
                 for (nv = stack_pop(&dr->stack); match < nv; nv = stack_pop(&dr->stack)) {
-                    if (dr->has.end_element && 0 >= dr->blocked &&
-                        (NULL == nv->hint || ActiveOverlay == nv->hint->overlay || NestOverlay == nv->hint->overlay)) {
-                        rb_funcall(dr->handler, ox_end_element_id, 1, nv->val);
-                    }
-                    if (NULL != nv->hint && BlockOverlay == nv->hint->overlay && 0 < dr->blocked) {
-                        dr->blocked--;
-                    }
+		    end_element_cb(dr, nv->val, pos, line, col, nv->hint);
                 }
                 name = nv->val;
                 h    = nv->hint;
@@ -1530,17 +1514,4 @@ static Nv hint_try_close(SaxDrive dr, const char *name) {
         }
     }
     return 0;
-}
-
-static void end_element_cb(SaxDrive dr, VALUE name, long pos, long line, long col, Hint h) {
-    if (dr->has.end_element && 0 >= dr->blocked &&
-        (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
-	dr->set_pos(dr->handler, pos);
-	dr->set_line(dr->handler, line);
-	dr->set_col(dr->handler, col);
-        rb_funcall(dr->handler, ox_end_element_id, 1, name);
-    }
-    if (NULL != h && BlockOverlay == h->overlay && 0 < dr->blocked) {
-        dr->blocked--;
-    }
 }
