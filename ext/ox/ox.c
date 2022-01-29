@@ -13,6 +13,7 @@
 #include "ruby.h"
 #include "ox.h"
 #include "sax.h"
+#include "intern.h"
 
 /* maximum to allocate on the stack, arbitrary limit */
 #define SMALL_XML		4096
@@ -1566,6 +1567,7 @@ void Init_ox() {
     ox_cache_new(&ox_attr_cache);
 
     ox_sax_define();
+    ox_hash_init();
 
 #if WITH_CACHE_TESTS
     // space added to stop yardoc from trying to document

@@ -19,7 +19,7 @@ require 'optparse'
 require 'ox'
 
 require 'helpers'
-require 'smart_test'
+#require 'smart_test'
 
 opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
@@ -57,7 +57,7 @@ class SaxBaseTest < ::Test::Unit::TestCase
     assert_equal([[:start_element, :top],
                   [:end_element, :top]], handler.calls)
   end
-
+=begin
   def test_sax_file
     Ox::default_options = $ox_sax_options
     handler = AllSax.new()
@@ -1315,5 +1315,5 @@ this is not part of the xml document
                   [:abort, :table],
                  ], handler.calls)
   end
-
+=end
 end

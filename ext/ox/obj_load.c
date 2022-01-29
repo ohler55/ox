@@ -11,9 +11,7 @@
 #include <time.h>
 
 #include "ruby.h"
-#if HAVE_RB_ENC_ASSOCIATE
 #include "ruby/encoding.h"
-#endif
 #include "base64.h"
 #include "ox.h"
 
@@ -61,7 +59,6 @@ inline static VALUE
 str2sym(const char *str, void *encoding) {
     VALUE	sym;
 
-#ifdef HAVE_RUBY_ENCODING_H
     if (0 != encoding) {
 	VALUE	rstr = rb_str_new2(str);
 
@@ -70,9 +67,6 @@ str2sym(const char *str, void *encoding) {
     } else {
 	sym = ID2SYM(rb_intern(str));
     }
-#else
-    sym = ID2SYM(rb_intern(str));
-#endif
     return sym;
 }
 
@@ -84,7 +78,6 @@ name2var(const char *name, void *encoding) {
     if ('0' <= *name && *name <= '9') {
 	var_id = INT2NUM(atoi(name));
     } else if (Qundef == (var_id = ox_cache_get(ox_attr_cache, name, &slot, 0))) {
-#ifdef HAVE_RUBY_ENCODING_H
 	if (0 != encoding) {
 	    volatile VALUE	rstr = rb_str_new2(name);
 	    volatile VALUE	sym;
@@ -98,9 +91,6 @@ name2var(const char *name, void *encoding) {
 	} else {
 	    var_id = rb_intern(name);
 	}
-#else
-	var_id = rb_intern(name);
-#endif
 	*slot = var_id;
     }
     return var_id;
@@ -376,13 +366,11 @@ parse_regexp(const char *text) {
 static void
 instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
     if (0 == strcmp("xml", target)) {
-#if HAVE_RB_ENC_FIND
 	for (; 0 != attrs->name; attrs++) {
 	    if (0 == strcmp("encoding", attrs->name)) {
 		pi->options->rb_enc = rb_enc_find(attrs->value);
 	    }
 	}
-#endif
     }
 }
 
@@ -408,11 +396,9 @@ add_text(PInfo pi, char *text, int closed) {
     case NoCode:
     case StringCode:
 	h->obj = rb_str_new2(text);
-#if HAVE_RB_ENC_ASSOCIATE
 	if (0 != pi->options->rb_enc) {
 	    rb_enc_associate(h->obj, pi->options->rb_enc);
 	}
-#endif
 	if (0 != pi->circ_array) {
 	    circ_array_set(pi->circ_array, h->obj, (unsigned long)pi->id);
 	}
@@ -481,11 +467,9 @@ add_text(PInfo pi, char *text, int closed) {
 
 	from_base64(text, (uchar*)str);
 	v = rb_str_new(str, str_size);
-#if HAVE_RB_ENC_ASSOCIATE
 	if (0 != pi->options->rb_enc) {
 	    rb_enc_associate(v, pi->options->rb_enc);
 	}
-#endif
 	if (0 != pi->circ_array) {
 	    circ_array_set(pi->circ_array, v, (unsigned long)h->obj);
 	}
@@ -843,7 +827,7 @@ parse_double_time(const char *text, VALUE clas) {
     for (; text - dot <= 9; text++) {
 	v2 *= 10;
     }
-#if HAS_NANO_TIME
+#if HAVE_RB_TIME_NANO_NEW
     return rb_time_nano_new(v, v2);
 #else
     return rb_time_new(v, v2 / 1000);
@@ -899,7 +883,7 @@ parse_xsd_time(const char *text, VALUE clas) {
     tm.tm_hour = (int)cargs[3];
     tm.tm_min = (int)cargs[4];
     tm.tm_sec = (int)cargs[5];
-#if HAS_NANO_TIME
+#if HAVE_RB_TIME_NANO_NEW
     return rb_time_nano_new(mktime(&tm), cargs[6]);
 #else
     return rb_time_new(mktime(&tm), cargs[6] / 1000);

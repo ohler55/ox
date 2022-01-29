@@ -27,7 +27,7 @@ extern "C" {
 #include "st.h"
 #endif
 
-#include "cache.h"
+#include "oxcache.h"
 
 #include "err.h"
 #include "type.h"

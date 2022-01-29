@@ -511,7 +511,7 @@ dump_date(Out out, VALUE obj) {
 static void
 dump_time_xsd(Out out, VALUE obj) {
     struct tm		*tm;
-#if HAS_RB_TIME_TIMESPEC
+#if HAVE_RB_TIME_TIMESPEC
     struct timespec	ts = rb_time_timespec(obj);
     time_t		sec = ts.tv_sec;
     long		nsec = ts.tv_nsec;
@@ -528,7 +528,7 @@ dump_time_xsd(Out out, VALUE obj) {
     }
     /* 2010-07-09T10:47:45.895826+09:00 */
     tm = localtime(&sec);
-#if HAS_TM_GMTOFF
+#if HAVE_ST_TM_GMTOFF
     if (0 > tm->tm_gmtoff) {
 	tzsign = '-';
 	tzhour = (int)(tm->tm_gmtoff / -3600);
