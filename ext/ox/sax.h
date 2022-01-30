@@ -10,11 +10,10 @@
 
 #include "ox.h"
 #include "sax_buf.h"
-#include "sax_has.h"
 #include "sax_hint.h"
 #include "sax_stack.h"
 
-typedef struct _saxOptions {
+    typedef struct _saxOptions {
     int      symbolize;
     int      convert_special;
     int      smart;
@@ -42,14 +41,17 @@ typedef struct _saxDrive {
     void (*cdata)(struct _saxDrive *dr, long pos, long line, long col);
     void (*error)(struct _saxDrive *dr, const char *msg, long pos, long line, long col);
 
-    struct _has  has;
     rb_encoding *encoding;
+    int          err;
+    int          blocked;
+    bool         abort;
+    bool         utf8;
+    bool         want_attr_name;
+    bool         has_text;
+    bool         has_value;
+    bool         has_start_element;
+    bool         has_end_element;
 
-    int  err;
-    int  blocked;
-    bool abort;
-    bool utf8;
-    bool want_attr_name;
 } * SaxDrive;
 
 extern void ox_collapse_return(char *str);
