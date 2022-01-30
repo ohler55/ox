@@ -218,6 +218,7 @@ classname2class(const char *name, PInfo pi, VALUE base_class) {
 	*s = '\0';
 	if (Qundef != (clas = resolve_classname(clas, class_name, pi->options->effort, base_class))) {
 	    *slot = clas;
+	    rb_gc_register_address(slot);
 	}
     }
     return clas;

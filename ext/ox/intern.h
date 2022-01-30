@@ -5,7 +5,6 @@
 
 #include <ruby.h>
 #include <ruby/encoding.h>
-#include <stdbool.h>
 
 struct _parseInfo;
 
@@ -14,8 +13,6 @@ extern void ox_hash_init();
 extern VALUE ox_str_intern(const char *key, size_t len, const char **keyp);
 extern VALUE ox_sym_intern(const char *key, size_t len, const char **keyp);
 extern ID    ox_attr_intern(const char *key, size_t len);
-extern VALUE
-ox_class_intern(const char *key, size_t len, bool safe, struct _parseInfo *pi, int auto_define, VALUE error_class);
 
 extern char *ox_strndup(const char *s, size_t len);
 
