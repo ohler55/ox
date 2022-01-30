@@ -10,9 +10,7 @@
 #include <stdarg.h>
 
 #include "ruby.h"
-#if HAVE_RB_ENC_ASSOCIATE
 #include "ruby/encoding.h"
-#endif
 #include "ox.h"
 
 static void     instruct(PInfo pi, const char *target, Attr attrs, const char *content);
@@ -103,7 +101,6 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 	    sym = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
 	    rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
 	} else if (Yes == pi->options->sym_keys) {
-#if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != pi->options->rb_enc) {
 		VALUE	rstr = rb_str_new2(attrs->name);
 
@@ -113,17 +110,14 @@ create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
 		sym = ID2SYM(rb_intern(attrs->name));
 	    }
 	    sym = ID2SYM(rb_intern(attrs->name));
-#endif
 	    rb_hash_aset(ah, sym, rb_str_new2(attrs->value));
 	} else {
-#if HAVE_RB_ENC_ASSOCIATE
 	    volatile VALUE	rstr = rb_str_new2(attrs->name);
 
 	    if (0 != pi->options->rb_enc) {
 		rb_enc_associate(rstr, pi->options->rb_enc);
 	    }
 	    rb_hash_aset(ah, rstr, rb_str_new2(attrs->value));
-#endif
 	}
 	if (0 == strcmp("encoding", attrs->name)) {
 	    pi->options->rb_enc = rb_enc_find(attrs->value);
@@ -195,11 +189,9 @@ add_doctype(PInfo pi, const char *docType) {
     VALUE       n = rb_obj_alloc(ox_doctype_clas);
     VALUE       s = rb_str_new2(docType);
 
-#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
     }
-#endif
     rb_ivar_set(n, ox_at_value_id, s);
     if (helper_stack_empty(&pi->helpers)) { /* top level object */
 	create_doc(pi);
@@ -212,11 +204,9 @@ add_comment(PInfo pi, const char *comment) {
     VALUE       n = rb_obj_alloc(ox_comment_clas);
     VALUE       s = rb_str_new2(comment);
 
-#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
     }
-#endif
     rb_ivar_set(n, ox_at_value_id, s);
     if (helper_stack_empty(&pi->helpers)) { /* top level object */
 	create_doc(pi);
@@ -229,11 +219,9 @@ add_cdata(PInfo pi, const char *cdata, size_t len) {
     VALUE       n = rb_obj_alloc(ox_cdata_clas);
     VALUE       s = rb_str_new2(cdata);
 
-#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
     }
-#endif
     rb_ivar_set(n, ox_at_value_id, s);
     if (helper_stack_empty(&pi->helpers)) { /* top level object */
 	create_doc(pi);
@@ -245,11 +233,9 @@ static void
 add_text(PInfo pi, char *text, int closed) {
     VALUE       s = rb_str_new2(text);
 
-#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
     }
-#endif
     if (helper_stack_empty(&pi->helpers)) { /* top level object */
 	create_doc(pi);
     }
@@ -264,11 +250,9 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     if (Qnil != pi->options->element_key_mod) {
 	s = rb_funcall(pi->options->element_key_mod, ox_call_id, 1, s);
     }
-#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
     }
-#endif
     e = rb_obj_alloc(ox_element_clas);
     rb_ivar_set(e, ox_at_value_id, s);
     if (0 != attrs->name) {
@@ -283,7 +267,6 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		VALUE	*slot;
 
 		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
-#if HAVE_RB_ENC_ASSOCIATE
 		    if (0 != pi->options->rb_enc) {
 			VALUE	rstr = rb_str_new2(attrs->name);
 
@@ -292,9 +275,6 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		    } else {
 			sym = ID2SYM(rb_intern(attrs->name));
 		    }
-#else
-		    sym = ID2SYM(rb_intern(attrs->name));
-#endif
 		    // Needed for Ruby 2.2 to get around the GC of symbols
 		    // created with to_sym which is needed for encoded symbols.
 		    rb_ary_push(ox_sym_bank, sym);
@@ -302,18 +282,14 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		}
 	    } else {
 		sym = rb_str_new2(attrs->name);
-#if HAVE_RB_ENC_ASSOCIATE
 		if (0 != pi->options->rb_enc) {
 		    rb_enc_associate(sym, pi->options->rb_enc);
 		}
-#endif
 	    }
             s = rb_str_new2(attrs->value);
-#if HAVE_RB_ENC_ASSOCIATE
             if (0 != pi->options->rb_enc) {
                 rb_enc_associate(s, pi->options->rb_enc);
             }
-#endif
             rb_hash_aset(ah, sym, s);
         }
         rb_ivar_set(e, ox_attributes_id, ah);
@@ -349,14 +325,12 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
     if (0 != content) {
 	c = rb_str_new2(content);
     }
-#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
 	if (0 != content) {
 	    rb_enc_associate(c, pi->options->rb_enc);
 	}
     }
-#endif
     inst = rb_obj_alloc(ox_instruct_clas);
     rb_ivar_set(inst, ox_at_value_id, s);
     if (0 != content) {
@@ -372,7 +346,6 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 		sym = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
 	    } else if (Yes == pi->options->sym_keys) {
 		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
-#if HAVE_RB_ENC_ASSOCIATE
 		    if (0 != pi->options->rb_enc) {
 			VALUE	rstr = rb_str_new2(attrs->name);
 
@@ -381,9 +354,6 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 		    } else {
 			sym = ID2SYM(rb_intern(attrs->name));
 		    }
-#else
-		    sym = ID2SYM(rb_intern(attrs->name));
-#endif
 		    // Needed for Ruby 2.2 to get around the GC of symbols
 		    // created with to_sym which is needed for encoded symbols.
 		    rb_ary_push(ox_sym_bank, sym);
@@ -391,18 +361,14 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 		}
 	    } else {
 		sym = rb_str_new2(attrs->name);
-#if HAVE_RB_ENC_ASSOCIATE
 		if (0 != pi->options->rb_enc) {
 		    rb_enc_associate(sym, pi->options->rb_enc);
 		}
-#endif
 	    }
             s = rb_str_new2(attrs->value);
-#if HAVE_RB_ENC_ASSOCIATE
             if (0 != pi->options->rb_enc) {
                 rb_enc_associate(s, pi->options->rb_enc);
             }
-#endif
             rb_hash_aset(ah, sym, s);
         }
         rb_ivar_set(inst, ox_attributes_id, ah);

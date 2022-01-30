@@ -488,9 +488,7 @@ static VALUE set_def_opts(VALUE self, VALUE opts) {
     } else {
         Check_Type(v, T_STRING);
         strncpy(ox_default_options.encoding, StringValuePtr(v), sizeof(ox_default_options.encoding) - 1);
-#if HAVE_RB_ENC_FIND
         ox_default_options.rb_enc = rb_enc_find(ox_default_options.encoding);
-#endif
     }
 
     v = rb_hash_aref(opts, ox_indent_sym);
@@ -873,7 +871,6 @@ static VALUE load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALU
             options.with_cdata = (Qtrue == v);
         }
     }
-#if HAVE_RB_ENC_FIND
     if ('\0' == *options.encoding) {
         if (Qnil != encoding) {
             options.rb_enc = rb_enc_from_index(rb_enc_get_index(encoding));
@@ -883,7 +880,6 @@ static VALUE load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALU
     } else if (0 == options.rb_enc) {
         options.rb_enc = rb_enc_find(options.encoding);
     }
-#endif
     xml = defuse_bom(xml, &options);
     switch (options.mode) {
     case ObjMode:
@@ -1669,9 +1665,7 @@ void Init_ox() {
     rb_define _module_function(Ox, "cache8_test", cache8_test, 0);
 #endif
 
-#if HAVE_RB_ENC_FIND
     ox_utf8_encoding = rb_enc_find("UTF-8");
-#endif
 }
 
 #if __GNUC__ > 4

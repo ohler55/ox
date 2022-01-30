@@ -333,11 +333,7 @@ static char skipBOM(SaxDrive dr) {
 
     if (0xEF == (uint8_t)c) { /* only UTF8 is supported */
         if (0xBB == (uint8_t)buf_get(&dr->buf) && 0xBF == (uint8_t)buf_get(&dr->buf)) {
-#if HAVE_RB_ENC_FIND
             dr->encoding = ox_utf8_encoding;
-#else
-            dr->encoding = UTF8_STR;
-#endif
             c = buf_get(&dr->buf);
         } else {
             ox_sax_drive_error(dr, BAD_BOM "invalid BOM or a binary file.");
@@ -1220,11 +1216,7 @@ static char read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, 
             c          = read_quoted_value(dr);
             attr_value = dr->buf.str;
             if (is_encoding) {
-#if HAVE_RB_ENC_FIND
                 dr->encoding = rb_enc_find(dr->buf.str);
-#else
-                dr->encoding = dr->buf.str;
-#endif
                 is_encoding = 0;
             }
         }
@@ -1433,19 +1425,11 @@ int ox_sax_collapse_special(SaxDrive dr, char *str, long pos, long line, long co
                 }
                 if (u <= 0x000000000000007FULL) {
                     *b++ = (char)u;
-#if HAVE_RB_ENC_FIND
                 } else if (ox_utf8_encoding == dr->encoding) {
                     b = ox_ucs_to_utf8_chars(b, u);
                 } else if (0 == dr->encoding) {
                     dr->encoding = ox_utf8_encoding;
                     b            = ox_ucs_to_utf8_chars(b, u);
-#else
-                } else if (0 == dr->encoding) {
-                    dr->encoding = UTF8_STR;
-                    b            = ox_ucs_to_utf8_chars(b, u);
-                } else if (0 == strcasecmp(UTF8_STR, dr->encoding)) {
-                    b = ox_ucs_to_utf8_chars(b, u);
-#endif
                 } else {
                     b = ox_ucs_to_utf8_chars(b, u);
                     /*

@@ -41,11 +41,6 @@ have_func('pthread_mutex_init')
 have_func('rb_enc_interned_str')
 have_func('rb_time_nano_new')
 
-# can these be removed?
-have_func('rb_enc_associate')
-have_func('rb_enc_find')
-
-
 have_header('ruby/st.h')
 have_header('sys/uio.h')
 
