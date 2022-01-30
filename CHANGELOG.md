@@ -2,6 +2,16 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.7] - 2022-01-30
+
+### Fixed
+
+- All classes and symbols are now registered to avoid issues with GC compaction movement.
+
+### Changed
+
+- SAX caching changed but should have no impact on use other than being slightly faster.
+
 ## [2.14.6] - 2021-11-03
 
 ### Fixed

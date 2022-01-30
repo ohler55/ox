@@ -33,6 +33,7 @@ typedef struct _saxDrive {
     void (*set_pos)(VALUE handler, long pos);
     void (*set_line)(VALUE handler, long line);
     void (*set_col)(VALUE handler, long col);
+    void (*attr_cb)(struct _saxDrive *dr, VALUE name, char *value, long pos, long line, long col);
     void (*attrs_done)(VALUE handler);
     VALUE (*instruct)(struct _saxDrive *dr, const char *target, long pos, long line, long col);
     void (*end_instruct)(struct _saxDrive *dr, VALUE target, long pos, long line, long col);
@@ -41,13 +42,14 @@ typedef struct _saxDrive {
     void (*cdata)(struct _saxDrive *dr, long pos, long line, long col);
     void (*error)(struct _saxDrive *dr, const char *msg, long pos, long line, long col);
 
-    struct _has has;
+    struct _has  has;
     rb_encoding *encoding;
 
-    int         err;
-    int         blocked;
-    bool        abort;
+    int  err;
+    int  blocked;
+    bool abort;
     bool utf8;
+    bool want_attr_name;
 } * SaxDrive;
 
 extern void ox_collapse_return(char *str);
@@ -59,6 +61,5 @@ extern int  ox_sax_collapse_special(SaxDrive dr, char *str, long pos, long line,
 extern VALUE ox_sax_value_class;
 
 extern VALUE str2sym(SaxDrive dr, const char *str, size_t len, const char **strp);
-//extern VALUE str2sym(SaxDrive dr, const char *str, const char **strp);
 
 #endif /* OX_SAX_H */
