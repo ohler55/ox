@@ -1221,35 +1221,7 @@ static char read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, 
             }
         }
         if (0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
-#if 1
             dr->attr_cb(dr, name, attr_value, pos, line, col);
-#else
-            if (dr->has.attr_value) {
-                VALUE args[2];
-
-                dr->set_pos(dr->handler, pos);
-                dr->set_line(dr->handler, line);
-                dr->set_col(dr->handler, col);
-                args[0] = name;
-                args[1] = dr->value_obj;
-                rb_funcall2(dr->handler, ox_attr_value_id, 2, args);
-            } else if (dr->has.attr) {
-                VALUE args[2];
-
-                args[0] = name;
-                if (dr->options.convert_special) {
-                    ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
-                }
-                args[1] = rb_str_new2(attr_value);
-                if (0 != dr->encoding) {
-                    rb_enc_associate(args[1], dr->encoding);
-                }
-                dr->set_pos(dr->handler, pos);
-                dr->set_line(dr->handler, line);
-                dr->set_col(dr->handler, col);
-                rb_funcall2(dr->handler, ox_attr_id, 2, args);
-            }
-#endif
         }
         if (is_white(c)) {
             c = buf_next_non_white(&dr->buf);
