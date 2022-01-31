@@ -14,6 +14,7 @@
 #include "ruby/encoding.h"
 #include "base64.h"
 #include "ox.h"
+#include "intern.h"
 
 static void	instruct(PInfo pi, const char *target, Attr attrs, const char *content);
 static void	add_text(PInfo pi, char *text, int closed);
@@ -54,30 +55,27 @@ ParseCallbacks	 ox_obj_callbacks = &_ox_obj_callbacks;
 
 extern ParseCallbacks	ox_gen_callbacks;
 
+#if 0
+inline static ID
+name2var(const char *name, void *encoding) {
+    ID		var_id;
 
-inline static VALUE
-str2sym(const char *str, void *encoding) {
-    VALUE	sym;
-
-    if (0 != encoding) {
-	VALUE	rstr = rb_str_new2(str);
-
-	rb_enc_associate(rstr, (rb_encoding*)encoding);
-	sym = rb_funcall(rstr, ox_to_sym_id, 0);
-    } else {
-	sym = ID2SYM(rb_intern(str));
+    if ('0' <= *name && *name <= '9') {
+	return INT2NUM(atoi(name));
     }
-    return sym;
+    //return rb_intern3(name, strlen(name), rb_utf8_encoding());
+    //return ox_attr_intern(name, strlen(name));
 }
-
+#else
 inline static ID
 name2var(const char *name, void *encoding) {
     VALUE	*slot;
-    ID		var_id = 0;
+    ID		var_id;
 
     if ('0' <= *name && *name <= '9') {
-	var_id = INT2NUM(atoi(name));
-    } else if (Qundef == (var_id = ox_cache_get(ox_attr_cache, name, &slot, 0))) {
+	return INT2NUM(atoi(name));
+    }
+    if (Qundef == (var_id = ox_cache_get(ox_attr_cache, name, &slot, 0))) {
 	if (0 != encoding) {
 	    volatile VALUE	rstr = rb_str_new2(name);
 	    volatile VALUE	sym;
@@ -95,6 +93,7 @@ name2var(const char *name, void *encoding) {
     }
     return var_id;
 }
+#endif
 
 inline static VALUE
 resolve_classname(VALUE mod, const char *class_name, Effort effort, VALUE base_class) {
@@ -433,20 +432,8 @@ add_text(PInfo pi, char *text, int closed) {
 	h->obj = rb_float_new(strtod(text, 0));
 	break;
     case SymbolCode:
-    {
-	VALUE	sym;
-	VALUE	*slot;
-
-	if (Qundef == (sym = ox_cache_get(ox_symbol_cache, text, &slot, 0))) {
-	    sym = str2sym(text, (void*)pi->options->rb_enc);
-	    // Needed for Ruby 2.2 to get around the GC of symbols created with
-	    // to_sym which is needed for encoded symbols.
-	    rb_ary_push(ox_sym_bank, sym);
-	    *slot = sym;
-	}
-	h->obj = sym;
+	h->obj = ox_sym_intern(text, strlen(text), NULL);
 	break;
-    }
     case DateCode:
     {
 	VALUE	args[1];
@@ -479,20 +466,11 @@ add_text(PInfo pi, char *text, int closed) {
     }
     case Symbol64Code:
     {
-	VALUE		sym;
-	VALUE		*slot;
 	unsigned long	str_size = b64_orig_size(text);
 	char		*str = ALLOCA_N(char, str_size + 1);
 
 	from_base64(text, (uchar*)str);
-	if (Qundef == (sym = ox_cache_get(ox_symbol_cache, str, &slot, 0))) {
-	    sym = str2sym(str, (void*)pi->options->rb_enc);
-	    // Needed for Ruby 2.2 to get around the GC of symbols created with
-	    // to_sym which is needed for encoded symbols.
-	    rb_ary_push(ox_sym_bank, sym);
-	    *slot = sym;
-	}
-	h->obj = sym;
+	h->obj = ox_sym_intern(str, strlen(str), NULL);
 	break;
     }
     case RegexpCode:

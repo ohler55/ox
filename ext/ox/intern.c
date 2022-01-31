@@ -154,8 +154,19 @@ ox_utf8_name(const char *str, size_t len, rb_encoding *encoding, const char **st
 }
 
 VALUE
-ox_enc_sym(const char *str, size_t len, rb_encoding *encoding, const char **strp) {
+ox_utf8_sym(const char *str, size_t len, rb_encoding *encoding, const char **strp) {
     return ox_sym_intern(str, len, strp);
+}
+
+VALUE
+ox_enc_sym(const char *str, size_t len, rb_encoding *encoding, const char **strp) {
+    VALUE sym = rb_str_new2(str);
+
+    rb_enc_associate(sym, encoding);
+    if (NULL != strp) {
+        *strp = StringValuePtr(sym);
+    }
+    return rb_to_symbol(sym);
 }
 
 VALUE

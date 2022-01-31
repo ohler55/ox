@@ -12,6 +12,7 @@
 #include "ruby.h"
 #include "ruby/encoding.h"
 #include "ox.h"
+#include "intern.h"
 
 static void     instruct(PInfo pi, const char *target, Attr attrs, const char *content);
 static void	create_doc(PInfo pi);
@@ -264,27 +265,9 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 	    if (Qnil != pi->options->attr_key_mod) {
 		sym = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
 	    } else if (Yes == pi->options->sym_keys) {
-		VALUE	*slot;
-
-		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
-		    if (0 != pi->options->rb_enc) {
-			VALUE	rstr = rb_str_new2(attrs->name);
-
-			rb_enc_associate(rstr, pi->options->rb_enc);
-			sym = rb_funcall(rstr, ox_to_sym_id, 0);
-		    } else {
-			sym = ID2SYM(rb_intern(attrs->name));
-		    }
-		    // Needed for Ruby 2.2 to get around the GC of symbols
-		    // created with to_sym which is needed for encoded symbols.
-		    rb_ary_push(ox_sym_bank, sym);
-		    *slot = sym;
-		}
+		sym = ox_sym_intern(attrs->name, strlen(attrs->name), NULL);
 	    } else {
-		sym = rb_str_new2(attrs->name);
-		if (0 != pi->options->rb_enc) {
-		    rb_enc_associate(sym, pi->options->rb_enc);
-		}
+		sym = ox_str_intern(attrs->name, strlen(attrs->name), NULL);
 	    }
             s = rb_str_new2(attrs->value);
             if (0 != pi->options->rb_enc) {
@@ -340,30 +323,13 @@ add_instruct(PInfo pi, const char *name, Attr attrs, const char *content) {
 
         for (; 0 != attrs->name; attrs++) {
             volatile VALUE	sym;
-	    VALUE		*slot;
 
 	    if (Qnil != pi->options->attr_key_mod) {
 		sym = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
 	    } else if (Yes == pi->options->sym_keys) {
-		if (Qundef == (sym = ox_cache_get(ox_symbol_cache, attrs->name, &slot, 0))) {
-		    if (0 != pi->options->rb_enc) {
-			VALUE	rstr = rb_str_new2(attrs->name);
-
-			rb_enc_associate(rstr, pi->options->rb_enc);
-			sym = rb_funcall(rstr, ox_to_sym_id, 0);
-		    } else {
-			sym = ID2SYM(rb_intern(attrs->name));
-		    }
-		    // Needed for Ruby 2.2 to get around the GC of symbols
-		    // created with to_sym which is needed for encoded symbols.
-		    rb_ary_push(ox_sym_bank, sym);
-		    *slot = sym;
-		}
+		sym = ox_sym_intern(attrs->name, strlen(attrs->name), NULL);
 	    } else {
-		sym = rb_str_new2(attrs->name);
-		if (0 != pi->options->rb_enc) {
-		    rb_enc_associate(sym, pi->options->rb_enc);
-		}
+		sym = ox_str_intern(attrs->name, strlen(attrs->name), NULL);
 	    }
             s = rb_str_new2(attrs->value);
             if (0 != pi->options->rb_enc) {

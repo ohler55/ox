@@ -12,6 +12,7 @@
 #include "ox.h"
 #include "err.h"
 #include "attr.h"
+#include "intern.h"
 #include "helper.h"
 #include "special.h"
 

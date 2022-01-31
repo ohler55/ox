@@ -13,7 +13,7 @@
 #include "sax_hint.h"
 #include "sax_stack.h"
 
-    typedef struct _saxOptions {
+typedef struct _saxOptions {
     int      symbolize;
     int      convert_special;
     int      smart;

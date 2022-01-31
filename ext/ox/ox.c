@@ -157,11 +157,7 @@ static VALUE element_key_mod_sym;
 static ID encoding_id;
 static ID has_key_id;
 
-#if HAVE_RB_ENC_ASSOCIATE
 rb_encoding *ox_utf8_encoding = 0;
-#else
-void *ox_utf8_encoding = 0;
-#endif
 
 struct _options ox_default_options = {
     {'\0'},        // encoding
@@ -1327,11 +1323,9 @@ static VALUE dump(int argc, VALUE *argv, VALUE self) {
         rb_raise(rb_eNoMemError, "Not enough memory.\n");
     }
     rstr = rb_str_new2(xml);
-#if HAVE_RB_ENC_ASSOCIATE
     if ('\0' != *copts.encoding) {
         rb_enc_associate(rstr, rb_enc_find(copts.encoding));
     }
-#endif
     xfree(xml);
 
     return rstr;

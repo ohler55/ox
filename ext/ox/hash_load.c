@@ -78,11 +78,9 @@ add_str(PInfo pi, VALUE s) {
     Helper		parent = helper_stack_peek(&pi->helpers);
     volatile VALUE	a;
 
-#if HAVE_RB_ENC_ASSOCIATE
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
     }
-#endif
     switch (parent->type) {
     case NoCode:
 	parent->obj = s;
@@ -131,11 +129,9 @@ add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
 		key = rb_str_new2(attrs->name);
 	    }
 	    val = rb_str_new2(attrs->value);
-#if HAVE_RB_ENC_ASSOCIATE
 	    if (0 != pi->options->rb_enc) {
 		rb_enc_associate(val, pi->options->rb_enc);
 	    }
-#endif
 	    rb_hash_aset(h, key, val);
 	}
 	a = rb_ary_new();

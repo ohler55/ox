@@ -9,9 +9,7 @@
 #include <string.h>
 
 #include "ruby.h"
-#if HAVE_RB_ENC_ASSOCIATE
 #include "ruby/encoding.h"
-#endif
 #include "ox.h"
 #include "buf.h"
 #include "err.h"
@@ -335,9 +333,7 @@ to_s(Builder b) {
     rstr = rb_str_new(b->buf.head, buf_len(&b->buf));
 
     if ('\0' != *b->encoding) {
-#if HAVE_RB_ENC_ASSOCIATE
 	rb_enc_associate(rstr, rb_enc_find(b->encoding));
-#endif
     }
     return rstr;
 }

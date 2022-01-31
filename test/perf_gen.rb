@@ -57,6 +57,8 @@ opts.on("-i", "--iterations [Int]", Integer, "iterations")  { |it| $iter = it }
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 files = opts.parse(ARGV)
 
+Ox.default_options = {mode: :generic}
+
 data = []
 
 if files.empty?
@@ -109,7 +111,7 @@ data.each do |d|
   if do_read
     $filename = d[:file]
     perf = Perf.new()
-    perf.add('Ox', 'load_file') { Ox.load_file($filename, :mode => :generic) }
+    perf.add('Ox', 'load_file') { Ox.load_file($filename) }
     perf.add('Nokogiri', 'parse') { Nokogiri::XML::Document.parse(File.open($filename)) } unless defined?(::Nokogiri).nil?
     perf.add('LibXML', 'parse') { LibXML::XML::Document.file($filename) } unless defined?(::LibXML).nil?
     perf.run($iter)

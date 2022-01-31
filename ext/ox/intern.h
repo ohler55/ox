@@ -17,6 +17,7 @@ extern ID    ox_attr_intern(const char *key, size_t len);
 extern char *ox_strndup(const char *s, size_t len);
 
 extern VALUE ox_utf8_name(const char *str, size_t len, rb_encoding *encoding, const char **strp);
+extern VALUE ox_utf8_sym(const char *str, size_t len, rb_encoding *encoding, const char **strp);
 extern VALUE ox_enc_sym(const char *str, size_t len, rb_encoding *encoding, const char **strp);
 extern VALUE ox_enc_name(const char *str, size_t len, rb_encoding *encoding, const char **strp);
 

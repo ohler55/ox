@@ -136,11 +136,9 @@ sax_value_as_s(VALUE self) {
 	break;
     }
     rs = rb_str_new2(dr->buf.str);
-#if HAVE_RB_ENC_ASSOCIATE
     if (0 != dr->encoding) {
 	rb_enc_associate(rs, dr->encoding);
     }
-#endif
     return rs;
 }
 

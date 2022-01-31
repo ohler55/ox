@@ -308,7 +308,7 @@ static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions opti
     }
     dr->utf8 = (NULL == dr->encoding || rb_utf8_encoding() == dr->encoding);
     if (NULL == dr->encoding || rb_utf8_encoding() == dr->encoding) {  // UTF-8
-        dr->get_name = dr->options.symbolize ? ox_enc_sym : ox_utf8_name;
+        dr->get_name = dr->options.symbolize ? ox_utf8_sym : ox_utf8_name; // TBD UTF8 sym?
     } else {
         dr->get_name = dr->options.symbolize ? ox_enc_sym : ox_enc_name;
     }
