@@ -194,30 +194,21 @@ read_from_fd(Buf buf) {
     return 0;
 }
 
-static char*
-ox_stpncpy(char *dest, const char *src, size_t n) {
-    size_t	cnt = strlen(src) + 1;
-
-    if (n < cnt) {
-	cnt = n;
-    }
-    strncpy(dest, src, cnt);
-
-    return dest + cnt - 1;
-}
-
-
 static int
 read_from_str(Buf buf) {
     size_t      max = buf->end - buf->tail - 1;
     char	*s;
-    long	cnt;
+    size_t	cnt;
 
     if ('\0' == *buf->in.str) {
-	/* done */
 	return -1;
     }
-    s = ox_stpncpy(buf->tail, buf->in.str, max);
+    cnt = strlen(buf->in.str) + 1;
+    if (max < cnt) {
+	cnt = max;
+    }
+    strncpy(buf->tail, buf->in.str, cnt);
+    s = buf->tail + cnt - 1;
     *s = '\0';
     cnt = s - buf->tail;
     buf->in.str += cnt;
