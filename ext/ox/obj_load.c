@@ -55,46 +55,6 @@ ParseCallbacks	 ox_obj_callbacks = &_ox_obj_callbacks;
 
 extern ParseCallbacks	ox_gen_callbacks;
 
-#if 0
-inline static ID
-name2var(const char *name, void *encoding) {
-    ID		var_id;
-
-    if ('0' <= *name && *name <= '9') {
-	return INT2NUM(atoi(name));
-    }
-    //return rb_intern3(name, strlen(name), rb_utf8_encoding());
-    //return ox_attr_intern(name, strlen(name));
-}
-#else
-inline static ID
-name2var(const char *name, void *encoding) {
-    VALUE	*slot;
-    ID		var_id;
-
-    if ('0' <= *name && *name <= '9') {
-	return INT2NUM(atoi(name));
-    }
-    if (Qundef == (var_id = ox_cache_get(ox_attr_cache, name, &slot, 0))) {
-	if (0 != encoding) {
-	    volatile VALUE	rstr = rb_str_new2(name);
-	    volatile VALUE	sym;
-
-	    rb_enc_associate(rstr, (rb_encoding*)encoding);
-	    sym = rb_funcall(rstr, ox_to_sym_id, 0);
-	    // Needed for Ruby 2.2 to get around the GC of symbols
-	    // created with to_sym which is needed for encoded symbols.
-	    rb_ary_push(ox_sym_bank, sym);
-	    var_id = SYM2ID(sym);
-	} else {
-	    var_id = rb_intern(name);
-	}
-	*slot = var_id;
-    }
-    return var_id;
-}
-#endif
-
 inline static VALUE
 resolve_classname(VALUE mod, const char *class_name, Effort effort, VALUE base_class) {
     VALUE	clas;
@@ -227,8 +187,12 @@ static ID
 get_var_sym_from_attrs(Attr a, void *encoding) {
     for (; 0 != a->name; a++) {
 	if ('a' == *a->name && '\0' == *(a->name + 1)) {
-	    name2var(a->value, encoding);
-	    return name2var(a->value, encoding);
+	    const char	*val = a->value;
+
+	    if ('0' <= *val && *val <= '9') {
+		return INT2NUM(atoi(val));
+	    }
+	    return ox_id_intern(val, strlen(val));
 	}
     }
     return 0;

@@ -2,7 +2,7 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
-## [2.14.7] - 2022-01-30
+## [2.14.7] - 2022-01-31
 
 ### Fixed
 
@@ -10,7 +10,9 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ### Changed
 
-- SAX caching changed but should have no impact on use other than being slightly faster.
+- Symbol and string caching changed but should have no impact on use
+  other than being slightly faster and handles large numbers of cached
+  items more efficiently.
 
 ## [2.14.6] - 2021-11-03
 

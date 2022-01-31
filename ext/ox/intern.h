@@ -13,6 +13,7 @@ extern void ox_hash_init();
 extern VALUE ox_str_intern(const char *key, size_t len, const char **keyp);
 extern VALUE ox_sym_intern(const char *key, size_t len, const char **keyp);
 extern ID    ox_attr_intern(const char *key, size_t len);
+extern ID    ox_id_intern(const char *key, size_t len);
 
 extern char *ox_strndup(const char *s, size_t len);
 
