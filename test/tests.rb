@@ -366,6 +366,61 @@ class Func < ::Test::Unit::TestCase
     assert_equal(xml, x)
   end
 
+  def test_big_instruction
+    Ox::default_options = $ox_object_options
+    xml = %{<?xml version="1.0"?>
+<top>
+  <str>This is a an MML instruction over 256 bytes.</str>
+  <?MML
+  <mml:math>
+    <mml:mrow>
+      <mml:mo stretchy="true">&lang;</mml:mo>
+      <mml:mi>&sgr;</mml:mi>
+      <mml:mi>v</mml:mi>
+      <mml:mo stretchy="true">&rang;</mml:mo>
+    </mml:mrow>
+    <mml:mo>&sim;</mml:mo>
+    <mml:msup superscriptshift="75%">
+      <mml:mrow>
+        <mml:mn>10</mml:mn>
+      </mml:mrow>
+      <mml:mrow>
+        <mml:mo form="prefix">
+          <!--RemoveAttribForm-->&minus;
+        </mml:mo>
+      <mml:mn>26</mml:mn>
+      </mml:mrow>
+    </mml:msup>
+  </mml:math>?>
+</top>
+}
+    doc = Ox.load(xml, :mode => :generic)
+    inst = doc.top.nodes[1]
+    assert_equal(Ox::Instruct, inst.class)
+    assert_equal('MML', inst.target)
+    assert_equal(%|
+  <mml:math>
+    <mml:mrow>
+      <mml:mo stretchy="true">&lang;</mml:mo>
+      <mml:mi>&sgr;</mml:mi>
+      <mml:mi>v</mml:mi>
+      <mml:mo stretchy="true">&rang;</mml:mo>
+    </mml:mrow>
+    <mml:mo>&sim;</mml:mo>
+    <mml:msup superscriptshift="75%">
+      <mml:mrow>
+        <mml:mn>10</mml:mn>
+      </mml:mrow>
+      <mml:mrow>
+        <mml:mo form="prefix">
+          <!--RemoveAttribForm-->&minus;
+        </mml:mo>
+      <mml:mn>26</mml:mn>
+      </mml:mrow>
+    </mml:msup>
+  </mml:math>|, inst.content)
+  end
+
   def test_dtd
     Ox::default_options = $ox_object_options
     xml = Ox.dump("test", :mode => :object, :with_dtd => true)

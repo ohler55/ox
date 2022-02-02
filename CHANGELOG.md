@@ -2,11 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
-## [2.14.7] - 2022-01-31
+## [2.14.7] - 2022-02-02
 
 ### Fixed
 
 - All classes and symbols are now registered to avoid issues with GC compaction movement.
+- Parsing of any size processing instruction is now allowed. There is no 1024 limit.
 
 ### Changed
 

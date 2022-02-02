@@ -212,31 +212,11 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
     return pi.obj;
 }
 
-static char*
-gather_content(const char *src, char *content, size_t len) {
-    for (; 0 < len; src++, content++, len--) {
-	switch (*src) {
-	case '?':
-	    if ('>' == *(src + 1)) {
-		*content = '\0';
-		return (char*)(src + 1);
-	    }
-	    *content = *src;
-	    break;
-	case '\0':
-	    return 0;
-	default:
-	    *content = *src;
-	    break;
-	}
-    }
-    return 0;
-}
-
 // Entered after the "<?" sequence. Ready to read the rest.
 static void
 read_instruction(PInfo pi) {
-    char		content[1024];
+    char		content[256];
+    char		*content_ptr;
     struct _attrStack	attrs;
     char		*attr_name;
     char		*attr_value;
@@ -244,7 +224,8 @@ read_instruction(PInfo pi) {
     char		*end;
     char		c;
     char		*cend;
-    int			attrs_ok = 1;
+    size_t		size;
+    bool		attrs_ok = true;
 
     *content = '\0';
     attr_stack_init(&attrs);
@@ -252,10 +233,33 @@ read_instruction(PInfo pi) {
 	return;
     }
     end = pi->s;
-    if (0 == (cend = gather_content(pi->s, content, sizeof(content) - 1))) {
-	set_error(&pi->err, "processing instruction content too large or not terminated", pi->str, pi->s);
-	return;
+    for (; true; pi->s++) {
+        switch (*pi->s) {
+        case '?':
+            if ('>' == *(pi->s + 1)) {
+		pi->s++;
+		goto DONE;
+            }
+            break;
+        case '\0':
+	    set_error(&pi->err, "processing instruction not terminated", pi->str, pi->s);
+	    return;
+        default:
+	    break;
+        }
     }
+DONE:
+    cend = pi->s;
+    size = cend - end - 1;
+    pi->s = end;
+    if (size < sizeof(content)) {
+	content_ptr = content;
+    } else {
+	content_ptr = ALLOC_N(char, size + 1);
+    }
+    memcpy(content_ptr, end, size);
+    content_ptr[size] = '\0';
+
     next_non_white(pi);
     c = *pi->s;
     *end = '\0'; // terminate name
@@ -275,7 +279,7 @@ read_instruction(PInfo pi) {
 	    end = pi->s;
 	    next_non_white(pi);
 	    if ('=' != *pi->s++) {
-		attrs_ok = 0;
+		attrs_ok = false;
 		break;
 	    }
 	    *end = '\0'; // terminate name
@@ -312,10 +316,13 @@ read_instruction(PInfo pi) {
 	if (attrs_ok) {
 	    pi->pcb->instruct(pi, target, attrs.head, 0);
 	} else {
-	    pi->pcb->instruct(pi, target, attrs.head, content);
+	    pi->pcb->instruct(pi, target, attrs.head, content_ptr);
 	}
     }
     attr_stack_cleanup(&attrs);
+    if (content_ptr != content) {
+	xfree(content_ptr);
+    }
 }
 
 static void
