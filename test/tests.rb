@@ -614,7 +614,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_skip_none
     Ox::default_options = $ox_object_options
-    xml = %{<top>  Pete\r\n  Ohler <b>P</b> <b>O</b></top>}
+    xml = %{<top>  Pete\r  Ohler <b>P</b> <b>O</b></top>}
     doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_none)
     x2 = Ox.dump(doc, :indent => -1)
     assert_equal(%{<top>  Pete\n  Ohler <b>P</b><b>O</b></top>}, x2)
