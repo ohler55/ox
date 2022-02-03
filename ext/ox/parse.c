@@ -94,6 +94,26 @@ next_white(PInfo pi) {
     }
 }
 
+static void fix_newlines(char *buf) {
+    if (NULL != index(buf, '\r')) {
+	char	*s = buf;
+	char	*d = buf;
+
+	for (; '\0' != *s; s++) {
+	    if ('\r' == *s) {
+		if ('\n' == *(s + 1)) {
+		    continue;
+		}
+		*s = '\n';
+	    } else if (d < s) {
+		*d = *s;
+	    }
+	    d++;
+	}
+	*d = '\0';
+    }
+}
+
 static void
 mark_pi_cb(void *ptr) {
     if (NULL != ptr) {
@@ -369,10 +389,10 @@ read_delimited(PInfo pi, char end) {
 // that. Ready to read the rest.
 static void
 read_doctype(PInfo pi) {
-    char	*docType;
+    char	*doctype;
 
     next_non_white(pi);
-    docType = pi->s;
+    doctype = pi->s;
     read_delimited(pi, '>');
     if (err_has(&pi->err)) {
 	return;
@@ -381,7 +401,8 @@ read_doctype(PInfo pi) {
     *pi->s = '\0';
     pi->s++;
     if (0 != pi->pcb->add_doctype) {
-	pi->pcb->add_doctype(pi, docType);
+	fix_newlines(doctype);
+	pi->pcb->add_doctype(pi, doctype);
     }
 }
 
@@ -417,6 +438,7 @@ read_comment(PInfo pi) {
     *end = '\0'; // in case the comment was blank
     pi->s = end + 3;
     if (0 != pi->pcb->add_comment) {
+	fix_newlines(comment);
 	pi->pcb->add_comment(pi, comment);
     }
 }
@@ -777,9 +799,11 @@ read_text(PInfo pi) {
     }
     *b = '\0';
     if (0 != alloc_buf) {
+	fix_newlines(alloc_buf);
 	pi->pcb->add_text(pi, alloc_buf, ('/' == *(pi->s + 1)));
 	xfree(alloc_buf);
     } else {
+	fix_newlines(buf);
 	pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
     }
 }
@@ -846,9 +870,11 @@ read_reduced_text(PInfo pi) {
     }
     *b = '\0';
     if (0 != alloc_buf) {
+	fix_newlines(alloc_buf);
 	pi->pcb->add_text(pi, alloc_buf, ('/' == *(pi->s + 1)));
 	xfree(alloc_buf);
     } else {
+	fix_newlines(buf);
 	pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
     }
 }
@@ -907,6 +933,7 @@ read_cdata(PInfo pi) {
     *end = '\0';
     pi->s = end + 3;
     if (0 != pi->pcb->add_cdata) {
+	fix_newlines(start);
 	pi->pcb->add_cdata(pi, start, end - start);
     }
 }

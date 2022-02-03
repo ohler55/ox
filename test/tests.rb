@@ -617,7 +617,7 @@ class Func < ::Test::Unit::TestCase
     xml = %{<top>  Pete\r\n  Ohler <b>P</b> <b>O</b></top>}
     doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_none)
     x2 = Ox.dump(doc, :indent => -1)
-    assert_equal(%{<top>  Pete\r\n  Ohler <b>P</b><b>O</b></top>}, x2)
+    assert_equal(%{<top>  Pete\n  Ohler <b>P</b><b>O</b></top>}, x2)
   end
 
   def test_skip_off
@@ -625,7 +625,7 @@ class Func < ::Test::Unit::TestCase
     xml = %{<top>  Pete\r\n  Ohler <b>P</b> <b>O</b></top>}
     doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_off)
     x2 = Ox.dump(doc, :indent => -1)
-    assert_equal(%{<top>  Pete\r\n  Ohler <b>P</b> <b>O</b></top>}, x2)
+    assert_equal(%{<top>  Pete\n  Ohler <b>P</b> <b>O</b></top>}, x2)
   end
 
   def test_skip_return
