@@ -97,7 +97,9 @@ next_white(PInfo pi) {
 }
 
 static void fix_newlines(char *buf) {
+#if HAVE_INDEX
     if (NULL != index(buf, '\r')) {
+#endif
 	char	*s = buf;
 	char	*d = buf;
 
@@ -113,7 +115,9 @@ static void fix_newlines(char *buf) {
 	    d++;
 	}
 	*d = '\0';
+#if HAVE_INDEX
     }
+#endif
 }
 
 static void
