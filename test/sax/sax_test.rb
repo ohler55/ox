@@ -19,7 +19,7 @@ require 'optparse'
 require 'ox'
 
 require 'helpers'
-require 'smart_test'
+#require 'smart_test'
 
 opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
@@ -192,6 +192,7 @@ encoding = "UTF-8" ?>},
                    [:error, "Start End Mismatch: element 'top' not closed", 1, 25],
                    [:end_element, :top]])
   end
+
   def test_sax_element_start_end
     Ox::default_options = $ox_sax_options
     parse_compare(%{<top></top>},

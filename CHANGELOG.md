@@ -2,6 +2,20 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.7] - 2022-02-03
+
+### Fixed
+
+- All classes and symbols are now registered to avoid issues with GC compaction movement.
+- Parsing of any size processing instruction is now allowed. There is no 1024 limit.
+- Fixed the `\r` replacement with `\n` according to https://www.w3.org/TR/2008/REC-xml-20081126/#sec-line-ends.
+
+### Changed
+
+- Symbol and string caching changed but should have no impact on use
+  other than being slightly faster and handles large numbers of cached
+  items more efficiently.
+
 ## [2.14.6] - 2021-11-03
 
 ### Fixed
