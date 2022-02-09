@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.8] - 2022-02-09
+
+### Fixed
+
+- Renamed internal functions to avoid linking issues where Oj and Ox function names collided.
+
 ## [2.14.7] - 2022-02-03
 
 ### Fixed
