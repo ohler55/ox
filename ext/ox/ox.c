@@ -107,9 +107,7 @@ VALUE ox_struct_class;
 VALUE ox_syntax_error_class;
 VALUE ox_time_class;
 
-Cache ox_symbol_cache = 0;
-Cache ox_class_cache  = 0;
-Cache ox_attr_cache   = 0;
+SlotCache ox_class_cache  = 0;
 
 static VALUE abort_sym;
 static VALUE active_sym;
@@ -1646,9 +1644,7 @@ void Init_ox() {
     rb_gc_register_address(&ox_time_class);
     rb_gc_register_address(&ox_version_sym);
 
-    ox_cache_new(&ox_symbol_cache);
-    ox_cache_new(&ox_class_cache);
-    ox_cache_new(&ox_attr_cache);
+    slot_cache_new(&ox_class_cache);
 
     ox_sax_define();
     ox_hash_init();

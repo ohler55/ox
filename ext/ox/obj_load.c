@@ -12,6 +12,7 @@
 
 #include "ruby.h"
 #include "ruby/encoding.h"
+
 #include "base64.h"
 #include "ox.h"
 #include "intern.h"
@@ -152,7 +153,7 @@ classname2class(const char *name, PInfo pi, VALUE base_class) {
     VALUE	*slot;
     VALUE	clas;
 
-    if (Qundef == (clas = ox_cache_get(ox_class_cache, name, &slot, 0))) {
+    if (Qundef == (clas = slot_cache_get(ox_class_cache, name, &slot, 0))) {
 	char		class_name[1024];
 	char		*s;
 	const char	*n = name;

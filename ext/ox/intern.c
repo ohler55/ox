@@ -8,17 +8,19 @@
 #include "cache.h"
 #include "ox.h"
 
-static struct _cache *str_cache = NULL;
-static VALUE          str_cache_obj;
+// These are statics but in an attempt to stop the cross linking or maybe
+// something in Ruby they all have been given an ox prefix.
+static struct _cache *ox_str_cache = NULL;
+static VALUE          ox_str_cache_obj;
 
-static struct _cache *sym_cache = NULL;
-static VALUE          sym_cache_obj;
+static struct _cache *ox_sym_cache = NULL;
+static VALUE          ox_sym_cache_obj;
 
-static struct _cache *attr_cache = NULL;
-static VALUE          attr_cache_obj;
+static struct _cache *ox_attr_cache = NULL;
+static VALUE          ox_attr_cache_obj;
 
-static struct _cache *id_cache = NULL;
-static VALUE          id_cache_obj;
+static struct _cache *ox_id_cache = NULL;
+static VALUE          ox_id_cache_obj;
 
 static VALUE form_str(const char *str, size_t len) {
     return rb_str_freeze(rb_utf8_str_new(str, len));
@@ -67,21 +69,21 @@ static VALUE form_id(const char *str, size_t len) {
 void ox_hash_init() {
     VALUE cache_class = rb_define_class_under(Ox, "Cache", rb_cObject);
 
-    str_cache     = cache_create(0, form_str, true, false);
-    str_cache_obj = Data_Wrap_Struct(cache_class, cache_mark, cache_free, str_cache);
-    rb_gc_register_address(&str_cache_obj);
+    ox_str_cache     = ox_cache_create(0, form_str, true, false);
+    ox_str_cache_obj = Data_Wrap_Struct(cache_class, ox_cache_mark, ox_cache_free, ox_str_cache);
+    rb_gc_register_address(&ox_str_cache_obj);
 
-    sym_cache     = cache_create(0, form_sym, true, false);
-    sym_cache_obj = Data_Wrap_Struct(cache_class, cache_mark, cache_free, sym_cache);
-    rb_gc_register_address(&sym_cache_obj);
+    ox_sym_cache     = ox_cache_create(0, form_sym, true, false);
+    ox_sym_cache_obj = Data_Wrap_Struct(cache_class, ox_cache_mark, ox_cache_free, ox_sym_cache);
+    rb_gc_register_address(&ox_sym_cache_obj);
 
-    attr_cache     = cache_create(0, form_attr, false, false);
-    attr_cache_obj = Data_Wrap_Struct(cache_class, cache_mark, cache_free, attr_cache);
-    rb_gc_register_address(&attr_cache_obj);
+    ox_attr_cache     = ox_cache_create(0, form_attr, false, false);
+    ox_attr_cache_obj = Data_Wrap_Struct(cache_class, ox_cache_mark, ox_cache_free, ox_attr_cache);
+    rb_gc_register_address(&ox_attr_cache_obj);
 
-    id_cache     = cache_create(0, form_id, false, false);
-    id_cache_obj = Data_Wrap_Struct(cache_class, cache_mark, cache_free, id_cache);
-    rb_gc_register_address(&id_cache_obj);
+    ox_id_cache     = ox_cache_create(0, form_id, false, false);
+    ox_id_cache_obj = Data_Wrap_Struct(cache_class, ox_cache_mark, ox_cache_free, ox_id_cache);
+    rb_gc_register_address(&ox_id_cache_obj);
 }
 
 VALUE
@@ -92,21 +94,21 @@ ox_str_intern(const char *key, size_t len, const char **keyp) {
 #if HAVE_RB_ENC_INTERNED_STR && 0
     return rb_enc_interned_str(key, len, rb_utf8_encoding());
 #else
-    return cache_intern(str_cache, key, len, keyp);
+    return ox_cache_intern(ox_str_cache, key, len, keyp);
 #endif
 }
 
 VALUE
 ox_sym_intern(const char *key, size_t len, const char **keyp) {
-    return cache_intern(sym_cache, key, len, keyp);
+    return ox_cache_intern(ox_sym_cache, key, len, keyp);
 }
 
 ID ox_attr_intern(const char *key, size_t len) {
-    return cache_intern(attr_cache, key, len, NULL);
+    return ox_cache_intern(ox_attr_cache, key, len, NULL);
 }
 
 ID ox_id_intern(const char *key, size_t len) {
-    return cache_intern(id_cache, key, len, NULL);
+    return ox_cache_intern(ox_id_cache, key, len, NULL);
 }
 
 char *ox_strndup(const char *s, size_t len) {
@@ -116,13 +118,6 @@ char *ox_strndup(const char *s, size_t len) {
     d[len] = '\0';
 
     return d;
-}
-
-void intern_cleanup() {
-    cache_free(str_cache);
-    cache_free(sym_cache);
-    cache_free(attr_cache);
-    cache_free(id_cache);
 }
 
 VALUE

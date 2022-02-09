@@ -28,7 +28,7 @@
 #define M 0x5bd1e995
 
 typedef struct _slot {
-    struct _slot *    next;
+    struct _slot     *next;
     VALUE             val;
     uint64_t          hash;
     volatile uint32_t use_cnt;
@@ -37,7 +37,7 @@ typedef struct _slot {
 } * Slot;
 
 typedef struct _cache {
-    volatile Slot * slots;
+    volatile Slot  *slots;
     volatile size_t cnt;
     VALUE (*form)(const char *str, size_t len);
     uint64_t size;
@@ -53,10 +53,6 @@ typedef struct _cache {
     uint8_t xrate;
     bool    mark;
 } * Cache;
-
-void cache_set_form(Cache c, VALUE (*form)(const char *str, size_t len)) {
-    c->form = form;
-}
 
 static uint64_t hash_calc(const uint8_t *key, size_t len) {
     const uint8_t *end     = key + len;
@@ -94,8 +90,8 @@ static uint64_t hash_calc(const uint8_t *key, size_t len) {
 
 static void rehash(Cache c) {
     uint64_t osize;
-    Slot *   end;
-    Slot *   sp;
+    Slot    *end;
+    Slot    *sp;
 
     osize    = c->size;
     c->size  = osize * 4;
@@ -110,7 +106,7 @@ static void rehash(Cache c) {
         *sp = NULL;
         for (; NULL != s; s = next) {
             uint64_t h      = s->hash & c->mask;
-            Slot *   bucket = (Slot *)c->slots + h;
+            Slot    *bucket = (Slot *)c->slots + h;
 
             next    = s->next;
             s->next = *bucket;
@@ -119,9 +115,9 @@ static void rehash(Cache c) {
     }
 }
 
-static VALUE lockless_intern(Cache c, const char *key, size_t len, const char **keyp) {
+static VALUE ox_lockless_intern(Cache c, const char *key, size_t len, const char **keyp) {
     uint64_t       h      = hash_calc((const uint8_t *)key, len);
-    Slot *         bucket = (Slot *)c->slots + (h & c->mask);
+    Slot          *bucket = (Slot *)c->slots + (h & c->mask);
     Slot           b;
     volatile VALUE rkey;
 
@@ -169,9 +165,9 @@ static VALUE lockless_intern(Cache c, const char *key, size_t len, const char **
     return rkey;
 }
 
-static VALUE locking_intern(Cache c, const char *key, size_t len, const char **keyp) {
+static VALUE ox_locking_intern(Cache c, const char *key, size_t len, const char **keyp) {
     uint64_t       h;
-    Slot *         bucket;
+    Slot          *bucket;
     Slot           b;
     uint64_t       old_size;
     volatile VALUE rkey;
@@ -239,10 +235,7 @@ static VALUE locking_intern(Cache c, const char *key, size_t len, const char **k
     return rkey;
 }
 
-Cache cache_create(size_t size,
-                   VALUE (*form)(const char *str, size_t len),
-                   bool mark,
-                   bool locking) {
+Cache ox_cache_create(size_t size, VALUE (*form)(const char *str, size_t len), bool mark, bool locking) {
     Cache c     = calloc(1, sizeof(struct _cache));
     int   shift = 0;
 
@@ -263,18 +256,14 @@ Cache cache_create(size_t size,
     c->xrate = 1;  // low
     c->mark  = mark;
     if (locking) {
-        c->intern = locking_intern;
+        c->intern = ox_locking_intern;
     } else {
-        c->intern = lockless_intern;
+        c->intern = ox_lockless_intern;
     }
     return c;
 }
 
-void cache_set_expunge_rate(Cache c, int rate) {
-    c->xrate = (uint8_t)rate;
-}
-
-void cache_free(Cache c) {
+void ox_cache_free(Cache c) {
     uint64_t i;
 
     for (i = 0; i < c->size; i++) {
@@ -290,7 +279,7 @@ void cache_free(Cache c) {
     free(c);
 }
 
-void cache_mark(Cache c) {
+void ox_cache_mark(Cache c) {
     uint64_t i;
 
 #if !HAVE_PTHREAD_MUTEX_INIT
@@ -333,7 +322,7 @@ void cache_mark(Cache c) {
 }
 
 VALUE
-cache_intern(Cache c, const char *key, size_t len, const char **keyp) {
+ox_cache_intern(Cache c, const char *key, size_t len, const char **keyp) {
     if (CACHE_MAX_KEY <= len) {
         if (NULL != keyp) {
             volatile VALUE rkey = c->form(key, len);

@@ -28,7 +28,7 @@ extern "C" {
 #include "attr.h"
 #include "err.h"
 #include "helper.h"
-#include "oxcache.h"
+#include "slotcache.h"
 #include "type.h"
 
 #define raise_error(msg, xml, current) _ox_raise_error(msg, xml, current, __FILE__, __LINE__)
@@ -238,9 +238,7 @@ extern VALUE ox_raw_clas;
 extern VALUE ox_doctype_clas;
 extern VALUE ox_cdata_clas;
 
-extern Cache ox_symbol_cache;
-extern Cache ox_class_cache;
-extern Cache ox_attr_cache;
+extern SlotCache ox_class_cache;
 
 extern void ox_init_builder(VALUE ox);
 
