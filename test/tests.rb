@@ -636,6 +636,14 @@ class Func < ::Test::Unit::TestCase
     assert_equal(%{\n<top>  Pete\n  Ohler</top>\n}, x2)
   end
 
+  def test_skip_return2
+    Ox::default_options = $ox_object_options
+    xml = %{<top>  Pete\rOhler</top>}
+    doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_return)
+    x2 = Ox.dump(doc)
+    assert_equal(%{\n<top>  Pete\nOhler</top>\n}, x2)
+  end
+
   def test_skip_space
     Ox::default_options = $ox_object_options
     xml = %{<top>  Pete\r\n  Ohler</top>}

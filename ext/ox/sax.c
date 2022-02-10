@@ -307,8 +307,8 @@ static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions opti
         dr->encoding = rb_enc_find(ox_default_options.encoding);
     }
     dr->utf8 = (NULL == dr->encoding || rb_utf8_encoding() == dr->encoding);
-    if (NULL == dr->encoding || rb_utf8_encoding() == dr->encoding) {  // UTF-8
-        dr->get_name = dr->options.symbolize ? ox_utf8_sym : ox_utf8_name; // TBD UTF8 sym?
+    if (NULL == dr->encoding || rb_utf8_encoding() == dr->encoding) {       // UTF-8
+        dr->get_name = dr->options.symbolize ? ox_utf8_sym : ox_utf8_name;  // TBD UTF8 sym?
     } else {
         dr->get_name = dr->options.symbolize ? ox_enc_sym : ox_enc_name;
     }
@@ -334,7 +334,7 @@ static char skipBOM(SaxDrive dr) {
     if (0xEF == (uint8_t)c) { /* only UTF8 is supported */
         if (0xBB == (uint8_t)buf_get(&dr->buf) && 0xBF == (uint8_t)buf_get(&dr->buf)) {
             dr->encoding = ox_utf8_encoding;
-            c = buf_get(&dr->buf);
+            c            = buf_get(&dr->buf);
         } else {
             ox_sax_drive_error(dr, BAD_BOM "invalid BOM or a binary file.");
             c = '\0';
@@ -1217,7 +1217,7 @@ static char read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, 
             attr_value = dr->buf.str;
             if (is_encoding) {
                 dr->encoding = rb_enc_find(dr->buf.str);
-                is_encoding = 0;
+                is_encoding  = 0;
             }
         }
         if (0 >= dr->blocked && (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
@@ -1368,7 +1368,8 @@ int ox_sax_collapse_special(SaxDrive dr, char *str, long pos, long line, long co
     char *b = str;
 
     while ('\0' != *s) {
-        if ('&' == *s) {
+        switch (*s) {
+        case '&': {
             int   c = 0;
             char *end;
 
@@ -1458,13 +1459,25 @@ int ox_sax_collapse_special(SaxDrive dr, char *str, long pos, long line, long co
             }
             *b++ = (char)c;
             col++;
-        } else {
+            break;
+        }
+        case '\r':
+	    s++;
             if ('\n' == *s) {
-                line++;
-                col = 0;
-            }
+		continue;
+	    }
+	    line++;
+	    col = 1;
+            *b++ = '\n';
+	    break;
+	case '\n':
+	    line++;
+	    col = 0;
+	    // fall through
+        default:
             col++;
             *b++ = *s++;
+            break;
         }
     }
     *b = '\0';

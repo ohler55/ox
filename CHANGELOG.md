@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.9] - 2022-02-11
+
+### Fixed
+
+- Fixed the `\r` replacement with `\n` with the SAX parser according to https://www.w3.org/TR/2008/REC-xml-20081126/#sec-line-ends.
+
 ## [2.14.8] - 2022-02-09
 
 ### Fixed

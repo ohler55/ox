@@ -108,7 +108,7 @@ static void fix_newlines(char *buf) {
 		if ('\n' == *(s + 1)) {
 		    continue;
 		}
-		*s = '\n';
+		*d = '\n';
 	    } else if (d < s) {
 		*d = *s;
 	    }

@@ -871,7 +871,7 @@ encoding = "UTF-8" ?>},
     handler = TypeSax.new(:as_s)
     xml = %{<top>  Pete\r\n  Ohler\r</top>}
     Ox.sax_parse(handler, StringIO.new(xml))
-    assert_equal(%{  Pete\r\n  Ohler\r}, handler.item)
+    assert_equal(%{  Pete\n  Ohler\n}, handler.item)
   end
 
   def test_sax_skip_none_nested
@@ -884,11 +884,11 @@ encoding = "UTF-8" ?>},
     assert_equal([[:start_element, :top],
                   [:text, "  "],
                   [:start_element, :child],
-                  [:text, "Pete\r"],
+                  [:text, "Pete\n"],
                   [:end_element, :child],
                   [:text, "\n "],
                   [:start_element, :child],
-                  [:text, " Ohler\r"],
+                  [:text, " Ohler\n"],
                   [:end_element, :child],
                   [:end_element, :top]], handler.calls)
   end
@@ -898,7 +898,7 @@ encoding = "UTF-8" ?>},
     handler = TypeSax.new(:as_s)
     xml = %{<top>  Pete\r\n  Ohler\r</top>}
     Ox.sax_parse(handler, StringIO.new(xml), :skip => :skip_return)
-    assert_equal(%{  Pete\n  Ohler\r}, handler.item)
+    assert_equal(%{  Pete\n  Ohler\n}, handler.item)
   end
 
   def test_sax_skip_white
