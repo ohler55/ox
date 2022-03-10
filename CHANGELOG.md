@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.10] - 2022-03-10
+
+### Fixed
+
+- Writing strings over 16K to a file with builder no longer causes a crash.
+
 ## [2.14.9] - 2022-02-11
 
 ### Fixed

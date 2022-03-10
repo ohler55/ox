@@ -86,8 +86,16 @@ buf_append_string(Buf buf, const char *s, size_t slen) {
 
 	    if (len != (size_t)write(buf->fd, buf->head, len)) {
 		buf->err = true;
+		return;
 	    }
 	    buf->tail = buf->head;
+	    if (sizeof(buf->base) <= slen) {
+		if (slen != (size_t)write(buf->fd, s, slen)) {
+		    buf->err = true;
+		    return;
+		}
+		return;
+	    }
 	} else {
 	    size_t	len = buf->end - buf->head;
 	    size_t	toff = buf->tail - buf->head;
