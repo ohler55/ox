@@ -117,7 +117,7 @@ static void attr_text(SaxDrive dr, VALUE name, char *value, long pos, long line,
     VALUE args[2];
 
     args[0] = name;
-    if (dr->options.convert_special) {
+    if (dr->options.convert_special && '\0' != value[0]) {
         ox_sax_collapse_special(dr, value, pos, line, col);
     }
     args[1] = rb_str_new2(value);
@@ -1215,6 +1215,7 @@ static char read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, 
             col        = dr->buf.col + 1;
             c          = read_quoted_value(dr);
             attr_value = dr->buf.str;
+
             if (is_encoding) {
                 dr->encoding = rb_enc_find(dr->buf.str);
                 is_encoding  = 0;

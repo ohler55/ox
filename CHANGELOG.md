@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.11] - <unreleased>
+
+### Fixed
+
+- Missing attribute value no longer crashes with the SAX parser.
+
 ## [2.14.10] - 2022-03-10
 
 ### Fixed
