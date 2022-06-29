@@ -881,6 +881,15 @@ builder_column(VALUE self) {
     return LONG2NUM(((Builder)DATA_PTR(self))->col);
 }
 
+/* call-seq: indent()
+ *
+ * Returns the indentation level
+ */
+static VALUE
+builder_get_indent(VALUE self) {
+    return INT2NUM(((Builder)DATA_PTR(self))->indent);
+}
+
 /* call-seq: pos()
  *
  * Returns the number of bytes written.
@@ -940,4 +949,5 @@ ox_init_builder(VALUE ox) {
     rb_define_method(builder_class, "line", builder_line, 0);
     rb_define_method(builder_class, "column", builder_column, 0);
     rb_define_method(builder_class, "pos", builder_pos, 0);
+    rb_define_method(builder_class, "indent", builder_get_indent, 0);
 }

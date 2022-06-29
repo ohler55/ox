@@ -1471,6 +1471,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_builder
     b = Ox::Builder.new(:indent => 2)
+    assert_equal(2, b.indent())
     assert_equal(1, b.line())
     assert_equal(1, b.column())
     assert_equal(0, b.pos())
