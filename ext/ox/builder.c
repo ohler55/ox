@@ -890,6 +890,26 @@ builder_get_indent(VALUE self) {
     return INT2NUM(((Builder)DATA_PTR(self))->indent);
 }
 
+/* call-seq: indent=(indent)
+ *
+ * Sets the indentation level
+ *
+ * - +indent+ (Fixnum) indentaion level, negative values excludes terminating newline
+ */
+static VALUE
+builder_set_indent(VALUE self, VALUE indent) {
+#ifdef RUBY_INTEGER_UNIFICATION
+    if (rb_cInteger != rb_obj_class(indent)) {
+#else
+    if (rb_cFixnum != rb_obj_class(indent)) {
+#endif
+      rb_raise(ox_parse_error_class, "indent must be a fixnum.\n");
+    }
+
+    ((Builder)DATA_PTR(self))->indent = NUM2INT(indent);
+    return Qnil;
+}
+
 /* call-seq: pos()
  *
  * Returns the number of bytes written.
@@ -950,4 +970,5 @@ ox_init_builder(VALUE ox) {
     rb_define_method(builder_class, "column", builder_column, 0);
     rb_define_method(builder_class, "pos", builder_pos, 0);
     rb_define_method(builder_class, "indent", builder_get_indent, 0);
+    rb_define_method(builder_class, "indent=", builder_set_indent, 1);
 }

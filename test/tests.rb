@@ -1511,6 +1511,31 @@ comment -->
 |, xml)
   end
 
+  def test_builder_set_indent
+    b = Ox::Builder.new(:indent => 2)
+    assert_equal(2, b.indent())
+    b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+    b.element('one')
+    b.element('two')
+    b.indent = 0
+    b.text('Sample ')
+    b.element('three', :a => 'ack')
+    b.text('sample')
+    b.pop() # </three>
+    b.pop() # </two>
+    b.indent = 2
+    b.element('four')
+    b.pop()
+    b.close()
+    xml = b.to_s
+    assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
+<one>
+  <two>Sample <three a="ack">sample</three></two>
+  <four/>
+</one>
+|, xml)
+  end
+
   def test_builder_file
     filename = File.join(File.dirname(__FILE__), 'create_file_test.xml')
     b = Ox::Builder.file(filename, :indent => 2)
