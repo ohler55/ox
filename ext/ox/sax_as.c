@@ -255,10 +255,12 @@ ox_sax_define() {
 #if 0
     ox = rb_define_module("Ox");
     sax_module = rb_define_class_under(ox, "Sax", rb_cObject);
+    rb_undef_alloc_func(sax_module);
 #endif
     VALUE	sax_module = rb_const_get_at(Ox, rb_intern("Sax"));
 
     ox_sax_value_class = rb_define_class_under(sax_module, "Value", rb_cObject);
+    rb_undef_alloc_func(ox_sax_value_class);
 
     rb_define_method(ox_sax_value_class, "as_s", sax_value_as_s, 0);
     rb_define_method(ox_sax_value_class, "as_sym", sax_value_as_sym, 0);

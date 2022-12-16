@@ -952,6 +952,7 @@ ox_init_builder(VALUE ox) {
     ox = rb_define_module("Ox");
 #endif
     builder_class = rb_define_class_under(ox, "Builder", rb_cObject);
+    rb_undef_alloc_func(builder_class);
     rb_define_module_function(builder_class, "new", builder_new, -1);
     rb_define_module_function(builder_class, "file", builder_file, -1);
     rb_define_module_function(builder_class, "io", builder_io, -1);
