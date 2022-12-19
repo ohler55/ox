@@ -794,8 +794,13 @@ class Func < ::Test::Unit::TestCase
     Ox::default_options = $ox_object_options
     x = Ox.dump(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, {:b => 3, :a => [5], :c => Bag.new(:@x => 7)}]), :indent => 1, :margin => '##')
 
-    assert_equal('##<o c="Bag">
-## <a a="@a">
+    assert(x.include?('## <o a="@o" c="Bag">
+##  <a a="@a">
+##   <i>2</i>
+##  </a>
+## </o>
+'))
+    assert(x.include?('## <a a="@a">
 ##  <i>1</i>
 ##  <h>
 ##   <m>b</m>
@@ -810,13 +815,7 @@ class Func < ::Test::Unit::TestCase
 ##   </o>
 ##  </h>
 ## </a>
-## <o a="@o" c="Bag">
-##  <a a="@a">
-##   <i>2</i>
-##  </a>
-## </o>
-##</o>
-', x)
+'))
   end
 
   # Create an Object and an Array with the same Objects in them. Dump and load

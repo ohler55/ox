@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#include "ruby/version.h"
+
 #include "cache.h"
 #include "ox.h"
 
@@ -68,6 +70,9 @@ static VALUE form_id(const char *str, size_t len) {
 
 void ox_hash_init() {
     VALUE cache_class = rb_define_class_under(Ox, "Cache", rb_cObject);
+#if RUBY_API_VERSION_CODE >= 30200
+    rb_undef_alloc_func(cache_class);
+#endif
 
     ox_str_cache     = ox_cache_create(0, form_str, true, false);
     ox_str_cache_obj = Data_Wrap_Struct(cache_class, ox_cache_mark, ox_cache_free, ox_str_cache);

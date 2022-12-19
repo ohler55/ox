@@ -10,6 +10,7 @@
 
 #include "ruby.h"
 #include "ruby/encoding.h"
+#include "ruby/version.h"
 #include "ox.h"
 #include "buf.h"
 #include "err.h"
@@ -952,6 +953,9 @@ ox_init_builder(VALUE ox) {
     ox = rb_define_module("Ox");
 #endif
     builder_class = rb_define_class_under(ox, "Builder", rb_cObject);
+#if RUBY_API_VERSION_CODE >= 30200
+    rb_undef_alloc_func(builder_class);
+#endif
     rb_define_module_function(builder_class, "new", builder_new, -1);
     rb_define_module_function(builder_class, "file", builder_file, -1);
     rb_define_module_function(builder_class, "io", builder_io, -1);
