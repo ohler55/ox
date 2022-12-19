@@ -15,6 +15,7 @@
 #include <time.h>
 
 #include "ruby.h"
+#include "ruby/version.h"
 #include "ox.h"
 #include "sax.h"
 
@@ -254,13 +255,16 @@ void
 ox_sax_define() {
 #if 0
     ox = rb_define_module("Ox");
+#if RUBY_API_VERSION_CODE >= 30200
     sax_module = rb_define_class_under(ox, "Sax", rb_cObject);
-    rb_undef_alloc_func(sax_module);
+#endif
 #endif
     VALUE	sax_module = rb_const_get_at(Ox, rb_intern("Sax"));
 
     ox_sax_value_class = rb_define_class_under(sax_module, "Value", rb_cObject);
+#if RUBY_API_VERSION_CODE >= 30200
     rb_undef_alloc_func(ox_sax_value_class);
+#endif
 
     rb_define_method(ox_sax_value_class, "as_s", sax_value_as_s, 0);
     rb_define_method(ox_sax_value_class, "as_sym", sax_value_as_sym, 0);
