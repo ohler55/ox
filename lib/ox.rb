@@ -76,4 +76,9 @@ require 'ox/document'
 require 'ox/bag'
 require 'ox/sax'
 
-require 'ox/ox' # C extension
+# C extension
+begin
+  require_relative 'ox.so'
+rescue LoadError
+  require 'ox/ox'
+end
