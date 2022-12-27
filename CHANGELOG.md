@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.12] - 2022-12-27
+
+### Fixed
+
+- Updated to support Ruby 3.2.
+
 ## [2.14.11] - 2022-03-31
 
 ### Fixed
