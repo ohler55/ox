@@ -762,6 +762,7 @@ CB:
  */
 static char read_element_start(SaxDrive dr) {
     const char    *ename = 0;
+    size_t         nlen;
     volatile VALUE name  = Qnil;
     char           c;
     int            closed;
@@ -790,6 +791,7 @@ static char read_element_start(SaxDrive dr) {
         0 == strcasecmp("html", dr->buf.str)) {
         dr->options.hints = ox_hints_html();
     }
+    nlen = dr->buf.tail - dr->buf.str - 1;
     if (NULL != dr->options.hints) {
         hint_clear_empty(dr);
         h = ox_hint_find(dr->options.hints, dr->buf.str);
@@ -810,7 +812,7 @@ static char read_element_start(SaxDrive dr) {
                 if (rb_respond_to(dr->handler, ox_abort_id)) {
                     VALUE args[1];
 
-                    args[0] = str2sym(dr, dr->buf.str, dr->buf.tail - dr->buf.str - 1, NULL);
+                    args[0] = str2sym(dr, dr->buf.str, nlen, NULL);
                     rb_funcall2(dr->handler, ox_abort_id, 1, args);
                 }
                 dr->abort = true;
@@ -861,7 +863,7 @@ static char read_element_start(SaxDrive dr) {
             }
         }
     }
-    name = str2sym(dr, dr->buf.str, dr->buf.tail - dr->buf.str - 1, &ename);
+    name = str2sym(dr, dr->buf.str, nlen, &ename);
     if (dr->has_start_element && 0 >= dr->blocked &&
         (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
         VALUE args[1];
@@ -894,7 +896,7 @@ static char read_element_start(SaxDrive dr) {
     } else if (stackless) {
         end_element_cb(dr, name, pos, line, col, h);
     } else if (NULL != h && h->jump) {
-        stack_push(&dr->stack, ename, name, h);
+        stack_push(&dr->stack, ename, nlen, name, h);
         if ('>' != c) {
             ox_sax_drive_error(dr, WRONG_CHAR "element not closed");
             return c;
@@ -902,7 +904,7 @@ static char read_element_start(SaxDrive dr) {
         read_jump(dr, h->name);
         return '<';
     } else {
-        stack_push(&dr->stack, ename, name, h);
+        stack_push(&dr->stack, ename, nlen, name, h);
     }
     if ('>' != c) {
         ox_sax_drive_error(dr, WRONG_CHAR "element not closed");

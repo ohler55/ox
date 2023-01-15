@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.13] - 2023-01-16
+
+### Fixed
+
+- Fixed the intern cache to handle symbol memory changes.
+
 ## [2.14.12] - 2022-12-27
 
 ### Fixed

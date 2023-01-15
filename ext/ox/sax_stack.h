@@ -6,11 +6,16 @@
 #ifndef OX_SAX_STACK_H
 #define OX_SAX_STACK_H
 
+#include <stdlib.h>
+
+#include "intern.h"
 #include "sax_hint.h"
 
 #define STACK_INC	32
+#define NV_BUF_MAX      64
 
 typedef struct _nv {
+    char	name_buf[NV_BUF_MAX];
     const char	*name;
     VALUE	val;
     int		childCnt;
@@ -44,7 +49,7 @@ stack_cleanup(NStack stack) {
 }
 
 inline static void
-stack_push(NStack stack, const char *name, VALUE val, Hint hint) {
+stack_push(NStack stack, const char *name, size_t nlen, VALUE val, Hint hint) {
     if (stack->end <= stack->tail) {
 	size_t	len = stack->end - stack->head;
 	size_t	toff = stack->tail - stack->head;
@@ -58,7 +63,13 @@ stack_push(NStack stack, const char *name, VALUE val, Hint hint) {
 	stack->tail = stack->head + toff;
 	stack->end = stack->head + len + STACK_INC;
     }
-    stack->tail->name = name;
+    if (NV_BUF_MAX <= nlen) {
+        stack->tail->name = ox_strndup(name, nlen);
+    } else {
+        strncpy(stack->tail->name_buf, name, nlen);
+        stack->tail->name_buf[nlen] = '\0';
+        stack->tail->name = stack->tail->name_buf;
+    }
     stack->tail->val = val;
     stack->tail->hint = hint;
     stack->tail->childCnt = 0;
@@ -77,6 +88,9 @@ inline static Nv
 stack_pop(NStack stack) {
     if (stack->head < stack->tail) {
 	stack->tail--;
+        if (stack->tail->name != stack->tail->name_buf) {
+            free((char*)(stack->tail->name));
+        }
 	return stack->tail;
     }
     return 0;
