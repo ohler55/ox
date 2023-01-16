@@ -35,7 +35,7 @@ mark_value(PInfo pi, VALUE val) {
 	pi->mark_size = MARK_INC;
     } else if (pi->mark_size <= pi->mark_cnt) {
 	pi->mark_size += MARK_INC;
-	pi->marked = REALLOC_N(pi->marked, VALUE, pi->mark_size);
+	REALLOC_N(pi->marked, VALUE, pi->mark_size);
     }
     pi->marked[pi->mark_cnt] = val;
     pi->mark_cnt++;
