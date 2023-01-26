@@ -89,7 +89,7 @@ stack_pop(NStack stack) {
     if (stack->head < stack->tail) {
 	stack->tail--;
         if (stack->tail->name != stack->tail->name_buf) {
-            free((char*)(stack->tail->name));
+            xfree((char*)(stack->tail->name));
         }
 	return stack->tail;
     }

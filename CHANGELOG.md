@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.14] - 2023-01-26
+
+### Fixed
+
+- Change free to xfree on ruby alloced memory.
+
 ## [2.14.13] - 2023-01-16
 
 ### Fixed
