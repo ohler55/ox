@@ -31,10 +31,9 @@
 #ifndef OX_BUF_H
 #define OX_BUF_H
 
+#include <ruby.h>
 #include <stdbool.h>
 #include <unistd.h>
-
-#include <ruby.h>
 
 typedef struct _buf {
     char *head;
