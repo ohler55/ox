@@ -1,7 +1,7 @@
 # Ox gem
 A fast XML parser and Object marshaller as a Ruby gem.
 
-[![Build Status](https://img.shields.io/github/workflow/status/ohler55/ox/CI?logo=github)](https://github.com/ohler55/ox/actions/workflows/CI.yml)
+[![CI](https://github.com/ohler55/ox/actions/workflows/CI.yml/badge.svg)](https://github.com/ohler55/ox/actions/workflows/CI.yml)
 
 ## Installation
     gem install ox
