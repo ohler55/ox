@@ -751,6 +751,8 @@ Metrics/PerceivedComplexity:
 # SupportedStyles: snake_case, camelCase
 Naming/MethodName:
   EnforcedStyle: snake_case
+  Exclude:
+    - 'test/tests.rb'
 
 # Offense count: 25
 # Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
@@ -1593,3 +1595,11 @@ Layout/LineLength:
     - 'test/sax/sax_test.rb'
     - 'test/sax/smart_test.rb'
     - 'test/tests.rb'
+
+Lint/ScriptPermission:
+  Exclude:
+    - 'test/sample.rb'
+
+Lint/Syntax:
+  Exclude:
+    - 'examples/sax_ractor.rb'
