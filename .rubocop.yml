@@ -1,1 +1,5 @@
 inherit_from: .rubocop_todo.yml
+
+AllCops:
+  TargetRubyVersion: 2.5
+  NewCops: enable
