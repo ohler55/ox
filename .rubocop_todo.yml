@@ -1599,7 +1599,3 @@ Layout/LineLength:
 Lint/ScriptPermission:
   Exclude:
     - 'test/sample.rb'
-
-Lint/Syntax:
-  Exclude:
-    - 'examples/sax_ractor.rb'
