@@ -3,27 +3,26 @@
  * All rights reserved.
  */
 
-#include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <strings.h>
 #include <sys/types.h>
 #if HAVE_SYS_UIO_H
 #include <sys/uio.h>
 #endif
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
+#include "ox.h"
 #include "ruby.h"
 #include "ruby/version.h"
-#include "ox.h"
 #include "sax.h"
 
-static VALUE
-parse_double_time(const char *text) {
-    long        v = 0;
-    long        v2 = 0;
-    const char  *dot = 0;
+static VALUE parse_double_time(const char *text) {
+    long        v   = 0;
+    long        v2  = 0;
+    const char *dot = 0;
     char        c;
 
     for (; '.' != *text; text++) {
@@ -52,58 +51,57 @@ parse_double_time(const char *text) {
 }
 
 typedef struct _tp {
-    int         cnt;
-    char        end;
-    char        alt;
+    int  cnt;
+    char end;
+    char alt;
 } *Tp;
 
-static VALUE
-parse_xsd_time(const char *text) {
-    long        cargs[10];
-    long        *cp = cargs;
-    long        v;
-    int         i;
-    char        c = '\0';
-    struct _tp  tpa[10] = { { 4, '-', '-' },
-                           { 2, '-', '-' },
-                           { 2, 'T', ' ' },
-                           { 2, ':', ':' },
-                           { 2, ':', ':' },
-                           { 2, '.', '.' },
-                           { 9, '+', '-' },
-                           { 2, ':', ':' },
-                           { 2, '\0', '\0' },
-                           { 0, '\0', '\0' } };
-    Tp          tp = tpa;
-    struct tm   tm;
+static VALUE parse_xsd_time(const char *text) {
+    long       cargs[10];
+    long      *cp = cargs;
+    long       v;
+    int        i;
+    char       c       = '\0';
+    struct _tp tpa[10] = {{4, '-', '-'},
+                          {2, '-', '-'},
+                          {2, 'T', ' '},
+                          {2, ':', ':'},
+                          {2, ':', ':'},
+                          {2, '.', '.'},
+                          {9, '+', '-'},
+                          {2, ':', ':'},
+                          {2, '\0', '\0'},
+                          {0, '\0', '\0'}};
+    Tp         tp      = tpa;
+    struct tm  tm;
 
     memset(cargs, 0, sizeof(cargs));
     for (; 0 != tp->cnt; tp++) {
-        for (i = tp->cnt, v = 0; 0 < i ; text++, i--) {
+        for (i = tp->cnt, v = 0; 0 < i; text++, i--) {
             c = *text;
             if (c < '0' || '9' < c) {
                 if ('\0' == c || tp->end == c || tp->alt == c) {
                     break;
                 }
-		return Qnil;
+                return Qnil;
             }
             v = 10 * v + (long)(c - '0');
         }
-	if ('\0' == c) {
-	    break;
-	}
+        if ('\0' == c) {
+            break;
+        }
         c = *text++;
         if (tp->end != c && tp->alt != c) {
-	    return Qnil;
+            return Qnil;
         }
         *cp++ = v;
     }
     tm.tm_year = (int)cargs[0] - 1900;
-    tm.tm_mon = (int)cargs[1] - 1;
+    tm.tm_mon  = (int)cargs[1] - 1;
     tm.tm_mday = (int)cargs[2];
     tm.tm_hour = (int)cargs[3];
-    tm.tm_min = (int)cargs[4];
-    tm.tm_sec = (int)cargs[5];
+    tm.tm_min  = (int)cargs[4];
+    tm.tm_sec  = (int)cargs[5];
 #if HAVE_RB_TIME_NANO_NEW
     return rb_time_nano_new(mktime(&tm), cargs[6]);
 #else
@@ -115,30 +113,24 @@ parse_xsd_time(const char *text) {
  *
  * *return* value as an String.
  */
-static VALUE
-sax_value_as_s(VALUE self) {
-    SaxDrive	dr = DATA_PTR(self);
-    VALUE	rs;
+static VALUE sax_value_as_s(VALUE self) {
+    SaxDrive dr = DATA_PTR(self);
+    VALUE    rs;
 
     if ('\0' == *dr->buf.str) {
-	return Qnil;
+        return Qnil;
     }
     if (dr->options.convert_special) {
-	ox_sax_collapse_special(dr, dr->buf.str, dr->buf.pos, dr->buf.line, dr->buf.col);
+        ox_sax_collapse_special(dr, dr->buf.str, dr->buf.pos, dr->buf.line, dr->buf.col);
     }
     switch (dr->options.skip) {
-    case CrSkip:
-	buf_collapse_return(dr->buf.str);
-	break;
-    case SpcSkip:
-	buf_collapse_white(dr->buf.str);
-	break;
-    default:
-	break;
+    case CrSkip: buf_collapse_return(dr->buf.str); break;
+    case SpcSkip: buf_collapse_white(dr->buf.str); break;
+    default: break;
     }
     rs = rb_str_new2(dr->buf.str);
     if (0 != dr->encoding) {
-	rb_enc_associate(rs, dr->encoding);
+        rb_enc_associate(rs, dr->encoding);
     }
     return rs;
 }
@@ -147,12 +139,11 @@ sax_value_as_s(VALUE self) {
  *
  * *return* value as an Symbol.
  */
-static VALUE
-sax_value_as_sym(VALUE self) {
-    SaxDrive	dr = DATA_PTR(self);
+static VALUE sax_value_as_sym(VALUE self) {
+    SaxDrive dr = DATA_PTR(self);
 
     if ('\0' == *dr->buf.str) {
-	return Qnil;
+        return Qnil;
     }
     return str2sym(dr, dr->buf.str, strlen(dr->buf.str), 0);
 }
@@ -161,12 +152,11 @@ sax_value_as_sym(VALUE self) {
  *
  * *return* value as an Float.
  */
-static VALUE
-sax_value_as_f(VALUE self) {
-    SaxDrive	dr = DATA_PTR(self);
+static VALUE sax_value_as_f(VALUE self) {
+    SaxDrive dr = DATA_PTR(self);
 
     if ('\0' == *dr->buf.str) {
-	return Qnil;
+        return Qnil;
     }
     return rb_float_new(strtod(dr->buf.str, 0));
 }
@@ -175,31 +165,30 @@ sax_value_as_f(VALUE self) {
  *
  * *return* value as an Fixnum.
  */
-static VALUE
-sax_value_as_i(VALUE self) {
-    SaxDrive	dr = DATA_PTR(self);
-    const char	*s = dr->buf.str;
-    long	n = 0;
-    int		neg = 0;
+static VALUE sax_value_as_i(VALUE self) {
+    SaxDrive    dr  = DATA_PTR(self);
+    const char *s   = dr->buf.str;
+    long        n   = 0;
+    int         neg = 0;
 
     if ('\0' == *s) {
-	return Qnil;
+        return Qnil;
     }
     if ('-' == *s) {
-	neg = 1;
-	s++;
+        neg = 1;
+        s++;
     } else if ('+' == *s) {
-	s++;
+        s++;
     }
     for (; '\0' != *s; s++) {
-	if ('0' <= *s && *s <= '9') {
-	    n = n * 10 + (*s - '0');
-	} else {
-	    rb_raise(ox_arg_error_class, "Not a valid Fixnum.\n");
-	}
+        if ('0' <= *s && *s <= '9') {
+            n = n * 10 + (*s - '0');
+        } else {
+            rb_raise(ox_arg_error_class, "Not a valid Fixnum.\n");
+        }
     }
     if (neg) {
-	n = -n;
+        n = -n;
     }
     return LONG2NUM(n);
 }
@@ -208,22 +197,20 @@ sax_value_as_i(VALUE self) {
  *
  * *return* value as an Time.
  */
-static VALUE
-sax_value_as_time(VALUE self) {
-    SaxDrive	dr = DATA_PTR(self);
-    const char	*str = dr->buf.str;
+static VALUE sax_value_as_time(VALUE self) {
+    SaxDrive    dr  = DATA_PTR(self);
+    const char *str = dr->buf.str;
     VALUE       t;
 
     if ('\0' == *str) {
-	return Qnil;
+        return Qnil;
     }
-    if (Qnil == (t = parse_double_time(str)) &&
-	Qnil == (t = parse_xsd_time(str))) {
-        VALUE       args[1];
+    if (Qnil == (t = parse_double_time(str)) && Qnil == (t = parse_xsd_time(str))) {
+        VALUE args[1];
 
         /*printf("**** time parse\n"); */
         *args = rb_str_new2(str);
-        t = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
+        t     = rb_funcall2(ox_time_class, ox_parse_id, 1, args);
     }
     return t;
 }
@@ -232,8 +219,7 @@ sax_value_as_time(VALUE self) {
  *
  * *return* value as an boolean.
  */
-static VALUE
-sax_value_as_bool(VALUE self) {
+static VALUE sax_value_as_bool(VALUE self) {
     return (0 == strcasecmp("true", ((SaxDrive)DATA_PTR(self))->buf.str)) ? Qtrue : Qfalse;
 }
 
@@ -241,8 +227,7 @@ sax_value_as_bool(VALUE self) {
  *
  * *return* true if the value is empty.
  */
-static VALUE
-sax_value_empty(VALUE self) {
+static VALUE sax_value_empty(VALUE self) {
     return ('\0' == *((SaxDrive)DATA_PTR(self))->buf.str) ? Qtrue : Qfalse;
 }
 
@@ -251,15 +236,14 @@ sax_value_empty(VALUE self) {
  * Values in the SAX callbacks. They can be converted to various different
  * types. with the _as_x()_ methods.
  */
-void
-ox_sax_define() {
+void ox_sax_define() {
 #if 0
     ox = rb_define_module("Ox");
 #if RUBY_API_VERSION_CODE >= 30200
     sax_module = rb_define_class_under(ox, "Sax", rb_cObject);
 #endif
 #endif
-    VALUE	sax_module = rb_const_get_at(Ox, rb_intern("Sax"));
+    VALUE sax_module = rb_const_get_at(Ox, rb_intern("Sax"));
 
     ox_sax_value_class = rb_define_class_under(sax_module, "Value", rb_cObject);
 #if RUBY_API_VERSION_CODE >= 30200

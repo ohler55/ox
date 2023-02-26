@@ -34,7 +34,7 @@ typedef struct _slot {
     volatile uint32_t use_cnt;
     uint8_t           klen;
     char              key[CACHE_MAX_KEY];
-} * Slot;
+} *Slot;
 
 typedef struct _cache {
     volatile Slot  *slots;
@@ -52,7 +52,7 @@ typedef struct _cache {
 #endif
     uint8_t xrate;
     bool    mark;
-} * Cache;
+} *Cache;
 
 static uint64_t hash_calc(const uint8_t *key, size_t len) {
     const uint8_t *end     = key + len;

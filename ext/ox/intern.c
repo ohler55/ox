@@ -5,10 +5,9 @@
 
 #include <stdint.h>
 
-#include "ruby/version.h"
-
 #include "cache.h"
 #include "ox.h"
+#include "ruby/version.h"
 
 // These are statics but in an attempt to stop the cross linking or maybe
 // something in Ruby they all have been given an ox prefix.

@@ -4,41 +4,42 @@
  */
 
 #include <errno.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
+#include "buf.h"
+#include "err.h"
+#include "ox.h"
 #include "ruby.h"
 #include "ruby/encoding.h"
 #include "ruby/version.h"
-#include "ox.h"
-#include "buf.h"
-#include "err.h"
 
-#define MAX_DEPTH	128
+#define MAX_DEPTH 128
 
 typedef struct _element {
-    char	*name;
-    char	buf[64];
-    long	len;
-    bool	has_child;
-    bool	non_text_child;
+    char *name;
+    char  buf[64];
+    long  len;
+    bool  has_child;
+    bool  non_text_child;
 } *Element;
 
 typedef struct _builder {
-    struct _buf		buf;
-    int			indent;
-    char		encoding[64];
-    int			depth;
-    FILE		*file;
-    struct _element	stack[MAX_DEPTH];
-    long		line;
-    long		col;
-    long		pos;
+    struct _buf     buf;
+    int             indent;
+    char            encoding[64];
+    int             depth;
+    FILE           *file;
+    struct _element stack[MAX_DEPTH];
+    long            line;
+    long            col;
+    long            pos;
 } *Builder;
 
-static VALUE		builder_class = Qundef;
-static const char	indent_spaces[] = "\n                                                                                                                                "; // 128 spaces
+static VALUE      builder_class   = Qundef;
+static const char indent_spaces[] = "\n                                                                                "
+                                    "                                                ";  // 128 spaces
 
 // The : character is equivalent to 10. Used for replacement characters up to
 // 10 characters long such as '&#x10FFFF;'. From
@@ -57,7 +58,7 @@ static const char	xml_friendly_chars[257] = "\
 
 // From 2.3 of the XML 1.1 spec. All over 0x20 except <&", > also. Builder
 // uses double quotes for attributes.
-static const char	xml_attr_chars[257] = "\
+static const char xml_attr_chars[257] = "\
 :::::::::11::1::::::::::::::::::\
 11611151111111111111111111114141\
 11111111111111111111111111111111\
@@ -68,7 +69,7 @@ static const char	xml_attr_chars[257] = "\
 11111111111111111111111111111111";
 
 // From 3.1 of the XML 1.1 spec. All over 0x20 except <&, > also.
-static const char	xml_element_chars[257] = "\
+static const char xml_element_chars[257] = "\
 :::::::::11::1::::::::::::::::::\
 11111151111111111111111111114141\
 11111111111111111111111111111111\
@@ -78,152 +79,134 @@ static const char	xml_element_chars[257] = "\
 11111111111111111111111111111111\
 11111111111111111111111111111111";
 
-inline static size_t
-xml_str_len(const unsigned char *str, size_t len, const char *table) {
-    size_t	size = 0;
+inline static size_t xml_str_len(const unsigned char *str, size_t len, const char *table) {
+    size_t size = 0;
 
     for (; 0 < len; str++, len--) {
-	size += table[*str];
+        size += table[*str];
     }
     return size - len * (size_t)'0';
 }
 
-static void
-append_indent(Builder b) {
+static void append_indent(Builder b) {
     if (0 >= b->indent) {
-	return;
+        return;
     }
     if (b->buf.head < b->buf.tail) {
-	int	cnt = (b->indent * (b->depth + 1)) + 1;
+        int cnt = (b->indent * (b->depth + 1)) + 1;
 
-	if (sizeof(indent_spaces) <=  (size_t)cnt) {
-	    cnt = sizeof(indent_spaces) - 1;
-	}
-	buf_append_string(&b->buf, indent_spaces, cnt);
-	b->line++;
-	b->col = cnt - 1;
-	b->pos += cnt;
+        if (sizeof(indent_spaces) <= (size_t)cnt) {
+            cnt = sizeof(indent_spaces) - 1;
+        }
+        buf_append_string(&b->buf, indent_spaces, cnt);
+        b->line++;
+        b->col = cnt - 1;
+        b->pos += cnt;
     }
 }
 
-static void
-append_string(Builder b, const char *str, size_t size, const char *table, bool strip_invalid_chars) {
-    size_t	xsize = xml_str_len((const unsigned char*)str, size, table);
+static void append_string(Builder b, const char *str, size_t size, const char *table, bool strip_invalid_chars) {
+    size_t xsize = xml_str_len((const unsigned char *)str, size, table);
 
     if (size == xsize) {
-	const char	*s = str;
-	const char	*end = str + size;
+        const char *s   = str;
+        const char *end = str + size;
 
-	buf_append_string(&b->buf, str, size);
-	b->col += size;
+        buf_append_string(&b->buf, str, size);
+        b->col += size;
         s = strchr(s, '\n');
         while (NULL != s) {
             b->line++;
             b->col = end - s;
-            s = strchr(s + 1, '\n');
+            s      = strchr(s + 1, '\n');
         }
-	b->pos += size;
+        b->pos += size;
     } else {
-	char	buf[256];
-	char	*end = buf + sizeof(buf) - 1;
-	char	*bp = buf;
-	size_t	i = size;
-	int	fcnt;
+        char   buf[256];
+        char  *end = buf + sizeof(buf) - 1;
+        char  *bp  = buf;
+        size_t i   = size;
+        int    fcnt;
 
-	for (; '\0' != *str && 0 < i; i--, str++) {
-	    if ('1' == (fcnt = table[(unsigned char)*str])) {
-		if (end <= bp) {
-		    buf_append_string(&b->buf, buf, bp - buf);
-		    bp = buf;
-		}
-		if ('\n' == *str) {
-		    b->line++;
-		    b->col = 1;
-		} else {
-		    b->col++;
-		}
-		b->pos++;
-		*bp++ = *str;
-	    } else {
-		b->pos += fcnt - '0';
-		b->col += fcnt - '0';
-		if (buf < bp) {
-		    buf_append_string(&b->buf, buf, bp - buf);
-		    bp = buf;
-		}
-		switch (*str) {
-		case '"':
-		    buf_append_string(&b->buf, "&quot;", 6);
-		    break;
-		case '&':
-		    buf_append_string(&b->buf, "&amp;", 5);
-		    break;
-		case '\'':
-		    buf_append_string(&b->buf, "&apos;", 6);
-		    break;
-		case '<':
-		    buf_append_string(&b->buf, "&lt;", 4);
-		    break;
-		case '>':
-		    buf_append_string(&b->buf, "&gt;", 4);
-		    break;
-		default:
-		    // Must be one of the invalid characters.
-		    if (!strip_invalid_chars) {
-			rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *str);
-		    }
-		    break;
-		}
-	    }
-	}
-	if (buf < bp) {
-	    buf_append_string(&b->buf, buf, bp - buf);
-	    bp = buf;
-	}
+        for (; '\0' != *str && 0 < i; i--, str++) {
+            if ('1' == (fcnt = table[(unsigned char)*str])) {
+                if (end <= bp) {
+                    buf_append_string(&b->buf, buf, bp - buf);
+                    bp = buf;
+                }
+                if ('\n' == *str) {
+                    b->line++;
+                    b->col = 1;
+                } else {
+                    b->col++;
+                }
+                b->pos++;
+                *bp++ = *str;
+            } else {
+                b->pos += fcnt - '0';
+                b->col += fcnt - '0';
+                if (buf < bp) {
+                    buf_append_string(&b->buf, buf, bp - buf);
+                    bp = buf;
+                }
+                switch (*str) {
+                case '"': buf_append_string(&b->buf, "&quot;", 6); break;
+                case '&': buf_append_string(&b->buf, "&amp;", 5); break;
+                case '\'': buf_append_string(&b->buf, "&apos;", 6); break;
+                case '<': buf_append_string(&b->buf, "&lt;", 4); break;
+                case '>': buf_append_string(&b->buf, "&gt;", 4); break;
+                default:
+                    // Must be one of the invalid characters.
+                    if (!strip_invalid_chars) {
+                        rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *str);
+                    }
+                    break;
+                }
+            }
+        }
+        if (buf < bp) {
+            buf_append_string(&b->buf, buf, bp - buf);
+            bp = buf;
+        }
     }
 }
 
-static void
-append_sym_str(Builder b, VALUE v) {
-    const char	*s;
-    long	len;
+static void append_sym_str(Builder b, VALUE v) {
+    const char *s;
+    long        len;
 
     switch (rb_type(v)) {
     case T_STRING:
-	s = StringValuePtr(v);
-	len = RSTRING_LEN(v);
-	break;
+        s   = StringValuePtr(v);
+        len = RSTRING_LEN(v);
+        break;
     case T_SYMBOL:
-	s = rb_id2name(SYM2ID(v));
-	len = strlen(s);
-	break;
-    default:
-	rb_raise(ox_arg_error_class, "expected a Symbol or String");
-	break;
+        s   = rb_id2name(SYM2ID(v));
+        len = strlen(s);
+        break;
+    default: rb_raise(ox_arg_error_class, "expected a Symbol or String"); break;
     }
     append_string(b, s, len, xml_element_chars, false);
 }
 
-static void
-i_am_a_child(Builder b, bool is_text) {
+static void i_am_a_child(Builder b, bool is_text) {
     if (0 <= b->depth) {
-	Element	e = &b->stack[b->depth];
+        Element e = &b->stack[b->depth];
 
-	if (!e->has_child) {
-	    e->has_child = true;
-	    buf_append(&b->buf, '>');
-	    b->col++;
-	    b->pos++;
-	}
-	if (!is_text) {
-	    e->non_text_child = true;
-	}
+        if (!e->has_child) {
+            e->has_child = true;
+            buf_append(&b->buf, '>');
+            b->col++;
+            b->pos++;
+        }
+        if (!is_text) {
+            e->non_text_child = true;
+        }
     }
 }
 
-static int
-append_attr(VALUE key, VALUE value, VALUE bv) {
-    Builder	b = (Builder)bv;
+static int append_attr(VALUE key, VALUE value, VALUE bv) {
+    Builder b = (Builder)bv;
 
     buf_append(&b->buf, ' ');
     b->col++;
@@ -241,100 +224,95 @@ append_attr(VALUE key, VALUE value, VALUE bv) {
     return ST_CONTINUE;
 }
 
-static void
-init(Builder b, int fd, int indent, long initial_size) {
+static void init(Builder b, int fd, int indent, long initial_size) {
     buf_init(&b->buf, fd, initial_size);
-    b->indent = indent;
+    b->indent    = indent;
     *b->encoding = '\0';
-    b->depth = -1;
-    b->line = 1;
-    b->col = 1;
-    b->pos = 0;
+    b->depth     = -1;
+    b->line      = 1;
+    b->col       = 1;
+    b->pos       = 0;
 }
 
-static void
-builder_free(void *ptr) {
-    Builder	b;
-    Element	e;
-    int		d;
+static void builder_free(void *ptr) {
+    Builder b;
+    Element e;
+    int     d;
 
     if (0 == ptr) {
-	return;
+        return;
     }
     b = (Builder)ptr;
     buf_cleanup(&b->buf);
     for (e = b->stack, d = b->depth; 0 < d; d--, e++) {
-	if (e->name != e->buf) {
-	    free(e->name);
-	}
+        if (e->name != e->buf) {
+            free(e->name);
+        }
     }
     xfree(ptr);
 }
 
-static void
-pop(Builder b) {
-    Element	e;
+static void pop(Builder b) {
+    Element e;
 
     if (0 > b->depth) {
-	rb_raise(ox_arg_error_class, "closed too many elements");
+        rb_raise(ox_arg_error_class, "closed too many elements");
     }
     e = &b->stack[b->depth];
     b->depth--;
     if (e->has_child) {
-	if (e->non_text_child) {
-	    append_indent(b);
-	}
-	buf_append_string(&b->buf, "</", 2);
-	append_string(b, e->name, e->len, xml_element_chars, false);
-	buf_append(&b->buf, '>');
-	b->col += e->len + 3;
-	b->pos += e->len + 3;
-	if (e->buf != e->name) {
-	    free(e->name);
-	    e->name = 0;
-	}
+        if (e->non_text_child) {
+            append_indent(b);
+        }
+        buf_append_string(&b->buf, "</", 2);
+        append_string(b, e->name, e->len, xml_element_chars, false);
+        buf_append(&b->buf, '>');
+        b->col += e->len + 3;
+        b->pos += e->len + 3;
+        if (e->buf != e->name) {
+            free(e->name);
+            e->name = 0;
+        }
     } else {
-	buf_append_string(&b->buf, "/>", 2);
-	b->col += 2;
-	b->pos += 2;
+        buf_append_string(&b->buf, "/>", 2);
+        b->col += 2;
+        b->pos += 2;
     }
 }
 
-static void
-bclose(Builder b) {
+static void bclose(Builder b) {
     while (0 <= b->depth) {
-	pop(b);
+        pop(b);
     }
     if (0 <= b->indent) {
-	buf_append(&b->buf, '\n');
+        buf_append(&b->buf, '\n');
     }
     b->line++;
     b->col = 1;
     b->pos++;
     buf_finish(&b->buf);
     if (NULL != b->file) {
-	fclose(b->file);
+        fclose(b->file);
     }
 }
 
-static VALUE
-to_s(Builder b) {
-    volatile VALUE	rstr;
+static VALUE to_s(Builder b) {
+    volatile VALUE rstr;
 
     if (0 != b->buf.fd) {
-	rb_raise(ox_arg_error_class, "can not create a String with a stream or file builder.");
+        rb_raise(ox_arg_error_class, "can not create a String with a stream or file builder.");
     }
     if (0 <= b->indent && '\n' != *(b->buf.tail - 1)) {
-	buf_append(&b->buf, '\n');
-	b->line++;
-	b->col = 1;
-	b->pos++;
+        buf_append(&b->buf, '\n');
+        b->line++;
+        b->col = 1;
+        b->pos++;
     }
-    *b->buf.tail = '\0'; // for debugging
-    rstr = rb_str_new(b->buf.head, buf_len(&b->buf));
+    *b->buf.tail = '\0';  // for debugging
+    rstr         = rb_str_new(b->buf.head, buf_len(&b->buf));
 
     if ('\0' != *b->encoding) {
-	rb_enc_associate(rstr, rb_enc_find(b->encoding));
+        rb_enc_associate(rstr, rb_enc_find(b->encoding));
     }
     return rstr;
 }
@@ -349,49 +327,48 @@ to_s(Builder b) {
  *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
  */
-static VALUE
-builder_new(int argc, VALUE *argv, VALUE self) {
-    Builder	b = ALLOC(struct _builder);
-    int		indent = ox_default_options.indent;
-    long	buf_size = 0;
+static VALUE builder_new(int argc, VALUE *argv, VALUE self) {
+    Builder b        = ALLOC(struct _builder);
+    int     indent   = ox_default_options.indent;
+    long    buf_size = 0;
 
     if (1 == argc) {
-	volatile VALUE	v;
+        volatile VALUE v;
 
-	rb_check_type(*argv, T_HASH);
-	if (Qnil != (v = rb_hash_lookup(*argv, ox_indent_sym))) {
+        rb_check_type(*argv, T_HASH);
+        if (Qnil != (v = rb_hash_lookup(*argv, ox_indent_sym))) {
 #ifdef RUBY_INTEGER_UNIFICATION
-	    if (rb_cInteger != rb_obj_class(v)) {
+            if (rb_cInteger != rb_obj_class(v)) {
 #else
-	    if (rb_cFixnum != rb_obj_class(v)) {
+            if (rb_cFixnum != rb_obj_class(v)) {
 #endif
-		rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
-	    }
-	    indent = NUM2INT(v);
-	}
-	if (Qnil != (v = rb_hash_lookup(*argv, ox_size_sym))) {
+                rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
+            }
+            indent = NUM2INT(v);
+        }
+        if (Qnil != (v = rb_hash_lookup(*argv, ox_size_sym))) {
 #ifdef RUBY_INTEGER_UNIFICATION
-	    if (rb_cInteger != rb_obj_class(v)) {
+            if (rb_cInteger != rb_obj_class(v)) {
 #else
-	    if (rb_cFixnum != rb_obj_class(v)) {
+            if (rb_cFixnum != rb_obj_class(v)) {
 #endif
-		rb_raise(ox_parse_error_class, ":size must be a fixnum.\n");
-	    }
-	    buf_size = NUM2LONG(v);
-	}
+                rb_raise(ox_parse_error_class, ":size must be a fixnum.\n");
+            }
+            buf_size = NUM2LONG(v);
+        }
     }
     b->file = NULL;
     init(b, 0, indent, buf_size);
 
     if (rb_block_given_p()) {
-	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        volatile VALUE rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
 
-	rb_yield(rb);
-	bclose(b);
+        rb_yield(rb);
+        bclose(b);
 
-	return to_s(b);
+        return to_s(b);
     } else {
-	return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
     }
 }
 
@@ -404,56 +381,55 @@ builder_new(int argc, VALUE *argv, VALUE self) {
  *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
  */
-static VALUE
-builder_file(int argc, VALUE *argv, VALUE self) {
-    Builder	b = ALLOC(struct _builder);
-    int		indent = ox_default_options.indent;
-    long	buf_size = 0;
-    FILE	*f;
+static VALUE builder_file(int argc, VALUE *argv, VALUE self) {
+    Builder b        = ALLOC(struct _builder);
+    int     indent   = ox_default_options.indent;
+    long    buf_size = 0;
+    FILE   *f;
 
     if (1 > argc) {
-	rb_raise(ox_arg_error_class, "missing filename");
+        rb_raise(ox_arg_error_class, "missing filename");
     }
     Check_Type(*argv, T_STRING);
     if (NULL == (f = fopen(StringValuePtr(*argv), "w"))) {
-	xfree(b);
-	rb_raise(rb_eIOError, "%s\n", strerror(errno));
+        xfree(b);
+        rb_raise(rb_eIOError, "%s\n", strerror(errno));
     }
     if (2 == argc) {
-	volatile VALUE	v;
+        volatile VALUE v;
 
-	rb_check_type(argv[1], T_HASH);
-	if (Qnil != (v = rb_hash_lookup(argv[1], ox_indent_sym))) {
+        rb_check_type(argv[1], T_HASH);
+        if (Qnil != (v = rb_hash_lookup(argv[1], ox_indent_sym))) {
 #ifdef RUBY_INTEGER_UNIFICATION
-	    if (rb_cInteger != rb_obj_class(v)) {
+            if (rb_cInteger != rb_obj_class(v)) {
 #else
-	    if (rb_cFixnum != rb_obj_class(v)) {
+            if (rb_cFixnum != rb_obj_class(v)) {
 #endif
-		rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
-	    }
-	    indent = NUM2INT(v);
-	}
-	if (Qnil != (v = rb_hash_lookup(argv[1], ox_size_sym))) {
+                rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
+            }
+            indent = NUM2INT(v);
+        }
+        if (Qnil != (v = rb_hash_lookup(argv[1], ox_size_sym))) {
 #ifdef RUBY_INTEGER_UNIFICATION
-	    if (rb_cInteger != rb_obj_class(v)) {
+            if (rb_cInteger != rb_obj_class(v)) {
 #else
-	    if (rb_cFixnum != rb_obj_class(v)) {
+            if (rb_cFixnum != rb_obj_class(v)) {
 #endif
-		rb_raise(ox_parse_error_class, ":size must be a fixnum.\n");
-	    }
-	    buf_size = NUM2LONG(v);
-	}
+                rb_raise(ox_parse_error_class, ":size must be a fixnum.\n");
+            }
+            buf_size = NUM2LONG(v);
+        }
     }
     b->file = f;
     init(b, fileno(f), indent, buf_size);
 
     if (rb_block_given_p()) {
-	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
-	rb_yield(rb);
-	bclose(b);
-	return Qnil;
+        volatile VALUE rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        rb_yield(rb);
+        bclose(b);
+        return Qnil;
     } else {
-	return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
     }
 }
 
@@ -466,57 +442,55 @@ builder_file(int argc, VALUE *argv, VALUE self) {
  *   - +:indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  *   - +:size+ (Fixnum) the initial size of the string buffer
  */
-static VALUE
-builder_io(int argc, VALUE *argv, VALUE self) {
-    Builder		b = ALLOC(struct _builder);
-    int			indent = ox_default_options.indent;
-    long		buf_size = 0;
-    int			fd;
-    volatile VALUE	v;
+static VALUE builder_io(int argc, VALUE *argv, VALUE self) {
+    Builder        b        = ALLOC(struct _builder);
+    int            indent   = ox_default_options.indent;
+    long           buf_size = 0;
+    int            fd;
+    volatile VALUE v;
 
     if (1 > argc) {
-	rb_raise(ox_arg_error_class, "missing IO object");
+        rb_raise(ox_arg_error_class, "missing IO object");
     }
-    if (!rb_respond_to(*argv, ox_fileno_id) ||
-	Qnil == (v = rb_funcall(*argv, ox_fileno_id, 0)) ||
-	0 == (fd = FIX2INT(v))) {
-	rb_raise(rb_eIOError, "expected an IO that has a fileno.");
+    if (!rb_respond_to(*argv, ox_fileno_id) || Qnil == (v = rb_funcall(*argv, ox_fileno_id, 0)) ||
+        0 == (fd = FIX2INT(v))) {
+        rb_raise(rb_eIOError, "expected an IO that has a fileno.");
     }
     if (2 == argc) {
-	volatile VALUE	v;
+        volatile VALUE v;
 
-	rb_check_type(argv[1], T_HASH);
-	if (Qnil != (v = rb_hash_lookup(argv[1], ox_indent_sym))) {
+        rb_check_type(argv[1], T_HASH);
+        if (Qnil != (v = rb_hash_lookup(argv[1], ox_indent_sym))) {
 #ifdef RUBY_INTEGER_UNIFICATION
-	    if (rb_cInteger != rb_obj_class(v)) {
+            if (rb_cInteger != rb_obj_class(v)) {
 #else
-	    if (rb_cFixnum != rb_obj_class(v)) {
+            if (rb_cFixnum != rb_obj_class(v)) {
 #endif
-		rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
-	    }
-	    indent = NUM2INT(v);
-	}
-	if (Qnil != (v = rb_hash_lookup(argv[1], ox_size_sym))) {
+                rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
+            }
+            indent = NUM2INT(v);
+        }
+        if (Qnil != (v = rb_hash_lookup(argv[1], ox_size_sym))) {
 #ifdef RUBY_INTEGER_UNIFICATION
-	    if (rb_cInteger != rb_obj_class(v)) {
+            if (rb_cInteger != rb_obj_class(v)) {
 #else
-	    if (rb_cFixnum != rb_obj_class(v)) {
+            if (rb_cFixnum != rb_obj_class(v)) {
 #endif
-		rb_raise(ox_parse_error_class, ":size must be a fixnum.\n");
-	    }
-	    buf_size = NUM2LONG(v);
-	}
+                rb_raise(ox_parse_error_class, ":size must be a fixnum.\n");
+            }
+            buf_size = NUM2LONG(v);
+        }
     }
     b->file = NULL;
     init(b, fd, indent, buf_size);
 
     if (rb_block_given_p()) {
-	volatile VALUE	rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
-	rb_yield(rb);
-	bclose(b);
-	return Qnil;
+        volatile VALUE rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        rb_yield(rb);
+        bclose(b);
+        return Qnil;
     } else {
-	return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
     }
 }
 
@@ -527,65 +501,64 @@ builder_io(int argc, VALUE *argv, VALUE self) {
  * - +decl+ - (String) 'xml' expected
  * - +options+ - (Hash) version or encoding
  */
-static VALUE
-builder_instruct(int argc, VALUE *argv, VALUE self) {
-    Builder	b = (Builder)DATA_PTR(self);
+static VALUE builder_instruct(int argc, VALUE *argv, VALUE self) {
+    Builder b = (Builder)DATA_PTR(self);
 
     i_am_a_child(b, false);
     append_indent(b);
     if (0 == argc) {
-	buf_append_string(&b->buf, "<?xml?>", 7);
-	b->col += 7;
-	b->pos += 7;
+        buf_append_string(&b->buf, "<?xml?>", 7);
+        b->col += 7;
+        b->pos += 7;
     } else {
-	volatile VALUE	v;
+        volatile VALUE v;
 
-	buf_append_string(&b->buf, "<?", 2);
-	b->col += 2;
-	b->pos += 2;
-	append_sym_str(b, *argv);
-	if (1 < argc && rb_cHash == rb_obj_class(argv[1])) {
-	    int	len;
+        buf_append_string(&b->buf, "<?", 2);
+        b->col += 2;
+        b->pos += 2;
+        append_sym_str(b, *argv);
+        if (1 < argc && rb_cHash == rb_obj_class(argv[1])) {
+            int len;
 
-	    if (Qnil != (v = rb_hash_lookup(argv[1], ox_version_sym))) {
-		if (rb_cString != rb_obj_class(v)) {
-		    rb_raise(ox_parse_error_class, ":version must be a Symbol.\n");
-		}
-		len = (int)RSTRING_LEN(v);
-		buf_append_string(&b->buf, " version=\"", 10);
-		buf_append_string(&b->buf, StringValuePtr(v), len);
-		buf_append(&b->buf, '"');
-		b->col += len + 11;
-		b->pos += len + 11;
-	    }
-	    if (Qnil != (v = rb_hash_lookup(argv[1], ox_encoding_sym))) {
-		if (rb_cString != rb_obj_class(v)) {
-		    rb_raise(ox_parse_error_class, ":encoding must be a Symbol.\n");
-		}
-		len = (int)RSTRING_LEN(v);
-		buf_append_string(&b->buf, " encoding=\"", 11);
-		buf_append_string(&b->buf, StringValuePtr(v), len);
-		buf_append(&b->buf, '"');
-		b->col += len + 12;
-		b->pos += len + 12;
-		strncpy(b->encoding, StringValuePtr(v), sizeof(b->encoding));
-		b->encoding[sizeof(b->encoding) - 1] = '\0';
-	    }
-	    if (Qnil != (v = rb_hash_lookup(argv[1], ox_standalone_sym))) {
-		if (rb_cString != rb_obj_class(v)) {
-		    rb_raise(ox_parse_error_class, ":standalone must be a Symbol.\n");
-		}
-		len = (int)RSTRING_LEN(v);
-		buf_append_string(&b->buf, " standalone=\"", 13);
-		buf_append_string(&b->buf, StringValuePtr(v), len);
-		buf_append(&b->buf, '"');
-		b->col += len + 14;
-		b->pos += len + 14;
-	    }
-	}
-	buf_append_string(&b->buf, "?>", 2);
-	b->col += 2;
-	b->pos += 2;
+            if (Qnil != (v = rb_hash_lookup(argv[1], ox_version_sym))) {
+                if (rb_cString != rb_obj_class(v)) {
+                    rb_raise(ox_parse_error_class, ":version must be a Symbol.\n");
+                }
+                len = (int)RSTRING_LEN(v);
+                buf_append_string(&b->buf, " version=\"", 10);
+                buf_append_string(&b->buf, StringValuePtr(v), len);
+                buf_append(&b->buf, '"');
+                b->col += len + 11;
+                b->pos += len + 11;
+            }
+            if (Qnil != (v = rb_hash_lookup(argv[1], ox_encoding_sym))) {
+                if (rb_cString != rb_obj_class(v)) {
+                    rb_raise(ox_parse_error_class, ":encoding must be a Symbol.\n");
+                }
+                len = (int)RSTRING_LEN(v);
+                buf_append_string(&b->buf, " encoding=\"", 11);
+                buf_append_string(&b->buf, StringValuePtr(v), len);
+                buf_append(&b->buf, '"');
+                b->col += len + 12;
+                b->pos += len + 12;
+                strncpy(b->encoding, StringValuePtr(v), sizeof(b->encoding));
+                b->encoding[sizeof(b->encoding) - 1] = '\0';
+            }
+            if (Qnil != (v = rb_hash_lookup(argv[1], ox_standalone_sym))) {
+                if (rb_cString != rb_obj_class(v)) {
+                    rb_raise(ox_parse_error_class, ":standalone must be a Symbol.\n");
+                }
+                len = (int)RSTRING_LEN(v);
+                buf_append_string(&b->buf, " standalone=\"", 13);
+                buf_append_string(&b->buf, StringValuePtr(v), len);
+                buf_append(&b->buf, '"');
+                b->col += len + 14;
+                b->pos += len + 14;
+            }
+        }
+        buf_append_string(&b->buf, "?>", 2);
+        b->col += 2;
+        b->pos += 2;
     }
     return Qnil;
 }
@@ -598,45 +571,42 @@ builder_instruct(int argc, VALUE *argv, VALUE self) {
  * - +name+ - (String) name of the element
  * - +attributes+ - (Hash) of the element
  */
-static VALUE
-builder_element(int argc, VALUE *argv, VALUE self) {
-    Builder		b = (Builder)DATA_PTR(self);
-    Element		e;
-    const char		*name;
-    long		len;
+static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
+    Builder     b = (Builder)DATA_PTR(self);
+    Element     e;
+    const char *name;
+    long        len;
 
     if (1 > argc) {
-	rb_raise(ox_arg_error_class, "missing element name");
+        rb_raise(ox_arg_error_class, "missing element name");
     }
     i_am_a_child(b, false);
     append_indent(b);
     b->depth++;
     if (MAX_DEPTH <= b->depth) {
-	rb_raise(ox_arg_error_class, "XML too deeply nested");
+        rb_raise(ox_arg_error_class, "XML too deeply nested");
     }
     switch (rb_type(*argv)) {
     case T_STRING:
-	name = StringValuePtr(*argv);
-	len = RSTRING_LEN(*argv);
-	break;
+        name = StringValuePtr(*argv);
+        len  = RSTRING_LEN(*argv);
+        break;
     case T_SYMBOL:
-	name = rb_id2name(SYM2ID(*argv));
-	len = strlen(name);
-	break;
-    default:
-	rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name");
-	break;
+        name = rb_id2name(SYM2ID(*argv));
+        len  = strlen(name);
+        break;
+    default: rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name"); break;
     }
     e = &b->stack[b->depth];
     if (sizeof(e->buf) <= (size_t)len) {
-	e->name = strdup(name);
-	*e->buf = '\0';
+        e->name = strdup(name);
+        *e->buf = '\0';
     } else {
-	strcpy(e->buf, name);
-	e->name = e->buf;
+        strcpy(e->buf, name);
+        e->name = e->buf;
     }
-    e->len = len;
-    e->has_child = false;
+    e->len            = len;
+    e->has_child      = false;
     e->non_text_child = false;
 
     buf_append(&b->buf, '<');
@@ -644,12 +614,12 @@ builder_element(int argc, VALUE *argv, VALUE self) {
     b->pos++;
     append_string(b, e->name, len, xml_element_chars, false);
     if (1 < argc && T_HASH == rb_type(argv[1])) {
-	rb_hash_foreach(argv[1], append_attr, (VALUE)b);
+        rb_hash_foreach(argv[1], append_attr, (VALUE)b);
     }
     // Do not close with > or /> yet. That is done with i_am_a_child() or pop().
     if (rb_block_given_p()) {
-	rb_yield(self);
-	pop(b);
+        rb_yield(self);
+        pop(b);
     }
     return Qnil;
 }
@@ -661,39 +631,37 @@ builder_element(int argc, VALUE *argv, VALUE self) {
  * - +name+ - (String) name of the element
  * - +attributes+ - (Hash) of the element
  */
-static VALUE
-builder_void_element(int argc, VALUE *argv, VALUE self) {
-    Builder	b = (Builder)DATA_PTR(self);
-    const char	*name;
-    long	len;
+static VALUE builder_void_element(int argc, VALUE *argv, VALUE self) {
+    Builder     b = (Builder)DATA_PTR(self);
+    const char *name;
+    long        len;
 
     if (1 > argc) {
-	rb_raise(ox_arg_error_class, "missing element name");
+        rb_raise(ox_arg_error_class, "missing element name");
     }
     i_am_a_child(b, false);
     append_indent(b);
     switch (rb_type(*argv)) {
     case T_STRING:
-	name = StringValuePtr(*argv);
-	len = RSTRING_LEN(*argv);
-	break;
+        name = StringValuePtr(*argv);
+        len  = RSTRING_LEN(*argv);
+        break;
     case T_SYMBOL:
-	name = rb_id2name(SYM2ID(*argv));
-	len = strlen(name);
-	break;
-    default:
-	rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name");
-	break;
+        name = rb_id2name(SYM2ID(*argv));
+        len  = strlen(name);
+        break;
+    default: rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name"); break;
     }
     buf_append(&b->buf, '<');
     b->col++;
     b->pos++;
     append_string(b, name, len, xml_element_chars, false);
     if (1 < argc && T_HASH == rb_type(argv[1])) {
-	rb_hash_foreach(argv[1], append_attr, (VALUE)b);
+        rb_hash_foreach(argv[1], append_attr, (VALUE)b);
     }
     buf_append_string(&b->buf, ">", 1);
-    b->col++;;
+    b->col++;
+    ;
     b->pos++;
 
     return Qnil;
@@ -704,9 +672,8 @@ builder_void_element(int argc, VALUE *argv, VALUE self) {
  * Adds a comment element to the XML string being formed.
  * - +text+ - (String) contents of the comment
  */
-static VALUE
-builder_comment(VALUE self, VALUE text) {
-    Builder	b = (Builder)DATA_PTR(self);
+static VALUE builder_comment(VALUE self, VALUE text) {
+    Builder b = (Builder)DATA_PTR(self);
 
     rb_check_type(text, T_STRING);
     i_am_a_child(b, false);
@@ -727,9 +694,8 @@ builder_comment(VALUE self, VALUE text) {
  * Adds a DOCTYPE element to the XML string being formed.
  * - +text+ - (String) contents of the doctype
  */
-static VALUE
-builder_doctype(VALUE self, VALUE text) {
-    Builder	b = (Builder)DATA_PTR(self);
+static VALUE builder_doctype(VALUE self, VALUE text) {
+    Builder b = (Builder)DATA_PTR(self);
 
     rb_check_type(text, T_STRING);
     i_am_a_child(b, false);
@@ -751,24 +717,23 @@ builder_doctype(VALUE self, VALUE text) {
  * - +text+ - (String) contents of the text field
  * - +strip_invalid_chars+ - [true|false] strips any characters invalid for XML, defaults to false
  */
-static VALUE
-builder_text(int argc, VALUE *argv, VALUE self) {
-    Builder		b = (Builder)DATA_PTR(self);
-    volatile VALUE	v;
-    volatile VALUE	strip_invalid_chars;
+static VALUE builder_text(int argc, VALUE *argv, VALUE self) {
+    Builder        b = (Builder)DATA_PTR(self);
+    volatile VALUE v;
+    volatile VALUE strip_invalid_chars;
 
     if ((0 == argc) || (argc > 2)) {
-	rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1..2)", argc);
+        rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1..2)", argc);
     }
     v = argv[0];
     if (2 == argc) {
-	strip_invalid_chars = argv[1];
+        strip_invalid_chars = argv[1];
     } else {
-	strip_invalid_chars = Qfalse;
+        strip_invalid_chars = Qfalse;
     }
 
     if (T_STRING != rb_type(v)) {
-	v = rb_funcall(v, ox_to_s_id, 0);
+        v = rb_funcall(v, ox_to_s_id, 0);
     }
     i_am_a_child(b, true);
     append_string(b, StringValuePtr(v), RSTRING_LEN(v), xml_element_chars, RTEST(strip_invalid_chars));
@@ -781,21 +746,20 @@ builder_text(int argc, VALUE *argv, VALUE self) {
  * Adds a CDATA element to the XML string being formed.
  * - +data+ - (String) contents of the CDATA element
  */
-static VALUE
-builder_cdata(VALUE self, VALUE data) {
-    Builder		b = (Builder)DATA_PTR(self);
-    volatile VALUE	v = data;
-    const char		*str;
-    const char		*s;
-    const char		*end;
-    int			len;
+static VALUE builder_cdata(VALUE self, VALUE data) {
+    Builder        b = (Builder)DATA_PTR(self);
+    volatile VALUE v = data;
+    const char    *str;
+    const char    *s;
+    const char    *end;
+    int            len;
 
     if (T_STRING != rb_type(v)) {
-	v = rb_funcall(v, ox_to_s_id, 0);
+        v = rb_funcall(v, ox_to_s_id, 0);
     }
     str = StringValuePtr(v);
     len = (int)RSTRING_LEN(v);
-    s = str;
+    s   = str;
     end = str + len;
     i_am_a_child(b, false);
     append_indent(b);
@@ -808,7 +772,7 @@ builder_cdata(VALUE self, VALUE data) {
     while (NULL != s) {
         b->line++;
         b->col = end - s;
-        s = strchr(s + 1, '\n');
+        s      = strchr(s + 1, '\n');
     }
     b->pos += len;
     buf_append_string(&b->buf, "]]>", 3);
@@ -824,21 +788,20 @@ builder_cdata(VALUE self, VALUE data) {
  *
  * - +text+ - (String) contents to be added
  */
-static VALUE
-builder_raw(VALUE self, VALUE text) {
-    Builder		b = (Builder)DATA_PTR(self);
-    volatile VALUE	v = text;
-    const char		*str;
-    const char		*s;
-    const char		*end;
-    int			len;
+static VALUE builder_raw(VALUE self, VALUE text) {
+    Builder        b = (Builder)DATA_PTR(self);
+    volatile VALUE v = text;
+    const char    *str;
+    const char    *s;
+    const char    *end;
+    int            len;
 
     if (T_STRING != rb_type(v)) {
-	v = rb_funcall(v, ox_to_s_id, 0);
+        v = rb_funcall(v, ox_to_s_id, 0);
     }
     str = StringValuePtr(v);
     len = (int)RSTRING_LEN(v);
-    s = str;
+    s   = str;
     end = str + len;
     i_am_a_child(b, true);
     buf_append_string(&b->buf, str, len);
@@ -847,7 +810,7 @@ builder_raw(VALUE self, VALUE text) {
     while (NULL != s) {
         b->line++;
         b->col = end - s;
-        s = strchr(s + 1, '\n');
+        s      = strchr(s + 1, '\n');
     }
     b->pos += len;
 
@@ -858,8 +821,7 @@ builder_raw(VALUE self, VALUE text) {
  *
  * Returns the JSON document string in what ever state the construction is at.
  */
-static VALUE
-builder_to_s(VALUE self) {
+static VALUE builder_to_s(VALUE self) {
     return to_s((Builder)DATA_PTR(self));
 }
 
@@ -867,8 +829,7 @@ builder_to_s(VALUE self) {
  *
  * Returns the current line in the output. The first line is line 1.
  */
-static VALUE
-builder_line(VALUE self) {
+static VALUE builder_line(VALUE self) {
     return LONG2NUM(((Builder)DATA_PTR(self))->line);
 }
 
@@ -877,8 +838,7 @@ builder_line(VALUE self) {
  * Returns the current column in the output. The first character in a line is at
  * column 1.
  */
-static VALUE
-builder_column(VALUE self) {
+static VALUE builder_column(VALUE self) {
     return LONG2NUM(((Builder)DATA_PTR(self))->col);
 }
 
@@ -886,8 +846,7 @@ builder_column(VALUE self) {
  *
  * Returns the indentation level
  */
-static VALUE
-builder_get_indent(VALUE self) {
+static VALUE builder_get_indent(VALUE self) {
     return INT2NUM(((Builder)DATA_PTR(self))->indent);
 }
 
@@ -897,14 +856,13 @@ builder_get_indent(VALUE self) {
  *
  * - +indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  */
-static VALUE
-builder_set_indent(VALUE self, VALUE indent) {
+static VALUE builder_set_indent(VALUE self, VALUE indent) {
 #ifdef RUBY_INTEGER_UNIFICATION
     if (rb_cInteger != rb_obj_class(indent)) {
 #else
     if (rb_cFixnum != rb_obj_class(indent)) {
 #endif
-      rb_raise(ox_parse_error_class, "indent must be a fixnum.\n");
+        rb_raise(ox_parse_error_class, "indent must be a fixnum.\n");
     }
 
     ((Builder)DATA_PTR(self))->indent = NUM2INT(indent);
@@ -915,8 +873,7 @@ builder_set_indent(VALUE self, VALUE indent) {
  *
  * Returns the number of bytes written.
  */
-static VALUE
-builder_pos(VALUE self) {
+static VALUE builder_pos(VALUE self) {
     return LONG2NUM(((Builder)DATA_PTR(self))->pos);
 }
 
@@ -934,8 +891,7 @@ static VALUE builder_pop(VALUE self) {
  *
  * Closes the all elements and the document.
  */
-static VALUE
-builder_close(VALUE self) {
+static VALUE builder_close(VALUE self) {
     bclose((Builder)DATA_PTR(self));
 
     return Qnil;
@@ -946,8 +902,7 @@ builder_close(VALUE self) {
  *
  * An XML builder.
  */
-void
-ox_init_builder(VALUE ox) {
+void ox_init_builder(VALUE ox) {
 #if 0
     // Just for rdoc.
     ox = rb_define_module("Ox");

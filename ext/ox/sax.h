@@ -20,7 +20,7 @@ typedef struct _saxOptions {
     SkipMode skip;
     char     strip_ns[64];
     Hints    hints;
-} * SaxOptions;
+} *SaxOptions;
 
 typedef struct _saxDrive {
     struct _buf        buf;
@@ -52,7 +52,7 @@ typedef struct _saxDrive {
     bool         has_start_element;
     bool         has_end_element;
 
-} * SaxDrive;
+} *SaxDrive;
 
 extern void ox_collapse_return(char *str);
 extern void ox_sax_parse(VALUE handler, VALUE io, SaxOptions options);

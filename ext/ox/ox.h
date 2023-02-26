@@ -94,14 +94,14 @@ typedef struct _parseCallbacks {
     void (*add_element)(PInfo pi, const char *ename, Attr attrs, int hasChildren);
     void (*end_element)(PInfo pi, const char *ename);
     void (*finish)(PInfo pi);
-} * ParseCallbacks;
+} *ParseCallbacks;
 
 typedef struct _circArray {
     VALUE         obj_array[1024];
     VALUE        *objs;
     unsigned long size; /* allocated size or initial array size */
     unsigned long cnt;
-} * CircArray;
+} *CircArray;
 
 typedef struct _options {
     char           encoding[64];     // encoding, stored in the option to avoid GC invalidation in default values
@@ -128,8 +128,8 @@ typedef struct _options {
     struct _hints *html_hints;       // html hints
     VALUE          attr_key_mod;
     VALUE          element_key_mod;
-    rb_encoding *rb_enc;
-} * Options;
+    rb_encoding   *rb_enc;
+} *Options;
 
 // parse information structure
 struct _pInfo {

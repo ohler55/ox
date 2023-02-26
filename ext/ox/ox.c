@@ -23,7 +23,7 @@
 typedef struct _yesNoOpt {
     VALUE sym;
     char *attr;
-} * YesNoOpt;
+} *YesNoOpt;
 
 void Init_ox();
 
@@ -107,7 +107,7 @@ VALUE ox_struct_class;
 VALUE ox_syntax_error_class;
 VALUE ox_time_class;
 
-SlotCache ox_class_cache  = 0;
+SlotCache ox_class_cache = 0;
 
 static VALUE abort_sym;
 static VALUE active_sym;

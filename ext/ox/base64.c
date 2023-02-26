@@ -3,15 +3,15 @@
  * All rights reserved.
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-
 #include "base64.h"
 
-static char	digits[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+#include <stdio.h>
+#include <stdlib.h>
+
+static char digits[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /* invalid or terminating characters are set to 'X' or \x58 */
-static uchar	s_digits[256] = "\
+static uchar s_digits[256] = "\
 \x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\
 \x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\
 \x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x3E\x58\x58\x58\x3F\
@@ -29,46 +29,45 @@ static uchar	s_digits[256] = "\
 \x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\
 \x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58\x58";
 
-void
-to_base64(const uchar *src, int len, char *b64) {
-    const uchar	*end3;
-    int		len3 = len % 3;
-    uchar	b1, b2, b3;
-    
+void to_base64(const uchar *src, int len, char *b64) {
+    const uchar *end3;
+    int          len3 = len % 3;
+    uchar        b1, b2, b3;
+
     end3 = src + (len - len3);
     while (src < end3) {
-	b1 = *src++;
-	b2 = *src++;
-	b3 = *src++;
-	*b64++ = digits[(uchar)(b1 >> 2)];
-	*b64++ = digits[(uchar)(((b1 & 0x03) << 4) | (b2 >> 4))];
-	*b64++ = digits[(uchar)(((b2 & 0x0F) << 2) | (b3 >> 6))];
-	*b64++ = digits[(uchar)(b3 & 0x3F)];
+        b1     = *src++;
+        b2     = *src++;
+        b3     = *src++;
+        *b64++ = digits[(uchar)(b1 >> 2)];
+        *b64++ = digits[(uchar)(((b1 & 0x03) << 4) | (b2 >> 4))];
+        *b64++ = digits[(uchar)(((b2 & 0x0F) << 2) | (b3 >> 6))];
+        *b64++ = digits[(uchar)(b3 & 0x3F)];
     }
     if (1 == len3) {
-	b1 = *src++;
-	*b64++ = digits[b1 >> 2];
-	*b64++ = digits[(b1 & 0x03) << 4];
-	*b64++ = '=';
-	*b64++ = '=';
+        b1     = *src++;
+        *b64++ = digits[b1 >> 2];
+        *b64++ = digits[(b1 & 0x03) << 4];
+        *b64++ = '=';
+        *b64++ = '=';
     } else if (2 == len3) {
-	b1 = *src++;
-	b2 = *src++;
-	*b64++ = digits[b1 >> 2];
-	*b64++ = digits[((b1 & 0x03) << 4) | (b2 >> 4)];
-	*b64++ = digits[(b2 & 0x0F) << 2];
-	*b64++ = '=';
+        b1     = *src++;
+        b2     = *src++;
+        *b64++ = digits[b1 >> 2];
+        *b64++ = digits[((b1 & 0x03) << 4) | (b2 >> 4)];
+        *b64++ = digits[(b2 & 0x0F) << 2];
+        *b64++ = '=';
     }
     *b64 = '\0';
 }
 
-unsigned long
-b64_orig_size(const char *text) {
-    const char          *start = text;
-    unsigned long        size = 0;
+unsigned long b64_orig_size(const char *text) {
+    const char   *start = text;
+    unsigned long size  = 0;
 
     if ('\0' != *text) {
-        for (; 0 != *text; text++) { }
+        for (; 0 != *text; text++) {
+        }
         size = (text - start) * 3 / 4;
         text--;
         if ('=' == *text) {
@@ -82,17 +81,24 @@ b64_orig_size(const char *text) {
     return size;
 }
 
-void
-from_base64(const char *b64, uchar *str) {
-    uchar	b0, b1, b2, b3;
-    
+void from_base64(const char *b64, uchar *str) {
+    uchar b0, b1, b2, b3;
+
     while (1) {
-        if ('X' == (b0 = s_digits[(uchar)*b64++])) { break; }
-        if ('X' == (b1 = s_digits[(uchar)*b64++])) { break; }
+        if ('X' == (b0 = s_digits[(uchar)*b64++])) {
+            break;
+        }
+        if ('X' == (b1 = s_digits[(uchar)*b64++])) {
+            break;
+        }
         *str++ = (b0 << 2) | ((b1 >> 4) & 0x03);
-        if ('X' == (b2 = s_digits[(uchar)*b64++])) { break; }
+        if ('X' == (b2 = s_digits[(uchar)*b64++])) {
+            break;
+        }
         *str++ = (b1 << 4) | ((b2 >> 2) & 0x0F);
-        if ('X' == (b3 = s_digits[(uchar)*b64++])) { break; }
+        if ('X' == (b3 = s_digits[(uchar)*b64++])) {
+            break;
+        }
         *str++ = (b2 << 6) | b3;
     }
     *str = '\0';

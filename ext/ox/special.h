@@ -8,7 +8,7 @@
 
 #include <stdint.h>
 
-extern char*	ox_ucs_to_utf8_chars(char *text, uint64_t u);
-extern char*	ox_entity_lookup(char *text, const char *key);
+extern char *ox_ucs_to_utf8_chars(char *text, uint64_t u);
+extern char *ox_entity_lookup(char *text, const char *key);
 
 #endif /* OX_SPECIAL_H */

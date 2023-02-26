@@ -763,7 +763,7 @@ CB:
 static char read_element_start(SaxDrive dr) {
     const char    *ename = 0;
     size_t         nlen;
-    volatile VALUE name  = Qnil;
+    volatile VALUE name = Qnil;
     char           c;
     int            closed;
     long           pos       = (long)(dr->buf.pos);
@@ -1465,18 +1465,18 @@ int ox_sax_collapse_special(SaxDrive dr, char *str, long pos, long line, long co
             break;
         }
         case '\r':
-	    s++;
+            s++;
             if ('\n' == *s) {
-		continue;
-	    }
-	    line++;
-	    col = 1;
+                continue;
+            }
+            line++;
+            col  = 1;
             *b++ = '\n';
-	    break;
-	case '\n':
-	    line++;
-	    col = 0;
-	    // fall through
+            break;
+        case '\n':
+            line++;
+            col = 0;
+            // fall through
         default:
             col++;
             *b++ = *s++;
