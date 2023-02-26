@@ -5,3 +5,23 @@ AllCops:
   NewCops: enable
   Exclude:
     - 'examples/sax_ractor.rb' # uses newer syntax than 2.5 supports
+
+Naming/MethodName:
+  EnforcedStyle: snake_case
+  Exclude:
+    - 'test/tests.rb' # test_IO doesn't match
+
+Style/FormatStringToken:
+  EnforcedStyle: unannotated
+
+Style/QuotedSymbols:
+  EnforcedStyle: double_quotes
+
+Style/RaiseArgs:
+  EnforcedStyle: compact
+
+Style/SymbolArray:
+  EnforcedStyle: brackets
+
+Style/WordArray:
+  EnforcedStyle: brackets
