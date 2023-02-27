@@ -38,6 +38,7 @@ module Weather
     def characters(text)
       text.strip!
       return if text.empty?
+
       if 1 < @row
         case @cell
         when 2

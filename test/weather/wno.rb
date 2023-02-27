@@ -26,6 +26,7 @@ module Weather
       first = true
       table.elements.each do |row|
         next unless 'Row' == row.name
+
         if first
           first = false
           next

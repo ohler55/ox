@@ -156,6 +156,7 @@ class ErrorsOnParentNormalElementTest < SaxSmartTest
 
   def parents_of(el)
     return [] if el == "html"
+
     NORMALELEMENTS[el]["parents"] || ["body"]
   end
 

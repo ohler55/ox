@@ -40,6 +40,7 @@ module Weather
     def on_characters(chars)
       chars.strip!
       return if chars.empty?
+
       if 1 < @row
         case @cell
         when 2

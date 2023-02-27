@@ -14,25 +14,6 @@ Gemspec/RequireMFA:
   Exclude:
     - 'ox.gemspec'
 
-# Offense count: 39
-# This cop supports safe autocorrection (--autocorrect).
-Layout/EmptyLineAfterGuardClause:
-  Exclude:
-    - 'lib/ox/bag.rb'
-    - 'lib/ox/element.rb'
-    - 'lib/ox/hasattrs.rb'
-    - 'lib/ox/instruct.rb'
-    - 'lib/ox/node.rb'
-    - 'test/files.rb'
-    - 'test/parse_cmp.rb'
-    - 'test/perf.rb'
-    - 'test/sax/smart_test.rb'
-    - 'test/tests.rb'
-    - 'test/weather/wlx.rb'
-    - 'test/weather/wlxsax.rb'
-    - 'test/weather/wno.rb'
-    - 'test/weather/wnosax.rb'
-
 # Offense count: 9
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EmptyLineBetweenMethodDefs, EmptyLineBetweenClassDefs, EmptyLineBetweenModuleDefs, AllowAdjacentOneLineDefs, NumberOfEmptyLines.

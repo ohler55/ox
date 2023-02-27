@@ -1934,8 +1934,10 @@ class Bag
 
   def eql?(other)
     return false if (other.nil? or self.class != other.class)
+
     ova = other.instance_variables
     return false if ova.size != instance_variables.size
+
     instance_variables.each do |vid|
       return false if instance_variable_get(vid) != other.instance_variable_get(vid)
     end
