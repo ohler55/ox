@@ -13,7 +13,6 @@ if __FILE__ == $0
 end
 
 require 'optparse'
-require 'pp'
 require 'ox'
 
 it = 5000
