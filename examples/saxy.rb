@@ -17,7 +17,7 @@ require 'ox'
 # includes the private version of all the methods that can be made publis.
 class Saxy
   def initialize
-    #super
+    # super
     @names = {}
   end
 

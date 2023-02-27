@@ -6,7 +6,7 @@ module Weather
     def self.parse(filename, as_time)
       highs = {}
       doc = Nokogiri::XML::Document.parse(File.open(filename))
-      #table = doc.xpath('/Workbook/Worksheet/Table') # fails to return any nodes
+      # table = doc.xpath('/Workbook/Worksheet/Table') # fails to return any nodes
       ws = nil
       table = nil
       doc.root.elements.each do |e|
@@ -37,7 +37,7 @@ module Weather
           highs[t] = high
         end
       end
-      #puts highs
+      # puts highs
       highs
     end
   end # WNo

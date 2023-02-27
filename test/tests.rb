@@ -22,53 +22,53 @@ $ruby = 'ree' if 'ruby' == $ruby && RUBY_DESCRIPTION.include?('Ruby Enterprise E
 $indent = 2
 
 $ox_object_options = {
-  :encoding=>nil,
-  :margin=>'',
-  :indent=>2,
-  :trace=>0,
-  :with_dtd=>false,
-  :with_xml=>false,
-  :with_instructions=>false,
-  :circular=>false,
-  :xsd_date=>false,
-  :mode=>:object,
-  :symbolize_keys=>true,
-  :element_key_mod=>nil,
-  :attr_key_mod=>nil,
-  :skip=>:skip_white,
-  :smart=>false,
-  :convert_special=>true,
-  :effort=>:strict,
-  :no_empty=>false,
-  :with_cdata=>false,
-  :invalid_replace=>'',
-  :strip_namespace=>false,
-  :overlay=>nil,
+  :encoding => nil,
+  :margin => '',
+  :indent => 2,
+  :trace => 0,
+  :with_dtd => false,
+  :with_xml => false,
+  :with_instructions => false,
+  :circular => false,
+  :xsd_date => false,
+  :mode => :object,
+  :symbolize_keys => true,
+  :element_key_mod => nil,
+  :attr_key_mod => nil,
+  :skip => :skip_white,
+  :smart => false,
+  :convert_special => true,
+  :effort => :strict,
+  :no_empty => false,
+  :with_cdata => false,
+  :invalid_replace => '',
+  :strip_namespace => false,
+  :overlay => nil,
 }
 
 $ox_generic_options = {
-  :encoding=>nil,
-  :margin=>'',
-  :indent=>2,
-  :trace=>0,
-  :with_dtd=>false,
-  :with_xml=>false,
-  :with_instructions=>false,
-  :circular=>false,
-  :xsd_date=>false,
-  :mode=>:generic,
-  :symbolize_keys=>true,
-  :element_key_mod=>nil,
-  :attr_key_mod=>nil,
-  :skip=>:skip_white,
-  :smart=>false,
-  :convert_special=>true,
-  :effort=>:strict,
-  :no_empty=>false,
-  :with_cdata=>false,
-  :invalid_replace=>'',
-  :strip_namespace=>false,
-  :overlay=>nil,
+  :encoding => nil,
+  :margin => '',
+  :indent => 2,
+  :trace => 0,
+  :with_dtd => false,
+  :with_xml => false,
+  :with_instructions => false,
+  :circular => false,
+  :xsd_date => false,
+  :mode => :generic,
+  :symbolize_keys => true,
+  :element_key_mod => nil,
+  :attr_key_mod => nil,
+  :skip => :skip_white,
+  :smart => false,
+  :convert_special => true,
+  :effort => :strict,
+  :no_empty => false,
+  :with_cdata => false,
+  :invalid_replace => '',
+  :strip_namespace => false,
+  :overlay => nil,
 }
 
 class Func < ::Test::Unit::TestCase
@@ -85,28 +85,28 @@ class Func < ::Test::Unit::TestCase
   def test_set_options
     Ox::default_options = $ox_object_options
     o2 = {
-      :encoding=>"UTF-8",
-      :margin=>'zz',
-      :indent=>4,
-      :trace=>1,
-      :with_dtd=>true,
-      :with_xml=>false,
-      :with_instructions=>true,
-      :circular=>true,
-      :xsd_date=>true,
-      :mode=>:object,
-      :symbolize_keys=>true,
-      :element_key_mod=>nil,
-      :attr_key_mod=>nil,
-      :skip=>:skip_return,
-      :smart=>true,
-      :convert_special=>false,
-      :effort=>:tolerant,
-      :no_empty=>true,
-      :with_cdata=>true,
-      :invalid_replace=>'*',
-      :strip_namespace=>'spaced',
-      :overlay=>nil,
+      :encoding => "UTF-8",
+      :margin => 'zz',
+      :indent => 4,
+      :trace => 1,
+      :with_dtd => true,
+      :with_xml => false,
+      :with_instructions => true,
+      :circular => true,
+      :xsd_date => true,
+      :mode => :object,
+      :symbolize_keys => true,
+      :element_key_mod => nil,
+      :attr_key_mod => nil,
+      :skip => :skip_return,
+      :smart => true,
+      :convert_special => false,
+      :effort => :tolerant,
+      :no_empty => true,
+      :with_cdata => true,
+      :invalid_replace => '*',
+      :strip_namespace => 'spaced',
+      :overlay => nil,
     }
     o3 = { :xsd_date=>false }
     Ox.default_options = o2
@@ -681,7 +681,7 @@ class Func < ::Test::Unit::TestCase
 <ps>after thought</ps>
 }
     doc = Ox.load(xml, :effort => :tolerant)
-    #puts Ox.dump(doc)
+    # puts Ox.dump(doc)
     assert_equal(expected, Ox.dump(doc, :with_xml => false))
   end
 
@@ -707,7 +707,7 @@ class Func < ::Test::Unit::TestCase
 </html>
 }
     doc = Ox.load(xml, :effort => :tolerant)
-    #puts Ox.dump(doc)
+    # puts Ox.dump(doc)
     assert_equal(expected, Ox.dump(doc, :with_xml => false))
   end
 
@@ -924,8 +924,8 @@ class Func < ::Test::Unit::TestCase
     Ox::default_options = $ox_object_options
     s = 'ピーター'
     xml = Ox.dump(s, :with_xml => true, :encoding => 'UTF-8')
-    #puts xml
-    #puts xml.encoding.to_s
+    # puts xml
+    # puts xml.encoding.to_s
     assert_equal('UTF-8', xml.encoding.to_s)
     obj = Ox.load(xml, :mode => :object)
     assert_equal(s, obj)
@@ -966,7 +966,7 @@ class Func < ::Test::Unit::TestCase
   def test_instructions
     Ox::default_options = $ox_object_options
     xml = Ox.dump("test", :with_instructions => true)
-    #puts xml
+    # puts xml
     obj = Ox.load(xml) # should convert it to an object
     assert_equal("test", obj)
   end
@@ -1277,9 +1277,9 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_remove_children_empty
-     doc = Ox.parse(easy_xml)
-     doc.remove_children
-     assert_equal(doc, Ox.parse(easy_xml))
+    doc = Ox.parse(easy_xml)
+    doc.remove_children
+    assert_equal(doc, Ox.parse(easy_xml))
   end
 
   def test_remove_children_single_match

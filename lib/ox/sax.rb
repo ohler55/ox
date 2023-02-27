@@ -56,9 +56,9 @@ module Ox
   class Sax
     # Create a new instance of the Sax handler class.
     def initialize()
-      #@pos = nil
-      #@line = nil
-      #@column = nil
+      # @pos = nil
+      # @line = nil
+      # @column = nil
     end
 
     # To make the desired methods active while parsing the desired method

@@ -14,7 +14,7 @@ module Weather
       parser.callbacks = handler
       parser.parse
       input.close
-      #puts handler.highs
+      # puts handler.highs
       handler.highs
     end
 

@@ -295,7 +295,7 @@ module Ox
           when 'DocType'
             match = nodes.select { |e| e.is_a?(DocType) }
           else
-            #puts "*** no match on #{name}"
+            # puts "*** no match on #{name}"
             match = []
           end
         else
@@ -376,7 +376,7 @@ module Ox
           when 'DocType'
             match = nodes.select { |e| e.is_a?(DocType) }
           else
-            #puts "*** no match on #{name}"
+            # puts "*** no match on #{name}"
             match = []
           end
         else

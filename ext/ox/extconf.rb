@@ -27,7 +27,7 @@ dflags.each do |k, v|
   end
 end
 $CPPFLAGS += ' -Wall'
-#puts "*** $CPPFLAGS: #{$CPPFLAGS}"
+# puts "*** $CPPFLAGS: #{$CPPFLAGS}"
 CONFIG['warnflags'].slice!(/ -Wsuggest-attribute=format/)
 CONFIG['warnflags'].slice!(/ -Wdeclaration-after-statement/)
 CONFIG['warnflags'].slice!(/ -Wmissing-noreturn/)

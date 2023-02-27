@@ -14,59 +14,6 @@ Gemspec/RequireMFA:
   Exclude:
     - 'ox.gemspec'
 
-# Offense count: 82
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: AllowMultipleStyles, EnforcedHashRocketStyle, EnforcedColonStyle, EnforcedLastArgumentHashStyle.
-# SupportedHashRocketStyles: key, separator, table
-# SupportedColonStyles: key, separator, table
-# SupportedLastArgumentHashStyles: always_inspect, always_ignore, ignore_implicit, ignore_explicit
-Layout/HashAlignment:
-  Exclude:
-    - 'test/sax/sax_test.rb'
-    - 'test/tests.rb'
-
-# Offense count: 7
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: IndentationWidth, EnforcedStyle.
-# SupportedStyles: spaces, tabs
-Layout/IndentationStyle:
-  Exclude:
-    - 'examples/saxy_html.rb'
-    - 'lib/ox/hasattrs.rb'
-    - 'test/sax/helpers.rb'
-
-# Offense count: 11
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: Width, AllowedPatterns.
-Layout/IndentationWidth:
-  Exclude:
-    - 'examples/saxy_html.rb'
-    - 'lib/ox/element.rb'
-    - 'lib/ox/hasattrs.rb'
-    - 'test/sax/helpers.rb'
-    - 'test/tests.rb'
-
-# Offense count: 32
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: AllowDoxygenCommentStyle, AllowGemfileRubyComment.
-Layout/LeadingCommentSpace:
-  Exclude:
-    - 'examples/saxy.rb'
-    - 'examples/saxy_html.rb'
-    - 'ext/ox/extconf.rb'
-    - 'lib/ox/element.rb'
-    - 'lib/ox/sax.rb'
-    - 'test/files.rb'
-    - 'test/perf_mars.rb'
-    - 'test/sax/helpers.rb'
-    - 'test/sax/sax_test.rb'
-    - 'test/tests.rb'
-    - 'test/weather/wlx.rb'
-    - 'test/weather/wlxsax.rb'
-    - 'test/weather/wno.rb'
-    - 'test/weather/wnosax.rb'
-    - 'test/weather/wsax.rb'
-
 # Offense count: 23
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EnforcedStyle.
@@ -85,14 +32,6 @@ Layout/MultilineHashBraceLayout:
     - 'test/parse_cmp.rb'
     - 'test/sample/file.rb'
     - 'test/tests.rb'
-
-# Offense count: 3
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: symmetrical, new_line, same_line
-Layout/MultilineMethodCallBraceLayout:
-  Exclude:
-    - 'contrib/xbuilder_test.rb'
 
 # Offense count: 26
 # This cop supports safe autocorrection (--autocorrect).

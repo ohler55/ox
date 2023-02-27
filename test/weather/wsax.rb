@@ -9,7 +9,7 @@ module Weather
       input = IO.open(IO.sysopen(filename))
       Ox.sax_parse(handler, input)
       input.close
-      #puts handler.highs
+      # puts handler.highs
       handler.highs
     end
 
