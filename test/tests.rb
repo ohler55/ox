@@ -681,7 +681,7 @@ class Func < ::Test::Unit::TestCase
 <ps>after thought</ps>
 }
     doc = Ox.load(xml, :effort => :tolerant)
-    #puts Ox.dump(doc)
+    # puts Ox.dump(doc)
     assert_equal(expected, Ox.dump(doc, :with_xml => false))
   end
 
@@ -707,7 +707,7 @@ class Func < ::Test::Unit::TestCase
 </html>
 }
     doc = Ox.load(xml, :effort => :tolerant)
-    #puts Ox.dump(doc)
+    # puts Ox.dump(doc)
     assert_equal(expected, Ox.dump(doc, :with_xml => false))
   end
 
@@ -924,8 +924,8 @@ class Func < ::Test::Unit::TestCase
     Ox::default_options = $ox_object_options
     s = 'ピーター'
     xml = Ox.dump(s, :with_xml => true, :encoding => 'UTF-8')
-    #puts xml
-    #puts xml.encoding.to_s
+    # puts xml
+    # puts xml.encoding.to_s
     assert_equal('UTF-8', xml.encoding.to_s)
     obj = Ox.load(xml, :mode => :object)
     assert_equal(s, obj)
@@ -966,7 +966,7 @@ class Func < ::Test::Unit::TestCase
   def test_instructions
     Ox::default_options = $ox_object_options
     xml = Ox.dump("test", :with_instructions => true)
-    #puts xml
+    # puts xml
     obj = Ox.load(xml) # should convert it to an object
     assert_equal("test", obj)
   end

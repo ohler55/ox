@@ -77,14 +77,14 @@ end
 puts "           load                        dump"
 puts "type       Ox      Marshal  ratio      Ox      Marshal  ratio"
 data.each do |type, a|
-  #xml = Ox.dump(a, :indent => -1, :xsd_date => true)
+  # xml = Ox.dump(a, :indent => -1, :xsd_date => true)
   xml = Ox.dump(a, :indent => -1)
-  #pp a
-  #puts xml
+  # pp a
+  # puts xml
   start = Time.now
   (1..it).each do
     obj = Ox.load(xml, :mode => :object)
-    #pp obj
+    # pp obj
   end
   ox_load_time = Time.now - start
   

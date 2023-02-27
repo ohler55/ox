@@ -19,7 +19,7 @@ require 'optparse'
 require 'ox'
 
 require 'helpers'
-#require 'smart_test'
+# require 'smart_test'
 
 opts = OptionParser.new
 opts.on("-h", "--help", "Show this display") { puts opts; Process.exit!(0) }

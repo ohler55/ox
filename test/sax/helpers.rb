@@ -20,7 +20,7 @@ module SaxTestHelpers
     input = StringIO.new(xml)
     options = {
       :symbolize => true,
-      #:convert_special => true,
+      # :convert_special => true,
       :smart => false
     }.merge(opts)
 

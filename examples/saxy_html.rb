@@ -103,11 +103,11 @@ handler = Saxy.new()
 Ox.sax_html(handler, xml)
 
 # For debugging uncomment these lines.
-#puts "******************** original *************************\n#{xml}"
-#puts "******************** modifified ***********************\n#{handler.to_s}"
+# puts "******************** original *************************\n#{xml}"
+# puts "******************** modifified ***********************\n#{handler.to_s}"
 
 # For benchmarks these lines should be repeated to parse and to generate a
 # modified XML string.
-#handler = Saxy.new()
-#Ox.sax_html(handler, xml)
-#handler.to_s
+# handler = Saxy.new()
+# Ox.sax_html(handler, xml)
+# handler.to_s

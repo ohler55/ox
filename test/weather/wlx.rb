@@ -46,7 +46,7 @@ module Weather
           end
         end
       end
-      #puts highs
+      # puts highs
       highs
     end
   end # Wlx
