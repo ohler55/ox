@@ -559,7 +559,7 @@ class Func < ::Test::Unit::TestCase
     xml = %{\xEF\xBB\xBF<?xml?>\n<top name="bom"></top>\n}
     doc = Ox.parse(xml).root()
     assert_equal('bom', doc.attributes[:name])
-    unless RUBY_VERSION.start_with?('1.8')# || 'rubinius' == $ruby
+    unless RUBY_VERSION.start_with?('1.8') # || 'rubinius' == $ruby
       assert_equal('UTF-8', doc.attributes[:name].encoding.to_s)
     end
   end
