@@ -26,22 +26,22 @@ opts.on("-h", "--help", "Show this display") { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
 $ox_sax_options = {
-  :encoding=>nil,
-  :indent=>2,
-  :trace=>0,
-  :with_dtd=>false,
-  :with_xml=>false,
-  :with_instructions=>false,
-  :circular=>false,
-  :xsd_date=>false,
-  :mode=>:object,
-  :symbolize_keys=>true,
-  :skip=>:skip_return,
-  :smart=>false,
-  :convert_special=>true,
-  :effort=>:strict,
-  :invalid_replace=>'',
-  :strip_namespace=>false
+  :encoding => nil,
+  :indent => 2,
+  :trace => 0,
+  :with_dtd => false,
+  :with_xml => false,
+  :with_instructions => false,
+  :circular => false,
+  :xsd_date => false,
+  :mode => :object,
+  :symbolize_keys => true,
+  :skip => :skip_return,
+  :smart => false,
+  :convert_special => true,
+  :effort => :strict,
+  :invalid_replace => '',
+  :strip_namespace => false
 }
 
 class SaxBaseTest < ::Test::Unit::TestCase
