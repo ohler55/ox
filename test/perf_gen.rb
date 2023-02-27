@@ -55,7 +55,7 @@ opts.on('-i', '--iterations [Int]', Integer, 'iterations')  { |it| $iter = it }
 opts.on('-h', '--help', 'Show this display')                { puts opts; Process.exit!(0) }
 files = opts.parse(ARGV)
 
-Ox.default_options = {mode: :generic}
+Ox.default_options = { mode: :generic }
 
 data = []
 

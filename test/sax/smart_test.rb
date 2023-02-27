@@ -40,7 +40,7 @@ class SaxSmartTest < Test::Unit::TestCase
     'cite' => {},
     'colgroup' => { 'parents' => ['table'], 'childs' => ['col'] },
     'data' => {},
-    'datalist' => { 'childs' => ['option']},
+    'datalist' => { 'childs' => ['option'] },
     'dl' => { 'childs' => ['dt', 'dd'] },
     'dt' => { 'parents' => ['dl'] },
     'dd' => { 'parents' => ['dl'] },
@@ -634,7 +634,7 @@ class SaxSmartTableTagTest < SaxSmartTest
                         [:end_element, :table],
                         [:end_element, :body],
                         [:end_element, :html]],
-                       {:overlay => hints})
+                       { :overlay => hints })
   end
 
   def test_nest_ok_auto_closing
@@ -650,6 +650,6 @@ class SaxSmartTableTagTest < SaxSmartTest
                         [:end_element, :h5],
                         [:end_element, :body],
                         [:end_element, :html]],
-                       {:overlay => hints})
+                       { :overlay => hints })
   end
 end

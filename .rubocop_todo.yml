@@ -16,29 +16,6 @@ Layout/MultilineHashBraceLayout:
     - 'test/sample/file.rb'
     - 'test/tests.rb'
 
-# Offense count: 106
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.
-# SupportedStyles: space, no_space, compact
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceInsideHashLiteralBraces:
-  Exclude:
-    - 'contrib/xbuilder_test.rb'
-    - 'examples/obj.rb'
-    - 'lib/ox/bag.rb'
-    - 'lib/ox/document.rb'
-    - 'lib/ox/hasattrs.rb'
-    - 'test/ox/doc.rb'
-    - 'test/ox/hasprops.rb'
-    - 'test/perf_gen.rb'
-    - 'test/perf_mars.rb'
-    - 'test/sample/doc.rb'
-    - 'test/sample/file.rb'
-    - 'test/sample/hasprops.rb'
-    - 'test/sax/sax_test.rb'
-    - 'test/sax/smart_test.rb'
-    - 'test/tests.rb'
-
 # Offense count: 12
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EnforcedStyle.

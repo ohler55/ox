@@ -179,7 +179,7 @@ class Func < Test::Unit::TestCase
 
   def test_hash
     Ox.default_options = $ox_object_options
-    dump_and_load({ }, false)
+    dump_and_load({}, false)
     dump_and_load({ 'a' => 1, 2 => 'b' }, false)
   end
 
@@ -241,7 +241,7 @@ class Func < Test::Unit::TestCase
 
   def test_object
     Ox.default_options = $ox_object_options
-    dump_and_load(Bag.new({ }), false)
+    dump_and_load(Bag.new({}), false)
     dump_and_load(Bag.new(:@x => 3), false)
   end
 
@@ -350,7 +350,7 @@ class Func < Test::Unit::TestCase
     assert_equal(Ox::Instruct, inst.class)
     assert_equal('attrs', inst.target)
     assert_nil(inst.content)
-    assert_equal({:dog => 'big'}, inst.attributes)
+    assert_equal({ :dog => 'big' }, inst.attributes)
 
     inst = doc.top.content
     assert_equal(Ox::Instruct, inst.class)
@@ -782,12 +782,12 @@ class Func < Test::Unit::TestCase
 
   def test_complex
     Ox.default_options = $ox_object_options
-    dump_and_load(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, {:b => 3, :a => [5], :c => Bag.new(:@x => 7)}]), false)
+    dump_and_load(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, { :b => 3, :a => [5], :c => Bag.new(:@x => 7) }]), false)
   end
 
   def test_dump_margin
     Ox.default_options = $ox_object_options
-    x = Ox.dump(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, {:b => 3, :a => [5], :c => Bag.new(:@x => 7)}]), :indent => 1, :margin => '##')
+    x = Ox.dump(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, { :b => 3, :a => [5], :c => Bag.new(:@x => 7) }]), :indent => 1, :margin => '##')
 
     assert(x.include?('## <o a="@o" c="Bag">
 ##  <a a="@a">
@@ -1722,7 +1722,7 @@ comment -->
     xml = %{<top>This is the top.</top>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: 'This is the top.'}, doc)
+    assert_equal({ top: 'This is the top.' }, doc)
   end
 
   def test_hash_no_attrs_mode_simple_nested
@@ -1737,7 +1737,7 @@ comment -->
 </top>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: {one: 'This is a one.', mid: {a: 'alpha', b: 'bravo'}}}, doc)
+    assert_equal({ top: { one: 'This is a one.', mid: { a: 'alpha', b: 'bravo' } } }, doc)
   end
 
   def test_hash_no_attrs_mode_multi_text
@@ -1745,7 +1745,7 @@ comment -->
     xml = %{<top>First<empty/>Second<empty></empty>Third</top>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: ['First', {empty: nil}, 'Second', {empty: nil}, 'Third']}, doc)
+    assert_equal({ top: ['First', { empty: nil }, 'Second', { empty: nil }, 'Third'] }, doc)
   end
 
   def test_hash_mode_simple
@@ -1753,7 +1753,7 @@ comment -->
     xml = %{<top>This is the top.</top>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: 'This is the top.'}, doc)
+    assert_equal({ top: 'This is the top.' }, doc)
   end
 
   def test_hash_mode_simple_nested
@@ -1768,7 +1768,7 @@ comment -->
 </top>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: {one: 'This is a one.', mid: {a: 'alpha', b: 'bravo'}}}, doc)
+    assert_equal({ top: { one: 'This is a one.', mid: { a: 'alpha', b: 'bravo' } } }, doc)
   end
 
   def test_hash_mode_simple_cdata
@@ -1783,10 +1783,10 @@ comment -->
 </top>
 }
     doc = Ox.load(xml, mode: :hash, with_cdata: true)
-    assert_equal({top: {one: 'This is a one.', mid: {a: 'alpha', b: 'bravo'}}}, doc)
+    assert_equal({ top: { one: 'This is a one.', mid: { a: 'alpha', b: 'bravo' } } }, doc)
 
     doc = Ox.load(xml, mode: :hash, with_cdata: false)
-    assert_equal({top: {one: 'This is a one.', mid: {a: nil, b: nil}}}, doc)
+    assert_equal({ top: { one: 'This is a one.', mid: { a: nil, b: nil } } }, doc)
   end
 
   def test_hash_mode_multi_text
@@ -1794,7 +1794,7 @@ comment -->
     xml = %{<top>First<empty/>Second<empty></empty>Third</top>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: ['First', {empty: nil}, 'Second', {empty: nil}, 'Third']}, doc)
+    assert_equal({ top: ['First', { empty: nil }, 'Second', { empty: nil }, 'Third'] }, doc)
   end
 
   def test_hash_mode_simple_attrs
@@ -1802,7 +1802,7 @@ comment -->
     xml = %{<top type="string">This is the top.</top>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: [{type: 'string'}, 'This is the top.']}, doc)
+    assert_equal({ top: [{ type: 'string' }, 'This is the top.'] }, doc)
   end
 
   def test_hash_mode_attrs
@@ -1818,13 +1818,13 @@ comment -->
 </result>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({result: {
+    assert_equal({ result: {
                    variables: {
                      var: [
-                       [{name: 'Blue'}, '14'],
-                       [{name: 'Jack'}, '14'],
-                       [{name: 'Magenta'}, '12'],
-                       [{name: 'Yellow'}, '14']
+                       [{ name: 'Blue' }, '14'],
+                       [{ name: 'Jack' }, '14'],
+                       [{ name: 'Magenta' }, '12'],
+                       [{ name: 'Yellow' }, '14']
                      ],
                    }
                  }
@@ -1844,13 +1844,13 @@ comment -->
 </result>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({result: {
+    assert_equal({ result: {
                    variables: {
                      var: [
                        '14',
-                       [{name: 'Jack'}, '14'],
-                       [{name: 'Magenta'}, '12'],
-                       [{name: 'Yellow'}, '14']
+                       [{ name: 'Jack' }, '14'],
+                       [{ name: 'Magenta' }, '12'],
+                       [{ name: 'Yellow' }, '14']
                      ],
                    }
                  }
@@ -1870,13 +1870,13 @@ comment -->
 </result>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({result: {
+    assert_equal({ result: {
                    variables: {
                      var: [
-                       [{name: 'Blue'}, '14'],
+                       [{ name: 'Blue' }, '14'],
                        '14',
-                       [{name: 'Magenta'}, '12'],
-                       [{name: 'Yellow'}, '14']
+                       [{ name: 'Magenta' }, '12'],
+                       [{ name: 'Yellow' }, '14']
                      ],
                    }
                  }

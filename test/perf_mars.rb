@@ -61,7 +61,7 @@ s = Struct.new('Zoo', :x, :y, :z)
   data[:Symbol].values << "Symbol#{i}".to_sym
   data[:Time].values << (Time.now + i)
   data[:Array].values << []
-  data[:Hash].values << { }
+  data[:Hash].values << {}
   data[:Range].values << (0..7)
   data[:Regexp].values << /^[0-9]/
   data[:Bignum].values << (7**55)
