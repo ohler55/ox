@@ -1195,52 +1195,52 @@ class Func < Test::Unit::TestCase
     Ox.default_options = $ox_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[0]')
-    assert_equal(['Kid1'], nodes.map { |e| e.value } )
+    assert_equal(['Kid1'], nodes.map { |e| e.value })
     nodes = doc.locate('Family/Pete/?[1]')
-    assert_equal(['Nicole'], nodes.map { |e| e.value } )
+    assert_equal(['Nicole'], nodes.map { |e| e.value })
     nodes = doc.locate('Family/Pete/?[2]')
-    assert_equal(['Kid2'], nodes.map { |e| e.value } )
+    assert_equal(['Kid2'], nodes.map { |e| e.value })
   end
 
   def test_locate_qual_less
     Ox.default_options = $ox_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[<1]')
-    assert_equal(['Kid1'], nodes.map { |e| e.value } )
+    assert_equal(['Kid1'], nodes.map { |e| e.value })
   end
 
   def test_locate_qual_great
     Ox.default_options = $ox_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[>1]')
-    assert_equal(['Kid2', 'Pamela'], nodes.map { |e| e.value } )
+    assert_equal(['Kid2', 'Pamela'], nodes.map { |e| e.value })
   end
 
   def test_locate_qual_last
     Ox.default_options = $ox_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[-1]')
-    assert_equal(['Pamela'], nodes.map { |e| e.value } )
+    assert_equal(['Pamela'], nodes.map { |e| e.value })
   end
 
   def test_locate_qual_last_attr
     Ox.default_options = $ox_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[-2]/@age')
-    assert_equal(['31'], nodes )
+    assert_equal(['31'], nodes)
   end
 
   def test_locate_attr_match
     Ox.default_options = $ox_object_options
     doc = Ox.parse(locate_xml)
     nodes = doc.locate('Family/Pete/?[@age=32]')
-    assert_equal(['Kid1'], nodes.map { |e| e.value } )
+    assert_equal(['Kid1'], nodes.map { |e| e.value })
 
     nodes = doc.locate('Family/Pete/Kid1[@age=32]')
-    assert_equal(['Kid1'], nodes.map { |e| e.value } )
+    assert_equal(['Kid1'], nodes.map { |e| e.value })
 
     nodes = doc.locate('Family/Pete/Kid1[@age=31]')
-    assert_equal([], nodes.map { |e| e.value } )
+    assert_equal([], nodes.map { |e| e.value })
   end
 
   def test_locate_attr_presence
@@ -1418,7 +1418,7 @@ class Func < Test::Unit::TestCase
   def test_namespace_strip_wild
     Ox.default_options = $ox_generic_options
     results = []
-    doc = Ox.load('<spaced:one><two spaced:out="no">inside</two></spaced:one>', :strip_namespace => true )
+    doc = Ox.load('<spaced:one><two spaced:out="no">inside</two></spaced:one>', :strip_namespace => true)
     assert_equal(%|
 <one>
   <two out="no">inside</two>
@@ -1890,7 +1890,7 @@ comment -->
 }
     ep = lambda { |k| k.downcase }
     ap = lambda { |k| 'a' + k }
-    doc = Ox.load(xml, mode: :generic, attr_key_mod: ap, element_key_mod: ep )
+    doc = Ox.load(xml, mode: :generic, attr_key_mod: ap, element_key_mod: ep)
     xml2 = Ox.dump(doc)
     assert_equal(%{
 <changeme ax="A"/>
