@@ -3,7 +3,6 @@ require 'ox'
 
 module Weather
   class WOx
-
     def self.parse(filename, as_time)
       highs = {}
       doc = Ox.load_file(filename)
@@ -19,6 +18,5 @@ module Weather
       end
       highs
     end
-
   end # WOx
 end # Weather

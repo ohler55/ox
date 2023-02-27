@@ -162,7 +162,6 @@ class Handler
       @plist = value
     end
   end
-
 end
 
 def parse_sax(xml)

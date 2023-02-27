@@ -16,7 +16,6 @@ module Test
         @just = 'left'
         @text_color = 'black'
       end
-
     end # Text
   end # Ox
 end # Test

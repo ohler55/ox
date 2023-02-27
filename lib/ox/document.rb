@@ -24,6 +24,5 @@ module Ox
       end
       nil
     end
-
   end # Document
 end # Ox

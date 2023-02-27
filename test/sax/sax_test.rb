@@ -1315,5 +1315,4 @@ this is not part of the xml document
                   [:abort, :table],
                  ], handler.calls)
   end
-
 end

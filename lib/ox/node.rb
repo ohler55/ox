@@ -19,6 +19,5 @@ module Ox
       other.value == self.value
     end
     alias == eql?
-
   end # Node
 end # Ox

@@ -14,50 +14,6 @@ Gemspec/RequireMFA:
   Exclude:
     - 'ox.gemspec'
 
-# Offense count: 58
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: empty_lines, empty_lines_except_namespace, empty_lines_special, no_empty_lines, beginning_only, ending_only
-Layout/EmptyLinesAroundClassBody:
-  Exclude:
-    - 'examples/saxy.rb'
-    - 'lib/ox/bag.rb'
-    - 'lib/ox/cdata.rb'
-    - 'lib/ox/comment.rb'
-    - 'lib/ox/doctype.rb'
-    - 'lib/ox/document.rb'
-    - 'lib/ox/node.rb'
-    - 'lib/ox/raw.rb'
-    - 'test/ox/dir.rb'
-    - 'test/ox/doc.rb'
-    - 'test/ox/file.rb'
-    - 'test/ox/group.rb'
-    - 'test/ox/layer.rb'
-    - 'test/ox/line.rb'
-    - 'test/ox/oval.rb'
-    - 'test/ox/rect.rb'
-    - 'test/ox/text.rb'
-    - 'test/parse_cmp.rb'
-    - 'test/perf.rb'
-    - 'test/sample/dir.rb'
-    - 'test/sample/doc.rb'
-    - 'test/sample/file.rb'
-    - 'test/sample/group.rb'
-    - 'test/sample/layer.rb'
-    - 'test/sample/line.rb'
-    - 'test/sample/oval.rb'
-    - 'test/sample/rect.rb'
-    - 'test/sample/text.rb'
-    - 'test/sax/sax_test.rb'
-    - 'test/sax/smart_test.rb'
-    - 'test/tests.rb'
-    - 'test/weather/wlx.rb'
-    - 'test/weather/wlxsax.rb'
-    - 'test/weather/wno.rb'
-    - 'test/weather/wnosax.rb'
-    - 'test/weather/wox.rb'
-    - 'test/weather/wsax.rb'
-
 # Offense count: 22
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EnforcedStyle.

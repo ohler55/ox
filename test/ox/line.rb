@@ -16,7 +16,6 @@ module Test
         @thick = thick
         @color = color
       end
-
     end # Line
   end # Ox
 end # Test

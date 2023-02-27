@@ -3,7 +3,6 @@ require 'nokogiri'
 
 module Weather
   class WNoSax < ::Nokogiri::XML::SAX::Document
-
     attr_accessor :highs
 
     def self.parse(filename, as_time)
@@ -60,6 +59,5 @@ module Weather
     def warning(message)
       puts message
     end
-
   end # WNoSax
 end # Weather

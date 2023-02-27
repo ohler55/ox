@@ -72,7 +72,6 @@ $ox_generic_options = {
 }
 
 class Func < ::Test::Unit::TestCase
-
   unless respond_to?(:assert_raise)
     alias assert_raise assert_raises
   end
@@ -1921,11 +1920,9 @@ comment -->
     end
     loaded
   end
-
 end
 
 class Bag
-
   def initialize(args)
     args.each do |k, v|
       self.instance_variable_set(k, v)
@@ -1944,5 +1941,4 @@ class Bag
     true
   end
   alias == eql?
-
 end

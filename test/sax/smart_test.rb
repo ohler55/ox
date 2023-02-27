@@ -141,11 +141,9 @@ class SaxSmartTest < ::Test::Unit::TestCase
   def smart_parse_compare(xml, expected, handler = AllSax, opts = {}, handler_attr = :calls)
     parse_compare(xml, expected, handler, opts.merge(:smart => true, :skip => :skip_white), handler_attr)
   end
-
 end
 
 class ErrorsOnParentNormalElementTest < SaxSmartTest
-
   attr_reader :w
 
   def initialize(*args)
@@ -176,11 +174,9 @@ class ErrorsOnParentNormalElementTest < SaxSmartTest
       end
     end
   end
-
 end
 
 class ErrorsOnParentVoidElementTest < SaxSmartTest
-
   def construct_html(el)
     s = ""
     str = (VOIDELEMENTS[el]["parents"] || []).each() do |p|
@@ -194,7 +190,6 @@ class ErrorsOnParentVoidElementTest < SaxSmartTest
       smart_parse_compare(construct_html(el), [], ErrorSax, {}, :errors)
     end
   end
-
 end
 
 ##
@@ -202,7 +197,6 @@ end
 # More info: http://www.w3.org/TR/html5/syntax.html#the-doctype
 ##
 class SaxSmartDoctypeTest < SaxSmartTest
-
   def test_doctype_html5
     html = %{<!DOCTYPE HTML>}
     smart_parse_compare(html, [[:doctype, " HTML"]])
@@ -257,7 +251,6 @@ end
 # More info: http://www.w3.org/TR/html5/syntax.html#normal-elements
 ##
 class SaxSmartNormalTagTest < SaxSmartTest
-
   def test_normal_tags
     html = %{<html class="class1">A terminated text</html>}
     smart_parse_compare(html,
@@ -532,7 +525,6 @@ end
 # the normal tags testing.
 ##
 class SaxSmartTableTagTest < SaxSmartTest
-
   def test_html_table
     html = %{
 <html>

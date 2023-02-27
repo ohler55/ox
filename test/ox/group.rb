@@ -10,7 +10,6 @@ module Test
       def <<(member)
         @members << member
       end
-
     end # Group
   end # Ox
 end # Test

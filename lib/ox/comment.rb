@@ -7,6 +7,5 @@ module Ox
     def initialize(value)
       super
     end
-
   end # Comment
 end # Ox

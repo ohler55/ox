@@ -8,6 +8,5 @@ module Ox
     def initialize(value)
       super
     end
-
   end # Raw
 end # Ox

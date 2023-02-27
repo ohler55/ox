@@ -14,7 +14,6 @@ module Test
       def <<(f)
         @files << f
       end
-
     end # Dir
   end # Ox
 end # Test
