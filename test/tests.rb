@@ -104,7 +104,7 @@ class Func < Test::Unit::TestCase
       :strip_namespace => 'spaced',
       :overlay => nil,
     }
-    o3 = { :xsd_date=>false }
+    o3 = { :xsd_date => false }
     Ox.default_options = o2
     opts = Ox.default_options
     assert_equal(o2, opts);
@@ -209,8 +209,8 @@ class Func < Test::Unit::TestCase
 
   def test_bignum
     Ox.default_options = $ox_object_options
-    dump_and_load(7 ** 55, false)
-    dump_and_load(-7 ** 55, false)
+    dump_and_load(7**55, false)
+    dump_and_load(-7**55, false)
   end
 
   def test_bigdecimal
@@ -350,7 +350,7 @@ class Func < Test::Unit::TestCase
     assert_equal(Ox::Instruct, inst.class)
     assert_equal('attrs', inst.target)
     assert_nil(inst.content)
-    assert_equal({:dog=>'big'}, inst.attributes)
+    assert_equal({:dog => 'big'}, inst.attributes)
 
     inst = doc.top.content
     assert_equal(Ox::Instruct, inst.class)

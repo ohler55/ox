@@ -1276,7 +1276,7 @@ this is not part of the xml document
     Ox.default_options = $ox_sax_options
     handler = AllSax.new
 
-    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => {'hr'=>:inactive})
+    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => {'hr' => :inactive})
     assert_equal([
                    [:start_element, :html],
                    [:start_element, :h1],

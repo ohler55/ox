@@ -32,13 +32,13 @@ class XBuilderTest < Test::Unit::TestCase
         x_if(false, 'child5')
       ]
 
-    n=x('parent',
-        x('child1', {'atr1'=>'atr1_value', :atr2 => 'atr2_value'},
-          x('subchild1', 'some text'),
-          x('subchild2', {'atr3' => 'default_value'}, {'atr3' => 'atr3_value'},
-            x('sometag'),
-            x_if(false, 'never'))),
-        children)
+    n = x('parent',
+          x('child1', {'atr1' => 'atr1_value', :atr2 => 'atr2_value'},
+            x('subchild1', 'some text'),
+            x('subchild2', {'atr3' => 'default_value'}, {'atr3' => 'atr3_value'},
+              x('sometag'),
+              x_if(false, 'never'))),
+          children)
 
     assert_equal(Ox.dump(n), Ox.dump(Ox.parse(xml)))
   end

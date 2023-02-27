@@ -64,7 +64,7 @@ s = Struct.new('Zoo', :x, :y, :z)
   data[:Hash].values << { }
   data[:Range].values << (0..7)
   data[:Regexp].values << /^[0-9]/
-  data[:Bignum].values << (7 ** 55)
+  data[:Bignum].values << (7**55)
   data[:Complex].values << Complex(1, 2)
   data[:Rational].values << Rational(1, 3)
   data[:Struct].values << s.new(1, 3, 5)

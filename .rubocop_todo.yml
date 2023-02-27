@@ -16,18 +16,6 @@ Layout/MultilineHashBraceLayout:
     - 'test/sample/file.rb'
     - 'test/tests.rb'
 
-# Offense count: 10
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: AllowForAlignment, EnforcedStyleForExponentOperator.
-# SupportedStylesForExponentOperator: space, no_space
-Layout/SpaceAroundOperators:
-  Exclude:
-    - 'contrib/xbuilder_test.rb'
-    - 'lib/ox/element.rb'
-    - 'test/perf_mars.rb'
-    - 'test/sax/sax_test.rb'
-    - 'test/tests.rb'
-
 # Offense count: 4
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces, SpaceBeforeBlockParameters.

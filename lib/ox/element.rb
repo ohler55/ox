@@ -269,7 +269,7 @@ module Ox
           name = step
           qual = nil
         else
-          name = step[0..i-1]
+          name = step[0..i - 1]
           raise InvalidPath.new(path) unless step.end_with?(']')
 
           i += 1
@@ -350,7 +350,7 @@ module Ox
           name = step
           qual = nil
         else
-          name = step[0..i-1]
+          name = step[0..i - 1]
           raise InvalidPath.new(path) unless step.end_with?(']')
 
           i += 1
