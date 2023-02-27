@@ -1,4 +1,3 @@
-
 module Ox
   # CData represents a CDATA element in an XML document.
   class CData < Node

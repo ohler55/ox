@@ -1,4 +1,3 @@
-
 module Test
   module Ox
     module HasProps

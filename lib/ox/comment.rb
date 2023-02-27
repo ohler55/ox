@@ -1,4 +1,3 @@
-
 module Ox
   # Comments represent XML comments in an XML document. A comment has a value
   # attribute only.

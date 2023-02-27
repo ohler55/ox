@@ -1,4 +1,3 @@
-
 module Ox
 
   # An Object that includes the HasAttrs module can have attributes which are a Hash of String values and either String

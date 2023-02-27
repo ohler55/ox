@@ -1,4 +1,3 @@
-
 module Ox
 
   # A generic class that is used only for storing attributes. It is the base

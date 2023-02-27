@@ -1,4 +1,3 @@
-
 # Contributed by Notezen
 
 require 'ox'

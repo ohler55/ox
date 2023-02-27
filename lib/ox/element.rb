@@ -1,4 +1,3 @@
-
 module Ox
 
   # An Element represents a element of an XML document. It has a name,

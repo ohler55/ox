@@ -1,4 +1,3 @@
-
 module Ox
   # Represents an XML document. It has a fixed set of attributes which form
   # the XML prolog. A Document includes Elements.

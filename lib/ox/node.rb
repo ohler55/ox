@@ -1,4 +1,3 @@
-
 module Ox
   # The Node is the base class for all other in the Ox module.
   class Node

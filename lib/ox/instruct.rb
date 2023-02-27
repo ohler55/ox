@@ -1,4 +1,3 @@
-
 module Ox
 
   # An Instruct represents a processing instruction of an XML document. It has a target, attributes, and a value or

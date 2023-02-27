@@ -1,4 +1,3 @@
-
 module Ox
   # Raw elements are used to inject existing XML strings into a document
   # WARNING: Use of this feature can result in invalid XML, since `value` is
