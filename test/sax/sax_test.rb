@@ -1301,7 +1301,6 @@ this is not part of the xml document
                   [:end_element, :html]], handler.calls)
   end
 
-
   def test_sax_html_abort
     Ox::default_options = $ox_sax_options
     handler = AllSax.new()

@@ -9,7 +9,6 @@ end
 
 require 'sample/doc'
 
-
 def sample_doc(size=3)
   colors = [ :black, :gray, :white, :red, :blue, :yellow, :green, :purple, :orange ]
 

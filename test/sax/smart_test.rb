@@ -17,7 +17,6 @@ require 'optparse'
 require 'helpers'
 require 'ox'
 
-
 opts = OptionParser.new
 opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
