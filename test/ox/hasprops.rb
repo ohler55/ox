@@ -1,7 +1,6 @@
 module Test
   module Ox
     module HasProps
-
       def add_prop(key, value)
         @props = { } unless self.instance_variable_defined?(:@props)
         @props[key] = value

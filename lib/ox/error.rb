@@ -1,5 +1,4 @@
 module Ox
-
   # Base error class for Ox errors.
   class Error < StandardError
   end # Error
@@ -23,5 +22,4 @@ module Ox
       super("#{path.join('/')} is not a valid location.")
     end
   end # InvalidPath
-
 end # Ox

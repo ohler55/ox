@@ -2,7 +2,6 @@ require 'etc'
 
 module Test
   module Ox
-
     class File
       attr_accessor :name, :ctime, :mtime, :size, :owner, :group, :permissions
 

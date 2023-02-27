@@ -14,33 +14,6 @@ Gemspec/RequireMFA:
   Exclude:
     - 'ox.gemspec'
 
-# Offense count: 22
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: empty_lines, empty_lines_except_namespace, empty_lines_special, no_empty_lines
-Layout/EmptyLinesAroundModuleBody:
-  Exclude:
-    - 'contrib/xbuilder.rb'
-    - 'lib/ox.rb'
-    - 'lib/ox/bag.rb'
-    - 'lib/ox/element.rb'
-    - 'lib/ox/error.rb'
-    - 'lib/ox/hasattrs.rb'
-    - 'lib/ox/instruct.rb'
-    - 'lib/ox/xmlrpc_adapter.rb'
-    - 'test/ox/dir.rb'
-    - 'test/ox/file.rb'
-    - 'test/ox/hasprops.rb'
-    - 'test/ox/line.rb'
-    - 'test/ox/oval.rb'
-    - 'test/ox/text.rb'
-    - 'test/sample/dir.rb'
-    - 'test/sample/file.rb'
-    - 'test/sample/hasprops.rb'
-    - 'test/sample/line.rb'
-    - 'test/sample/oval.rb'
-    - 'test/sax/helpers.rb'
-
 # Offense count: 3
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: AllowForAlignment, AllowBeforeTrailingComments, ForceEqualSignAlignment.

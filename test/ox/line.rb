@@ -1,6 +1,5 @@
 module Test
   module Ox
-
     class Line
       include HasProps
 

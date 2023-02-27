@@ -2,7 +2,6 @@ require 'etc'
 
 module Test
   module Ox
-
     class Dir < File
       attr_accessor :files
 

@@ -1,5 +1,4 @@
 module Ox
-
   # An Object that includes the HasAttrs module can have attributes which are a Hash of String values and either String
   # or Symbol keys.
   #
@@ -51,6 +50,5 @@ module Ox
       end
       raise NoMethodError.new("#{ids} not found", name)
     end
-
   end # HasAttrs
 end # Ox

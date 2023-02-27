@@ -1,6 +1,5 @@
 module Test
   module Ox
-
     class Text < Shape
       attr_accessor :text
       attr_accessor :font
