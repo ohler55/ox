@@ -273,7 +273,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
                         [[:start_element, :html],
                          [:attr, :class, "class1"],
                          [:error, "Invalid Format: empty element", 1, 22],
-                          [:text, "A terminated text"],
+                         [:text, "A terminated text"],
                          [:end_element, :html]])
   end
 
