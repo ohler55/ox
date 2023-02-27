@@ -1823,15 +1823,15 @@ comment -->
 }
     doc = Ox.load(xml, :mode => :hash)
     assert_equal({result: {
-                     variables: {
-                       var: [
-                         [{name: 'Blue'}, '14'],
-                         [{name: 'Jack'}, '14'],
-                         [{name: 'Magenta'}, '12'],
-                         [{name: 'Yellow'}, '14']
-                       ],
-                     }
+                   variables: {
+                     var: [
+                       [{name: 'Blue'}, '14'],
+                       [{name: 'Jack'}, '14'],
+                       [{name: 'Magenta'}, '12'],
+                       [{name: 'Yellow'}, '14']
+                     ],
                    }
+                 }
                  }, doc)
   end
 
@@ -1849,15 +1849,15 @@ comment -->
 }
     doc = Ox.load(xml, :mode => :hash)
     assert_equal({result: {
-                     variables: {
-                       var: [
-                         '14',
-                         [{name: 'Jack'}, '14'],
-                         [{name: 'Magenta'}, '12'],
-                         [{name: 'Yellow'}, '14']
-                       ],
-                     }
+                   variables: {
+                     var: [
+                       '14',
+                       [{name: 'Jack'}, '14'],
+                       [{name: 'Magenta'}, '12'],
+                       [{name: 'Yellow'}, '14']
+                     ],
                    }
+                 }
                  }, doc)
   end
 
@@ -1875,15 +1875,15 @@ comment -->
 }
     doc = Ox.load(xml, :mode => :hash)
     assert_equal({result: {
-                     variables: {
-                       var: [
-                         [{name: 'Blue'}, '14'],
-                         '14',
-                         [{name: 'Magenta'}, '12'],
-                         [{name: 'Yellow'}, '14']
-                       ],
-                     }
+                   variables: {
+                     var: [
+                       [{name: 'Blue'}, '14'],
+                       '14',
+                       [{name: 'Magenta'}, '12'],
+                       [{name: 'Yellow'}, '14']
+                     ],
                    }
+                 }
                  }, doc)
   end
 
