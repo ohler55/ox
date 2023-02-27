@@ -576,15 +576,6 @@ Lint/MissingSuper:
     - 'test/weather/wnosax.rb'
     - 'test/weather/wsax.rb'
 
-# Offense count: 4
-# This cop supports safe autocorrection (--autocorrect).
-Lint/RedundantRequireStatement:
-  Exclude:
-    - 'contrib/sax_benchmark.rb'
-    - 'test/files.rb'
-    - 'test/perf_mars.rb'
-    - 'test/sample.rb'
-
 # Offense count: 18
 Lint/RescueException:
   Exclude:

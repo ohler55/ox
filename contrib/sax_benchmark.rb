@@ -2,7 +2,6 @@
 # Taken from https://gist.github.com/hakanensari/3078932
 
 require 'benchmark'
-require 'pp'
 require 'stringio'
  
 require 'nokogiri'
