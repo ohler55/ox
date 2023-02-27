@@ -1277,9 +1277,9 @@ class Func < ::Test::Unit::TestCase
   end
 
   def test_remove_children_empty
-     doc = Ox.parse(easy_xml)
-     doc.remove_children
-     assert_equal(doc, Ox.parse(easy_xml))
+    doc = Ox.parse(easy_xml)
+    doc.remove_children
+    assert_equal(doc, Ox.parse(easy_xml))
   end
 
   def test_remove_children_single_match
