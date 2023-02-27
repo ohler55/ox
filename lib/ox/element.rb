@@ -274,9 +274,9 @@ module Ox
           match = nodes
         elsif '^' == name[0..0] # 1.8.7 thinks name[0] is a fixnum
           case name[1..-1]
-           when 'Element'
+          when 'Element'
             match = nodes.select { |e| e.is_a?(Element) }
-           when 'String', 'Text'
+          when 'String', 'Text'
             match = nodes.select { |e| e.is_a?(String) }
           when 'Comment'
             match = nodes.select { |e| e.is_a?(Comment) }
@@ -353,9 +353,9 @@ module Ox
           match = nodes
         elsif '^' == name[0..0] # 1.8.7 thinks name[0] is a fixnum
           case name[1..-1]
-           when 'Element'
+          when 'Element'
             match = nodes.select { |e| e.is_a?(Element) }
-           when 'String', 'Text'
+          when 'String', 'Text'
             match = nodes.select { |e| e.is_a?(String) }
           when 'Comment'
             match = nodes.select { |e| e.is_a?(Comment) }
