@@ -1,4 +1,3 @@
-
 require 'time'
 require 'libxml'
 
@@ -25,6 +24,7 @@ module Weather
       first = true
       table.each_element do |row|
         next unless 'Row' == row.name
+
         if first
           first = false
           next

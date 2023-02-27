@@ -1,4 +1,3 @@
-
 module Ox
 
   # An Object that includes the HasAttrs module can have attributes which are a Hash of String values and either String
@@ -18,6 +17,7 @@ module Ox
     # - +attr+ [Symbol|String] attribute name or key to return the value for
     def [](attr)
       return nil unless instance_variable_defined?(:@attributes) and @attributes.is_a?(Hash)
+
       @attributes[attr] or (attr.is_a?(String) ? @attributes[attr.to_sym] : @attributes[attr.to_s])
     end
 
@@ -26,6 +26,7 @@ module Ox
     # - +value+ [Object] value for the attribute
     def []=(attr, value)
       raise "argument to [] must be a Symbol or a String." unless attr.is_a?(Symbol) or attr.is_a?(String)
+
       @attributes = { } if !instance_variable_defined?(:@attributes) or @attributes.nil?
       a_str = attr.to_s
       a_sym = attr.to_sym

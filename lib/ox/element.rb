@@ -1,4 +1,3 @@
-
 module Ox
 
   # An Element represents a element of an XML document. It has a name,
@@ -59,6 +58,7 @@ module Ox
     # - +node+ [Node] Node to append to the nodes array
     def <<(node)
       raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
+
       @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       @nodes << node
       self
@@ -69,6 +69,7 @@ module Ox
     # - +node+ [Node] Node to prepend to the nodes array
     def prepend_child(node)
       raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
+
       @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       @nodes.unshift(node)
       self
@@ -82,6 +83,7 @@ module Ox
       return false unless super(other)
       return false unless self.attributes == other.attributes
       return false unless self.nodes == other.nodes
+
       true
     end
     alias == eql?
@@ -98,6 +100,7 @@ module Ox
     # - +txt+ [String] to become the only element of the nodes array
     def replace_text(txt)
       raise "the argument to replace_text() must be a String" unless txt.is_a?(String)
+
       @nodes.clear()
       @nodes << txt
     end
@@ -105,7 +108,7 @@ module Ox
     # Return true if all the key-value pairs in the cond Hash match the
     # @attributes key-values.
     def attr_match(cond)
-      cond.each_pair { |k,v| return false unless v == @attributes[k.to_sym] || v == @attributes[k.to_s] }
+      cond.each_pair { |k, v| return false unless v == @attributes[k.to_sym] || v == @attributes[k.to_s] }
       true
     end
 
@@ -161,6 +164,7 @@ module Ox
     # - +path+ [String] path to the Nodes to locate
     def locate(path)
       return [self] if path.nil?
+
       found = []
       pa = path.split('/')
       if '*' == path[0]
@@ -183,6 +187,7 @@ module Ox
     # - +children+ [Array] array of OX
     def remove_children(*children)
       return self if children.compact.empty?
+
       recursive_children_removal(children.compact.map { |c| c.object_id })
       self
     end
@@ -211,6 +216,7 @@ module Ox
       nodes.each do |n|
         if (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids || name_matchs?(n.value, ids))
           return n if 0 == i
+
           has_some = true
           i -= 1
         end
@@ -220,6 +226,7 @@ module Ox
         return @attributes[ids] if @attributes.has_key?(ids)
       end
       return nil if has_some
+
       raise NoMethodError.new("#{ids} not found", name)
     end
 
@@ -228,6 +235,7 @@ module Ox
     # *return* true if the element has a member that matches the provided name.
     def respond_to?(id, inc_all=false)
       return true if super
+
       id_str = id.to_s
       id_sym = id.to_sym
       nodes.each do |n|
@@ -247,10 +255,11 @@ module Ox
       step = path[0]
       if step.start_with?('@') # attribute
         raise InvalidPath.new(path) unless 1 == path.size
+
         if instance_variable_defined?(:@attributes)
           step = step[1..-1]
           sym_step = step.to_sym
-          @attributes.each do |k,v|
+          @attributes.each do |k, v|
             found << v if ('?' == step or k == step or k == sym_step)
           end
         end
@@ -261,6 +270,7 @@ module Ox
         else
           name = step[0..i-1]
           raise InvalidPath.new(path) unless step.end_with?(']')
+
           i += 1
           qual = step[i..i] # step[i] would be better but some rubies (jruby, ree, rbx) take that as a Fixnum.
           if '0' <= qual and qual <= '9'
@@ -274,9 +284,9 @@ module Ox
           match = nodes
         elsif '^' == name[0..0] # 1.8.7 thinks name[0] is a fixnum
           case name[1..-1]
-           when 'Element'
+          when 'Element'
             match = nodes.select { |e| e.is_a?(Element) }
-           when 'String', 'Text'
+          when 'String', 'Text'
             match = nodes.select { |e| e.is_a?(String) }
           when 'Comment'
             match = nodes.select { |e| e.is_a?(Comment) }
@@ -302,7 +312,7 @@ module Ox
           when '>'
             match = index <= match.size ? match[index + 1..-1] : []
           when '@'
-            k,v = step[i..-2].split('=')
+            k, v = step[i..-2].split('=')
             if v
               match = match.select { |n| n.is_a?(Element) && (v == n.attributes[k.to_sym] || v == n.attributes[k]) }
             else
@@ -328,10 +338,11 @@ module Ox
       step = path[0]
       if step.start_with?('@') # attribute
         raise InvalidPath.new(path) unless 1 == path.size
+
         if instance_variable_defined?(:@attributes)
           step = step[1..-1]
           sym_step = step.to_sym
-          @attributes.delete_if { |k,v| '?' == step || k.to_sym == sym_step }
+          @attributes.delete_if { |k, v| '?' == step || k.to_sym == sym_step }
         end
       else # element name
         if (i = step.index('[')).nil? # just name
@@ -340,6 +351,7 @@ module Ox
         else
           name = step[0..i-1]
           raise InvalidPath.new(path) unless step.end_with?(']')
+
           i += 1
           qual = step[i..i] # step[i] would be better but some rubies (jruby, ree, rbx) take that as a Fixnum.
           if '0' <= qual and qual <= '9'
@@ -353,9 +365,9 @@ module Ox
           match = nodes
         elsif '^' == name[0..0] # 1.8.7 thinks name[0] is a fixnum
           case name[1..-1]
-           when 'Element'
+          when 'Element'
             match = nodes.select { |e| e.is_a?(Element) }
-           when 'String', 'Text'
+          when 'String', 'Text'
             match = nodes.select { |e| e.is_a?(String) }
           when 'Comment'
             match = nodes.select { |e| e.is_a?(Comment) }
@@ -381,7 +393,7 @@ module Ox
           when '>'
             match = index <= match.size ? match[index + 1..-1] : []
           when '@'
-            k,v = step[i..-2].split('=')
+            k, v = step[i..-2].split('=')
             if v
               match = match.select { |n| n.is_a?(Element) && (v == n.attributes[k.to_sym] || v == n.attributes[k]) }
             else
@@ -427,6 +439,7 @@ module Ox
     # - +found+ [Array] An array of Ox::Element
     def recursive_children_removal(found)
       return if found.empty?
+
       nodes.tap do |ns|
         # found.delete(n.object_id) stops looking for an already found object_id
         ns.delete_if { |n| found.include?(n.object_id) ? found.delete(n.object_id) : false }
@@ -438,6 +451,7 @@ module Ox
 
     def name_matchs?(pat, id)
       return false unless pat.length == id.length
+
       pat.length.times { |i| return false unless '_' == id[i] || pat[i] == id[i] }
       true
     end

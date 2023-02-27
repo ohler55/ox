@@ -1,4 +1,3 @@
-
 require 'date'
 require File.join(File.dirname(__FILE__), 'lib/ox/version')
 
@@ -6,7 +5,6 @@ Gem::Specification.new do |s|
   s.name = "ox"
   s.version = ::Ox::VERSION
   s.authors = "Peter Ohler"
-  s.date = Date.today.to_s
   s.email = "peter@ohler.com"
   s.homepage = "http://www.ohler.com/ox"
   s.summary = "A fast XML parser and object serializer."

@@ -23,8 +23,10 @@ def node_to_dict(element)
   key = nil
   element.nodes.each do |n|
     raise "A dict can only contain elements." unless n.is_a?(::Ox::Element)
+
     if key.nil?
       raise "Expected a key, not a #{n.name}." unless 'key' == n.name
+
       key = first_text(n)
     else
       dict[key] = node_to_value(n)
@@ -44,6 +46,7 @@ end
 
 def node_to_value(node)
   raise "A dict can only contain elements." unless node.is_a?(::Ox::Element)
+
   case node.name
   when 'key'
     raise "Expected a value, not a key."
@@ -101,6 +104,7 @@ class Handler
     last = @stack.last
     if last.is_a?(Hash) and @key.nil?
       raise "Expected a key, not #{@type} with a value of #{value}." unless :key == @type
+
       @key = value
     else
       append(value)
@@ -149,6 +153,7 @@ class Handler
     last = @stack.last
     if last.is_a?(Hash)
       raise "Expected a key, not with a value of #{value}." if @key.nil?
+
       last[@key] = value
       @key = nil
     elsif last.is_a?(Array)
@@ -205,7 +210,7 @@ def plist_to_obj_xml(xml)
     '<real/>' => '<f/>',
     '<true/>' => '<y/>',
     '<false/>' => '<n/>',
-  }.each do |pat,rep|
+  }.each do |pat, rep|
     xml.gsub!(pat, rep)
   end
   xml

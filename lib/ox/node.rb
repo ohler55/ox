@@ -1,4 +1,3 @@
-
 module Ox
   # The Node is the base class for all other in the Ox module.
   class Node
@@ -16,6 +15,7 @@ module Ox
     # - +other+ [Object] Object to compare _self_ to.
     def eql?(other)
       return false if (other.nil? or self.class != other.class)
+
       other.value == self.value
     end
     alias == eql?

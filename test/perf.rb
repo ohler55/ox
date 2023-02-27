@@ -1,4 +1,3 @@
-
 class Perf
 
   def initialize()
@@ -36,6 +35,7 @@ class Perf
     width = 6
     @items.each do |i|
       next if i.duration.nil?
+
       width = i.title.size if width < i.title.size
     end
     iva = @items.clone

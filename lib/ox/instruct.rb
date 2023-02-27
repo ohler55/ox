@@ -1,4 +1,3 @@
-
 module Ox
 
   # An Instruct represents a processing instruction of an XML document. It has a target, attributes, and a value or
@@ -28,6 +27,7 @@ module Ox
       return false unless super(other)
       return false unless self.attributes == other.attributes
       return false unless self.content == other.content
+
       true
     end
     alias == eql?

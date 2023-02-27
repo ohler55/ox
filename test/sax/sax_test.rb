@@ -50,7 +50,7 @@ class SaxBaseTest < ::Test::Unit::TestCase
   def test_sax_io_pipe
     Ox::default_options = $ox_sax_options
     handler = AllSax.new()
-    input,w = IO.pipe
+    input, w = IO.pipe
     w << %{<top/>}
     w.close
     Ox.sax_parse(handler, input)
@@ -1300,7 +1300,6 @@ this is not part of the xml document
                   [:end_element, :tr],
                   [:end_element, :html]], handler.calls)
   end
-
 
   def test_sax_html_abort
     Ox::default_options = $ox_sax_options

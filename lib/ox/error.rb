@@ -1,4 +1,3 @@
-
 module Ox
 
   # Base error class for Ox errors.

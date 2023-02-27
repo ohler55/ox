@@ -1,4 +1,3 @@
-
 module Ox
   # Represents a DOCTYPE in an XML document.
   class DocType < Node

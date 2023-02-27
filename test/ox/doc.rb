@@ -1,4 +1,3 @@
-
 require 'test/ox/hasprops'
 require 'test/ox/group'
 require 'test/ox/layer'

@@ -19,7 +19,7 @@ dflags = {
   'RUBY_VERSION_MICRO' => version[2],
 }
 
-dflags.each do |k,v|
+dflags.each do |k, v|
   if v.nil?
     $CPPFLAGS += " -D#{k}"
   else

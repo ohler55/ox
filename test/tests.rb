@@ -559,7 +559,7 @@ class Func < ::Test::Unit::TestCase
     xml = %{\xEF\xBB\xBF<?xml?>\n<top name="bom"></top>\n}
     doc = Ox.parse(xml).root()
     assert_equal('bom', doc.attributes[:name])
-    unless RUBY_VERSION.start_with?('1.8')# || 'rubinius' == $ruby
+    unless RUBY_VERSION.start_with?('1.8') # || 'rubinius' == $ruby
       assert_equal('UTF-8', doc.attributes[:name].encoding.to_s)
     end
   end
@@ -1281,7 +1281,7 @@ class Func < ::Test::Unit::TestCase
     doc = Ox.parse(easy_xml)
     doc.remove_children
     assert_equal(doc, Ox.parse(easy_xml))
-  end
+ end
 
   def test_remove_children_single_match
     root = Ox.parse(easy_xml)
@@ -1561,7 +1561,7 @@ comment -->
   end
 
   def test_builder_io
-    IO.pipe do |r,w|
+    IO.pipe do |r, w|
       if fork
         w.close
         xml = r.read(1000)
@@ -1637,7 +1637,7 @@ comment -->
   end
 
   def test_builder_block_io
-    IO.pipe do |r,w|
+    IO.pipe do |r, w|
       if fork
         w.close
         xml = r.read(1000)
@@ -1807,7 +1807,7 @@ comment -->
     xml = %{<top type="string">This is the top.</top>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: [{type: 'string'},'This is the top.']}, doc)
+    assert_equal({top: [{type: 'string'}, 'This is the top.']}, doc)
   end
 
   def test_hash_mode_attrs
@@ -1927,15 +1927,17 @@ end
 class Bag
 
   def initialize(args)
-    args.each do |k,v|
+    args.each do |k, v|
       self.instance_variable_set(k, v)
     end
   end
 
   def eql?(other)
     return false if (other.nil? or self.class != other.class)
+
     ova = other.instance_variables
     return false if ova.size != instance_variables.size
+
     instance_variables.each do |vid|
       return false if instance_variable_get(vid) != other.instance_variable_get(vid)
     end

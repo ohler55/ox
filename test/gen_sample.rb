@@ -1,4 +1,3 @@
-
 require 'ox'
 
 doc = Ox::Document.new(:version => '1.0')

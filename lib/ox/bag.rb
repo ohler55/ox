@@ -1,4 +1,3 @@
-
 module Ox
 
   # A generic class that is used only for storing attributes. It is the base
@@ -18,7 +17,7 @@ module Ox
     #  Ox::Bag.new(:@x => 42, :@y => 57)
     #
     def initialize(args={ })
-      args.each do |k,v|
+      args.each do |k, v|
         self.instance_variable_set(k, v)
       end
     end
@@ -29,6 +28,7 @@ module Ox
     # reader, otherwise false.
     def respond_to?(m)
       return true if super
+
       at_m = ('@' + m.to_s).to_sym
       instance_variables.include?(at_m)
     end
@@ -43,8 +43,10 @@ module Ox
     # _raise_ [NoMethodError] if the instance variable is not defined.
     def method_missing(m, *args, &block)
       raise ArgumentError.new("wrong number of arguments (#{args.size} for 0) to method #{m}") unless args.nil? or args.empty?
+
       at_m = ('@' + m.to_s).to_sym
       raise NoMethodError.new("undefined method #{m}", m) unless instance_variable_defined?(at_m)
+
       instance_variable_get(at_m)
     end
 
@@ -53,9 +55,11 @@ module Ox
     # *return* [Boolean] true if each variable and value are the same, otherwise false.
     def eql?(other)
       return false if (other.nil? or self.class != other.class)
+
       ova = other.instance_variables
       iv = instance_variables
       return false if ova.size != iv.size
+
       iv.each do |vid|
         return false if instance_variable_get(vid) != other.instance_variable_get(vid)
       end
@@ -75,6 +79,7 @@ module Ox
       classname = classname.to_s unless classname.is_a?(String)
       tokens = classname.split('::').map { |n| n.to_sym }
       raise NameError.new("Invalid classname '#{classname}") if tokens.empty?
+
       m = Object
       tokens[0..-2].each do |sym|
         if m.const_defined?(sym)
