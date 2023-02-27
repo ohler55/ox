@@ -17,7 +17,7 @@ class Perf
   end
 
   def run(iter)
-    base = Item.new(nil, nil) { }
+    base = Item.new(nil, nil) {}
     base.run(iter, 0.0)
     @items.each do |i|
       i.run(iter, base.duration)

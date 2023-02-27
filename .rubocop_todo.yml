@@ -16,18 +16,6 @@ Layout/MultilineHashBraceLayout:
     - 'test/sample/file.rb'
     - 'test/tests.rb'
 
-# Offense count: 4
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces, SpaceBeforeBlockParameters.
-# SupportedStyles: space, no_space
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceInsideBlockBraces:
-  Exclude:
-    - 'contrib/xbuilder.rb'
-    - 'test/perf.rb'
-    - 'test/sax/smart_test.rb'
-    - 'test/tests.rb'
-
 # Offense count: 106
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.

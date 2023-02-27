@@ -357,7 +357,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
 </html>
 }
     overlay = Ox.sax_html_overlay.dup
-    overlay.each_key {|k| overlay[k] = :off }
+    overlay.each_key { |k| overlay[k] = :off }
     overlay['!--'] = :active
 
     handler = AllSax.new

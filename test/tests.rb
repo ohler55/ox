@@ -307,7 +307,7 @@ class Func < Test::Unit::TestCase
   end
 
   def test_unsupported_ox_version
-    assert_raise(Ox::SyntaxError) { Ox.parse(%{<?ox version="10"?><s>foobar</s>})}
+    assert_raise(Ox::SyntaxError) { Ox.parse(%{<?ox version="10"?><s>foobar</s>}) }
   end
 
   def test_prolog_syntax_error
