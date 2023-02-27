@@ -22,13 +22,6 @@ Gemspec/RequireMFA:
   Exclude:
     - 'ox.gemspec'
 
-# Offense count: 1
-# Configuration parameters: Severity, Include.
-# Include: **/*.gemspec
-Gemspec/RequiredRubyVersion:
-  Exclude:
-    - 'ox.gemspec'
-
 # Offense count: 18
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EnforcedStyle, IndentationWidth.
