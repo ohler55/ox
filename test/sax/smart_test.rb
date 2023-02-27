@@ -136,7 +136,7 @@ class SaxSmartTest < Test::Unit::TestCase
   }
 
   # Make the :smart => true option the default one
-  def smart_parse_compare(xml, expected, handler = AllSax, opts = {}, handler_attr = :calls)
+  def smart_parse_compare(xml, expected, handler=AllSax, opts={}, handler_attr=:calls)
     parse_compare(xml, expected, handler, opts.merge(:smart => true, :skip => :skip_white), handler_attr)
   end
 end
@@ -155,7 +155,7 @@ class ErrorsOnParentNormalElementTest < SaxSmartTest
     NORMALELEMENTS[el]['parents'] || ['body']
   end
 
-  def ancestry_of(el, parent = nil)
+  def ancestry_of(el, parent=nil)
     p = parent || parents_of(el)[0]
     [el] + (p ? ancestry_of(p) : [])
   end
@@ -588,7 +588,7 @@ class SaxSmartTableTagTest < SaxSmartTest
                          [:end_element, :html]])
   end
 
-  def html_parse_compare(xml, expected, opts = {})
+  def html_parse_compare(xml, expected, opts={})
     handler = AllSax.new
     input = StringIO.new(xml)
     options = {

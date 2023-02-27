@@ -93,7 +93,7 @@ class NokogiriHandler < Nokogiri::XML::SAX::Document
     end
   end
 
-  def start_element(key, attrs = [])
+  def start_element(key, attrs=[])
     @stack << @node = {}
     attrs.each do |attr|
       key, val = *attr

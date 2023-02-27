@@ -117,7 +117,7 @@ unless defined?(Nokogiri).nil?
   end
 
   class NoAllSax < NoSax
-    def start_element(name, attrs = []); end
+    def start_element(name, attrs=[]); end
     def characters(text); end
     def cdata_block(string); end
     def comment(string); end

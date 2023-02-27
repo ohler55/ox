@@ -16,31 +16,6 @@ Layout/MultilineHashBraceLayout:
     - 'test/sample/file.rb'
     - 'test/tests.rb'
 
-# Offense count: 26
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: space, no_space
-Layout/SpaceAroundEqualsInParameterDefault:
-  Exclude:
-    - 'lib/ox/bag.rb'
-    - 'lib/ox/document.rb'
-    - 'lib/ox/element.rb'
-    - 'test/ox/change.rb'
-    - 'test/ox/doc.rb'
-    - 'test/ox/oval.rb'
-    - 'test/ox/rect.rb'
-    - 'test/ox/shape.rb'
-    - 'test/ox/text.rb'
-    - 'test/perf_mars.rb'
-    - 'test/sample.rb'
-    - 'test/sample/change.rb'
-    - 'test/sample/doc.rb'
-    - 'test/sample/oval.rb'
-    - 'test/sample/rect.rb'
-    - 'test/sample/shape.rb'
-    - 'test/sample/text.rb'
-    - 'test/tests.rb'
-
 # Offense count: 10
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: AllowForAlignment, EnforcedStyleForExponentOperator.
