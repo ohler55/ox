@@ -40,10 +40,10 @@ class XBuilderTest < ::Test::Unit::TestCase
           x('subchild2',{'atr3' => 'default_value'},{'atr3' => 'atr3_value'},
             x('sometag'),
             x_if(false,'never')
-            )
-          ),
+          )
+        ),
         children
-        )
+       )
 
     assert_equal(Ox.dump(n),Ox.dump(Ox.parse(xml)))
   end
