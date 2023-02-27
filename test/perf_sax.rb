@@ -108,6 +108,7 @@ unless defined?(::Nokogiri).nil?
     def error(message); puts message; end
     def warning(message); puts message; end
   end
+
   class NoAllSax < NoSax
     def start_element(name, attrs = []); end
     def characters(text); end
@@ -124,6 +125,7 @@ unless defined?(::LibXML).nil?
   class LxSax
     include LibXML::XML::SaxParser::Callbacks
   end
+
   class LxAllSax < LxSax
     def on_start_element(element, attributes); end
     def on_cdata_block(cdata); end

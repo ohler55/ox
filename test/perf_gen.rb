@@ -138,5 +138,4 @@ data.each do |d|
     end
     perf.run($iter)
   end
-
 end

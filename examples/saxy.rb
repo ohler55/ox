@@ -28,7 +28,6 @@ class Saxy
   def start_element(name)
     @names[name] = nil
   end
-
 end
 
 # The XML can be a string or a IO instance.

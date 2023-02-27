@@ -31,7 +31,6 @@ module Test
       def add_change(comment, time=nil, user=nil)
         @change_history << Change.new(comment, time, user)
       end
-
     end # Doc
   end # Ox
 end # Test

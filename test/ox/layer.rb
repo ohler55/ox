@@ -7,7 +7,6 @@ module Test
         super()
         @name = name
       end
-
     end # Layer
   end # Ox
 end # Test

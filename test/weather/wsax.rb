@@ -2,7 +2,6 @@ require 'ox'
 
 module Weather
   class WSax < ::Ox::Sax
-
     attr_accessor :highs
 
     def self.parse(filename, as_time)
@@ -50,6 +49,5 @@ module Weather
     def error(message, line, column)
       puts message
     end
-
   end # WSax
 end # Weather

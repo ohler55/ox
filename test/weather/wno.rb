@@ -3,7 +3,6 @@ require 'nokogiri'
 
 module Weather
   class WNo
-
     def self.parse(filename, as_time)
       highs = {}
       doc = Nokogiri::XML::Document.parse(File.open(filename))
@@ -41,6 +40,5 @@ module Weather
       #puts highs
       highs
     end
-
   end # WNo
 end # Weather

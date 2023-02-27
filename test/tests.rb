@@ -72,7 +72,6 @@ $ox_generic_options = {
 }
 
 class Func < ::Test::Unit::TestCase
-
   unless respond_to?(:assert_raise)
     alias assert_raise assert_raises
   end
@@ -1277,11 +1276,11 @@ class Func < ::Test::Unit::TestCase
 }
   end
 
- def test_remove_children_empty
-    doc = Ox.parse(easy_xml)
-    doc.remove_children
-    assert_equal(doc, Ox.parse(easy_xml))
- end
+  def test_remove_children_empty
+     doc = Ox.parse(easy_xml)
+     doc.remove_children
+     assert_equal(doc, Ox.parse(easy_xml))
+  end
 
   def test_remove_children_single_match
     root = Ox.parse(easy_xml)
@@ -1824,15 +1823,15 @@ comment -->
 }
     doc = Ox.load(xml, :mode => :hash)
     assert_equal({result: {
-                     variables: {
-                       var: [
-                             [{name: 'Blue'}, '14'],
-                             [{name: 'Jack'}, '14'],
-                             [{name: 'Magenta'}, '12'],
-                             [{name: 'Yellow'}, '14']
-                            ],
-                     }
+                   variables: {
+                     var: [
+                       [{name: 'Blue'}, '14'],
+                       [{name: 'Jack'}, '14'],
+                       [{name: 'Magenta'}, '12'],
+                       [{name: 'Yellow'}, '14']
+                     ],
                    }
+                 }
                  }, doc)
   end
 
@@ -1850,15 +1849,15 @@ comment -->
 }
     doc = Ox.load(xml, :mode => :hash)
     assert_equal({result: {
-                     variables: {
-                       var: [
-                             '14',
-                             [{name: 'Jack'}, '14'],
-                             [{name: 'Magenta'}, '12'],
-                             [{name: 'Yellow'}, '14']
-                            ],
-                     }
+                   variables: {
+                     var: [
+                       '14',
+                       [{name: 'Jack'}, '14'],
+                       [{name: 'Magenta'}, '12'],
+                       [{name: 'Yellow'}, '14']
+                     ],
                    }
+                 }
                  }, doc)
   end
 
@@ -1876,15 +1875,15 @@ comment -->
 }
     doc = Ox.load(xml, :mode => :hash)
     assert_equal({result: {
-                     variables: {
-                       var: [
-                             [{name: 'Blue'}, '14'],
-                             '14',
-                             [{name: 'Magenta'}, '12'],
-                             [{name: 'Yellow'}, '14']
-                            ],
-                     }
+                   variables: {
+                     var: [
+                       [{name: 'Blue'}, '14'],
+                       '14',
+                       [{name: 'Magenta'}, '12'],
+                       [{name: 'Yellow'}, '14']
+                     ],
                    }
+                 }
                  }, doc)
   end
 
@@ -1921,11 +1920,9 @@ comment -->
     end
     loaded
   end
-
 end
 
 class Bag
-
   def initialize(args)
     args.each do |k, v|
       self.instance_variable_set(k, v)
@@ -1944,5 +1941,4 @@ class Bag
     true
   end
   alias == eql?
-
 end

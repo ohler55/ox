@@ -1,5 +1,4 @@
 module Ox
-
   # An Element represents a element of an XML document. It has a name,
   # attributes, and sub-nodes.
   #
@@ -203,6 +202,7 @@ module Ox
       del_locate(path.split('/')) unless path.nil?
       self
     end
+
     # Handles the 'easy' API that allows navigating a simple XML by
     # referencing elements and attributes by name.
     # - +id+ [Symbol] element or attribute name

@@ -29,9 +29,9 @@ class XBuilderTest < ::Test::Unit::TestCase
 
     children =
       [
-       x_if(true, 'child3'),
-       x('child4', 'another text', 'atr4' => 'atr4_value'),
-       x_if(false, 'child5')
+        x_if(true, 'child3'),
+        x('child4', 'another text', 'atr4' => 'atr4_value'),
+        x_if(false, 'child5')
       ]
 
     n=x('parent',

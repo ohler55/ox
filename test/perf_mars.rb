@@ -26,6 +26,7 @@ module Test
   module Ox
     class Wrap
       attr_accessor :values
+
       def initialize(v=[])
         @values = v
       end

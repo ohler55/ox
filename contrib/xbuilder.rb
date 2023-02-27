@@ -28,6 +28,5 @@ module Ox
     def x_if(condition, *args)
       x(*args) if condition
     end
-
   end
 end

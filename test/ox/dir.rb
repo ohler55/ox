@@ -2,7 +2,6 @@ require 'etc'
 
 module Test
   module Ox
-
     class Dir < File
       attr_accessor :files
 
@@ -14,7 +13,6 @@ module Test
       def <<(f)
         @files << f
       end
-
     end # Dir
   end # Ox
 end # Test

@@ -1,5 +1,4 @@
 module Sample
-
   class Line
     include HasProps
 
@@ -15,6 +14,5 @@ module Sample
       @thick = thick
       @color = color
     end
-
   end # Line
 end # Sample

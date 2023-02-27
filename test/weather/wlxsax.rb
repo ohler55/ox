@@ -57,6 +57,5 @@ module Weather
     def on_error(msg)
       puts msg
     end
-
   end # WLxSax
 end # Weather

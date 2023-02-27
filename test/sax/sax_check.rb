@@ -18,21 +18,26 @@ class QuietSax < Ox::Sax
     @line = nil
     @column = nil
   end
+
   def start_element(name)
     puts "Start #{name} @ #{@column}"
   end
+
   def end_element(name)
     puts "End #{name} @ #{@line}:#{@column}"
   end
+
   def attr(name, value); end
   def instruct(target); end
   def end_instruct(target); end
   def doctype(value); end
   def comment(value); end
   def cdata(value); end
+
   def text(value)
     puts "text #{value.length} @ #{@line}:#{@column}"
   end
+
   def error(message, line, column)
     puts "Error: #{message} @ #{line}:#{column}"
   end

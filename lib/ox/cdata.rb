@@ -6,6 +6,5 @@ module Ox
     def initialize(value)
       super
     end
-
   end # CData
 end # Ox

@@ -1,7 +1,6 @@
 require 'handlers'
 
 module SaxTestHelpers
-
   # A helper method to initiate a sax parsing using a specified xml
   # structure as input, an expected stack of calls, a handler class
   # and an optional options hash to pass to the parser.

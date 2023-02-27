@@ -81,7 +81,7 @@ else
     $xml = File.read(f)
     $obj = Ox.load($xml);
     $mars = Marshal.dump($obj)
-    $json = Oj.dump($obj, :indent => $indent, :circular => $circular)  unless defined?(::Oj).nil?
+    $json = Oj.dump($obj, :indent => $indent, :circular => $circular) unless defined?(::Oj).nil?
   end
 end
 

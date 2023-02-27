@@ -3,7 +3,6 @@ require 'libxml'
 
 module Weather
   class WLx
-
     def self.parse(filename, as_time)
       highs = {}
       doc = LibXML::XML::Document.file(filename)
@@ -50,6 +49,5 @@ module Weather
       #puts highs
       highs
     end
-
   end # Wlx
 end # Weather

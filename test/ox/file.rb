@@ -2,7 +2,6 @@ require 'etc'
 
 module Test
   module Ox
-
     class File
       attr_accessor :name, :ctime, :mtime, :size, :owner, :group, :permissions
 
@@ -26,7 +25,6 @@ module Test
                      (0 != (stat.mode & 0x0001)) ? 'x' : '-'].join('')
         }
       end
-
     end # File
   end # Ox
 end # Test

@@ -1,7 +1,6 @@
 require 'ox'
 
 module Ox
-
   # This is an alternative parser for the stdlib xmlrpc library. It makes
   # use of Ox and is based on REXMLStreamParser. To use it set is as the
   # parser for an XMLRPC client:

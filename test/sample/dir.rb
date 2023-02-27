@@ -1,7 +1,6 @@
 require 'etc'
 
 module Sample
-
   class Dir < File
     attr_accessor :files
 
@@ -13,6 +12,5 @@ module Sample
     def <<(f)
       @files << f
     end
-
   end # Dir
 end # Sample

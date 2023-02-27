@@ -1,6 +1,5 @@
 module Test
   module Ox
-
     class Text < Shape
       attr_accessor :text
       attr_accessor :font
@@ -16,7 +15,6 @@ module Test
         @just = 'left'
         @text_color = 'black'
       end
-
     end # Text
   end # Ox
 end # Test
