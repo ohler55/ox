@@ -49,9 +49,9 @@ class Saxy < Ox::Sax
       # written. HTML includes void elements that are self closing so those
       # should be handled correctly.
       if VOID_ELEMENTS.include?(@element_name)
-	@builder.void_element(@element_name, @attrs)
+        @builder.void_element(@element_name, @attrs)
       else
-	@builder.element(@element_name, @attrs)
+        @builder.element(@element_name, @attrs)
       end
       # Reset the element name.
       @element_name = nil
@@ -97,7 +97,7 @@ end
 
 # Load the XML file. The Ox.sax_html also handles IO objects.
 xml = File.read('saxy.html')
-# Create an instance of the handler. 
+# Create an instance of the handler.
 handler = Saxy.new()
 
 Ox.sax_html(handler, xml)

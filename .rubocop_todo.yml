@@ -14,16 +14,6 @@ Gemspec/RequireMFA:
   Exclude:
     - 'ox.gemspec'
 
-# Offense count: 7
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: IndentationWidth, EnforcedStyle.
-# SupportedStyles: spaces, tabs
-Layout/IndentationStyle:
-  Exclude:
-    - 'examples/saxy_html.rb'
-    - 'lib/ox/hasattrs.rb'
-    - 'test/sax/helpers.rb'
-
 # Offense count: 11
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: Width, AllowedPatterns.

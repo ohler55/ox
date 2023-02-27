@@ -30,9 +30,9 @@ module Ox
       a_str = attr.to_s
       a_sym = attr.to_sym
       if @attributes.has_key?(a_str)
-	attr = a_str
+        attr = a_str
       elsif @attributes.has_key?(a_sym)
-	attr = a_sym
+        attr = a_sym
       end
       @attributes[attr] = value.to_s
     end
