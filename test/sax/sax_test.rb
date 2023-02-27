@@ -22,7 +22,7 @@ require 'helpers'
 #require 'smart_test'
 
 opts = OptionParser.new
-opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
+opts.on("-h", "--help", "Show this display") { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
 $ox_sax_options = {
