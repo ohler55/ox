@@ -27,4 +27,6 @@ serialization. }
 
   s.extra_rdoc_files = ['README.md', 'CHANGELOG.md']
   s.rdoc_options = ['--main', 'README.md', '--title', 'Ox', '--exclude', 'extconf.rb', 'lib', 'ext/ox', 'README.md']
+
+  s.required_ruby_version = '>= 2.5.0'
 end
