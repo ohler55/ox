@@ -210,7 +210,7 @@ def plist_to_obj_xml(xml)
     '<real/>' => '<f/>',
     '<true/>' => '<y/>',
     '<false/>' => '<n/>',
-  }.each do |pat,rep|
+  }.each do |pat, rep|
     xml.gsub!(pat, rep)
   end
   xml

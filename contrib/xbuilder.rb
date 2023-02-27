@@ -14,7 +14,7 @@ module Ox
       for arg in args
         case arg
         when Hash
-          arg.each { |k,v| n[k.to_s] = v }
+          arg.each { |k, v| n[k.to_s] = v }
         when Array
           arg.each { |c| n << c if c}
         else

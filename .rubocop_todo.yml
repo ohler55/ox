@@ -226,23 +226,6 @@ Layout/MultilineMethodCallBraceLayout:
   Exclude:
     - 'contrib/xbuilder_test.rb'
 
-# Offense count: 30
-# This cop supports safe autocorrection (--autocorrect).
-Layout/SpaceAfterComma:
-  Exclude:
-    - 'contrib/xbuilder.rb'
-    - 'contrib/xbuilder_test.rb'
-    - 'ext/ox/extconf.rb'
-    - 'lib/ox/bag.rb'
-    - 'lib/ox/element.rb'
-    - 'test/cache8_test.rb'
-    - 'test/cache_test.rb'
-    - 'test/parse_cmp.rb'
-    - 'test/perf_mars.rb'
-    - 'test/perf_sax.rb'
-    - 'test/sax/sax_test.rb'
-    - 'test/tests.rb'
-
 # Offense count: 26
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EnforcedStyle.

@@ -108,7 +108,7 @@ module Ox
     # Return true if all the key-value pairs in the cond Hash match the
     # @attributes key-values.
     def attr_match(cond)
-      cond.each_pair { |k,v| return false unless v == @attributes[k.to_sym] || v == @attributes[k.to_s] }
+      cond.each_pair { |k, v| return false unless v == @attributes[k.to_sym] || v == @attributes[k.to_s] }
       true
     end
 
@@ -259,7 +259,7 @@ module Ox
         if instance_variable_defined?(:@attributes)
           step = step[1..-1]
           sym_step = step.to_sym
-          @attributes.each do |k,v|
+          @attributes.each do |k, v|
             found << v if ('?' == step or k == step or k == sym_step)
           end
         end
@@ -312,7 +312,7 @@ module Ox
           when '>'
             match = index <= match.size ? match[index + 1..-1] : []
           when '@'
-            k,v = step[i..-2].split('=')
+            k, v = step[i..-2].split('=')
             if v
               match = match.select { |n| n.is_a?(Element) && (v == n.attributes[k.to_sym] || v == n.attributes[k]) }
             else
@@ -342,7 +342,7 @@ module Ox
         if instance_variable_defined?(:@attributes)
           step = step[1..-1]
           sym_step = step.to_sym
-          @attributes.delete_if { |k,v| '?' == step || k.to_sym == sym_step }
+          @attributes.delete_if { |k, v| '?' == step || k.to_sym == sym_step }
         end
       else # element name
         if (i = step.index('[')).nil? # just name
@@ -393,7 +393,7 @@ module Ox
           when '>'
             match = index <= match.size ? match[index + 1..-1] : []
           when '@'
-            k,v = step[i..-2].split('=')
+            k, v = step[i..-2].split('=')
             if v
               match = match.select { |n| n.is_a?(Element) && (v == n.attributes[k.to_sym] || v == n.attributes[k]) }
             else

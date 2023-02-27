@@ -7,7 +7,7 @@ $: << '../ext'
 
 if __FILE__ == $0
   if (i = ARGV.index('-I'))
-    x,path = ARGV.slice!(i, 2)
+    x, path = ARGV.slice!(i, 2)
     $: << path
   end
 end
@@ -75,7 +75,7 @@ end
 
 puts "           load                        dump"
 puts "type       Ox      Marshal  ratio      Ox      Marshal  ratio"
-data.each do |type,a|
+data.each do |type, a|
   #xml = Ox.dump(a, :indent => -1, :xsd_date => true)
   xml = Ox.dump(a, :indent => -1)
   #pp a

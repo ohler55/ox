@@ -1561,7 +1561,7 @@ comment -->
   end
 
   def test_builder_io
-    IO.pipe do |r,w|
+    IO.pipe do |r, w|
       if fork
         w.close
         xml = r.read(1000)
@@ -1637,7 +1637,7 @@ comment -->
   end
 
   def test_builder_block_io
-    IO.pipe do |r,w|
+    IO.pipe do |r, w|
       if fork
         w.close
         xml = r.read(1000)
@@ -1807,7 +1807,7 @@ comment -->
     xml = %{<top type="string">This is the top.</top>
 }
     doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: [{type: 'string'},'This is the top.']}, doc)
+    assert_equal({top: [{type: 'string'}, 'This is the top.']}, doc)
   end
 
   def test_hash_mode_attrs
@@ -1927,7 +1927,7 @@ end
 class Bag
 
   def initialize(args)
-    args.each do |k,v|
+    args.each do |k, v|
       self.instance_variable_set(k, v)
     end
   end

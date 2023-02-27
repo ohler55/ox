@@ -50,7 +50,7 @@ class SaxBaseTest < ::Test::Unit::TestCase
   def test_sax_io_pipe
     Ox::default_options = $ox_sax_options
     handler = AllSax.new()
-    input,w = IO.pipe
+    input, w = IO.pipe
     w << %{<top/>}
     w.close
     Ox.sax_parse(handler, input)
