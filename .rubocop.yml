@@ -1,10 +1,8 @@
 inherit_from: .rubocop_todo.yml
 
 AllCops:
-  TargetRubyVersion: 2.5
+  TargetRubyVersion: 2.7
   NewCops: enable
-  Exclude:
-    - 'examples/sax_ractor.rb' # uses newer syntax than 2.5 supports
 
 Naming/MethodName:
   EnforcedStyle: snake_case
