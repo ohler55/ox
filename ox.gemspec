@@ -27,4 +27,6 @@ serialization. }
   s.rdoc_options = ['--main', 'README.md', '--title', 'Ox', '--exclude', 'extconf.rb', 'lib', 'ext/ox', 'README.md']
 
   s.required_ruby_version = '>= 2.5.0'
+
+  s.metadata['rubygems_mfa_required'] = 'true'
 end
