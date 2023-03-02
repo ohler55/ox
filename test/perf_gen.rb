@@ -5,11 +5,9 @@ $: << '..'
 $: << '../lib'
 $: << '../ext'
 
-if __FILE__ == $0
-  if (i = ARGV.index('-I'))
-    x = ARGV.slice!(i, 2)
-    $: << x[1]
-  end
+if __FILE__ == $0 && (i = ARGV.index('-I'))
+  x = ARGV.slice!(i, 2)
+  $: << x[1]
 end
 
 require 'optparse'
