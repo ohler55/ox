@@ -46,7 +46,7 @@ class SaxBaseTest < Test::Unit::TestCase
   include SaxTestHelpers
 
   def test_sax_io_pipe
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     input, w = IO.pipe
     w << %{<top/>}
@@ -57,7 +57,7 @@ class SaxBaseTest < Test::Unit::TestCase
   end
 
   def test_sax_file
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     input = File.open(File.join(File.dirname(__FILE__), 'basic.xml'))
     Ox.sax_parse(handler, input)
@@ -67,7 +67,7 @@ class SaxBaseTest < Test::Unit::TestCase
   end
 
   def test_sax_file_line_col
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = LineColSax.new
     input = File.open(File.join(File.dirname(__FILE__), 'trilevel.xml'))
     Ox.sax_parse(handler, input)
@@ -88,7 +88,7 @@ class SaxBaseTest < Test::Unit::TestCase
   end
 
   def test_sax_io_file
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     input = IO.open(IO.sysopen(File.join(File.dirname(__FILE__), 'basic.xml')))
     Ox.sax_parse(handler, input)
@@ -98,18 +98,18 @@ class SaxBaseTest < Test::Unit::TestCase
   end
 
   def test_sax_instruct_simple
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml?>}, [[:instruct, 'xml'],
                                [:end_instruct, 'xml']])
   end
 
   def test_sax_instruct_blank
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml?>}, [], StartSax)
   end
 
   def test_sax_instruct_attrs
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>},
                   [[:instruct, 'xml'],
                    [:attr, :version, '1.0'],
@@ -118,7 +118,7 @@ class SaxBaseTest < Test::Unit::TestCase
   end
 
   def test_sax_instruct_noattrs
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?bad something?>},
                   [[:instruct, 'bad'],
                    [:text, 'something'],
@@ -126,7 +126,7 @@ class SaxBaseTest < Test::Unit::TestCase
   end
 
   def test_sax_instruct_loose
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<? xml
 version = "1.0"
 encoding = "UTF-8" ?>},
@@ -137,7 +137,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_instruct_pi
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?pro cat="quick"?>
 <top>
   <str>This is a <?attrs dog="big"?> string.</str>
@@ -162,7 +162,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_instruct_no_term
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml?
 <top/>},
                   [[:instruct, 'xml'],
@@ -173,14 +173,14 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_element_simple
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top/>},
                   [[:start_element, :top],
                    [:end_element, :top]])
   end
 
   def test_sax_element_attrs
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top x="57" y='42' z=33/>},
                   [[:start_element, :top],
                    [:attr, :x, '57'],
@@ -192,7 +192,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_element_start_end
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top></top>},
                   [[:start_element, :top],
                    [:text, ''],
@@ -200,7 +200,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_two_top
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top/><top/>},
                   [[:start_element, :top],
                    [:end_element, :top],
@@ -210,7 +210,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_nested_elements
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top>
   <child>
     <grandchild/>
@@ -227,8 +227,8 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_elements_case
-    Ox::default_options = $ox_sax_options
-    Ox::default_options = { :smart => true, :skip => :skip_white }
+    Ox.default_options = $ox_sax_options
+    Ox.default_options = { :smart => true, :skip => :skip_white }
     parse_compare(%{<top>
   <Child>
     <grandchild/>
@@ -245,7 +245,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_nested1
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <top>
   <child>
@@ -266,7 +266,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_line_col
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <!DOCTYPE top PUBLIC "top.dtd">
 <top attr="one">
@@ -309,7 +309,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_element_name_mismatch
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <top>
   <child>
@@ -333,7 +333,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_nested
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <top>
   <child>
@@ -364,7 +364,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_element_no_term
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{
 <top>
   <child/>
@@ -378,7 +378,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_text
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top>This is some text.</top>},
                   [[:start_element, :top],
                    [:text, 'This is some text.'],
@@ -387,7 +387,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_open_close_element
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top><mid></mid></top>},
                   [[:start_element, :top],
                    [:start_element, :mid],
@@ -398,7 +398,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_empty_element
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{  <top>  </top>},
                   [[:start_element, :top],
                    [:text, ' '],
@@ -407,7 +407,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_empty_element_name
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <top>
   <>
@@ -427,7 +427,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_empty_element_noskip
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{  <top>  </top>},
                   [[:text, '  '],
                    [:start_element, :top],
@@ -437,7 +437,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_special
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; &pi; text.</top>},
                   [[:start_element, :top],
                    [:attr, :name, 'A&Z'],
@@ -447,7 +447,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_bad_special
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top name="&example;">&example;</top>},
                   [[:start_element, :top],
                    [:error, 'Invalid Format: Invalid special character sequence', 1, 11],
@@ -459,7 +459,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_ignore_special
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top name="&example;">&example;</top>},
                   [[:start_element, :top],
                    [:attr, :name, '&example;'],
@@ -469,7 +469,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_not_special
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [[:start_element, :top],
                    [:attr, :name, 'A&amp;Z'],
@@ -479,33 +479,33 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_special_default
-    Ox::default_options = $ox_sax_options
-    orig = Ox::default_options[:convert_special]
-    Ox::default_options = { :convert_special => true }
+    Ox.default_options = $ox_sax_options
+    orig = Ox.default_options[:convert_special]
+    Ox.default_options = { :convert_special => true }
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [[:start_element, :top],
                    [:attr, :name, 'A&Z'],
                    [:text, 'This is <some> text.'],
                    [:end_element, :top]
                   ], AllSax)
-    Ox::default_options = { :convert_special => orig }
+    Ox.default_options = { :convert_special => orig }
   end
 
   def test_sax_not_special_default
-    Ox::default_options = $ox_sax_options
-    orig = Ox::default_options[:convert_special]
-    Ox::default_options = { :convert_special => false }
+    Ox.default_options = $ox_sax_options
+    orig = Ox.default_options[:convert_special]
+    Ox.default_options = { :convert_special => false }
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [[:start_element, :top],
                    [:attr, :name, 'A&amp;Z'],
                    [:text, 'This is &lt;some&gt; text.'],
                    [:end_element, :top]
                   ], AllSax)
-    Ox::default_options = { :convert_special => orig }
+    Ox.default_options = { :convert_special => orig }
   end
 
   def test_sax_whitespace
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top> This is some text.</top>},
                   [[:start_element, :top],
                    [:text, ' This is some text.'],
@@ -514,7 +514,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_text_no_term
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top>This is some text.},
                   [[:start_element, :top],
                    [:error, 'Not Terminated: text not terminated', 1, 23],
@@ -525,7 +525,7 @@ encoding = "UTF-8" ?>},
   # TBD invalid chacters in text
 
   def test_sax_doctype
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <!DOCTYPE top PUBLIC "top.dtd">
 <top/>
@@ -539,7 +539,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_doctype_big
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <!DOCTYPE Objects [<!ELEMENT Objects (RentObjects)><!ENTITY euml "&#235;"><!ENTITY Atilde "&#195;">]>
 <top/>
@@ -553,7 +553,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_doctype_bad_order
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <top/>
 <!DOCTYPE top PUBLIC "top.dtd">
@@ -568,7 +568,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_doctype_space
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{
 <! DOCTYPE top PUBLIC "top.dtd">
 <top/>
@@ -580,7 +580,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_bad_bang
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<top>
   <! Bang Bang>
 </top>
@@ -591,7 +591,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_comment_simple
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <!--First comment.-->
 },
@@ -602,7 +602,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_comment
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <!--First comment.-->
 <top>Before<!--Nested comment.-->After</top>
@@ -619,7 +619,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_comment_no_term
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <!--First comment.--
 <top/>
@@ -634,7 +634,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_cdata
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <top>
   <![CDATA[This is CDATA.]]>
@@ -649,7 +649,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_cdata_no_term
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <top>
   <![CDATA[This is CDATA.]]
@@ -665,7 +665,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_cdata_empty
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <top>
   <child><![CDATA[]]></child>
@@ -686,7 +686,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_mixed
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0"?>
 <?ox version="1.0" mode="object" circular="no" xsd_date="no"?>
 <!DOCTYPE table PUBLIC "-//ox//DTD TABLE 1.0//EN" "http://www.ohler.com/DTDs/TestTable-1.0.dtd">
@@ -749,7 +749,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_encoding
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
 <top>ピーター</top>
 },
@@ -763,7 +763,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_bom
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     xml = %{\xEF\xBB\xBF<?xml?>
 <top>ピーター</top>
 }
@@ -777,7 +777,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_full_encoding
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
 <いち name="ピーター" つま="まきえ">ピーター is katakana</いち>
 },
@@ -793,7 +793,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_amp_hash
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
 <text>&#233; is e with an accent</text>
 },
@@ -807,7 +807,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_implied_encoding
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     if RUBY_VERSION.start_with?('1.8') || RUBY_DESCRIPTION.start_with?('rubinius 2.0.0dev')
       assert(true)
     else
@@ -829,7 +829,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_non_utf8_encoding
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     if RUBY_VERSION.start_with?('1.8') || RUBY_DESCRIPTION.start_with?('rubinius 2.0.0dev')
       assert(true)
     else
@@ -847,22 +847,22 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_value_fixnum
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(:as_i)
     Ox.sax_parse(handler, StringIO.new(%{<top>7</top>}))
     assert_equal(7, handler.item)
   end
 
   def test_sax_value_string
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(:as_s)
     Ox.sax_parse(handler, StringIO.new(%{<top>cheese</top>}))
     assert_equal('cheese', handler.item)
   end
 
   def test_sax_skip_none
-    Ox::default_options = $ox_sax_options
-    Ox::default_options = { :skip => :skip_none }
+    Ox.default_options = $ox_sax_options
+    Ox.default_options = { :skip => :skip_none }
 
     handler = TypeSax.new(:as_s)
     xml = %{<top>  Pete\r\n  Ohler\r</top>}
@@ -871,8 +871,8 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_skip_none_nested
-    Ox::default_options = $ox_sax_options
-    Ox::default_options = { :skip => :skip_none }
+    Ox.default_options = $ox_sax_options
+    Ox.default_options = { :skip => :skip_none }
 
     handler = AllSax.new
     xml = %{<top>  <child>Pete\r</child>\n <child> Ohler\r</child></top>}
@@ -890,7 +890,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_skip_return
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(:as_s)
     xml = %{<top>  Pete\r\n  Ohler\r</top>}
     Ox.sax_parse(handler, StringIO.new(xml), :skip => :skip_return)
@@ -898,7 +898,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_skip_white
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(:as_s)
     xml = %{<top>  Pete\r\n  Ohler\r</top>}
     Ox.sax_parse(handler, StringIO.new(xml), :skip => :skip_white)
@@ -906,35 +906,35 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_value_float
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(:as_f)
     Ox.sax_parse(handler, StringIO.new(%{<top>7</top>}))
     assert_equal(7.0, handler.item)
   end
 
   def test_sax_value_sym
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(:as_sym)
     Ox.sax_parse(handler, StringIO.new(%{<top>cheese</top>}))
     assert_equal(:cheese, handler.item)
   end
 
   def test_sax_value_bool
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(:as_bool)
     Ox.sax_parse(handler, StringIO.new(%{<top>true</top>}))
     assert_equal(true, handler.item)
   end
 
   def test_sax_value_nil
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(:as_i)
     Ox.sax_parse(handler, StringIO.new(%{<top></top>}))
     assert_equal(nil, handler.item)
   end
 
   def test_sax_value_time
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     t = Time.local(2012, 1, 5, 10, 20, 30)
     handler = TypeSax.new(:as_time)
     Ox.sax_parse(handler, StringIO.new(%{<top>#{t}</top>}))
@@ -947,49 +947,49 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_attr_value_fixnum
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(nil)
     Ox.sax_parse(handler, StringIO.new(%{<top as_i="7"/>}))
     assert_equal(7, handler.item)
   end
 
   def test_sax_attr_value_string
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(nil)
     Ox.sax_parse(handler, StringIO.new(%{<top as_s="cheese"/>}))
     assert_equal('cheese', handler.item)
   end
 
   def test_sax_attr_value_float
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(nil)
     Ox.sax_parse(handler, StringIO.new(%{<top as_f="7"/>}))
     assert_equal(7.0, handler.item)
   end
 
   def test_sax_attr_value_sym
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(nil)
     Ox.sax_parse(handler, StringIO.new(%{<top as_sym="cheese"/>}))
     assert_equal(:cheese, handler.item)
   end
 
   def test_sax_attr_value_bool
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(nil)
     Ox.sax_parse(handler, StringIO.new(%{<top as_bool="true"/>}))
     assert_equal(true, handler.item)
   end
 
   def test_sax_attr_value_nil
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = TypeSax.new(nil)
     Ox.sax_parse(handler, StringIO.new(%{<top as_i=""/>}))
     assert_equal(nil, handler.item)
   end
 
   def test_sax_attr_value_time
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     t = Time.local(2012, 1, 5, 10, 20, 30)
     handler = TypeSax.new(nil)
     Ox.sax_parse(handler, StringIO.new(%{<top as_time="#{t}"/>}))
@@ -1002,7 +1002,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_nested_same_prefix
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = ErrorSax.new
     Ox.sax_parse(handler, StringIO.new(%{<?xml version="1.0"?><abc><abcd/></abc>}))
     assert_equal([], handler.errors)
@@ -1017,7 +1017,7 @@ encoding = "UTF-8" ?>},
   end
 
   def test_sax_offset_start
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     xml = StringIO.new(%|
 this is not part of the xml document
@@ -1031,7 +1031,7 @@ this is not part of the xml document
   end
 
   def test_sax_tolerant
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     xml = %{<!doctype HTML>
 <html lang=en>
   <head garbage='trash'>
@@ -1076,7 +1076,7 @@ this is not part of the xml document
   end
 
   def test_sax_not_symbolized
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     xml = %{<!DOCTYPE HTML>
 <html lang="en">
   <head>
@@ -1103,7 +1103,7 @@ this is not part of the xml document
   end
 
   def test_sax_script
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     html = %|<!DOCTYPE HTML>
 <html lang="en">
   <head>
@@ -1137,7 +1137,7 @@ this is not part of the xml document
   end
 
   def test_sax_namespace_no_strip
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     Ox.sax_parse(handler, '<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>')
     assert_equal([[:start_element, :"spaced:one"],
@@ -1150,7 +1150,7 @@ this is not part of the xml document
   end
 
   def test_sax_namespace_strip_wild
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     Ox.sax_parse(handler,
                  '<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>',
@@ -1165,8 +1165,8 @@ this is not part of the xml document
   end
 
   def test_sax_namespace_strip
-    Ox::default_options = $ox_sax_options
-    Ox::default_options = { :strip_namespace => 'spaced' }
+    Ox.default_options = $ox_sax_options
+    Ox.default_options = { :strip_namespace => 'spaced' }
 
     handler = AllSax.new
     Ox.sax_parse(handler, '<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>')
@@ -1180,7 +1180,7 @@ this is not part of the xml document
   end
 
   def test_sax_html_inactive
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
 
     Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => {'hr'=>:inactive})
@@ -1195,7 +1195,7 @@ this is not part of the xml document
   end
 
   def test_sax_html_overlay_mod
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     overlay = Ox.sax_html_overlay
     overlay['hr'] = :inactive
@@ -1211,7 +1211,7 @@ this is not part of the xml document
   end
 
   def test_sax_html_active
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     overlay = Ox.sax_html_overlay
     overlay.each_key { |k| overlay[k] = :inactive }
@@ -1228,11 +1228,11 @@ this is not part of the xml document
   end
 
   def test_sax_html_default_overlay_mod
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     overlay = Ox.sax_html_overlay
     overlay['hr'] = :inactive
-    Ox::default_options = { :overlay => overlay }
+    Ox.default_options = { :overlay => overlay }
     Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>')
     assert_equal([[:start_element, :html],
                   [:start_element, :h1],
@@ -1245,7 +1245,7 @@ this is not part of the xml document
   end
 
   def test_sax_html_block
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     overlay = Ox.sax_html_overlay
     overlay['table'] = :block
@@ -1259,7 +1259,7 @@ this is not part of the xml document
   end
 
   def test_sax_html_off
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     overlay = Ox.sax_html_overlay
     overlay['table'] = :off
@@ -1279,7 +1279,7 @@ this is not part of the xml document
   end
 
   def test_sax_html_inactive_full_map
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     overlay = Ox.sax_html_overlay
     overlay['table'] = :inactive
@@ -1298,7 +1298,7 @@ this is not part of the xml document
   end
 
   def test_sax_html_abort
-    Ox::default_options = $ox_sax_options
+    Ox.default_options = $ox_sax_options
     handler = AllSax.new
     overlay = Ox.sax_html_overlay
     overlay['table'] = :abort

@@ -164,7 +164,7 @@ herd = (0..head_count).map {
   moo[individual] += 1
   Ractor.new(haystack, name: "#{individual} #{moo[individual] - 1}") { |haystack|
     # Initialize an `Ox::Sax` handler for our given source file.
-    handler = Saxtor::new(Ractor.current, haystack)
+    handler = Saxtor.new(Ractor.current, haystack)
 
     # Now we can `#send` a needle to this `Ractor` and make it search the haystack!
     while ietf_string = Ractor.receive
@@ -189,7 +189,7 @@ puts
 puts 'Serial Ractor'
 # Create a single `Ractor` and send every media-type to it in series.
 only_one_ox = Ractor.new(haystack, name: 'ONLY ONE OX') { |haystack|
-  handler = Saxtor::new(Ractor.current, haystack)
+  handler = Saxtor.new(Ractor.current, haystack)
   while ietf_string = Ractor.receive
     handler.awen(ietf_string)
   end
