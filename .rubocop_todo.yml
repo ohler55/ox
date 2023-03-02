@@ -906,12 +906,6 @@ Style/MultilineIfModifier:
   Exclude:
     - 'examples/sax_ractor.rb'
 
-# Offense count: 2
-# This cop supports safe autocorrection (--autocorrect).
-Style/MultilineInPatternThen:
-  Exclude:
-    - 'examples/sax_ractor.rb'
-
 # Offense count: 4
 # This cop supports unsafe autocorrection (--autocorrect-all).
 # Configuration parameters: EnforcedStyle.

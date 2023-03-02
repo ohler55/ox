@@ -68,11 +68,11 @@ class Saxtor < Ox::Sax
   # Element attribute callback — Ox::Sax::Value version
   def attr_value(name, value)
     case [@parse_stack.last, name]
-    in :"mime-type", :type then
+    in :"mime-type", :type
       cyo[:ietf] = value.as_s
       # If we found our needle then we will yield the scratch `CYO` instead of `nil`.
       @i_can_haz = true if value.as_s == @needle
-    in :glob, :pattern then
+    in :glob, :pattern
       cyo[:globs].append(value.as_s)
     else nil
     end
