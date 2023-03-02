@@ -57,7 +57,7 @@ class Saxtor < Ox::Sax
   # …wax off.
   def end_element(name)
     case @parse_stack.last
-    when :"mime-type" then
+    when :"mime-type"
       # Save the scratch `Struct` if we matched our needle while building it.
       @out = cyo.dup if @i_can_haz
       @i_can_haz = false
@@ -82,7 +82,7 @@ class Saxtor < Ox::Sax
   #                                This part. --------^
   def text(element_text)
     case @parse_stack.last
-    when :comment then
+    when :comment
       # This will end up being the `last` <comment> locale (probably `zh_TW`)
       # because I don't want to implement locale checking for a test script lol
       cyo[:description] = element_text
