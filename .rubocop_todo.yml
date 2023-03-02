@@ -508,12 +508,6 @@ Style/AndOr:
     - 'test/parse_cmp.rb'
     - 'test/tests.rb'
 
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-Style/BlockComments:
-  Exclude:
-    - 'test/sax/smart_test.rb'
-
 # Offense count: 2
 # This cop supports unsafe autocorrection (--autocorrect-all).
 Style/CaseLikeIf:

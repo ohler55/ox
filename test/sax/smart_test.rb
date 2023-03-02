@@ -444,78 +444,76 @@ end
 # A class that groups tests concerning the so called void elements of an html document.
 # More info: http://www.w3.org/TR/html5/syntax.html#void-elements
 ##
-=begin
-class SaxSmartVoidTagTest < SaxSmartTest
-
-  VOIDELEMENTS = [
-                  #"area", # only in map
-                  #"base", # only in head
-                  "br",
-                  #"col", # only in colgroup
-                  #"command", # not a void tag
-                  "embed",
-                  "hr",
-                  "img",
-                  "input",
-                  "keygen",
-                  #"link", # only in head
-                  #"meta", # only in head
-                  "param",
-                  #"source", # only in media (audio, video)
-                  #"track", # only in media (audio, video)
-                  "wbr"
-                 ]
-
-  def test_closed
-    VOIDELEMENTS.each do |el|
-      html = %{<html>A terminated <#{el}/> text</html>}
-      smart_parse_compare(html,
-                    [
-                     [:start_element, :html],
-                     [:text, "A terminated "],
-                     [:start_element, el.to_sym],
-                     [:end_element, el.to_sym],
-                     [:text, " text"],
-                     [:end_element, :html]
-                    ])
-    end
-  end
-
-  def test_not_closed
-    VOIDELEMENTS.each do |el|
-      html = %{<html>A terminated <#{el}> text</html>}
-      smart_parse_compare(html,
-                    [
-                     [:start_element, :html],
-                     [:text, "A terminated "],
-                     [:start_element, el.to_sym],
-                     [:end_element, el.to_sym],
-                     [:text, " text"],
-                     [:end_element, :html]
-                    ])
-    end
-  end
-
-  # Fix this error to be supported
-  def test_invalid_syntax
-    VOIDELEMENTS.each do |el|
-      html = %{<html>A terminated <#{el}>nice\n</#{el}> text</html>}
-      smart_parse_compare(html,
-                    [
-                     [:start_element, :html],
-                     [:text, "A terminated "],
-                     [:start_element, el.to_sym],
-                     [:end_element, el.to_sym],
-                     [:text, "nice\n"],
-                     [:error, "Start End Mismatch: element '#{el}' should not have a separate close element", 2, 1],
-                     [:text, " text"],
-                     [:end_element, :html]
-                    ])
-    end
-  end
-
-end
-=end
+# class SaxSmartVoidTagTest < SaxSmartTest
+#
+#   VOIDELEMENTS = [
+#                   #"area", # only in map
+#                   #"base", # only in head
+#                   "br",
+#                   #"col", # only in colgroup
+#                   #"command", # not a void tag
+#                   "embed",
+#                   "hr",
+#                   "img",
+#                   "input",
+#                   "keygen",
+#                   #"link", # only in head
+#                   #"meta", # only in head
+#                   "param",
+#                   #"source", # only in media (audio, video)
+#                   #"track", # only in media (audio, video)
+#                   "wbr"
+#                  ]
+#
+#   def test_closed
+#     VOIDELEMENTS.each do |el|
+#       html = %{<html>A terminated <#{el}/> text</html>}
+#       smart_parse_compare(html,
+#                     [
+#                      [:start_element, :html],
+#                      [:text, "A terminated "],
+#                      [:start_element, el.to_sym],
+#                      [:end_element, el.to_sym],
+#                      [:text, " text"],
+#                      [:end_element, :html]
+#                     ])
+#     end
+#   end
+#
+#   def test_not_closed
+#     VOIDELEMENTS.each do |el|
+#       html = %{<html>A terminated <#{el}> text</html>}
+#       smart_parse_compare(html,
+#                     [
+#                      [:start_element, :html],
+#                      [:text, "A terminated "],
+#                      [:start_element, el.to_sym],
+#                      [:end_element, el.to_sym],
+#                      [:text, " text"],
+#                      [:end_element, :html]
+#                     ])
+#     end
+#   end
+#
+#   # Fix this error to be supported
+#   def test_invalid_syntax
+#     VOIDELEMENTS.each do |el|
+#       html = %{<html>A terminated <#{el}>nice\n</#{el}> text</html>}
+#       smart_parse_compare(html,
+#                     [
+#                      [:start_element, :html],
+#                      [:text, "A terminated "],
+#                      [:start_element, el.to_sym],
+#                      [:end_element, el.to_sym],
+#                      [:text, "nice\n"],
+#                      [:error, "Start End Mismatch: element '#{el}' should not have a separate close element", 2, 1],
+#                      [:text, " text"],
+#                      [:end_element, :html]
+#                     ])
+#     end
+#   end
+#
+# end
 
 ##
 # A class that groups tests concerning the table element. Because this element
