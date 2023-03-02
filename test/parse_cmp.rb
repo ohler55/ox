@@ -11,9 +11,9 @@ $verbose = 0
 $iter = 100
 
 opts = OptionParser.new
-opts.on("-v", "increase verbosity")                            { $verbose += 1 }
-opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |i| $iter = i }
-opts.on("-h", "--help", "Show this display")                   { puts opts; Process.exit!(0) }
+opts.on('-v', 'increase verbosity')                            { $verbose += 1 }
+opts.on('-i', '--iterations [Int]', Integer, 'iterations')     { |i| $iter = i }
+opts.on('-h', '--help', 'Show this display')                   { puts opts; Process.exit!(0) }
 files = opts.parse(ARGV)
 
 ### XML conversion to Hash using in memory Ox parsing ###
@@ -22,7 +22,7 @@ def node_to_dict(element)
   dict = Hash.new
   key = nil
   element.nodes.each do |n|
-    raise "A dict can only contain elements." unless n.is_a?(::Ox::Element)
+    raise 'A dict can only contain elements.' unless n.is_a?(::Ox::Element)
 
     if key.nil?
       raise "Expected a key, not a #{n.name}." unless 'key' == n.name
@@ -45,11 +45,11 @@ def node_to_array(element)
 end
 
 def node_to_value(node)
-  raise "A dict can only contain elements." unless node.is_a?(::Ox::Element)
+  raise 'A dict can only contain elements.' unless node.is_a?(::Ox::Element)
 
   case node.name
   when 'key'
-    raise "Expected a value, not a key."
+    raise 'Expected a value, not a key.'
   when 'string'
     value = first_text(node)
   when 'dict'

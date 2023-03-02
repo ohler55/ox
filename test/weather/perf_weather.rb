@@ -22,10 +22,10 @@ $as_time = false
 $iter = 10
 
 opts = OptionParser.new
-opts.on("-f", "--file [String]", String, "filename")           { |f| $filename = f }
-opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |i| $iter = i }
-opts.on("-t", "dates as time")                                 { $as_time = true }
-opts.on("-h", "--help", "Show this display")                   { puts opts; Process.exit!(0) }
+opts.on('-f', '--file [String]', String, 'filename')           { |f| $filename = f }
+opts.on('-i', '--iterations [Int]', Integer, 'iterations')     { |i| $iter = i }
+opts.on('-t', 'dates as time')                                 { $as_time = true }
+opts.on('-h', '--help', 'Show this display')                   { puts opts; Process.exit!(0) }
 rest = opts.parse(ARGV)
 
 perf = Perf.new()

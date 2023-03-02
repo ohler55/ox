@@ -36,16 +36,16 @@ $pos = false
 $smart = false
 
 opts = OptionParser.new
-opts.on("-v", "increase verbosity")                            { $verbose += 1 }
-opts.on("-x", "ox only")                                       { $ox_only = true }
-opts.on("-a", "all callbacks")                                 { $all_cbs = true }
-opts.on("-b", "html smart")                                    { $smart = true }
-opts.on("-p", "update position")                               { $pos = true; $all_cbs = true }
-opts.on("-z", "use StringIO instead of file")                  { $strio = true }
-opts.on("-f", "--file [String]", String, "filename")           { |f| $filename = f }
-opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |it| $iter = it }
-opts.on("-s", "--size [Int]", Integer, "file size in KBytes")  { |s| $filesize = s }
-opts.on("-h", "--help", "Show this display")                   { puts opts; Process.exit!(0) }
+opts.on('-v', 'increase verbosity')                            { $verbose += 1 }
+opts.on('-x', 'ox only')                                       { $ox_only = true }
+opts.on('-a', 'all callbacks')                                 { $all_cbs = true }
+opts.on('-b', 'html smart')                                    { $smart = true }
+opts.on('-p', 'update position')                               { $pos = true; $all_cbs = true }
+opts.on('-z', 'use StringIO instead of file')                  { $strio = true }
+opts.on('-f', '--file [String]', String, 'filename')           { |f| $filename = f }
+opts.on('-i', '--iterations [Int]', Integer, 'iterations')     { |it| $iter = it }
+opts.on('-s', '--size [Int]', Integer, 'file size in KBytes')  { |s| $filesize = s }
+opts.on('-h', '--help', 'Show this display')                   { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
 $xml_str = nil
@@ -70,7 +70,7 @@ def create_file(filename, size)
   </row>
 }
   cnt = (size * 1000 - head.size - tail.size) / row.size
-  File.open(filename, "w") do |f|
+  File.open(filename, 'w') do |f|
     f.write(head)
     cnt.times do |i|
       f.write(row % [i, i])

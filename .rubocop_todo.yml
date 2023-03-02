@@ -1189,31 +1189,6 @@ Style/StringConcatenation:
     - 'lib/ox/bag.rb'
     - 'test/tests.rb'
 
-# Offense count: 638
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle, ConsistentQuotesInMultiline.
-# SupportedStyles: single_quotes, double_quotes
-Style/StringLiterals:
-  Exclude:
-    - 'Gemfile'
-    - 'contrib/xbuilder_test.rb'
-    - 'examples/sax_ractor.rb'
-    - 'lib/ox/element.rb'
-    - 'lib/ox/hasattrs.rb'
-    - 'ox.gemspec'
-    - 'test/obj_sample.rb'
-    - 'test/parse_cmp.rb'
-    - 'test/perf.rb'
-    - 'test/perf_gen.rb'
-    - 'test/perf_mars.rb'
-    - 'test/perf_obj.rb'
-    - 'test/perf_sax.rb'
-    - 'test/sax/sax_check.rb'
-    - 'test/sax/sax_test.rb'
-    - 'test/sax/smart_test.rb'
-    - 'test/tests.rb'
-    - 'test/weather/perf_weather.rb'
-
 # Offense count: 21
 # This cop supports unsafe autocorrection (--autocorrect-all).
 # Configuration parameters: AllowMethodsWithArguments, AllowedMethods, AllowedPatterns, AllowComments.

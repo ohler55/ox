@@ -7,8 +7,8 @@
 
 $VERBOSE = true
 
-$: << File.join(File.dirname(__FILE__), "../lib")
-$: << File.join(File.dirname(__FILE__), "../ext")
+$: << File.join(File.dirname(__FILE__), '../lib')
+$: << File.join(File.dirname(__FILE__), '../ext')
 
 require 'rubygems' if RUBY_VERSION.start_with?('1.8.')
 require 'test/unit'
@@ -85,7 +85,7 @@ class Func < ::Test::Unit::TestCase
   def test_set_options
     Ox::default_options = $ox_object_options
     o2 = {
-      :encoding => "UTF-8",
+      :encoding => 'UTF-8',
       :margin => 'zz',
       :indent => 4,
       :trace => 1,
@@ -321,23 +321,23 @@ class Func < ::Test::Unit::TestCase
 
   def test_xml_instruction
     Ox::default_options = $ox_object_options
-    xml = Ox.dump("test", :mode => :object, :with_xml => false)
+    xml = Ox.dump('test', :mode => :object, :with_xml => false)
     assert_equal("<s>test</s>\n", xml)
-    xml = Ox.dump("test", :mode => :object, :with_xml => true)
+    xml = Ox.dump('test', :mode => :object, :with_xml => true)
     assert_equal("<?xml version=\"1.0\"?>\n<s>test</s>\n", xml)
-    xml = Ox.dump("test", :mode => :object, :with_xml => true, :encoding => 'UTF-8')
+    xml = Ox.dump('test', :mode => :object, :with_xml => true, :encoding => 'UTF-8')
     assert_equal("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<s>test</s>\n", xml)
   end
 
   def test_ox_instruction
     Ox::default_options = $ox_object_options
-    xml = Ox.dump("test", :mode => :object, :with_xml => true, :with_instructions => true)
+    xml = Ox.dump('test', :mode => :object, :with_xml => true, :with_instructions => true)
     assert_equal("<?xml version=\"1.0\"?>\n<?ox version=\"1.0\" mode=\"object\" circular=\"no\" xsd_date=\"no\"?>\n<s>test</s>\n", xml)
-    xml = Ox.dump("test", :mode => :object, :with_instructions => true)
+    xml = Ox.dump('test', :mode => :object, :with_instructions => true)
     assert_equal("<?ox version=\"1.0\" mode=\"object\" circular=\"no\" xsd_date=\"no\"?>\n<s>test</s>\n", xml)
-    xml = Ox.dump("test", :mode => :object, :with_instructions => true, :circular => true, :xsd_date => true)
+    xml = Ox.dump('test', :mode => :object, :with_instructions => true, :circular => true, :xsd_date => true)
     assert_equal("<?ox version=\"1.0\" mode=\"object\" circular=\"yes\" xsd_date=\"yes\"?>\n<s i=\"1\">test</s>\n", xml)
-    xml = Ox.dump("test", :mode => :object, :with_instructions => true, :circular => false, :xsd_date => false)
+    xml = Ox.dump('test', :mode => :object, :with_instructions => true, :circular => false, :xsd_date => false)
     assert_equal("<?ox version=\"1.0\" mode=\"object\" circular=\"no\" xsd_date=\"no\"?>\n<s>test</s>\n", xml)
   end
 
@@ -422,13 +422,13 @@ class Func < ::Test::Unit::TestCase
 
   def test_dtd
     Ox::default_options = $ox_object_options
-    xml = Ox.dump("test", :mode => :object, :with_dtd => true)
+    xml = Ox.dump('test', :mode => :object, :with_dtd => true)
     assert_equal("<!DOCTYPE s SYSTEM \"ox.dtd\">\n<s>test</s>\n", xml)
   end
 
   def test_lone_dtd
     Ox::default_options = $ox_object_options
-    xml = "<!DOCTYPE html>" # not really a valid xml but should pass anyway
+    xml = '<!DOCTYPE html>' # not really a valid xml but should pass anyway
     doc = Ox.parse(xml)
     assert_equal('html', doc.nodes[0].value)
   end
@@ -531,7 +531,7 @@ class Func < ::Test::Unit::TestCase
     begin
       Ox.load("<s>tab\tamp&amp;backspace\b.</s>", :effort => :strict)
     rescue Exception => e
-      assert_equal("invalid character at line 1, column 26 ", e.message.split('[')[0])
+      assert_equal('invalid character at line 1, column 26 ', e.message.split('[')[0])
       return
     end
     assert(false)
@@ -721,9 +721,9 @@ class Func < ::Test::Unit::TestCase
     if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
       assert(true)
     else
-      e = StandardError.new("Some Error")
-      e.set_backtrace(["./func.rb:119: in test_exception",
-                       "./fake.rb:57: in fake_func"])
+      e = StandardError.new('Some Error')
+      e.set_backtrace(['./func.rb:119: in test_exception',
+                       './fake.rb:57: in fake_func'])
       dump_and_load(e, false)
     end
   end
@@ -830,7 +830,7 @@ class Func < ::Test::Unit::TestCase
       assert(true)
     else
       a = [1]
-      s = "a,b,c"
+      s = 'a,b,c'
       h = { 1 => 2 }
       e = Ox::Element.new('Zoo')
       e[:cage] = 'bear'
@@ -883,7 +883,7 @@ class Func < ::Test::Unit::TestCase
   def test_nameerror
     Ox::default_options = $ox_object_options
     begin
-      raise StandardError.new("An error message,")
+      raise StandardError.new('An error message,')
     rescue Exception => e
       xml = Ox.dump(e, :effort => :tolerant)
       o = Ox.load(xml, :mode => :object)
@@ -965,10 +965,10 @@ class Func < ::Test::Unit::TestCase
 
   def test_instructions
     Ox::default_options = $ox_object_options
-    xml = Ox.dump("test", :with_instructions => true)
+    xml = Ox.dump('test', :with_instructions => true)
     # puts xml
     obj = Ox.load(xml) # should convert it to an object
-    assert_equal("test", obj)
+    assert_equal('test', obj)
   end
 
   def test_generic_string
@@ -1006,7 +1006,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_IO
     Ox::default_options = $ox_object_options
-    f = File.open(__FILE__, "r")
+    f = File.open(__FILE__, 'r')
     assert_raise(NotImplementedError) {
       Ox.dump(f, :effort => :strict)
     }
@@ -1293,7 +1293,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_remove_children_all
     root = Ox.parse(easy_xml)
-    kids = root.locate("*/Kid")
+    kids = root.locate('*/Kid')
     root.remove_children(*kids)
 
     kids_doc = %{<?xml?><Family real="false"><Pete age="58" type="male"/></Family>}
@@ -1302,7 +1302,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_remove_children_by_path_unmatching_path
     doc = Ox.parse(easy_xml)
-    doc.remove_children_by_path("unmatching_path")
+    doc.remove_children_by_path('unmatching_path')
     assert_equal(doc, Ox.parse(easy_xml))
   end
 
@@ -1316,7 +1316,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_remove_children_by_path_all
     doc = Ox.parse(easy_xml)
-    doc.remove_children_by_path("*/Kid")
+    doc.remove_children_by_path('*/Kid')
 
     kid_doc = %{<?xml?><Family real="false"><Pete age="58" type="male"/></Family>}
     assert_equal(doc, Ox.parse(kid_doc))
@@ -1432,7 +1432,7 @@ class Func < ::Test::Unit::TestCase
 
   def test_namespace_strip
     Ox::default_options = $ox_generic_options
-    Ox::default_options = { :strip_namespace => "spaced" }
+    Ox::default_options = { :strip_namespace => 'spaced' }
     results = []
     doc = Ox.load('<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>')
     assert_equal(%|
@@ -1477,7 +1477,7 @@ class Func < ::Test::Unit::TestCase
     assert_equal(1, b.line())
     assert_equal(39, b.column())
     assert_equal(38, b.pos())
-    b.element('one', :a => "ack", 'b' => "<ba\"'&ck>")
+    b.element('one', :a => 'ack', 'b' => "<ba\"'&ck>")
     b.element('two')
     assert_equal(3, b.line())
     assert_equal(6, b.column())
@@ -1538,12 +1538,12 @@ comment -->
     filename = File.join(File.dirname(__FILE__), 'create_file_test.xml')
     b = Ox::Builder.file(filename, :indent => 2)
     b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
-    b.element('one', :a => "ack", 'b' => 'back')
+    b.element('one', :a => 'ack', 'b' => 'back')
     b.element('two')
     b.pop()
     b.comment(' just a comment ')
     b.element('three')
-    b.text("my name is \"ピーター\"")
+    b.text('my name is "ピーター"')
     b.pop()
     b.pop()
     b.close()
@@ -1577,12 +1577,12 @@ comment -->
         r.close
         b = Ox::Builder.io(w, :indent => 2)
         b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
-        b.element('one', :a => "ack", 'b' => 'back')
+        b.element('one', :a => 'ack', 'b' => 'back')
         b.element('two')
         b.pop()
         b.comment(' just a comment ')
         b.element('three')
-        b.text("my name is \"ピーター\"")
+        b.text('my name is "ピーター"')
         b.pop()
         b.pop()
         b.close()
@@ -1595,11 +1595,11 @@ comment -->
   def test_builder_block
     xml = Ox::Builder.new(:indent => 2) { |b|
       b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
-      b.element('one', :a => "ack", 'b' => 'back') {
+      b.element('one', :a => 'ack', 'b' => 'back') {
         b.element('two') {}
         b.comment(' just a comment ')
         b.element('three') {
-          b.text("my name is \"ピーター\"")
+          b.text('my name is "ピーター"')
         }
       }
     }
@@ -1616,11 +1616,11 @@ comment -->
     filename = File.join(File.dirname(__FILE__), 'create_file_test.xml')
     Ox::Builder.file(filename, :indent => 2) { |b|
       b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
-      b.element('one', :a => "ack", 'b' => 'back') {
+      b.element('one', :a => 'ack', 'b' => 'back') {
         b.element('two') {}
         b.comment(' just a comment ')
         b.element('three') {
-          b.text("my name is \"ピーター\"")
+          b.text('my name is "ピーター"')
         }
       }
     }
@@ -1653,11 +1653,11 @@ comment -->
         r.close
         Ox::Builder.io(w, :indent => 2) { |b|
           b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
-          b.element('one', :a => "ack", 'b' => 'back') {
+          b.element('one', :a => 'ack', 'b' => 'back') {
             b.element('two') {}
             b.comment(' just a comment ')
             b.element('three') {
-              b.text("my name is \"ピーター\"")
+              b.text('my name is "ピーター"')
             }
           }
         }
@@ -1670,7 +1670,7 @@ comment -->
   def test_builder_no_newline
     b = Ox::Builder.new(:indent => -1)
     b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
-    b.element('one', :a => "ack", 'b' => 'back')
+    b.element('one', :a => 'ack', 'b' => 'back')
     b.text('hello')
     b.close()
     xml = b.to_s
@@ -1704,7 +1704,7 @@ comment -->
       b = Ox::Builder.new
       b.text()
     rescue ArgumentError => e
-      assert_equal("wrong number of arguments (given 0, expected 1..2)", e.message)
+      assert_equal('wrong number of arguments (given 0, expected 1..2)', e.message)
       return
     end
     assert(false)
@@ -1713,9 +1713,9 @@ comment -->
   def test_builder_text_with_too_many_args
     begin
       b = Ox::Builder.new
-      b.text("Hello", false, "world")
+      b.text('Hello', false, 'world')
     rescue ArgumentError => e
-      assert_equal("wrong number of arguments (given 3, expected 1..2)", e.message)
+      assert_equal('wrong number of arguments (given 3, expected 1..2)', e.message)
       return
     end
     assert(false)

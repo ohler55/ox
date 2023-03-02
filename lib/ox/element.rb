@@ -56,7 +56,7 @@ module Ox
     # so multiple appends can be chained together.
     # - +node+ [Node] Node to append to the nodes array
     def <<(node)
-      raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
+      raise 'argument to << must be a String or Ox::Node.' unless node.is_a?(String) or node.is_a?(Node)
 
       @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       @nodes << node
@@ -67,7 +67,7 @@ module Ox
     # so multiple appends can be chained together.
     # - +node+ [Node] Node to prepend to the nodes array
     def prepend_child(node)
-      raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
+      raise 'argument to << must be a String or Ox::Node.' unless node.is_a?(String) or node.is_a?(Node)
 
       @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       @nodes.unshift(node)
@@ -98,7 +98,7 @@ module Ox
     # (String) node. Note the existing nodes array is modified and not replaced.
     # - +txt+ [String] to become the only element of the nodes array
     def replace_text(txt)
-      raise "the argument to replace_text() must be a String" unless txt.is_a?(String)
+      raise 'the argument to replace_text() must be a String' unless txt.is_a?(String)
 
       @nodes.clear()
       @nodes << txt

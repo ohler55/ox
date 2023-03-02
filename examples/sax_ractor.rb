@@ -5,7 +5,7 @@ require 'pathname'
 
 # Silence Ractor warning in Ruby 3.0.x
 Warning[:experimental] = false
-abort("This Ractor example requires at least Ruby 3.0") if RUBY_VERSION.start_with?("2")
+abort('This Ractor example requires at least Ruby 3.0') if RUBY_VERSION.start_with?('2')
 
 # Example/test script for `Ractor`-based `Ox::Sax` parsing.
 # In the Real World™ we probably wouldn't create a single-use `Ractor` for
@@ -150,7 +150,7 @@ needles = ARGV[1...]
 
 
 # Hamburger Style.
-puts "Parallel Ractors"
+puts 'Parallel Ractors'
 # Create one `Ractor` for every given media-type argument
 moo = ['Heifer', 'Cow', 'Bull', 'Steer'].tally
 head_count = needles.size - 1
@@ -182,9 +182,9 @@ pp (0..head_count).map {
 
 # Hotdog Style.
 puts
-puts "Serial Ractor"
+puts 'Serial Ractor'
 # Create a single `Ractor` and send every media-type to it in series.
-only_one_ox = Ractor.new(haystack, name: "ONLY ONE OX") { |haystack|
+only_one_ox = Ractor.new(haystack, name: 'ONLY ONE OX') { |haystack|
   handler = Saxtor::new(Ractor.current, haystack)
   while ietf_string = Ractor.receive
     handler.awen(ietf_string)

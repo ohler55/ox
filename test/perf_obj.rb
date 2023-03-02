@@ -35,21 +35,21 @@ do_write = false
 $iter = 1000
 
 opts = OptionParser.new
-opts.on("-c", "circular options")                           { $circular = true }
+opts.on('-c', 'circular options')                           { $circular = true }
 
-opts.on("-s", "load and dump as sample Ruby object")        { do_sample = true }
-opts.on("-f", "load and dump as files Ruby object")         { do_files = true }
+opts.on('-s', 'load and dump as sample Ruby object')        { do_sample = true }
+opts.on('-f', 'load and dump as files Ruby object')         { do_files = true }
 
-opts.on("-l", "load")                                       { do_load = true }
-opts.on("-d", "dump")                                       { do_dump = true }
-opts.on("-r", "read")                                       { do_read = true }
-opts.on("-w", "write")                                      { do_write = true }
-opts.on("-a", "load, dump, read and write")                 { do_load = true; do_dump = true; do_read = true; do_write = true }
+opts.on('-l', 'load')                                       { do_load = true }
+opts.on('-d', 'dump')                                       { do_dump = true }
+opts.on('-r', 'read')                                       { do_read = true }
+opts.on('-w', 'write')                                      { do_write = true }
+opts.on('-a', 'load, dump, read and write')                 { do_load = true; do_dump = true; do_read = true; do_write = true }
 
-opts.on("-i", "--iterations [Int]", Integer, "iterations")  { |it| $iter = it }
-opts.on("-o", "ox_only")                                    { ox_only = true }
+opts.on('-i', '--iterations [Int]', Integer, 'iterations')  { |it| $iter = it }
+opts.on('-o', 'ox_only')                                    { ox_only = true }
 
-opts.on("-h", "--help", "Show this display")                { puts opts; Process.exit!(0) }
+opts.on('-h', '--help', 'Show this display')                { puts opts; Process.exit!(0) }
 files = opts.parse(ARGV)
 
 $obj = nil
@@ -89,7 +89,7 @@ Oj.default_options = { :mode => :object, :indent => $indent } unless defined?(::
 
 if do_load
   puts '-' * 80
-  puts "Load Performance"
+  puts 'Load Performance'
   perf = Perf.new()
   perf.add('Ox', 'load') { Ox.load($xml, :mode => :object) }
   perf.add('Oj', 'load') { Oj.load($json) } unless (defined?(::Oj).nil? || ox_only)
@@ -99,7 +99,7 @@ end
 
 if do_dump
   puts '-' * 80
-  puts "Dump Performance"
+  puts 'Dump Performance'
   perf = Perf.new()
   perf.add('Ox', 'dump') { Ox.dump($obj, :indent => $indent, :circular => $circular) }
   perf.add('Oj', 'dump') { Oj.dump($obj) } unless (defined?(::Oj).nil? || ox_only)
@@ -109,7 +109,7 @@ end
 
 if do_read
   puts '-' * 80
-  puts "Read from file Performance"
+  puts 'Read from file Performance'
   perf = Perf.new()
   perf.add('Ox', 'load_file') { Ox.load_file('sample.xml', :mode => :object) }
   perf.add('Oj', 'load') { Oj.load_file('sample.json') } unless (defined?(::Oj).nil? || ox_only)
@@ -119,7 +119,7 @@ end
 
 if do_write
   puts '-' * 80
-  puts "Write to file Performance"
+  puts 'Write to file Performance'
   perf = Perf.new()
   perf.add('Ox', 'to_file') { Ox.to_file('sample.xml', $obj, :indent => $indent, :circular => $circular) }
   perf.add('Oj', 'to_file') { Oj.to_file('sample.json', $obj) } unless (defined?(::Oj).nil? || ox_only)

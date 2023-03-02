@@ -7,9 +7,9 @@
 
 $VERBOSE = true
 
-$: << File.join(File.dirname(__FILE__), "../../lib")
-$: << File.join(File.dirname(__FILE__), "../../ext")
-$: << File.join(File.dirname(__FILE__), ".")
+$: << File.join(File.dirname(__FILE__), '../../lib')
+$: << File.join(File.dirname(__FILE__), '../../ext')
+$: << File.join(File.dirname(__FILE__), '.')
 
 require 'stringio'
 require 'bigdecimal'
@@ -22,7 +22,7 @@ require 'helpers'
 # require 'smart_test'
 
 opts = OptionParser.new
-opts.on("-h", "--help", "Show this display") { puts opts; Process.exit!(0) }
+opts.on('-h', '--help', 'Show this display') { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
 $ox_sax_options = {
@@ -74,10 +74,10 @@ class SaxBaseTest < ::Test::Unit::TestCase
     input = File.open(File.join(File.dirname(__FILE__), 'trilevel.xml'))
     Ox.sax_parse(handler, input)
     input.close
-    assert_equal([[:instruct, "xml", 1, 1, 1],
-                  [:attr, :version, "1.0", 15, 1, 15],
+    assert_equal([[:instruct, 'xml', 1, 1, 1],
+                  [:attr, :version, '1.0', 15, 1, 15],
                   [:attrs_done, 15, 1, 15],
-                  [:end_instruct, "xml", 20, 1, 20],
+                  [:end_instruct, 'xml', 20, 1, 20],
                   [:start_element, :top, 23, 2, 1],
                   [:attrs_done, 23, 2, 1],
                   [:start_element, :child, 31, 3, 3],
@@ -114,8 +114,8 @@ class SaxBaseTest < ::Test::Unit::TestCase
     Ox::default_options = $ox_sax_options
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>},
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
-                   [:attr, :encoding, "UTF-8"],
+                   [:attr, :version, '1.0'],
+                   [:attr, :encoding, 'UTF-8'],
                    [:end_instruct, 'xml']])
   end
 
@@ -123,7 +123,7 @@ class SaxBaseTest < ::Test::Unit::TestCase
     Ox::default_options = $ox_sax_options
     parse_compare(%{<?bad something?>},
                   [[:instruct, 'bad'],
-                   [:text, "something"],
+                   [:text, 'something'],
                    [:end_instruct, 'bad']])
   end
 
@@ -133,8 +133,8 @@ class SaxBaseTest < ::Test::Unit::TestCase
 version = "1.0"
 encoding = "UTF-8" ?>},
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
-                   [:attr, :encoding, "UTF-8"],
+                   [:attr, :version, '1.0'],
+                   [:attr, :encoding, 'UTF-8'],
                    [:end_instruct, 'xml']])
   end
 
@@ -147,19 +147,19 @@ encoding = "UTF-8" ?>},
 </top>
 },
                   [[:instruct, 'pro'],
-                   [:attr, :cat, "quick"],
+                   [:attr, :cat, 'quick'],
                    [:end_instruct, 'pro'],
                    [:start_element, :top],
                    [:start_element, :str],
-                   [:text, "This is a "],
-                   [:instruct, "attrs"],
-                   [:attr, :dog, "big"],
-                   [:end_instruct, "attrs"],
-                   [:text, " string."],
+                   [:text, 'This is a '],
+                   [:instruct, 'attrs'],
+                   [:attr, :dog, 'big'],
+                   [:end_instruct, 'attrs'],
+                   [:text, ' string.'],
                    [:end_element, :str],
-                   [:instruct, "content"],
-                   [:text, "dog is big"],
-                   [:end_instruct, "content"],
+                   [:instruct, 'content'],
+                   [:text, 'dog is big'],
+                   [:end_instruct, 'content'],
                    [:end_element, :top]])
   end
 
@@ -167,9 +167,9 @@ encoding = "UTF-8" ?>},
     Ox::default_options = $ox_sax_options
     parse_compare(%{<?xml?
 <top/>},
-                  [[:instruct, "xml"],
-                   [:error, "Not Terminated: instruction not terminated", 1, 6],
-                   [:end_instruct, "xml"],
+                  [[:instruct, 'xml'],
+                   [:error, 'Not Terminated: instruction not terminated', 1, 6],
+                   [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:end_element, :top]])
   end
@@ -185,10 +185,10 @@ encoding = "UTF-8" ?>},
     Ox::default_options = $ox_sax_options
     parse_compare(%{<top x="57" y='42' z=33/>},
                   [[:start_element, :top],
-                   [:attr, :x, "57"],
-                   [:attr, :y, "42"],
-                   [:error, "Unexpected Character: attribute value not in quotes", 1, 22],
-                   [:attr, :z, "33/"],
+                   [:attr, :x, '57'],
+                   [:attr, :y, '42'],
+                   [:error, 'Unexpected Character: attribute value not in quotes', 1, 22],
+                   [:attr, :z, '33/'],
                    [:error, "Start End Mismatch: element 'top' not closed", 1, 25],
                    [:end_element, :top]])
   end
@@ -197,7 +197,7 @@ encoding = "UTF-8" ?>},
     Ox::default_options = $ox_sax_options
     parse_compare(%{<top></top>},
                   [[:start_element, :top],
-                   [:text, ""],
+                   [:text, ''],
                    [:end_element, :top]])
   end
 
@@ -206,7 +206,7 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<top/><top/>},
                   [[:start_element, :top],
                    [:end_element, :top],
-                   [:error, "Out of Order: multiple top level elements", 1, 7],
+                   [:error, 'Out of Order: multiple top level elements', 1, 7],
                    [:start_element, :top],
                    [:end_element, :top]])
   end
@@ -256,7 +256,7 @@ encoding = "UTF-8" ?>},
 </top>
 },
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
+                   [:attr, :version, '1.0'],
                    [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:start_element, :child],
@@ -283,24 +283,24 @@ encoding = "UTF-8" ?>},
 </second>
 },
                   [[:instruct, 'xml', 1, 1, 1],
-                   [:attr, :version, "1.0", 15, 1, 15],
+                   [:attr, :version, '1.0', 15, 1, 15],
                    [:attrs_done, 15, 1, 15],
                    [:end_instruct, 'xml', 20, 1, 20],
-                   [:doctype, " top PUBLIC \"top.dtd\"", 23, 2, 1],
+                   [:doctype, ' top PUBLIC "top.dtd"', 23, 2, 1],
                    [:start_element, :top, 55, 3, 1],
-                   [:attr, :attr, "one", 65, 3, 11],
+                   [:attr, :attr, 'one', 65, 3, 11],
                    [:attrs_done, 65, 3, 11],
-                   [:comment, " family ", 74, 4, 3],
+                   [:comment, ' family ', 74, 4, 3],
                    [:start_element, :child, 92, 5, 3],
                    [:attrs_done, 92, 5, 3],
                    [:start_element, :grandchild, 104, 6, 5],
                    [:attrs_done, 104, 6, 5],
                    [:end_element, :grandchild, 116, 6, 17],
-                   [:cdata, "see data.", 122, 7, 5],
+                   [:cdata, 'see data.', 122, 7, 5],
                    [:end_element, :child, 146, 8, 3],
                    [:text, "Some text.\n", 154, 8, 10],
                    [:end_element, :top, 165, 9, 1],
-                   [:error, "Out of Order: multiple top level elements", 10, 1],
+                   [:error, 'Out of Order: multiple top level elements', 10, 1],
                    [:start_element, :second, 172, 10, 1],
                    [:attrs_done, 172, 10, 1],
                    [:start_element, :inside, 183, 11, 3],
@@ -319,8 +319,8 @@ encoding = "UTF-8" ?>},
   </parent>
 </top>},
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
-                   [:end_instruct, "xml"],
+                   [:attr, :version, '1.0'],
+                   [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:start_element, :child],
                    [:start_element, :grandchild],
@@ -348,7 +348,7 @@ encoding = "UTF-8" ?>},
 </top>
 },
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
+                   [:attr, :version, '1.0'],
                    [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:start_element, :child],
@@ -383,7 +383,7 @@ encoding = "UTF-8" ?>},
     Ox::default_options = $ox_sax_options
     parse_compare(%{<top>This is some text.</top>},
                   [[:start_element, :top],
-                   [:text, "This is some text."],
+                   [:text, 'This is some text.'],
                    [:end_element, :top]
                   ])
   end
@@ -393,7 +393,7 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<top><mid></mid></top>},
                   [[:start_element, :top],
                    [:start_element, :mid],
-                   [:text, ""],
+                   [:text, ''],
                    [:end_element, :mid],
                    [:end_element, :top]
                   ])
@@ -403,7 +403,7 @@ encoding = "UTF-8" ?>},
     Ox::default_options = $ox_sax_options
     parse_compare(%{  <top>  </top>},
                   [[:start_element, :top],
-                   [:text, " "],
+                   [:text, ' '],
                    [:end_element, :top]
                   ], AllSax, { :skip => :skip_white })
   end
@@ -416,13 +416,13 @@ encoding = "UTF-8" ?>},
   <abc x="1">zzz</abc>
 </top>},
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
-                   [:end_instruct, "xml"],
+                   [:attr, :version, '1.0'],
+                   [:end_instruct, 'xml'],
                    [:start_element, :top],
-                   [:error, "Invalid Format: empty element", 3, 3],
+                   [:error, 'Invalid Format: empty element', 3, 3],
                    [:start_element, :abc],
-                   [:attr, :x, "1"],
-                   [:text, "zzz"],
+                   [:attr, :x, '1'],
+                   [:text, 'zzz'],
                    [:end_element, :abc],
                    [:end_element, :top],
                   ])
@@ -431,9 +431,9 @@ encoding = "UTF-8" ?>},
   def test_sax_empty_element_noskip
     Ox::default_options = $ox_sax_options
     parse_compare(%{  <top>  </top>},
-                  [[:text, "  "],
+                  [[:text, '  '],
                    [:start_element, :top],
-                   [:text, "  "],
+                   [:text, '  '],
                    [:end_element, :top]
                   ], AllSax, { :skip => :skip_none })
   end
@@ -452,10 +452,10 @@ encoding = "UTF-8" ?>},
     Ox::default_options = $ox_sax_options
     parse_compare(%{<top name="&example;">&example;</top>},
                   [[:start_element, :top],
-                   [:error, "Invalid Format: Invalid special character sequence", 1, 11],
+                   [:error, 'Invalid Format: Invalid special character sequence', 1, 11],
                    [:attr, :name, '&example;'],
-                   [:error, "Invalid Format: Invalid special character sequence", 1, 22],
-                   [:text, "&example;"],
+                   [:error, 'Invalid Format: Invalid special character sequence', 1, 22],
+                   [:text, '&example;'],
                    [:end_element, :top]
                   ], AllSax, :convert_special => true)
   end
@@ -465,7 +465,7 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<top name="&example;">&example;</top>},
                   [[:start_element, :top],
                    [:attr, :name, '&example;'],
-                   [:text, "&example;"],
+                   [:text, '&example;'],
                    [:end_element, :top]
                   ], AllSax, :convert_special => false)
   end
@@ -475,7 +475,7 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [[:start_element, :top],
                    [:attr, :name, 'A&amp;Z'],
-                   [:text, "This is &lt;some&gt; text."],
+                   [:text, 'This is &lt;some&gt; text.'],
                    [:end_element, :top]
                   ], AllSax, :convert_special => false)
   end
@@ -487,7 +487,7 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [[:start_element, :top],
                    [:attr, :name, 'A&Z'],
-                   [:text, "This is <some> text."],
+                   [:text, 'This is <some> text.'],
                    [:end_element, :top]
                   ], AllSax)
     Ox::default_options = { :convert_special => orig }
@@ -500,7 +500,7 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [[:start_element, :top],
                    [:attr, :name, 'A&amp;Z'],
-                   [:text, "This is &lt;some&gt; text."],
+                   [:text, 'This is &lt;some&gt; text.'],
                    [:end_element, :top]
                   ], AllSax)
     Ox::default_options = { :convert_special => orig }
@@ -510,7 +510,7 @@ encoding = "UTF-8" ?>},
     Ox::default_options = $ox_sax_options
     parse_compare(%{<top> This is some text.</top>},
                   [[:start_element, :top],
-                   [:text, " This is some text."],
+                   [:text, ' This is some text.'],
                    [:end_element, :top]
                   ])
   end
@@ -519,8 +519,8 @@ encoding = "UTF-8" ?>},
     Ox::default_options = $ox_sax_options
     parse_compare(%{<top>This is some text.},
                   [[:start_element, :top],
-                   [:error, "Not Terminated: text not terminated", 1, 23],
-                   [:text, "This is some text."],
+                   [:error, 'Not Terminated: text not terminated', 1, 23],
+                   [:text, 'This is some text.'],
                    [:error, "Start End Mismatch: element 'top' not closed", 1, 23],
                    [:end_element, :top]])
   end
@@ -533,7 +533,7 @@ encoding = "UTF-8" ?>},
 <top/>
 },
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
+                   [:attr, :version, '1.0'],
                    [:end_instruct, 'xml'],
                    [:doctype, ' top PUBLIC "top.dtd"'],
                    [:start_element, :top],
@@ -547,7 +547,7 @@ encoding = "UTF-8" ?>},
 <top/>
 },
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
+                   [:attr, :version, '1.0'],
                    [:end_instruct, 'xml'],
                    [:doctype, %{ Objects [<!ELEMENT Objects (RentObjects)><!ENTITY euml "&#235;"><!ENTITY Atilde "&#195;">]}],
                    [:start_element, :top],
@@ -561,11 +561,11 @@ encoding = "UTF-8" ?>},
 <!DOCTYPE top PUBLIC "top.dtd">
 },
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
+                   [:attr, :version, '1.0'],
                    [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:end_element, :top],
-                   [:error, "Out of Order: DOCTYPE can not come after an element", 3, 10],
+                   [:error, 'Out of Order: DOCTYPE can not come after an element', 3, 10],
                    [:doctype, ' top PUBLIC "top.dtd"']])
   end
 
@@ -575,7 +575,7 @@ encoding = "UTF-8" ?>},
 <! DOCTYPE top PUBLIC "top.dtd">
 <top/>
 },
-                  [[:error, "Unexpected Character: <!DOCTYPE can not included spaces", 2, 4],
+                  [[:error, 'Unexpected Character: <!DOCTYPE can not included spaces', 2, 4],
                    [:doctype, ' top PUBLIC "top.dtd"'],
                    [:start_element, :top],
                    [:end_element, :top]])
@@ -588,7 +588,7 @@ encoding = "UTF-8" ?>},
 </top>
 },
                   [[:start_element, :top],
-                   [:error, "Unexpected Character: DOCTYPE, CDATA, or comment expected", 2, 6],
+                   [:error, 'Unexpected Character: DOCTYPE, CDATA, or comment expected', 2, 6],
                    [:end_element, :top]])
   end
 
@@ -598,7 +598,7 @@ encoding = "UTF-8" ?>},
 <!--First comment.-->
 },
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
+                   [:attr, :version, '1.0'],
                    [:end_instruct, 'xml'],
                    [:comment, 'First comment.']])
   end
@@ -610,7 +610,7 @@ encoding = "UTF-8" ?>},
 <top>Before<!--Nested comment.-->After</top>
 },
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
+                   [:attr, :version, '1.0'],
                    [:end_instruct, 'xml'],
                    [:comment, 'First comment.'],
                    [:start_element, :top],
@@ -627,9 +627,9 @@ encoding = "UTF-8" ?>},
 <top/>
 },
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
+                   [:attr, :version, '1.0'],
                    [:end_instruct, 'xml'],
-                   [:error, "Not Terminated: comment not terminated", 3, 0],
+                   [:error, 'Not Terminated: comment not terminated', 3, 0],
                    [:comment, 'First comment.--'],
                    [:start_element, :top],
                    [:end_element, :top]])
@@ -643,7 +643,7 @@ encoding = "UTF-8" ?>},
 </top>
 },
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
+                   [:attr, :version, '1.0'],
                    [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:cdata, 'This is CDATA.'],
@@ -658,11 +658,11 @@ encoding = "UTF-8" ?>},
 </top>
 },
                   [[:instruct, 'xml'],
-                   [:attr, :version, "1.0"],
+                   [:attr, :version, '1.0'],
                    [:end_instruct, 'xml'],
                    [:start_element, :top],
-                   [:error, "Not Terminated: CDATA not terminated", 4, 0],
-                   [:cdata, "This is CDATA.]]"],
+                   [:error, 'Not Terminated: CDATA not terminated', 4, 0],
+                   [:cdata, 'This is CDATA.]]'],
                    [:end_element, :top]])
   end
 
@@ -703,48 +703,48 @@ encoding = "UTF-8" ?>},
   </row>
 </table>
 },
-                  [[:instruct, "xml"],
-                   [:attr, :version, "1.0"],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, '1.0'],
                    [:end_instruct, 'xml'],
-                   [:instruct, "ox"],
-                   [:attr, :version, "1.0"],
-                   [:attr, :mode, "object"],
-                   [:attr, :circular, "no"],
-                   [:attr, :xsd_date, "no"],
+                   [:instruct, 'ox'],
+                   [:attr, :version, '1.0'],
+                   [:attr, :mode, 'object'],
+                   [:attr, :circular, 'no'],
+                   [:attr, :xsd_date, 'no'],
                    [:end_instruct, 'ox'],
-                   [:doctype, " table PUBLIC \"-//ox//DTD TABLE 1.0//EN\" \"http://www.ohler.com/DTDs/TestTable-1.0.dtd\""],
+                   [:doctype, ' table PUBLIC "-//ox//DTD TABLE 1.0//EN" "http://www.ohler.com/DTDs/TestTable-1.0.dtd"'],
                    [:start_element, :table],
                    [:start_element, :row],
-                   [:attr, :id, "00004"],
+                   [:attr, :id, '00004'],
                    [:start_element, :cell],
-                   [:attr, :id, "A"],
-                   [:attr, :type, "Fixnum"],
-                   [:text, "1234"],
+                   [:attr, :id, 'A'],
+                   [:attr, :type, 'Fixnum'],
+                   [:text, '1234'],
                    [:end_element, :cell],
                    [:start_element, :cell],
-                   [:attr, :id, "B"],
-                   [:attr, :type, "String"],
-                   [:text, "A string."],
+                   [:attr, :id, 'B'],
+                   [:attr, :type, 'String'],
+                   [:text, 'A string.'],
                    [:end_element, :cell],
                    [:start_element, :cell],
-                   [:attr, :id, "C"],
-                   [:attr, :type, "String"],
-                   [:text, "This is a longer string that stretches over a larger number of characters."],
+                   [:attr, :id, 'C'],
+                   [:attr, :type, 'String'],
+                   [:text, 'This is a longer string that stretches over a larger number of characters.'],
                    [:end_element, :cell],
                    [:start_element, :cell],
-                   [:attr, :id, "D"],
-                   [:attr, :type, "Float"],
-                   [:text, "-12.345"],
+                   [:attr, :id, 'D'],
+                   [:attr, :type, 'Float'],
+                   [:text, '-12.345'],
                    [:end_element, :cell],
                    [:start_element, :cell],
-                   [:attr, :id, "E"],
-                   [:attr, :type, "Date"],
-                   [:text, "2011-09-18 23:07:26 +0900"],
+                   [:attr, :id, 'E'],
+                   [:attr, :type, 'Date'],
+                   [:text, '2011-09-18 23:07:26 +0900'],
                    [:end_element, :cell],
                    [:start_element, :cell],
-                   [:attr, :id, "F"],
-                   [:attr, :type, "Image"],
-                   [:cdata, "xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00"],
+                   [:attr, :id, 'F'],
+                   [:attr, :type, 'Image'],
+                   [:cdata, 'xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00'],
                    [:end_element, :cell],
                    [:end_element, :row],
                    [:end_element, :table]])
@@ -755,9 +755,9 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
 <top>ピーター</top>
 },
-                  [[:instruct, "xml"],
-                   [:attr, :version, "1.0"],
-                   [:attr, :encoding, "UTF-8"],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, '1.0'],
+                   [:attr, :encoding, 'UTF-8'],
                    [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:text, 'ピーター'],
@@ -773,7 +773,7 @@ encoding = "UTF-8" ?>},
       xml.force_encoding('ASCII')
     end
     parse_compare(xml,
-                  [[:instruct, "xml"],
+                  [[:instruct, 'xml'],
                    [:end_instruct, 'xml'],
                    [:start_element, :top],
                    [:text, 'ピーター'],
@@ -785,9 +785,9 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
 <いち name="ピーター" つま="まきえ">ピーター is katakana</いち>
 },
-                  [[:instruct, "xml"],
-                   [:attr, :version, "1.0"],
-                   [:attr, :encoding, "UTF-8"],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, '1.0'],
+                   [:attr, :encoding, 'UTF-8'],
                    [:end_instruct, 'xml'],
                    [:start_element, 'いち'.to_sym],
                    [:attr, :name, 'ピーター'],
@@ -801,9 +801,9 @@ encoding = "UTF-8" ?>},
     parse_compare(%{<?xml version="1.0" encoding="UTF-8"?>
 <text>&#233; is e with an accent</text>
 },
-                  [[:instruct, "xml"],
-                   [:attr, :version, "1.0"],
-                   [:attr, :encoding, "UTF-8"],
+                  [[:instruct, 'xml'],
+                   [:attr, :version, '1.0'],
+                   [:attr, :encoding, 'UTF-8'],
                    [:end_instruct, 'xml'],
                    [:start_element, :text],
                    [:text, 'é is e with an accent'],
@@ -882,7 +882,7 @@ encoding = "UTF-8" ?>},
     xml = %{<top>  <child>Pete\r</child>\n <child> Ohler\r</child></top>}
     Ox.sax_parse(handler, StringIO.new(xml))
     assert_equal([[:start_element, :top],
-                  [:text, "  "],
+                  [:text, '  '],
                   [:start_element, :child],
                   [:text, "Pete\n"],
                   [:end_element, :child],
@@ -1030,7 +1030,7 @@ this is not part of the xml document
     xml.seek(37)
     Ox.sax_parse(handler, xml)
     assert_equal([[:start_element, :top],
-                  [:text, "this is xml"],
+                  [:text, 'this is xml'],
                   [:end_element, :top]], handler.calls)
   end
 
@@ -1050,19 +1050,19 @@ this is not part of the xml document
 }
     parse_compare(xml,
                   [
-                    [:doctype, " HTML"],
+                    [:doctype, ' HTML'],
                     [:start_element, :html],
-                    [:error, "Unexpected Character: attribute value not in quotes", 2, 12],
-                    [:attr, :lang, "en"],
+                    [:error, 'Unexpected Character: attribute value not in quotes', 2, 12],
+                    [:attr, :lang, 'en'],
                     [:start_element, :head],
-                    [:attr, :garbage, "trash"],
-                    [:error, "Invalid Element: bad is not a valid element type for a HTML document type.", 4, 9],
+                    [:attr, :garbage, 'trash'],
+                    [:error, 'Invalid Element: bad is not a valid element type for a HTML document type.', 4, 9],
                     [:start_element, :bad],
-                    [:attr, :attr, "some&#xthing"],
-                    [:error, "Invalid Element: bad is not a valid element type for a HTML document type.", 5, 9],
+                    [:attr, :attr, 'some&#xthing'],
+                    [:error, 'Invalid Element: bad is not a valid element type for a HTML document type.', 5, 9],
                     [:start_element, :bad],
-                    [:error, "Unexpected Character: no attribute value", 5, 15],
-                    [:attr, :alone, ""],
+                    [:error, 'Unexpected Character: no attribute value', 5, 15],
+                    [:attr, :alone, ''],
                     [:text, "\n  "],
                     [:error, "Start End Mismatch: element 'head' close does not match 'bad' open", 6, 3],
                     [:end_element, :bad],
@@ -1072,9 +1072,9 @@ this is not part of the xml document
                     [:text, "\n  This is a test of the &tolerant&# effort option.\n  "],
                     [:end_element, :body],
                     [:end_element, :html],
-                    [:error, "Out of Order: multiple top level elements", 11, 1],
+                    [:error, 'Out of Order: multiple top level elements', 11, 1],
                     [:start_element, :p],
-                    [:text, "after thought"],
+                    [:text, 'after thought'],
                     [:end_element, :p]],
                   AllSax, :convert_special => false, :smart => true)
   end
@@ -1092,16 +1092,16 @@ this is not part of the xml document
 }
     parse_compare(xml,
                   [
-                    [:doctype, " HTML"],
-                    [:start_element, "html"],
-                    [:attr, "lang", "en"],
-                    [:start_element, "head"],
+                    [:doctype, ' HTML'],
+                    [:start_element, 'html'],
+                    [:attr, 'lang', 'en'],
+                    [:start_element, 'head'],
                     [:text, "\n  "],
-                    [:end_element, "head"],
-                    [:start_element, "body"],
+                    [:end_element, 'head'],
+                    [:start_element, 'body'],
                     [:text, "\n  This is a some text.\n  "],
-                    [:end_element, "body"],
-                    [:end_element, "html"]
+                    [:end_element, 'body'],
+                    [:end_element, 'html']
                   ],
                   AllSax, :symbolize => false, :smart => true)
   end
@@ -1123,15 +1123,15 @@ this is not part of the xml document
 </html>
 |
     parse_compare(html,
-                  [[:doctype, " HTML"],
+                  [[:doctype, ' HTML'],
                    [:start_element, :html],
-                   [:attr, :lang, "en"],
+                   [:attr, :lang, 'en'],
                    [:start_element, :head],
                    [:text, "\n  "],
                    [:end_element, :head],
                    [:start_element, :body],
                    [:start_element, :script],
-                   [:attr, :type, "text/javascript"],
+                   [:attr, :type, 'text/javascript'],
                    [:text, "\n      def fake(c,d) {\n        x = \"</script\";\n        return c<d;\n      }\n    "],
                    [:end_element, :script],
                    [:end_element, :body],
@@ -1146,9 +1146,9 @@ this is not part of the xml document
     Ox.sax_parse(handler, '<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>')
     assert_equal([[:start_element, :"spaced:one"],
                   [:start_element, :two],
-                  [:attr, :"spaced:out", "no"],
-                  [:attr, :"other:space", "yes"],
-                  [:text, "inside"],
+                  [:attr, :"spaced:out", 'no'],
+                  [:attr, :"other:space", 'yes'],
+                  [:text, 'inside'],
                   [:end_element, :two],
                   [:end_element, :"spaced:one"]], handler.calls)
   end
@@ -1161,24 +1161,24 @@ this is not part of the xml document
                  :strip_namespace => true)
     assert_equal([[:start_element, :one],
                   [:start_element, :two],
-                  [:attr, :out, "no"],
-                  [:attr, :space, "yes"],
-                  [:text, "inside"],
+                  [:attr, :out, 'no'],
+                  [:attr, :space, 'yes'],
+                  [:text, 'inside'],
                   [:end_element, :two],
                   [:end_element, :one]], handler.calls)
   end
 
   def test_sax_namespace_strip
     Ox::default_options = $ox_sax_options
-    Ox::default_options = { :strip_namespace => "spaced" }
+    Ox::default_options = { :strip_namespace => 'spaced' }
 
     handler = AllSax.new()
     Ox.sax_parse(handler, '<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>')
     assert_equal([[:start_element, :one],
                   [:start_element, :two],
-                  [:attr, :out, "no"],
-                  [:attr, :"other:space", "yes"],
-                  [:text, "inside"],
+                  [:attr, :out, 'no'],
+                  [:attr, :"other:space", 'yes'],
+                  [:text, 'inside'],
                   [:end_element, :two],
                   [:end_element, :one]], handler.calls)
   end
@@ -1190,10 +1190,10 @@ this is not part of the xml document
     Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => {'hr'=>:inactive})
     assert_equal([[:start_element, :html],
                   [:start_element, :h1],
-                  [:text, "title"],
+                  [:text, 'title'],
                   [:end_element, :h1],
                   [:start_element, :p],
-                  [:text, "Hello"],
+                  [:text, 'Hello'],
                   [:end_element, :p],
                   [:end_element, :html]], handler.calls)
   end
@@ -1206,10 +1206,10 @@ this is not part of the xml document
     Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => overlay)
     assert_equal([[:start_element, :html],
                   [:start_element, :h1],
-                  [:text, "title"],
+                  [:text, 'title'],
                   [:end_element, :h1],
                   [:start_element, :p],
-                  [:text, "Hello"],
+                  [:text, 'Hello'],
                   [:end_element, :p],
                   [:end_element, :html]], handler.calls)
   end
@@ -1224,10 +1224,10 @@ this is not part of the xml document
 
     Ox.sax_html(handler, '<html class="fuzzy"><h1>title</h1><hr/><p>Hello</p></html>', :overlay => overlay)
     assert_equal([[:start_element, :h1],
-                  [:text, "title"],
+                  [:text, 'title'],
                   [:end_element, :h1],
                   [:start_element, :p],
-                  [:text, "Hello"],
+                  [:text, 'Hello'],
                   [:end_element, :p]], handler.calls)
   end
 
@@ -1240,10 +1240,10 @@ this is not part of the xml document
     Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>')
     assert_equal([[:start_element, :html],
                   [:start_element, :h1],
-                  [:text, "title"],
+                  [:text, 'title'],
                   [:end_element, :h1],
                   [:start_element, :p],
-                  [:text, "Hello"],
+                  [:text, 'Hello'],
                   [:end_element, :p],
                   [:end_element, :html]], handler.calls)
   end
@@ -1257,7 +1257,7 @@ this is not part of the xml document
     Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><tr><td>one</td></tr></table></html>', :overlay => overlay)
     assert_equal([[:start_element, :html],
                   [:start_element, :h1],
-                  [:text, "title"],
+                  [:text, 'title'],
                   [:end_element, :h1],
                   [:end_element, :html]], handler.calls)
   end
@@ -1273,7 +1273,7 @@ this is not part of the xml document
     Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><hr/><tr><td>one</td></tr></table></html>', :overlay => overlay)
     assert_equal([[:start_element, :html],
                   [:start_element, :h1],
-                  [:text, "title"],
+                  [:text, 'title'],
                   [:end_element, :h1],
                   [:start_element, :hr],
                   [:end_element, :hr],
@@ -1292,11 +1292,11 @@ this is not part of the xml document
     Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><tr><td>one</td></tr></table></html>', :overlay => overlay)
     assert_equal([[:start_element, :html],
                   [:start_element, :h1],
-                  [:text, "title"],
+                  [:text, 'title'],
                   [:end_element, :h1],
-                  [:comment, "comment"],
+                  [:comment, 'comment'],
                   [:start_element, :tr],
-                  [:text, "one"],
+                  [:text, 'one'],
                   [:end_element, :tr],
                   [:end_element, :html]], handler.calls)
   end
@@ -1310,7 +1310,7 @@ this is not part of the xml document
     Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><tr><td>one</td></tr></table></html>', :overlay => overlay)
     assert_equal([[:start_element, :html],
                   [:start_element, :h1],
-                  [:text, "title"],
+                  [:text, 'title'],
                   [:end_element, :h1],
                   [:abort, :table],
                  ], handler.calls)

@@ -18,8 +18,8 @@ require 'ox'
 it = 5000
 
 opts = OptionParser.new
-opts.on("-i", "--iterations [Int]", Integer, "iterations")    { |i| it = i }
-opts.on("-h", "--help", "Show this display")                  { puts opts; Process.exit!(0) }
+opts.on('-i', '--iterations [Int]', Integer, 'iterations')    { |i| it = i }
+opts.on('-h', '--help', 'Show this display')                  { puts opts; Process.exit!(0) }
 files = opts.parse(ARGV)
 
 module Test
@@ -74,8 +74,8 @@ s = Struct.new('Zoo', :x, :y, :z)
   data[:Object].values << ::Test::Ox::Wrap.new(i)
 end
 
-puts "           load                        dump"
-puts "type       Ox      Marshal  ratio      Ox      Marshal  ratio"
+puts '           load                        dump'
+puts 'type       Ox      Marshal  ratio      Ox      Marshal  ratio'
 data.each do |type, a|
   # xml = Ox.dump(a, :indent => -1, :xsd_date => true)
   xml = Ox.dump(a, :indent => -1)
@@ -108,7 +108,7 @@ data.each do |type, a|
   end
   mars_dump_time = Time.now - start
 
-  puts "%8s  %6.3f  %6.3f    %0.1f       %6.3f  %6.3f    %0.1f" % [type.to_s,
+  puts '%8s  %6.3f  %6.3f    %0.1f       %6.3f  %6.3f    %0.1f' % [type.to_s,
                                                                    ox_load_time, mars_load_time, mars_load_time / ox_load_time,
                                                                    ox_dump_time, mars_dump_time, mars_dump_time / ox_dump_time]
 end

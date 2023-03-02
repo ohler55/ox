@@ -24,7 +24,7 @@ module Ox
     # - +attr+ [Symbol|String] attribute name or key
     # - +value+ [Object] value for the attribute
     def []=(attr, value)
-      raise "argument to [] must be a Symbol or a String." unless attr.is_a?(Symbol) or attr.is_a?(String)
+      raise 'argument to [] must be a Symbol or a String.' unless attr.is_a?(Symbol) or attr.is_a?(String)
 
       @attributes = { } if !instance_variable_defined?(:@attributes) or @attributes.nil?
       a_str = attr.to_s

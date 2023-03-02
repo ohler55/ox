@@ -11,7 +11,7 @@ class Sample
 end # File
 
 # Create Object
-obj = Sample.new(1, "bee", ['x', :y, 7.0])
+obj = Sample.new(1, 'bee', ['x', :y, 7.0])
 # Now dump the Object to an XML String.
 xml = Ox.dump(obj)
 # Convert the object back into a Sample Object.

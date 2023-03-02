@@ -41,23 +41,23 @@ class Perf
     iva.delete_if { |i| i.duration.nil? }
     iva = iva.sort_by { |i| i.duration }
     puts
-    puts "Summary:"
-    puts "%*s  time (secs)  rate (ops/sec)" % [width, 'System']
+    puts 'Summary:'
+    puts '%*s  time (secs)  rate (ops/sec)' % [width, 'System']
     puts "#{'-' * width}  -----------  --------------"
     iva.each do |i|
       if i.duration.nil?
       else
-        puts "%*s %11.3f  %14.3f" % [width, i.title, i.duration, i.rate ]
+        puts '%*s %11.3f  %14.3f' % [width, i.title, i.duration, i.rate ]
       end
     end
     puts
     puts "Comparison Matrix\n(performance factor, 2.0 means row is twice as fast as column)"
-    puts(([' ' * width] + iva.map { |i| "%*s" % [width, i.title] }).join('  '))
+    puts(([' ' * width] + iva.map { |i| '%*s' % [width, i.title] }).join('  '))
     puts((['-' * width] + iva.map { |i| '-' * width }).join('  '))
     iva.each do |i|
-      line = ["%*s" % [width, i.title]]
+      line = ['%*s' % [width, i.title]]
       iva.each do |o|
-        line << "%*.2f" % [width, o.duration / i.duration]
+        line << '%*.2f' % [width, o.duration / i.duration]
       end
       puts line.join('  ')
     end
