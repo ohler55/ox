@@ -556,14 +556,6 @@ Style/CombinableLoops:
   Exclude:
     - 'lib/ox/element.rb'
 
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle, AllowInnerBackticks.
-# SupportedStyles: backticks, percent_x, mixed
-Style/CommandLiteral:
-  Exclude:
-    - 'ext/ox/extconf.rb'
-
 # Offense count: 105
 # This cop supports unsafe autocorrection (--autocorrect-all).
 Style/CommentedKeyword:

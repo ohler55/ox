@@ -49,4 +49,4 @@ have_struct_member('struct tm', 'tm_gmtoff')
 
 create_makefile(extension_name)
 
-%x{make clean}
+`make clean`
