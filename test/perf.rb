@@ -22,7 +22,8 @@ class Perf
     @items.each do |i|
       i.run(iter, base.duration)
       if i.error.nil?
-        puts "#{i.title}.#{i.op} #{iter} times in %0.3f seconds or %0.3f #{i.op}/sec." % [i.duration, iter / i.duration]
+        puts format("#{i.title}.#{i.op} #{iter} times in %0.3f seconds or %0.3f #{i.op}/sec.", i.duration, 
+                    iter / i.duration)
       else
         puts "***** #{i.title}.#{i.op} failed! #{i.error}"
       end
@@ -42,22 +43,22 @@ class Perf
     iva = iva.sort_by { |i| i.duration }
     puts
     puts 'Summary:'
-    puts '%*s  time (secs)  rate (ops/sec)' % [width, 'System']
+    puts format('%*s  time (secs)  rate (ops/sec)', width, 'System')
     puts "#{'-' * width}  -----------  --------------"
     iva.each do |i|
       if i.duration.nil?
       else
-        puts '%*s %11.3f  %14.3f' % [width, i.title, i.duration, i.rate ]
+        puts format('%*s %11.3f  %14.3f', width, i.title, i.duration, i.rate)
       end
     end
     puts
     puts "Comparison Matrix\n(performance factor, 2.0 means row is twice as fast as column)"
-    puts(([' ' * width] + iva.map { |i| '%*s' % [width, i.title] }).join('  '))
+    puts(([' ' * width] + iva.map { |i| format('%*s', width, i.title) }).join('  '))
     puts((['-' * width] + iva.map { |i| '-' * width }).join('  '))
     iva.each do |i|
-      line = ['%*s' % [width, i.title]]
+      line = [format('%*s', width, i.title)]
       iva.each do |o|
-        line << '%*.2f' % [width, o.duration / i.duration]
+        line << format('%*.2f', width, o.duration / i.duration)
       end
       puts line.join('  ')
     end

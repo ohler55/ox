@@ -106,7 +106,5 @@ data.each do |type, a|
   end
   mars_dump_time = Time.now - start
 
-  puts '%8s  %6.3f  %6.3f    %0.1f       %6.3f  %6.3f    %0.1f' % [type.to_s,
-                                                                   ox_load_time, mars_load_time, mars_load_time / ox_load_time,
-                                                                   ox_dump_time, mars_dump_time, mars_dump_time / ox_dump_time]
+  puts format('%8s  %6.3f  %6.3f    %0.1f       %6.3f  %6.3f    %0.1f', type.to_s, ox_load_time, mars_load_time, mars_load_time / ox_load_time, ox_dump_time, mars_dump_time, mars_dump_time / ox_dump_time)
 end

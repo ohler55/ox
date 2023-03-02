@@ -73,7 +73,7 @@ def create_file(filename, size)
   File.open(filename, 'w') do |f|
     f.write(head)
     cnt.times do |i|
-      f.write(row % [i, i])
+      f.write(format(row, i, i))
     end
     f.write(tail)
   end

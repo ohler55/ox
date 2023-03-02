@@ -943,7 +943,7 @@ encoding = "UTF-8" ?>},
     assert_equal(t.sec, handler.item.sec)
     assert_equal(t.usec, handler.item.usec)
     t = Time.now
-    Ox.sax_parse(handler, StringIO.new(%{<top>%d.%06d</top>} % [t.sec, t.usec]))
+    Ox.sax_parse(handler, StringIO.new(format(%{<top>%d.%06d</top>}, t.sec, t.usec)))
     assert_equal(t.sec, handler.item.sec)
     assert_equal(t.usec, handler.item.usec)
   end
@@ -998,7 +998,7 @@ encoding = "UTF-8" ?>},
     assert_equal(t.sec, handler.item.sec)
     assert_equal(t.usec, handler.item.usec)
     t = Time.local(2012, 1, 5, 10, 20, 30.123456)
-    Ox.sax_parse(handler, StringIO.new(%{<top as_time="%d.%06d"/>} % [t.sec, t.usec]))
+    Ox.sax_parse(handler, StringIO.new(format(%{<top as_time="%d.%06d"/>}, t.sec, t.usec)))
     assert_equal(t.sec, handler.item.sec)
     assert_equal(t.usec, handler.item.usec)
   end
