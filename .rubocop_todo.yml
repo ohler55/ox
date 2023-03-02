@@ -537,12 +537,6 @@ Style/CaseLikeIf:
     - 'lib/ox/element.rb'
     - 'test/parse_cmp.rb'
 
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-Style/CharacterLiteral:
-  Exclude:
-    - 'examples/sax_ractor.rb'
-
 # Offense count: 2
 Style/CombinableLoops:
   Exclude:
