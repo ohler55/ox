@@ -16,7 +16,7 @@ module SaxTestHelpers
   #                ], AllSax, :convert_special => true, :smart => true)
   #
   def parse_compare(xml, expected, handler_class = AllSax, opts = {}, handler_attr = :calls)
-    handler = handler_class.new()
+    handler = handler_class.new
     input = StringIO.new(xml)
     options = {
       :symbolize => true,

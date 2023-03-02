@@ -49,7 +49,7 @@ class SaxBaseTest < Test::Unit::TestCase
 
   def test_sax_io_pipe
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
+    handler = AllSax.new
     input, w = IO.pipe
     w << %{<top/>}
     w.close
@@ -60,7 +60,7 @@ class SaxBaseTest < Test::Unit::TestCase
 
   def test_sax_file
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
+    handler = AllSax.new
     input = File.open(File.join(File.dirname(__FILE__), 'basic.xml'))
     Ox.sax_parse(handler, input)
     input.close
@@ -70,7 +70,7 @@ class SaxBaseTest < Test::Unit::TestCase
 
   def test_sax_file_line_col
     Ox::default_options = $ox_sax_options
-    handler = LineColSax.new()
+    handler = LineColSax.new
     input = File.open(File.join(File.dirname(__FILE__), 'trilevel.xml'))
     Ox.sax_parse(handler, input)
     input.close
@@ -91,7 +91,7 @@ class SaxBaseTest < Test::Unit::TestCase
 
   def test_sax_io_file
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
+    handler = AllSax.new
     input = IO.open(IO.sysopen(File.join(File.dirname(__FILE__), 'basic.xml')))
     Ox.sax_parse(handler, input)
     input.close
@@ -819,13 +819,13 @@ encoding = "UTF-8" ?>},
 <top>ピーター</top>
 }
       xml.force_encoding('UTF-8')
-      handler = AllSax.new()
+      handler = AllSax.new
       input = StringIO.new(xml)
       Ox.sax_parse(handler, input)
       assert_equal('UTF-8', handler.calls.assoc(:text)[1].encoding.to_s)
       # now try a different one
       xml.force_encoding('US-ASCII')
-      handler = AllSax.new()
+      handler = AllSax.new
       input = StringIO.new(xml)
       Ox.sax_parse(handler, input)
       assert_equal('US-ASCII', handler.calls.assoc(:text)[1].encoding.to_s)
@@ -840,7 +840,7 @@ encoding = "UTF-8" ?>},
       xml = %{<?xml version="1.0" encoding="Windows-1251"?>
 <top>тест</top>
 }
-      handler = AllSax.new()
+      handler = AllSax.new
       input = StringIO.new(xml)
       Ox.sax_parse(handler, input)
 
@@ -878,7 +878,7 @@ encoding = "UTF-8" ?>},
     Ox::default_options = $ox_sax_options
     Ox::default_options = { :skip => :skip_none }
 
-    handler = AllSax.new()
+    handler = AllSax.new
     xml = %{<top>  <child>Pete\r</child>\n <child> Ohler\r</child></top>}
     Ox.sax_parse(handler, StringIO.new(xml))
     assert_equal([[:start_element, :top],
@@ -1022,7 +1022,7 @@ encoding = "UTF-8" ?>},
 
   def test_sax_offset_start
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
+    handler = AllSax.new
     xml = StringIO.new(%|
 this is not part of the xml document
 <top>this is xml</top>
@@ -1142,7 +1142,7 @@ this is not part of the xml document
 
   def test_sax_namespace_no_strip
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
+    handler = AllSax.new
     Ox.sax_parse(handler, '<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>')
     assert_equal([[:start_element, :"spaced:one"],
                   [:start_element, :two],
@@ -1155,7 +1155,7 @@ this is not part of the xml document
 
   def test_sax_namespace_strip_wild
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
+    handler = AllSax.new
     Ox.sax_parse(handler,
                  '<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>',
                  :strip_namespace => true)
@@ -1172,7 +1172,7 @@ this is not part of the xml document
     Ox::default_options = $ox_sax_options
     Ox::default_options = { :strip_namespace => 'spaced' }
 
-    handler = AllSax.new()
+    handler = AllSax.new
     Ox.sax_parse(handler, '<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>')
     assert_equal([[:start_element, :one],
                   [:start_element, :two],
@@ -1185,7 +1185,7 @@ this is not part of the xml document
 
   def test_sax_html_inactive
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
+    handler = AllSax.new
 
     Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => {'hr'=>:inactive})
     assert_equal([[:start_element, :html],
@@ -1200,8 +1200,8 @@ this is not part of the xml document
 
   def test_sax_html_overlay_mod
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
-    overlay = Ox.sax_html_overlay()
+    handler = AllSax.new
+    overlay = Ox.sax_html_overlay
     overlay['hr'] = :inactive
     Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => overlay)
     assert_equal([[:start_element, :html],
@@ -1216,8 +1216,8 @@ this is not part of the xml document
 
   def test_sax_html_active
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
-    overlay = Ox.sax_html_overlay()
+    handler = AllSax.new
+    overlay = Ox.sax_html_overlay
     overlay.each_key { |k| overlay[k] = :inactive }
     overlay['h1'] = :active
     overlay['p'] = :active
@@ -1233,8 +1233,8 @@ this is not part of the xml document
 
   def test_sax_html_default_overlay_mod
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
-    overlay = Ox.sax_html_overlay()
+    handler = AllSax.new
+    overlay = Ox.sax_html_overlay
     overlay['hr'] = :inactive
     Ox::default_options = { :overlay => overlay }
     Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>')
@@ -1250,8 +1250,8 @@ this is not part of the xml document
 
   def test_sax_html_block
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
-    overlay = Ox.sax_html_overlay()
+    handler = AllSax.new
+    overlay = Ox.sax_html_overlay
     overlay['table'] = :block
 
     Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><tr><td>one</td></tr></table></html>', :overlay => overlay)
@@ -1264,8 +1264,8 @@ this is not part of the xml document
 
   def test_sax_html_off
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
-    overlay = Ox.sax_html_overlay()
+    handler = AllSax.new
+    overlay = Ox.sax_html_overlay
     overlay['table'] = :off
     overlay['td'] = :off
     overlay['!--'] = :off
@@ -1284,8 +1284,8 @@ this is not part of the xml document
 
   def test_sax_html_inactive_full_map
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
-    overlay = Ox.sax_html_overlay()
+    handler = AllSax.new
+    overlay = Ox.sax_html_overlay
     overlay['table'] = :inactive
     overlay['td'] = :inactive
 
@@ -1303,8 +1303,8 @@ this is not part of the xml document
 
   def test_sax_html_abort
     Ox::default_options = $ox_sax_options
-    handler = AllSax.new()
-    overlay = Ox.sax_html_overlay()
+    handler = AllSax.new
+    overlay = Ox.sax_html_overlay
     overlay['table'] = :abort
 
     Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><tr><td>one</td></tr></table></html>', :overlay => overlay)

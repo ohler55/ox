@@ -43,5 +43,5 @@ class QuietSax < Ox::Sax
   end
 end
 
-handler = QuietSax.new()
+handler = QuietSax.new
 Ox.sax_parse(handler, ARGF, :smart => true)

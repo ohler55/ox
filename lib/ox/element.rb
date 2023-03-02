@@ -100,7 +100,7 @@ module Ox
     def replace_text(txt)
       raise 'the argument to replace_text() must be a String' unless txt.is_a?(String)
 
-      @nodes.clear()
+      @nodes.clear
       @nodes << txt
     end
 

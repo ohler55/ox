@@ -33,22 +33,22 @@ module Test
 end
 
 data = { 
-  :Boolean => Test::Ox::Wrap.new(),
-  :Fixnum => Test::Ox::Wrap.new(),
-  :Float => Test::Ox::Wrap.new(),
-  :String => Test::Ox::Wrap.new(),
-  :Symbol => Test::Ox::Wrap.new(),
-  :Time => Test::Ox::Wrap.new(), 
-  :Array => Test::Ox::Wrap.new(), 
-  :Hash => Test::Ox::Wrap.new(),
-  :Range => Test::Ox::Wrap.new(),
-  :Regexp => Test::Ox::Wrap.new(),
-  :Bignum => Test::Ox::Wrap.new(),
-  :Complex => Test::Ox::Wrap.new(),
-  :Rational => Test::Ox::Wrap.new(),
-  :Struct => Test::Ox::Wrap.new(),
-  :Class => Test::Ox::Wrap.new(),
-  :Object => Test::Ox::Wrap.new(),
+  :Boolean => Test::Ox::Wrap.new,
+  :Fixnum => Test::Ox::Wrap.new,
+  :Float => Test::Ox::Wrap.new,
+  :String => Test::Ox::Wrap.new,
+  :Symbol => Test::Ox::Wrap.new,
+  :Time => Test::Ox::Wrap.new, 
+  :Array => Test::Ox::Wrap.new, 
+  :Hash => Test::Ox::Wrap.new,
+  :Range => Test::Ox::Wrap.new,
+  :Regexp => Test::Ox::Wrap.new,
+  :Bignum => Test::Ox::Wrap.new,
+  :Complex => Test::Ox::Wrap.new,
+  :Rational => Test::Ox::Wrap.new,
+  :Struct => Test::Ox::Wrap.new,
+  :Class => Test::Ox::Wrap.new,
+  :Object => Test::Ox::Wrap.new,
 }
 
 s = Struct.new('Zoo', :x, :y, :z)

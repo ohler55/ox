@@ -29,8 +29,8 @@ module Weather
           first = false
           next
         end
-        t = row.elements[1].child().child().to_s
-        high = row.elements[3].child().child().to_s.to_f
+        t = row.elements[1].child.child.to_s
+        high = row.elements[3].child.child.to_s.to_f
         if as_time
           highs[Time.parse(t)] = high
         else

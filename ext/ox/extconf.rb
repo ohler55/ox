@@ -4,7 +4,7 @@ extension_name = 'ox'
 dir_config(extension_name)
 
 parts = RUBY_DESCRIPTION.split(' ')
-type = parts[0].downcase()
+type = parts[0].downcase
 type = 'ree' if 'ruby' == type && RUBY_DESCRIPTION.include?('Ruby Enterprise Edition')
 platform = RUBY_PLATFORM
 version = RUBY_VERSION.split('.')

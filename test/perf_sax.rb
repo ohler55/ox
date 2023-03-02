@@ -172,9 +172,9 @@ perf.add('Ox::Sax', 'sax_parse') {
 }
 perf.before('Ox::Sax') {
   $handler = if $all_cbs
-               $pos ? OxPosAllSax.new() : OxAllSax.new()
+               $pos ? OxPosAllSax.new : OxAllSax.new
              else
-               OxSax.new()
+               OxSax.new
              end
 }
 
@@ -185,7 +185,7 @@ unless $ox_only
       $handler.parse(input)
       input.close
     }
-    perf.before('Nokogiri::XML::Sax') { $handler = Nokogiri::XML::SAX::Parser.new($all_cbs ? NoAllSax.new() : NoSax.new()) }
+    perf.before('Nokogiri::XML::Sax') { $handler = Nokogiri::XML::SAX::Parser.new($all_cbs ? NoAllSax.new : NoSax.new) }
   end
 
   unless defined?(LibXML).nil?
@@ -193,10 +193,10 @@ unless $ox_only
       input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
       parser = LibXML::XML::SaxParser.io(input)
       parser.callbacks = $handler
-      parser.parse()
+      parser.parse
       input.close
     }
-    perf.before('LibXML::XML::Sax') { $handler = $all_cbs ? LxAllSax.new() : LxSax.new() }
+    perf.before('LibXML::XML::Sax') { $handler = $all_cbs ? LxAllSax.new : LxSax.new }
   end
 end
 

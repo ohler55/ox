@@ -28,7 +28,7 @@ opts.on('-t', 'dates as time')                                 { $as_time = true
 opts.on('-h', '--help', 'Show this display')                   { puts opts; Process.exit!(0) }
 rest = opts.parse(ARGV)
 
-perf = Perf.new()
+perf = Perf.new
 
 $sax = nil
 

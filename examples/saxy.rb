@@ -44,7 +44,7 @@ xml = %{
 </Park.Animal>
 }
 # Create an instance of the handler. 
-handler = Saxy.new()
+handler = Saxy.new
 
 Ox.sax_html(handler, xml)
 

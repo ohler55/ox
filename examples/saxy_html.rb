@@ -85,7 +85,7 @@ class Saxy < Ox::Sax
 
   def end_element(name)
     push_element
-    @builder.pop() unless VOID_ELEMENTS.include?(name)
+    @builder.pop unless VOID_ELEMENTS.include?(name)
   end
 
   # Just in case there is a parse error this will display the error along with
@@ -98,7 +98,7 @@ end
 # Load the XML file. The Ox.sax_html also handles IO objects.
 xml = File.read('saxy.html')
 # Create an instance of the handler.
-handler = Saxy.new()
+handler = Saxy.new
 
 Ox.sax_html(handler, xml)
 

@@ -179,7 +179,7 @@ end
 class ErrorsOnParentVoidElementTest < SaxSmartTest
   def construct_html(el)
     s = ''
-    str = (VOIDELEMENTS[el]['parents'] || []).each() do |p|
+    str = (VOIDELEMENTS[el]['parents'] || []).each do |p|
       s += "<#{p}><#{el}></#{p}>"
     end
     "<html><body>#{str}</body></html>"
@@ -362,7 +362,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
     overlay.each_key {|k| overlay[k] = :off }
     overlay['!--'] = :active
 
-    handler = AllSax.new()
+    handler = AllSax.new
     input = StringIO.new(html)
     options = {
       :overlay => overlay,
@@ -370,7 +370,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
     }
     Ox.sax_html(handler, input, options)
     expected = [[:comment, ' a comment ']]
-    actual = handler.calls()
+    actual = handler.calls
 
     puts "\nexpected: #{expected}\n  actual: #{actual}" if expected != actual
     assert_equal(expected, actual)
@@ -594,7 +594,7 @@ class SaxSmartTableTagTest < SaxSmartTest
   end
 
   def html_parse_compare(xml, expected, opts = {})
-    handler = AllSax.new()
+    handler = AllSax.new
     input = StringIO.new(xml)
     options = {
       :symbolize => true,
@@ -621,7 +621,7 @@ class SaxSmartTableTagTest < SaxSmartTest
 </html>
 }
 
-    hints = Ox.sax_html_overlay()
+    hints = Ox.sax_html_overlay
     hints['td'] = :nest_ok
     html_parse_compare(html,
                        [[:start_element, :html],
@@ -644,7 +644,7 @@ class SaxSmartTableTagTest < SaxSmartTest
   
   def test_nest_ok_auto_closing
     html = %{<html><body><h5>test</body></html>}
-    hints = Ox.sax_html_overlay()
+    hints = Ox.sax_html_overlay
     hints['h5'] = :nest_ok
     html_parse_compare(html,
                        [[:start_element, :html],

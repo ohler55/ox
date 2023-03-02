@@ -78,7 +78,7 @@ class Func < Test::Unit::TestCase
 
   def test_get_options
     Ox::default_options = $ox_object_options
-    opts = Ox.default_options()
+    opts = Ox.default_options
     assert_equal($ox_object_options, opts)
   end
 
@@ -110,7 +110,7 @@ class Func < Test::Unit::TestCase
     }
     o3 = { :xsd_date=>false }
     Ox.default_options = o2
-    opts = Ox.default_options()
+    opts = Ox.default_options
     assert_equal(o2, opts);
     Ox.default_options = o3 # see if it throws an exception
     Ox::default_options = $ox_object_options
@@ -540,7 +540,7 @@ class Func < Test::Unit::TestCase
   def test_escape_utf8_value
     Ox::default_options = $ox_object_options
     xml = %{<?xml encoding="UTF-8"?>\n<top name="&#x30d4;&#12540;&#xE382BFE383BC;">&#xe38394; test &#64;</top>\n}
-    doc = Ox.parse(xml).root()
+    doc = Ox.parse(xml).root
     assert_equal('ピ test @', doc.nodes[0])
     assert_equal('ピーター', doc.attributes[:name])
   end
@@ -548,7 +548,7 @@ class Func < Test::Unit::TestCase
   def test_escape_utf8_nil_encoding
     Ox::default_options = $ox_object_options
     xml = %{<?xml?>\n<top name="&#x30d4;&#12540;&#xE382BFE383BC;">&#x30D4; test &#64;</top>\n}
-    doc = Ox.parse(xml).root()
+    doc = Ox.parse(xml).root
     assert_equal('ピ test @', doc.nodes[0])
     assert_equal('ピーター', doc.attributes[:name])
   end
@@ -556,7 +556,7 @@ class Func < Test::Unit::TestCase
   def test_escape_bom_utf8_encoding
     Ox::default_options = $ox_object_options
     xml = %{\xEF\xBB\xBF<?xml?>\n<top name="bom"></top>\n}
-    doc = Ox.parse(xml).root()
+    doc = Ox.parse(xml).root
     assert_equal('bom', doc.attributes[:name])
     unless RUBY_VERSION.start_with?('1.8') # || 'rubinius' == $ruby
       assert_equal('UTF-8', doc.attributes[:name].encoding.to_s)
@@ -567,7 +567,7 @@ class Func < Test::Unit::TestCase
     Ox::default_options = $ox_object_options
     xml = %{\xEF\xBB<?xml?>\n<top name="bom"></top>\n}
     assert_raise(Ox::ParseError) {
-      Ox.parse(xml).root()
+      Ox.parse(xml).root
     }
   end
 
@@ -743,7 +743,7 @@ class Func < Test::Unit::TestCase
 </e>
 }
       x = Ox.load(xml, :mode => :object, :effort => :auto_define)
-      assert_equal('Some Error', x.message())
+      assert_equal('Some Error', x.message)
       assert(x.is_a?(Exception))
     end
   end
@@ -1405,7 +1405,7 @@ class Func < Test::Unit::TestCase
     Ox.load('<one>first</one><two>second</two><!--three-->') do |x|
       results << Ox.dump(x)
     end
-    assert_equal("\n<one>first</one>\n\n<two>second</two>\n\n<!-- three -->\n", results.join())
+    assert_equal("\n<one>first</one>\n\n<two>second</two>\n\n<!-- three -->\n", results.join)
   end
 
   def test_namespace_no_strip
@@ -1469,28 +1469,28 @@ class Func < Test::Unit::TestCase
 
   def test_builder
     b = Ox::Builder.new(:indent => 2)
-    assert_equal(2, b.indent())
-    assert_equal(1, b.line())
-    assert_equal(1, b.column())
-    assert_equal(0, b.pos())
+    assert_equal(2, b.indent)
+    assert_equal(1, b.line)
+    assert_equal(1, b.column)
+    assert_equal(0, b.pos)
     b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
-    assert_equal(1, b.line())
-    assert_equal(39, b.column())
-    assert_equal(38, b.pos())
+    assert_equal(1, b.line)
+    assert_equal(39, b.column)
+    assert_equal(38, b.pos)
     b.element('one', :a => 'ack', 'b' => "<ba\"'&ck>")
     b.element('two')
-    assert_equal(3, b.line())
-    assert_equal(6, b.column())
-    assert_equal(88, b.pos())
-    b.pop()
+    assert_equal(3, b.line)
+    assert_equal(6, b.column)
+    assert_equal(88, b.pos)
+    b.pop
     b.comment(' just a comment ')
     b.element('three')
     b.text(%|my name is Peter & <"ピーター">|)
-    b.pop()
+    b.pop
     b.cdata("multi\nline\ncdata")
     b.raw("<multi></multi>\n<line></line>\n<raw></raw>")
     b.comment(" Multi\nline\ncomment ")
-    b.close()
+    b.close
     xml = b.to_s
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
 <one a="ack" b="&lt;ba&quot;'&amp;ck&gt;">
@@ -1511,7 +1511,7 @@ comment -->
 
   def test_builder_set_indent
     b = Ox::Builder.new(:indent => 2)
-    assert_equal(2, b.indent())
+    assert_equal(2, b.indent)
     b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
     b.element('one')
     b.element('two')
@@ -1519,12 +1519,12 @@ comment -->
     b.text('Sample ')
     b.element('three', :a => 'ack')
     b.text('sample')
-    b.pop() # </three>
-    b.pop() # </two>
+    b.pop # </three>
+    b.pop # </two>
     b.indent = 2
     b.element('four')
-    b.pop()
-    b.close()
+    b.pop
+    b.close
     xml = b.to_s
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
 <one>
@@ -1540,13 +1540,13 @@ comment -->
     b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
     b.element('one', :a => 'ack', 'b' => 'back')
     b.element('two')
-    b.pop()
+    b.pop
     b.comment(' just a comment ')
     b.element('three')
     b.text('my name is "ピーター"')
-    b.pop()
-    b.pop()
-    b.close()
+    b.pop
+    b.pop
+    b.close
 
     xml = File.read(filename)
     xml.force_encoding('UTF-8')
@@ -1579,13 +1579,13 @@ comment -->
         b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
         b.element('one', :a => 'ack', 'b' => 'back')
         b.element('two')
-        b.pop()
+        b.pop
         b.comment(' just a comment ')
         b.element('three')
         b.text('my name is "ピーター"')
-        b.pop()
-        b.pop()
-        b.close()
+        b.pop
+        b.pop
+        b.close
         w.close
         Process.exit(0)
       end
@@ -1672,7 +1672,7 @@ comment -->
     b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
     b.element('one', :a => 'ack', 'b' => 'back')
     b.text('hello')
-    b.close()
+    b.close
     xml = b.to_s
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?><one a="ack" b="back">hello</one>|, xml)
   end
@@ -1681,7 +1681,7 @@ comment -->
     b = Ox::Builder.new
     b.element('one')
     b.text("tab\tamp&backspace\b.", true)
-    b.close()
+    b.close
     xml = b.to_s
     assert_equal(%|<one>tab\tamp&amp;backspace.</one>
 |, xml)
@@ -1702,7 +1702,7 @@ comment -->
   def test_builder_text_with_too_few_args
     begin
       b = Ox::Builder.new
-      b.text()
+      b.text
     rescue ArgumentError => e
       assert_equal('wrong number of arguments (given 0, expected 1..2)', e.message)
       return

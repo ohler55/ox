@@ -84,7 +84,7 @@ end
 
 data.each do |d|
   if do_load
-    perf = Perf.new()
+    perf = Perf.new
     perf.add('Ox', 'parse') { Ox.parse(xml) }
     perf.add('Nokogiri', 'parse') { Nokogiri::XML::Document.parse(xml) } unless defined?(Nokogiri).nil?
     perf.add('LibXML', 'parse') { LibXML::XML::Document.string(xml) } unless defined?(LibXML).nil?
@@ -92,7 +92,7 @@ data.each do |d|
   end
 
   if do_dump
-    perf = Perf.new()
+    perf = Perf.new
     perf.add('Ox', 'dump') { Ox.dump($obj, :indent => 2) }
     perf.before('Ox') { $obj = d[:ox] }
     unless defined?(Nokogiri).nil?
@@ -100,7 +100,7 @@ data.each do |d|
       perf.before('Nokogiri') { $obj = d[:nokogiri] }
     end
     unless defined?(LibXML).nil?
-      perf.add('LibXML', 'dump') { $obj.to_s() }
+      perf.add('LibXML', 'dump') { $obj.to_s }
       perf.before('LibXML') { $obj = d[:libxml] }
     end
     perf.run($iter)
@@ -108,7 +108,7 @@ data.each do |d|
 
   if do_read
     $filename = d[:file]
-    perf = Perf.new()
+    perf = Perf.new
     perf.add('Ox', 'load_file') { Ox.load_file($filename) }
     perf.add('Nokogiri', 'parse') { Nokogiri::XML::Document.parse(File.open($filename)) } unless defined?(Nokogiri).nil?
     perf.add('LibXML', 'parse') { LibXML::XML::Document.file($filename) } unless defined?(LibXML).nil?
@@ -118,7 +118,7 @@ data.each do |d|
   next unless do_write
 
   $filename = 'out.xml'
-  perf = Perf.new()
+  perf = Perf.new
   perf.add('Ox', 'to_file') { Ox.to_file($filename, $obj, :indent => 0) }
   perf.before('Ox') { $obj = d[:ox] }
   unless defined?(Nokogiri).nil?
@@ -130,7 +130,7 @@ data.each do |d|
   perf.before('Nokogiri') { $obj = d[:nokogiri] }
   unless defined?(LibXML).nil?
     perf.add('LibXML', 'dump') {
-      xml = $obj.to_s()
+      xml = $obj.to_s
       File.open($filename, 'w') { |f| f.write(xml) }
     }
     perf.before('LibXML') { $obj = d[:libxml] }

@@ -27,7 +27,7 @@ class Perf
         puts "***** #{i.title}.#{i.op} failed! #{i.error}"
       end
     end
-    summary()
+    summary
   end
 
   def summary()

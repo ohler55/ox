@@ -165,7 +165,7 @@ end
 def parse_sax(xml)
   io = StringIO.new(xml)
   start = Time.now
-  handler = Handler.new()
+  handler = Handler.new
   Ox.sax_parse(handler, io)
   handler.plist
 end
