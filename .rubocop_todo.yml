@@ -629,22 +629,6 @@ Style/ConditionalAssignment:
     - 'test/weather/wnosax.rb'
     - 'test/weather/wsax.rb'
 
-# Offense count: 19
-# This cop supports safe autocorrection (--autocorrect).
-Style/DefWithParentheses:
-  Exclude:
-    - 'lib/ox/document.rb'
-    - 'lib/ox/element.rb'
-    - 'lib/ox/sax.rb'
-    - 'test/ox/group.rb'
-    - 'test/parse_cmp.rb'
-    - 'test/perf.rb'
-    - 'test/perf_sax.rb'
-    - 'test/sample/group.rb'
-    - 'test/sax/handlers.rb'
-    - 'test/sax/sax_check.rb'
-    - 'test/tests.rb'
-
 # Offense count: 4
 # Configuration parameters: AllowedConstants.
 Style/Documentation:

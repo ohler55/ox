@@ -3,7 +3,7 @@ require 'ox'
 class StartSax < Ox::Sax
   attr_accessor :calls
 
-  def initialize()
+  def initialize
     @calls = []
   end
 
@@ -17,7 +17,7 @@ class StartSax < Ox::Sax
 end
 
 class AllSax < StartSax
-  def initialize()
+  def initialize
     super
   end
 
@@ -59,7 +59,7 @@ class AllSax < StartSax
 end
 
 class LineColSax < StartSax
-  def initialize()
+  def initialize
     @pos = nil    # this initializes the @pos variable which will then be set by the parser
     @line = nil   # this initializes the @line variable which will then be set by the parser
     @column = nil # this initializes the @line variable which will then be set by the parser
@@ -102,7 +102,7 @@ class LineColSax < StartSax
     @calls << [:attr, name, value, @pos, @line, @column]
   end
 
-  def attrs_done()
+  def attrs_done
     @calls << [:attrs_done, @pos, @line, @column]
   end
 
@@ -152,7 +152,7 @@ end
 class HtmlSax < Ox::Sax
   attr_accessor :calls
 
-  def initialize()
+  def initialize
     @calls = []
   end
 

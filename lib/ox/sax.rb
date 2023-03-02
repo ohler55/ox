@@ -55,7 +55,7 @@ module Ox
   # will hold the number of bytes from the start of the document.
   class Sax
     # Create a new instance of the Sax handler class.
-    def initialize()
+    def initialize
       # @pos = nil
       # @line = nil
       # @column = nil

@@ -1,5 +1,5 @@
 class Perf
-  def initialize()
+  def initialize
     @items = []
   end
 
@@ -31,7 +31,7 @@ class Perf
     summary
   end
 
-  def summary()
+  def summary
     width = 6
     @items.each do |i|
       next if i.duration.nil?

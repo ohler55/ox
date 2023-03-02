@@ -99,7 +99,7 @@ class OxAllSax < OxSax
 end
 
 class OxPosAllSax < OxAllSax
-  def initialize()
+  def initialize
     @line = nil
     @column = nil
   end

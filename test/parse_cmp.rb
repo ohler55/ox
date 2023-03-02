@@ -93,7 +93,7 @@ end
 ### XML conversion to Hash using Ox SAX parser ###
 
 class Handler
-  def initialize()
+  def initialize
     @key = nil
     @type = nil
     @plist = nil

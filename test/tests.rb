@@ -1011,7 +1011,7 @@ class Func < Test::Unit::TestCase
     assert_nil(obj)
   end
 
-  def each_xml()
+  def each_xml
     %{<?xml?>
 <Family real="false">
   <Pete age="57" type="male">
@@ -1064,7 +1064,7 @@ class Func < Test::Unit::TestCase
     assert_equal(['Pamela'], nodes)
   end
 
-  def locate_xml()
+  def locate_xml
     %{<?xml?>
 <Family real="false">
   <Pete age="57" type="male">
@@ -1261,7 +1261,7 @@ class Func < Test::Unit::TestCase
     assert_equal([daughter_with_job], parent.locate('Daughter[@job]'))
   end
 
-  def easy_xml()
+  def easy_xml
     %{<?xml?>
 <Family real="false">
   <Pete age="58" type="male">
