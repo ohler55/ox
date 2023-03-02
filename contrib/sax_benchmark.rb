@@ -106,7 +106,7 @@ class NokogiriHandler < Nokogiri::XML::SAX::Document
   end
 end
  
-n = 10000
+n = 10_000
 Benchmark.bmbm do |b|
   b.report('ox') do
     n.times do

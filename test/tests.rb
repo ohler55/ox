@@ -1444,7 +1444,7 @@ class Func < Test::Unit::TestCase
 
   def test_prepend_child_invalid_node
     parent = Ox::Element.new('Parent')
-    invalid_node = 12345
+    invalid_node = 12_345
     assert_raise { parent.prepend_child(invalid_node) }
   end
 
