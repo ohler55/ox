@@ -662,14 +662,6 @@ Style/EmptyLiteral:
     - 'examples/sax_ractor.rb'
     - 'test/parse_cmp.rb'
 
-# Offense count: 14
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: compact, expanded
-Style/EmptyMethod:
-  Exclude:
-    - 'lib/ox/sax.rb'
-
 # Offense count: 4
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: AllowedVars.
