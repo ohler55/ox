@@ -39,9 +39,9 @@ puts "descendent type attribute value: #{root.locate('*/@type')}"
 
 # Delete 'i' element by iterating over the root's nodes and look for one named
 # friends. The locate method could also be used.
-root.nodes.each { |n|
+root.nodes.each do |n|
   n.nodes.delete_if { |child| child.name == 'i' } if n.name == 'friends'
-}
+end
 
 # Lets take a look at the changes by dumping the doc.
 xml2 = Ox.dump(doc)

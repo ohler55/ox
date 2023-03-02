@@ -158,11 +158,11 @@ puts 'Parallel Ractors'
 # Create one `Ractor` for every given media-type argument
 moo = ['Heifer', 'Cow', 'Bull', 'Steer'].tally
 head_count = needles.size - 1
-herd = (0..head_count).map {
+herd = (0..head_count).map do
   # Give our worker `Ractor` a name, otherwise its `#name` will return `nil`.
   individual = moo.keys.sample
   moo[individual] += 1
-  Ractor.new(haystack, name: "#{individual} #{moo[individual] - 1}") { |haystack|
+  Ractor.new(haystack, name: "#{individual} #{moo[individual] - 1}") do |haystack|
     # Initialize an `Ox::Sax` handler for our given source file.
     handler = Saxtor.new(Ractor.current, haystack)
 
@@ -170,29 +170,29 @@ herd = (0..head_count).map {
     while ietf_string = Ractor.receive
       Ractor.yield(handler.awen(ietf_string))
     end
-  }
-}
+  end
+end
 
 # Send our arguments to our herd in a 1:1 mapping
 (0..head_count).each { herd[_1].send(needles[_1]) }
 
 # Wait for every `Ractor` to have a result, and then pretty print all of them :)
-pp (0..head_count).map {
+pp (0..head_count).map do
   [herd[_1], herd[_1].take]
-}.map {
+end.map do
   "#{_1.name} gave us #{_2 || 'nothing'}"
-}
+end
 
 
 # Hotdog Style.
 puts
 puts 'Serial Ractor'
 # Create a single `Ractor` and send every media-type to it in series.
-only_one_ox = Ractor.new(haystack, name: 'ONLY ONE OX') { |haystack|
+only_one_ox = Ractor.new(haystack, name: 'ONLY ONE OX') do |haystack|
   handler = Saxtor.new(Ractor.current, haystack)
   while ietf_string = Ractor.receive
     handler.awen(ietf_string)
   end
-}
+end
 (0..head_count).each { only_one_ox.send(needles[_1]) }
 pp "#{only_one_ox.name} gave us #{(0..head_count).map { only_one_ox.take }}"

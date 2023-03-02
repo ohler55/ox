@@ -165,37 +165,37 @@ puts "A #{$filesize} KByte XML file was parsed #{$iter} times for this test."
 $handler = nil
 perf = Perf.new
 
-perf.add('Ox::Sax', 'sax_parse') {
+perf.add('Ox::Sax', 'sax_parse') do
   input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
   Ox.sax_parse($handler, input, :smart => $smart)
   input.close
-}
-perf.before('Ox::Sax') {
+end
+perf.before('Ox::Sax') do
   $handler = if $all_cbs
                $pos ? OxPosAllSax.new : OxAllSax.new
              else
                OxSax.new
              end
-}
+end
 
 unless $ox_only
   unless defined?(Nokogiri).nil?
-    perf.add('Nokogiri::XML::Sax', 'parse') {
+    perf.add('Nokogiri::XML::Sax', 'parse') do
       input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
       $handler.parse(input)
       input.close
-    }
+    end
     perf.before('Nokogiri::XML::Sax') { $handler = Nokogiri::XML::SAX::Parser.new($all_cbs ? NoAllSax.new : NoSax.new) }
   end
 
   unless defined?(LibXML).nil?
-    perf.add('LibXML::XML::Sax', 'parse') {
+    perf.add('LibXML::XML::Sax', 'parse') do
       input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
       parser = LibXML::XML::SaxParser.io(input)
       parser.callbacks = $handler
       parser.parse
       input.close
-    }
+    end
     perf.before('LibXML::XML::Sax') { $handler = $all_cbs ? LxAllSax.new : LxSax.new }
   end
 end

@@ -29,9 +29,9 @@ module SaxTestHelpers
     actual = handler.send(handler_attr)
 
     if expected != actual
-      expected.each_index { |i|
+      expected.each_index do |i|
         puts "#{i}: #{expected[i]} != #{actual[i]}" if expected[i] != actual[i]
-      }
+      end
     end
     puts "\nexpected: #{expected}\n  actual: #{actual}" if expected != actual
     assert_equal(expected, actual)

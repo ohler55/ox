@@ -257,9 +257,9 @@ class Func < Test::Unit::TestCase
   <i a="@x">7</i>
 </o>
 }
-    assert_raise(NameError) {
+    assert_raise(NameError) do
       Ox.load(xml, :mode => :object, :trace => 0)
-    }
+    end
     loaded = Ox.load(xml, :mode => :object, :trace => 0, :effort => :tolerant)
     assert_nil(loaded)
     loaded = Ox.load(xml, :mode => :object, :trace => 0, :effort => :auto_define)
@@ -277,9 +277,9 @@ class Func < Test::Unit::TestCase
   <i a="@x">3</i>
 </o>
 }
-    assert_raise(Ox::ParseError) {
+    assert_raise(Ox::ParseError) do
       Ox.load(xml, :mode => :object, :trace => 0)
-    }
+    end
   end
 
   def test_empty_element
@@ -288,9 +288,9 @@ class Func < Test::Unit::TestCase
 <top>
   <>
 </top>}
-    assert_raise(Ox::ParseError) {
+    assert_raise(Ox::ParseError) do
       Ox.load(xml, :mode => :object, :trace => 0)
-    }
+    end
   end
 
   def test_xml_instruction_format
@@ -562,9 +562,9 @@ class Func < Test::Unit::TestCase
   def test_escape_bom_bad_encoding
     Ox.default_options = $ox_object_options
     xml = %{\xEF\xBB<?xml?>\n<top name="bom"></top>\n}
-    assert_raise(Ox::ParseError) {
+    assert_raise(Ox::ParseError) do
       Ox.parse(xml).root
-    }
+    end
   end
 
   def test_escape_open_close_tag_names
@@ -757,9 +757,9 @@ class Func < Test::Unit::TestCase
   def test_bad_format
     Ox.default_options = $ox_object_options
     xml = "<?xml version=\"1.0\"?>\n<tag>test</tagz>\n"
-    assert_raise(Ox::ParseError) {
+    assert_raise(Ox::ParseError) do
       Ox.load(xml, :mode => :generic, :trace => 0)
-    }
+    end
   end
 
   def test_array_multi
@@ -1003,9 +1003,9 @@ class Func < Test::Unit::TestCase
   def test_IO
     Ox.default_options = $ox_object_options
     f = File.open(__FILE__, 'r')
-    assert_raise(NotImplementedError) {
+    assert_raise(NotImplementedError) do
       Ox.dump(f, :effort => :strict)
-    }
+    end
     xml = Ox.dump(f, :effort => :tolerant)
     obj = Ox.load(xml, :mode => :object) # should convert it to an object
     assert_nil(obj)
@@ -1182,13 +1182,13 @@ class Func < Test::Unit::TestCase
     nodes = pete.locate('*/@age')
     assert_equal(['31', '32', '57'], nodes.sort)
 
-    assert_raise(::Ox::InvalidPath) {
+    assert_raise(::Ox::InvalidPath) do
       nodes = doc.locate('Family/@age/?')
-    }
+    end
 
-    assert_raise(::Ox::InvalidPath) {
+    assert_raise(::Ox::InvalidPath) do
       nodes = doc.locate('Family/?[/?')
-    }
+    end
   end
 
   def test_locate_qual_index
@@ -1342,9 +1342,9 @@ class Func < Test::Unit::TestCase
   def test_easy_attribute_missing
     Ox.default_options = $ox_object_options
     doc = Ox.parse(easy_xml)
-    assert_raise(NoMethodError) {
+    assert_raise(NoMethodError) do
       doc.Family.fake
-    }
+    end
   end
 
   def test_easy_element
@@ -1383,9 +1383,9 @@ class Func < Test::Unit::TestCase
   def test_easy_element_missing
     Ox.default_options = $ox_object_options
     doc = Ox.parse(easy_xml)
-    assert_raise(NoMethodError) {
+    assert_raise(NoMethodError) do
       doc.Family.Bob
-    }
+    end
   end
 
   def test_arbitrary_raw_xml
@@ -1589,16 +1589,16 @@ comment -->
   end
 
   def test_builder_block
-    xml = Ox::Builder.new(:indent => 2) { |b|
+    xml = Ox::Builder.new(:indent => 2) do |b|
       b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
-      b.element('one', :a => 'ack', 'b' => 'back') {
+      b.element('one', :a => 'ack', 'b' => 'back') do
         b.element('two') {}
         b.comment(' just a comment ')
-        b.element('three') {
+        b.element('three') do
           b.text('my name is "ピーター"')
-        }
-      }
-    }
+        end
+      end
+    end
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
 <one a="ack" b="back">
   <two/>
@@ -1610,16 +1610,16 @@ comment -->
 
   def test_builder_block_file
     filename = File.join(File.dirname(__FILE__), 'create_file_test.xml')
-    Ox::Builder.file(filename, :indent => 2) { |b|
+    Ox::Builder.file(filename, :indent => 2) do |b|
       b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
-      b.element('one', :a => 'ack', 'b' => 'back') {
+      b.element('one', :a => 'ack', 'b' => 'back') do
         b.element('two') {}
         b.comment(' just a comment ')
-        b.element('three') {
+        b.element('three') do
           b.text('my name is "ピーター"')
-        }
-      }
-    }
+        end
+      end
+    end
     xml = File.read(filename)
     xml.force_encoding('UTF-8')
     assert_equal(%|<?xml version="1.0" encoding="UTF-8"?>
@@ -1647,16 +1647,16 @@ comment -->
 |, xml)
       else
         r.close
-        Ox::Builder.io(w, :indent => 2) { |b|
+        Ox::Builder.io(w, :indent => 2) do |b|
           b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
-          b.element('one', :a => 'ack', 'b' => 'back') {
+          b.element('one', :a => 'ack', 'b' => 'back') do
             b.element('two') {}
             b.comment(' just a comment ')
-            b.element('three') {
+            b.element('three') do
               b.text('my name is "ピーター"')
-            }
-          }
-        }
+            end
+          end
+        end
         w.close
         Process.exit(0)
       end

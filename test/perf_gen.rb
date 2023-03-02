@@ -122,17 +122,17 @@ data.each do |d|
   perf.add('Ox', 'to_file') { Ox.to_file($filename, $obj, :indent => 0) }
   perf.before('Ox') { $obj = d[:ox] }
   unless defined?(Nokogiri).nil?
-    perf.add('Nokogiri', 'dump') {
+    perf.add('Nokogiri', 'dump') do
       xml = $obj.to_xml(:indent => 0)
       File.write($filename, xml)
-    }
+    end
   end
   perf.before('Nokogiri') { $obj = d[:nokogiri] }
   unless defined?(LibXML).nil?
-    perf.add('LibXML', 'dump') {
+    perf.add('LibXML', 'dump') do
       xml = $obj.to_s
       File.write($filename, xml)
-    }
+    end
     perf.before('LibXML') { $obj = d[:libxml] }
   end
   perf.run($iter)
