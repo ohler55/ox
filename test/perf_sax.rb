@@ -80,7 +80,9 @@ def create_file(filename, size)
 end
 
 class OxSax < ::Ox::Sax
-  def error(message, line, column); puts message; end
+  def error(message, line, column);
+    puts message;
+  end
 end
 
 class OxAllSax < OxSax
@@ -105,8 +107,13 @@ end
 
 unless defined?(::Nokogiri).nil?
   class NoSax < Nokogiri::XML::SAX::Document
-    def error(message); puts message; end
-    def warning(message); puts message; end
+    def error(message);
+      puts message;
+    end
+
+    def warning(message);
+      puts message;
+    end
   end
 
   class NoAllSax < NoSax

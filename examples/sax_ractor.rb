@@ -28,7 +28,9 @@ class Saxtor < Ox::Sax
         self[:globs]&.map(&File.method(:extname)).join(?,)
       }]"
     end
-    def inspect; "#<CYO #{self.to_s}>"; end
+    def inspect
+      "#<CYO #{self.to_s}>"
+    end
   end
 
   # Set up our parsing environment and open a file handle for our XML.
