@@ -214,12 +214,13 @@ module Ox
       ids = id.to_s
       i = args[0].to_i # will be 0 if no arg or parsing fails
       nodes.each do |n|
-        if (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids || name_matchs?(n.value, ids))
-          return n if 0 == i
-
-          has_some = true
-          i -= 1
+        unless (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids || name_matchs?(n.value, ids))
+          next
         end
+        return n if 0 == i
+
+        has_some = true
+        i -= 1
       end
       if instance_variable_defined?(:@attributes)
         return @attributes[id] if @attributes.has_key?(id)

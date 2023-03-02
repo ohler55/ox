@@ -957,15 +957,6 @@ Style/NestedTernaryOperator:
   Exclude:
     - 'test/perf_sax.rb'
 
-# Offense count: 2
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle, MinBodyLength.
-# SupportedStyles: skip_modifier_ifs, always
-Style/Next:
-  Exclude:
-    - 'lib/ox/element.rb'
-    - 'test/perf_gen.rb'
-
 # Offense count: 1
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: allow_single_line, disallow

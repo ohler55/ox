@@ -115,25 +115,25 @@ data.each do |d|
     perf.run($iter)
   end
 
-  if do_write
-    $filename = 'out.xml'
-    perf = Perf.new()
-    perf.add('Ox', 'to_file') { Ox.to_file($filename, $obj, :indent => 0) }
-    perf.before('Ox') { $obj = d[:ox] }
-    unless defined?(Nokogiri).nil?
-      perf.add('Nokogiri', 'dump') {
-        xml = $obj.to_xml(:indent => 0)
-        File.open($filename, 'w') { |f| f.write(xml) }
-      }
-    end
-    perf.before('Nokogiri') { $obj = d[:nokogiri] }
-    unless defined?(LibXML).nil?
-      perf.add('LibXML', 'dump') {
-        xml = $obj.to_s()
-        File.open($filename, 'w') { |f| f.write(xml) }
-      }
-      perf.before('LibXML') { $obj = d[:libxml] }
-    end
-    perf.run($iter)
+  next unless do_write
+
+  $filename = 'out.xml'
+  perf = Perf.new()
+  perf.add('Ox', 'to_file') { Ox.to_file($filename, $obj, :indent => 0) }
+  perf.before('Ox') { $obj = d[:ox] }
+  unless defined?(Nokogiri).nil?
+    perf.add('Nokogiri', 'dump') {
+      xml = $obj.to_xml(:indent => 0)
+      File.open($filename, 'w') { |f| f.write(xml) }
+    }
   end
+  perf.before('Nokogiri') { $obj = d[:nokogiri] }
+  unless defined?(LibXML).nil?
+    perf.add('LibXML', 'dump') {
+      xml = $obj.to_s()
+      File.open($filename, 'w') { |f| f.write(xml) }
+    }
+    perf.before('LibXML') { $obj = d[:libxml] }
+  end
+  perf.run($iter)
 end
