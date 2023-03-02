@@ -33,22 +33,22 @@ module Test
 end
 
 data = { 
-  :Boolean => ::Test::Ox::Wrap.new(),
-  :Fixnum => ::Test::Ox::Wrap.new(),
-  :Float => ::Test::Ox::Wrap.new(),
-  :String => ::Test::Ox::Wrap.new(),
-  :Symbol => ::Test::Ox::Wrap.new(),
-  :Time => ::Test::Ox::Wrap.new(), 
-  :Array => ::Test::Ox::Wrap.new(), 
-  :Hash => ::Test::Ox::Wrap.new(),
-  :Range => ::Test::Ox::Wrap.new(),
-  :Regexp => ::Test::Ox::Wrap.new(),
-  :Bignum => ::Test::Ox::Wrap.new(),
-  :Complex => ::Test::Ox::Wrap.new(),
-  :Rational => ::Test::Ox::Wrap.new(),
-  :Struct => ::Test::Ox::Wrap.new(),
-  :Class => ::Test::Ox::Wrap.new(),
-  :Object => ::Test::Ox::Wrap.new(),
+  :Boolean => Test::Ox::Wrap.new(),
+  :Fixnum => Test::Ox::Wrap.new(),
+  :Float => Test::Ox::Wrap.new(),
+  :String => Test::Ox::Wrap.new(),
+  :Symbol => Test::Ox::Wrap.new(),
+  :Time => Test::Ox::Wrap.new(), 
+  :Array => Test::Ox::Wrap.new(), 
+  :Hash => Test::Ox::Wrap.new(),
+  :Range => Test::Ox::Wrap.new(),
+  :Regexp => Test::Ox::Wrap.new(),
+  :Bignum => Test::Ox::Wrap.new(),
+  :Complex => Test::Ox::Wrap.new(),
+  :Rational => Test::Ox::Wrap.new(),
+  :Struct => Test::Ox::Wrap.new(),
+  :Class => Test::Ox::Wrap.new(),
+  :Object => Test::Ox::Wrap.new(),
 }
 
 s = Struct.new('Zoo', :x, :y, :z)
@@ -68,8 +68,8 @@ s = Struct.new('Zoo', :x, :y, :z)
   data[:Complex].values << Complex(1, 2)
   data[:Rational].values << Rational(1, 3)
   data[:Struct].values << s.new(1, 3, 5)
-  data[:Class].values << ::Test::Ox::Wrap
-  data[:Object].values << ::Test::Ox::Wrap.new(i)
+  data[:Class].values << Test::Ox::Wrap
+  data[:Object].values << Test::Ox::Wrap.new(i)
 end
 
 puts '           load                        dump'

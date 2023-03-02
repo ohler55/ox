@@ -79,7 +79,7 @@ def create_file(filename, size)
   end
 end
 
-class OxSax < ::Ox::Sax
+class OxSax < Ox::Sax
   def error(message, line, column);
     puts message;
   end
@@ -105,7 +105,7 @@ class OxPosAllSax < OxAllSax
   end
 end
 
-unless defined?(::Nokogiri).nil?
+unless defined?(Nokogiri).nil?
   class NoSax < Nokogiri::XML::SAX::Document
     def error(message);
       puts message;
@@ -128,7 +128,7 @@ unless defined?(::Nokogiri).nil?
   end
 end
 
-unless defined?(::LibXML).nil?
+unless defined?(LibXML).nil?
   class LxSax
     include LibXML::XML::SaxParser::Callbacks
   end
@@ -173,7 +173,7 @@ perf.add('Ox::Sax', 'sax_parse') {
 perf.before('Ox::Sax') { $handler = $all_cbs ? ($pos ? OxPosAllSax.new() : OxAllSax.new()) : OxSax.new() }
 
 unless $ox_only
-  unless defined?(::Nokogiri).nil?
+  unless defined?(Nokogiri).nil?
     perf.add('Nokogiri::XML::Sax', 'parse') {
       input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
       $handler.parse(input)
@@ -182,7 +182,7 @@ unless $ox_only
     perf.before('Nokogiri::XML::Sax') { $handler = Nokogiri::XML::SAX::Parser.new($all_cbs ? NoAllSax.new() : NoSax.new()) }
   end
 
-  unless defined?(::LibXML).nil?
+  unless defined?(LibXML).nil?
     perf.add('LibXML::XML::Sax', 'parse') {
       input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
       parser = LibXML::XML::SaxParser.io(input)

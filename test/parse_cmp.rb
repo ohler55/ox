@@ -22,7 +22,7 @@ def node_to_dict(element)
   dict = Hash.new
   key = nil
   element.nodes.each do |n|
-    raise 'A dict can only contain elements.' unless n.is_a?(::Ox::Element)
+    raise 'A dict can only contain elements.' unless n.is_a?(Ox::Element)
 
     if key.nil?
       raise "Expected a key, not a #{n.name}." unless 'key' == n.name
@@ -45,7 +45,7 @@ def node_to_array(element)
 end
 
 def node_to_value(node)
-  raise 'A dict can only contain elements.' unless node.is_a?(::Ox::Element)
+  raise 'A dict can only contain elements.' unless node.is_a?(Ox::Element)
 
   case node.name
   when 'key'
@@ -82,7 +82,7 @@ def parse_gen(xml)
   plist = doc.root
   dict = nil
   plist.nodes.each do |n|
-    if n.is_a?(::Ox::Element)
+    if n.is_a?(Ox::Element)
       dict = node_to_dict(n)
       break
     end
@@ -174,13 +174,13 @@ end
 
 def convert_parse_obj(xml)
   xml = plist_to_obj_xml(xml)
-  ::Ox.load(xml, :mode => :object)
+  Ox.load(xml, :mode => :object)
 end
 
 ### XML conversion to Hash using Ox Object parsing after gsub! replacements ###
 
 def parse_obj(xml)
-  ::Ox.load(xml, :mode => :object)
+  Ox.load(xml, :mode => :object)
 end
 
 def plist_to_obj_xml(xml)

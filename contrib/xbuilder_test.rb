@@ -11,7 +11,7 @@ require 'test/unit'
 require 'ox'
 require 'xbuilder'
 
-class XBuilderTest < ::Test::Unit::TestCase
+class XBuilderTest < Test::Unit::TestCase
   include Ox::XBuilder
 
   def test_build

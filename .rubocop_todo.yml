@@ -1058,24 +1058,6 @@ Style/RedundantBegin:
   Exclude:
     - 'test/perf.rb'
 
-# Offense count: 66
-# This cop supports safe autocorrection (--autocorrect).
-Style/RedundantConstantBase:
-  Exclude:
-    - 'contrib/xbuilder_test.rb'
-    - 'ox.gemspec'
-    - 'test/files.rb'
-    - 'test/parse_cmp.rb'
-    - 'test/perf_gen.rb'
-    - 'test/perf_mars.rb'
-    - 'test/perf_obj.rb'
-    - 'test/perf_sax.rb'
-    - 'test/sample.rb'
-    - 'test/sax/handlers.rb'
-    - 'test/sax/sax_test.rb'
-    - 'test/sax/smart_test.rb'
-    - 'test/tests.rb'
-
 # Offense count: 5
 # This cop supports unsafe autocorrection (--autocorrect-all).
 # Configuration parameters: AllowComments.

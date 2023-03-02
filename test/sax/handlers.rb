@@ -1,6 +1,6 @@
 require 'ox'
 
-class StartSax < ::Ox::Sax
+class StartSax < Ox::Sax
   attr_accessor :calls
 
   def initialize()
@@ -111,7 +111,7 @@ class LineColSax < StartSax
   end
 end
 
-class TypeSax < ::Ox::Sax
+class TypeSax < Ox::Sax
   attr_accessor :item
   # method to call on the Ox::Sax::Value Object
   attr_accessor :type
@@ -130,7 +130,7 @@ class TypeSax < ::Ox::Sax
   end
 end
 
-class ErrorSax < ::Ox::Sax
+class ErrorSax < Ox::Sax
   attr_reader :errors
 
   def initialize
@@ -149,7 +149,7 @@ class ErrorSax < ::Ox::Sax
   end
 end
 
-class HtmlSax < ::Ox::Sax
+class HtmlSax < Ox::Sax
   attr_accessor :calls
 
   def initialize()

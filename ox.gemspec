@@ -3,7 +3,7 @@ require File.join(File.dirname(__FILE__), 'lib/ox/version')
 
 Gem::Specification.new do |s|
   s.name = 'ox'
-  s.version = ::Ox::VERSION
+  s.version = Ox::VERSION
   s.authors = 'Peter Ohler'
   s.email = 'peter@ohler.com'
   s.homepage = 'http://www.ohler.com/ox'

@@ -44,7 +44,7 @@ $ox_sax_options = {
   :strip_namespace => false
 }
 
-class SaxBaseTest < ::Test::Unit::TestCase
+class SaxBaseTest < Test::Unit::TestCase
   include SaxTestHelpers
 
   def test_sax_io_pipe

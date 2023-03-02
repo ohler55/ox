@@ -71,7 +71,7 @@ $ox_generic_options = {
   :overlay => nil,
 }
 
-class Func < ::Test::Unit::TestCase
+class Func < Test::Unit::TestCase
   unless respond_to?(:assert_raise)
     alias assert_raise assert_raises
   end

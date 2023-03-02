@@ -11,7 +11,7 @@ require 'sample/file'
 require 'sample/dir'
 
 def files(dir)
-  d = ::Sample::Dir.new(dir)
+  d = Sample::Dir.new(dir)
   Dir.new(dir).each do |fn|
     next if fn.start_with?('.')
 
@@ -20,7 +20,7 @@ def files(dir)
     if File.directory?(filename)
       d << files(filename)
     else
-      d << ::Sample::File.new(filename)
+      d << Sample::File.new(filename)
     end
   end
   # pp d

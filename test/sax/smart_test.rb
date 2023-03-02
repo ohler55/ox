@@ -21,7 +21,7 @@ opts = OptionParser.new
 opts.on('-h', '--help', 'Show this display') { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
-class SaxSmartTest < ::Test::Unit::TestCase
+class SaxSmartTest < Test::Unit::TestCase
   include SaxTestHelpers
 
   NORMALELEMENTS = {
