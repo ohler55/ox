@@ -1161,7 +1161,7 @@ this is not part of the xml document
                  :strip_namespace => true)
     assert_equal([[:start_element, :one],
                   [:start_element, :two],
-                  [:attr, :"out", "no"],
+                  [:attr, :out, "no"],
                   [:attr, :space, "yes"],
                   [:text, "inside"],
                   [:end_element, :two],

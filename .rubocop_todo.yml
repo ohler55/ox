@@ -1214,12 +1214,6 @@ Style/StringLiterals:
     - 'test/tests.rb'
     - 'test/weather/perf_weather.rb'
 
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-Style/SymbolLiteral:
-  Exclude:
-    - 'test/sax/sax_test.rb'
-
 # Offense count: 21
 # This cop supports unsafe autocorrection (--autocorrect-all).
 # Configuration parameters: AllowMethodsWithArguments, AllowedMethods, AllowedPatterns, AllowComments.
