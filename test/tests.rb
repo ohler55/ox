@@ -449,11 +449,11 @@ class Func < ::Test::Unit::TestCase
 
   def test_escape_value
     Ox::default_options = $ox_object_options
-    xml = %{\n<top name="<&amp;test>">&lt;not \'quoted\'&gt;</top>\n}
+    xml = %{\n<top name="<&amp;test>">&lt;not 'quoted'&gt;</top>\n}
     doc = Ox.parse(xml)
     assert_equal('<&test>', doc.attributes[:name])
     dumped_xml = Ox.dump(doc)
-    escaped_xml = %{\n<top name="&lt;&amp;test&gt;">&lt;not \'quoted\'&gt;</top>\n}
+    escaped_xml = %{\n<top name="&lt;&amp;test&gt;">&lt;not 'quoted'&gt;</top>\n}
     assert_equal(escaped_xml, dumped_xml)
   end
 
