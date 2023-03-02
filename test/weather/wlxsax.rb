@@ -40,17 +40,17 @@ module Weather
       chars.strip!
       return if chars.empty?
 
-      if 1 < @row
-        case @cell
-        when 2
-          if @as_time
-            @time = Time.parse(chars)
-          else
-            @time = chars
-          end
-        when 4
-          @highs[@time] = chars.to_f
+      return unless 1 < @row
+
+      case @cell
+      when 2
+        if @as_time
+          @time = Time.parse(chars)
+        else
+          @time = chars
         end
+      when 4
+        @highs[@time] = chars.to_f
       end
     end
 

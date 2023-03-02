@@ -41,22 +41,22 @@ class Saxy < Ox::Sax
   # added. When another callback other than attributes is called write any
   # pending element start.
   def push_element
-    unless @element_name.nil?
-      # Add the class attribute if the element is a <p> element.
-      @attrs[:class] = 'ppp' if :p == @element_name
+    return if @element_name.nil?
 
-      # Check @void_elements to determine how the element start would be
-      # written. HTML includes void elements that are self closing so those
-      # should be handled correctly.
-      if VOID_ELEMENTS.include?(@element_name)
-        @builder.void_element(@element_name, @attrs)
-      else
-        @builder.element(@element_name, @attrs)
-      end
-      # Reset the element name.
-      @element_name = nil
-      @attrs = {}
+    # Add the class attribute if the element is a <p> element.
+    @attrs[:class] = 'ppp' if :p == @element_name
+
+    # Check @void_elements to determine how the element start would be
+    # written. HTML includes void elements that are self closing so those
+    # should be handled correctly.
+    if VOID_ELEMENTS.include?(@element_name)
+      @builder.void_element(@element_name, @attrs)
+    else
+      @builder.element(@element_name, @attrs)
     end
+    # Reset the element name.
+    @element_name = nil
+    @attrs = {}
   end
 
   def start_element(name)
