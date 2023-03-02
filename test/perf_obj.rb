@@ -67,11 +67,11 @@ if files.empty?
   $obj = do_sample ? sample_doc(2) : files('..')
   $mars = Marshal.dump($obj)
   $xml = Ox.dump($obj, :indent => $indent, :circular => $circular)
-  File.open('sample.xml', 'w') { |f| f.write($xml) }
-  File.open('sample.marshal', 'w') { |f| f.write($mars) }
+  File.write('sample.xml', $xml)
+  File.write('sample.marshal', $mars)
   unless defined?(Oj).nil?
     $json = Oj.dump($obj, :indent => $indent, :circular => $circular)
-    File.open('sample.json', 'w') { |f| f.write($json) }
+    File.write('sample.json', $json)
   end
 else
   puts "loading and parsing #{files}\n\n"

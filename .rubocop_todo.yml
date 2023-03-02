@@ -690,13 +690,6 @@ Style/FetchEnvVar:
     - 'test/sample/change.rb'
     - 'test/sample/doc.rb'
 
-# Offense count: 6
-# This cop supports safe autocorrection (--autocorrect).
-Style/FileWrite:
-  Exclude:
-    - 'test/perf_gen.rb'
-    - 'test/perf_obj.rb'
-
 # Offense count: 1
 # This cop supports unsafe autocorrection (--autocorrect-all).
 # Configuration parameters: EnforcedStyle.

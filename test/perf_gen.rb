@@ -63,7 +63,7 @@ if files.empty?
   data = []
   obj = do_sample ? sample_doc(2) : files('..')
   xml = Ox.dump(obj, :indent => 2, :opt_format => true)
-  File.open('sample.xml', 'w') { |f| f.write(xml) }
+  File.write('sample.xml', xml)
   gen = Ox.parse(xml)
   h = { :file => 'sample.xml', :xml => xml, :ox => gen }
   h[:nokogiri] = Nokogiri::XML::Document.parse(xml) unless defined?(Nokogiri).nil?
@@ -124,14 +124,14 @@ data.each do |d|
   unless defined?(Nokogiri).nil?
     perf.add('Nokogiri', 'dump') {
       xml = $obj.to_xml(:indent => 0)
-      File.open($filename, 'w') { |f| f.write(xml) }
+      File.write($filename, xml)
     }
   end
   perf.before('Nokogiri') { $obj = d[:nokogiri] }
   unless defined?(LibXML).nil?
     perf.add('LibXML', 'dump') {
       xml = $obj.to_s
-      File.open($filename, 'w') { |f| f.write(xml) }
+      File.write($filename, xml)
     }
     perf.before('LibXML') { $obj = d[:libxml] }
   end
