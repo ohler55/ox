@@ -136,8 +136,10 @@ Common file paths:
 PLZ
 
 # Bail out if we were given a nonexistant file.
-abort("Please provide the path to a `shared-mime-info` XML package \
-and some media-type query arguments (e.g. 'image/jpeg')".concat(usage)) unless ARGV.size > 0
+unless ARGV.size > 0
+  abort("Please provide the path to a `shared-mime-info` XML package \
+  and some media-type query arguments (e.g. 'image/jpeg')".concat(usage))
+end
 haystack = Pathname.new(ARGV.first)
 abort("#{haystack} does not exist") unless haystack.exist? and haystack.file?
 
