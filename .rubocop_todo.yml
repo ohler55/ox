@@ -952,12 +952,6 @@ Style/NegatedIfElseCondition:
     - 'test/sample/file.rb'
 
 # Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-Style/NestedTernaryOperator:
-  Exclude:
-    - 'test/perf_sax.rb'
-
-# Offense count: 1
 # Configuration parameters: EnforcedStyle.
 # SupportedStyles: allow_single_line, disallow
 Style/NumberedParameters:

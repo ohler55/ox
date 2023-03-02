@@ -170,7 +170,13 @@ perf.add('Ox::Sax', 'sax_parse') {
   Ox.sax_parse($handler, input, :smart => $smart)
   input.close
 }
-perf.before('Ox::Sax') { $handler = $all_cbs ? ($pos ? OxPosAllSax.new() : OxAllSax.new()) : OxSax.new() }
+perf.before('Ox::Sax') {
+  $handler = if $all_cbs
+               $pos ? OxPosAllSax.new() : OxAllSax.new()
+             else
+               OxSax.new()
+             end
+}
 
 unless $ox_only
   unless defined?(Nokogiri).nil?
