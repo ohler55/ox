@@ -1,6 +1,4 @@
 #!/usr/bin/env ruby
-# encoding: UTF-8
-
 # Contributed by Notezen
 
 $: << File.join(File.dirname(__FILE__), '../lib')

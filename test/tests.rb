@@ -1,6 +1,4 @@
 #!/usr/bin/env ruby
-# encoding: utf-8
-
 # Ubuntu does not accept arguments to ruby when called using env. To get warnings to show up the -w options is
 # required. That can be set in the RUBYOPT environment variable.
 # export RUBYOPT=-w
