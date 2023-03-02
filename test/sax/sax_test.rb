@@ -769,7 +769,7 @@ encoding = "UTF-8" ?>},
     xml = %{\xEF\xBB\xBF<?xml?>
 <top>ピーター</top>
 }
-    if !RUBY_VERSION.start_with?('1.8')
+    unless RUBY_VERSION.start_with?('1.8')
       xml.force_encoding('ASCII')
     end
     parse_compare(xml,
