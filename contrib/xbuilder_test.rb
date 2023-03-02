@@ -1,17 +1,15 @@
 #!/usr/bin/env ruby
-# encoding: UTF-8
-
 # Contributed by Notezen
 
-$: << File.join(File.dirname(__FILE__), "../lib")
-$: << File.join(File.dirname(__FILE__), "../ext")
-$: << File.join(File.dirname(__FILE__), ".")
+$: << File.join(File.dirname(__FILE__), '../lib')
+$: << File.join(File.dirname(__FILE__), '../ext')
+$: << File.join(File.dirname(__FILE__), '.')
 
 require 'test/unit'
 require 'ox'
 require 'xbuilder'
 
-class XBuilderTest < ::Test::Unit::TestCase
+class XBuilderTest < Test::Unit::TestCase
   include Ox::XBuilder
 
   def test_build

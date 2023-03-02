@@ -14,15 +14,15 @@ module Test
         @owner = Etc.getpwuid(stat.uid).name
         @group = Etc.getgrgid(stat.gid).name
         @permissions = {
-          :user => [(0 != (stat.mode & 0x0100)) ? 'r' : '-',
-                    (0 != (stat.mode & 0x0080)) ? 'w' : '-',
-                    (0 != (stat.mode & 0x0040)) ? 'x' : '-'].join(''),
-          :group => [(0 != (stat.mode & 0x0020)) ? 'r' : '-',
-                     (0 != (stat.mode & 0x0010)) ? 'w' : '-',
-                     (0 != (stat.mode & 0x0008)) ? 'x' : '-'].join(''),
-          :other => [(0 != (stat.mode & 0x0004)) ? 'r' : '-',
-                     (0 != (stat.mode & 0x0002)) ? 'w' : '-',
-                     (0 != (stat.mode & 0x0001)) ? 'x' : '-'].join('')
+          :user => [0 != (stat.mode & 0x0100) ? 'r' : '-',
+                    0 != (stat.mode & 0x0080) ? 'w' : '-',
+                    0 != (stat.mode & 0x0040) ? 'x' : '-'].join(''),
+          :group => [0 != (stat.mode & 0x0020) ? 'r' : '-',
+                     0 != (stat.mode & 0x0010) ? 'w' : '-',
+                     0 != (stat.mode & 0x0008) ? 'x' : '-'].join(''),
+          :other => [0 != (stat.mode & 0x0004) ? 'r' : '-',
+                     0 != (stat.mode & 0x0002) ? 'w' : '-',
+                     0 != (stat.mode & 0x0001) ? 'x' : '-'].join('')
         }
       end
     end # File

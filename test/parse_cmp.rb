@@ -11,18 +11,18 @@ $verbose = 0
 $iter = 100
 
 opts = OptionParser.new
-opts.on("-v", "increase verbosity")                            { $verbose += 1 }
-opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |i| $iter = i }
-opts.on("-h", "--help", "Show this display")                   { puts opts; Process.exit!(0) }
+opts.on('-v', 'increase verbosity')                            { $verbose += 1 }
+opts.on('-i', '--iterations [Int]', Integer, 'iterations')     { |i| $iter = i }
+opts.on('-h', '--help', 'Show this display')                   { puts opts; Process.exit!(0) }
 files = opts.parse(ARGV)
 
 ### XML conversion to Hash using in memory Ox parsing ###
 
 def node_to_dict(element)
-  dict = Hash.new
+  dict = {}
   key = nil
   element.nodes.each do |n|
-    raise "A dict can only contain elements." unless n.is_a?(::Ox::Element)
+    raise 'A dict can only contain elements.' unless n.is_a?(Ox::Element)
 
     if key.nil?
       raise "Expected a key, not a #{n.name}." unless 'key' == n.name
@@ -37,7 +37,7 @@ def node_to_dict(element)
 end
 
 def node_to_array(element)
-  a = Array.new
+  a = []
   element.nodes.each do |n|
     a.push(node_to_value(n))
   end
@@ -45,11 +45,11 @@ def node_to_array(element)
 end
 
 def node_to_value(node)
-  raise "A dict can only contain elements." unless node.is_a?(::Ox::Element)
+  raise 'A dict can only contain elements.' unless node.is_a?(Ox::Element)
 
   case node.name
   when 'key'
-    raise "Expected a value, not a key."
+    raise 'Expected a value, not a key.'
   when 'string'
     value = first_text(node)
   when 'dict'
@@ -82,7 +82,7 @@ def parse_gen(xml)
   plist = doc.root
   dict = nil
   plist.nodes.each do |n|
-    if n.is_a?(::Ox::Element)
+    if n.is_a?(Ox::Element)
       dict = node_to_dict(n)
       break
     end
@@ -93,7 +93,7 @@ end
 ### XML conversion to Hash using Ox SAX parser ###
 
 class Handler
-  def initialize()
+  def initialize
     @key = nil
     @type = nil
     @plist = nil
@@ -113,11 +113,11 @@ class Handler
 
   def start_element(name)
     if :dict == name
-      dict = Hash.new
+      dict = {}
       append(dict)
       @stack.push(dict)
     elsif :array == name
-      a = Array.new
+      a = []
       append(a)
       @stack.push(a)
     elsif :true == name
@@ -130,12 +130,10 @@ class Handler
   end
 
   def end_element(name)
-    @stack.pop if :dict == name or :array == name
+    @stack.pop if [:dict, :array].include?(name)
   end
   
-  def plist
-    @plist
-  end
+  attr_reader :plist
 
   def append(value)
     unless value.is_a?(Array) or value.is_a?(Hash)
@@ -167,7 +165,7 @@ end
 def parse_sax(xml)
   io = StringIO.new(xml)
   start = Time.now
-  handler = Handler.new()
+  handler = Handler.new
   Ox.sax_parse(handler, io)
   handler.plist
 end
@@ -176,13 +174,13 @@ end
 
 def convert_parse_obj(xml)
   xml = plist_to_obj_xml(xml)
-  ::Ox.load(xml, :mode => :object)
+  Ox.load(xml, :mode => :object)
 end
 
 ### XML conversion to Hash using Ox Object parsing after gsub! replacements ###
 
 def parse_obj(xml)
-  ::Ox.load(xml, :mode => :object)
+  Ox.load(xml, :mode => :object)
 end
 
 def plist_to_obj_xml(xml)

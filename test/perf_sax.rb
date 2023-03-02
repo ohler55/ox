@@ -36,16 +36,16 @@ $pos = false
 $smart = false
 
 opts = OptionParser.new
-opts.on("-v", "increase verbosity")                            { $verbose += 1 }
-opts.on("-x", "ox only")                                       { $ox_only = true }
-opts.on("-a", "all callbacks")                                 { $all_cbs = true }
-opts.on("-b", "html smart")                                    { $smart = true }
-opts.on("-p", "update position")                               { $pos = true; $all_cbs = true }
-opts.on("-z", "use StringIO instead of file")                  { $strio = true }
-opts.on("-f", "--file [String]", String, "filename")           { |f| $filename = f }
-opts.on("-i", "--iterations [Int]", Integer, "iterations")     { |it| $iter = it }
-opts.on("-s", "--size [Int]", Integer, "file size in KBytes")  { |s| $filesize = s }
-opts.on("-h", "--help", "Show this display")                   { puts opts; Process.exit!(0) }
+opts.on('-v', 'increase verbosity')                            { $verbose += 1 }
+opts.on('-x', 'ox only')                                       { $ox_only = true }
+opts.on('-a', 'all callbacks')                                 { $all_cbs = true }
+opts.on('-b', 'html smart')                                    { $smart = true }
+opts.on('-p', 'update position')                               { $pos = true; $all_cbs = true }
+opts.on('-z', 'use StringIO instead of file')                  { $strio = true }
+opts.on('-f', '--file [String]', String, 'filename')           { |f| $filename = f }
+opts.on('-i', '--iterations [Int]', Integer, 'iterations')     { |it| $iter = it }
+opts.on('-s', '--size [Int]', Integer, 'file size in KBytes')  { |s| $filesize = s }
+opts.on('-h', '--help', 'Show this display')                   { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
 $xml_str = nil
@@ -70,17 +70,19 @@ def create_file(filename, size)
   </row>
 }
   cnt = (size * 1000 - head.size - tail.size) / row.size
-  File.open(filename, "w") do |f|
+  File.open(filename, 'w') do |f|
     f.write(head)
     cnt.times do |i|
-      f.write(row % [i, i])
+      f.write(format(row, i, i))
     end
     f.write(tail)
   end
 end
 
-class OxSax < ::Ox::Sax
-  def error(message, line, column); puts message; end
+class OxSax < Ox::Sax
+  def error(message, line, column);
+    puts message;
+  end
 end
 
 class OxAllSax < OxSax
@@ -97,16 +99,21 @@ class OxAllSax < OxSax
 end
 
 class OxPosAllSax < OxAllSax
-  def initialize()
+  def initialize
     @line = nil
     @column = nil
   end
 end
 
-unless defined?(::Nokogiri).nil?
+unless defined?(Nokogiri).nil?
   class NoSax < Nokogiri::XML::SAX::Document
-    def error(message); puts message; end
-    def warning(message); puts message; end
+    def error(message);
+      puts message;
+    end
+
+    def warning(message);
+      puts message;
+    end
   end
 
   class NoAllSax < NoSax
@@ -121,7 +128,7 @@ unless defined?(::Nokogiri).nil?
   end
 end
 
-unless defined?(::LibXML).nil?
+unless defined?(LibXML).nil?
   class LxSax
     include LibXML::XML::SaxParser::Callbacks
   end
@@ -158,32 +165,38 @@ puts "A #{$filesize} KByte XML file was parsed #{$iter} times for this test."
 $handler = nil
 perf = Perf.new
 
-perf.add('Ox::Sax', 'sax_parse') {
+perf.add('Ox::Sax', 'sax_parse') do
   input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
   Ox.sax_parse($handler, input, :smart => $smart)
   input.close
-}
-perf.before('Ox::Sax') { $handler = $all_cbs ? ($pos ? OxPosAllSax.new() : OxAllSax.new()) : OxSax.new() }
+end
+perf.before('Ox::Sax') do
+  $handler = if $all_cbs
+               $pos ? OxPosAllSax.new : OxAllSax.new
+             else
+               OxSax.new
+             end
+end
 
 unless $ox_only
-  unless defined?(::Nokogiri).nil?
-    perf.add('Nokogiri::XML::Sax', 'parse') {
+  unless defined?(Nokogiri).nil?
+    perf.add('Nokogiri::XML::Sax', 'parse') do
       input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
       $handler.parse(input)
       input.close
-    }
-    perf.before('Nokogiri::XML::Sax') { $handler = Nokogiri::XML::SAX::Parser.new($all_cbs ? NoAllSax.new() : NoSax.new()) }
+    end
+    perf.before('Nokogiri::XML::Sax') { $handler = Nokogiri::XML::SAX::Parser.new($all_cbs ? NoAllSax.new : NoSax.new) }
   end
 
-  unless defined?(::LibXML).nil?
-    perf.add('LibXML::XML::Sax', 'parse') {
+  unless defined?(LibXML).nil?
+    perf.add('LibXML::XML::Sax', 'parse') do
       input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
       parser = LibXML::XML::SaxParser.io(input)
       parser.callbacks = $handler
-      parser.parse()
+      parser.parse
       input.close
-    }
-    perf.before('LibXML::XML::Sax') { $handler = $all_cbs ? LxAllSax.new() : LxSax.new() }
+    end
+    perf.before('LibXML::XML::Sax') { $handler = $all_cbs ? LxAllSax.new : LxSax.new }
   end
 end
 

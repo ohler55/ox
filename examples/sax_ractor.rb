@@ -5,7 +5,7 @@ require 'pathname'
 
 # Silence Ractor warning in Ruby 3.0.x
 Warning[:experimental] = false
-abort("This Ractor example requires at least Ruby 3.0") if RUBY_VERSION.start_with?("2")
+abort('This Ractor example requires at least Ruby 3.0') if RUBY_VERSION.start_with?('2')
 
 # Example/test script for `Ractor`-based `Ox::Sax` parsing.
 # In the Real World™ we probably wouldn't create a single-use `Ractor` for
@@ -20,20 +20,22 @@ class Saxtor < Ox::Sax
   # yield it if its `ietf` matches our `needle`,
   # and throw it away otherwise.
   CYO = Struct.new(:ietf, :globs, :description) do
-    def initialize(ietf = nil, globs = Array.new, description = nil)
+    def initialize(ietf = nil, globs = [], description = nil)
       super(ietf, globs, description)
     end
     def to_s  # Pretty print
       "#{self[:description]} (#{self[:ietf]}) [#{
-        self[:globs]&.map(&File.method(:extname)).join(?,)
+        self[:globs]&.map(&File.method(:extname)).join(',')
       }]"
     end
-    def inspect; "#<CYO #{self.to_s}>"; end
+    def inspect
+      "#<CYO #{to_s}>"
+    end
   end
 
   # Set up our parsing environment and open a file handle for our XML.
   def initialize(parent, haystack)
-    @parse_stack = Array::new  # Track our current Element as we parse.
+    @parse_stack = []  # Track our current Element as we parse.
     @parent = parent           # `Ractor` that instantiated us.
     @haystack = File.open(haystack, File::Constants::RDONLY)
     @haystack.advise(:sequential)
@@ -55,7 +57,7 @@ class Saxtor < Ox::Sax
   # …wax off.
   def end_element(name)
     case @parse_stack.last
-    when :"mime-type" then
+    when :"mime-type"
       # Save the scratch `Struct` if we matched our needle while building it.
       @out = cyo.dup if @i_can_haz
       @i_can_haz = false
@@ -66,11 +68,11 @@ class Saxtor < Ox::Sax
   # Element attribute callback — Ox::Sax::Value version
   def attr_value(name, value)
     case [@parse_stack.last, name]
-    in :"mime-type", :type then
+    in :"mime-type", :type
       cyo[:ietf] = value.as_s
       # If we found our needle then we will yield the scratch `CYO` instead of `nil`.
       @i_can_haz = true if value.as_s == @needle
-    in :glob, :pattern then
+    in :glob, :pattern
       cyo[:globs].append(value.as_s)
     else nil
     end
@@ -80,7 +82,7 @@ class Saxtor < Ox::Sax
   #                                This part. --------^
   def text(element_text)
     case @parse_stack.last
-    when :comment then
+    when :comment
       # This will end up being the `last` <comment> locale (probably `zh_TW`)
       # because I don't want to implement locale checking for a test script lol
       cyo[:description] = element_text
@@ -134,8 +136,10 @@ Common file paths:
 PLZ
 
 # Bail out if we were given a nonexistant file.
-abort("Please provide the path to a `shared-mime-info` XML package \
-and some media-type query arguments (e.g. 'image/jpeg')".concat(usage)) unless ARGV.size > 0
+unless ARGV.size > 0
+  abort("Please provide the path to a `shared-mime-info` XML package \
+  and some media-type query arguments (e.g. 'image/jpeg')".concat(usage))
+end
 haystack = Pathname.new(ARGV.first)
 abort("#{haystack} does not exist") unless haystack.exist? and haystack.file?
 
@@ -150,45 +154,45 @@ needles = ARGV[1...]
 
 
 # Hamburger Style.
-puts "Parallel Ractors"
+puts 'Parallel Ractors'
 # Create one `Ractor` for every given media-type argument
 moo = ['Heifer', 'Cow', 'Bull', 'Steer'].tally
 head_count = needles.size - 1
-herd = (0..head_count).map {
+herd = (0..head_count).map do
   # Give our worker `Ractor` a name, otherwise its `#name` will return `nil`.
   individual = moo.keys.sample
   moo[individual] += 1
-  Ractor.new(haystack, name: "#{individual} #{moo[individual] - 1}") { |haystack|
+  Ractor.new(haystack, name: "#{individual} #{moo[individual] - 1}") do |haystack|
     # Initialize an `Ox::Sax` handler for our given source file.
-    handler = Saxtor::new(Ractor.current, haystack)
+    handler = Saxtor.new(Ractor.current, haystack)
 
     # Now we can `#send` a needle to this `Ractor` and make it search the haystack!
     while ietf_string = Ractor.receive
       Ractor.yield(handler.awen(ietf_string))
     end
-  }
-}
+  end
+end
 
 # Send our arguments to our herd in a 1:1 mapping
 (0..head_count).each { herd[_1].send(needles[_1]) }
 
 # Wait for every `Ractor` to have a result, and then pretty print all of them :)
-pp (0..head_count).map {
+pp (0..head_count).map do
   [herd[_1], herd[_1].take]
-}.map {
+end.map do
   "#{_1.name} gave us #{_2 || 'nothing'}"
-}
+end
 
 
 # Hotdog Style.
 puts
-puts "Serial Ractor"
+puts 'Serial Ractor'
 # Create a single `Ractor` and send every media-type to it in series.
-only_one_ox = Ractor.new(haystack, name: "ONLY ONE OX") { |haystack|
-  handler = Saxtor::new(Ractor.current, haystack)
+only_one_ox = Ractor.new(haystack, name: 'ONLY ONE OX') do |haystack|
+  handler = Saxtor.new(Ractor.current, haystack)
   while ietf_string = Ractor.receive
     handler.awen(ietf_string)
   end
-}
+end
 (0..head_count).each { only_one_ox.send(needles[_1]) }
 pp "#{only_one_ox.name} gave us #{(0..head_count).map { only_one_ox.take }}"

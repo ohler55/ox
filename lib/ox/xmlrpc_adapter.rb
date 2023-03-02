@@ -19,9 +19,9 @@ module Ox
     class OxParser < Ox::Sax
       include XMLRPC::XMLParser::StreamParserMixin
 
-      alias :text :character
-      alias :end_element :endElement
-      alias :start_element :startElement
+      alias text character
+      alias end_element endElement
+      alias start_element startElement
 
       # Initiates the sax parser with the provided string.
       def parse(str)

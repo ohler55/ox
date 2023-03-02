@@ -1,20 +1,18 @@
 #!/usr/bin/env ruby
-# encoding: UTF-8
-
 # Ubuntu does not accept arguments to ruby when called using env. To get warnings to show up the -w options is
 # required. That can be set in the RUBYOPT environment variable.
 # export RUBYOPT=-w
 
 $VERBOSE = true
 
-$: << File.join(File.dirname(__FILE__), "../../lib")
-$: << File.join(File.dirname(__FILE__), "../../ext")
+$: << File.join(File.dirname(__FILE__), '../../lib')
+$: << File.join(File.dirname(__FILE__), '../../ext')
 
 require 'ox'
 
 class QuietSax < Ox::Sax
   
-  def initialize()
+  def initialize
     @line = nil
     @column = nil
   end
@@ -43,5 +41,5 @@ class QuietSax < Ox::Sax
   end
 end
 
-handler = QuietSax.new()
+handler = QuietSax.new
 Ox.sax_parse(handler, ARGF, :smart => true)

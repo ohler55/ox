@@ -13,3 +13,4 @@ Makefile
 .rbx
 .yardoc
 doc
+Gemfile.lock

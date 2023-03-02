@@ -55,7 +55,7 @@ module Ox
   # will hold the number of bytes from the start of the document.
   class Sax
     # Create a new instance of the Sax handler class.
-    def initialize()
+    def initialize
       # @pos = nil
       # @line = nil
       # @column = nil
@@ -66,47 +66,33 @@ module Ox
     # they will not be called during parsing.
     private
 
-    def instruct(target)
-    end
+    def instruct(target); end
 
-    def end_instruct(target)
-    end
+    def end_instruct(target); end
 
-    def attr(name, str)
-    end
+    def attr(name, str); end
 
-    def attr_value(name, value)
-    end
+    def attr_value(name, value); end
 
-    def attrs_done()
-    end
+    def attrs_done; end
 
-    def doctype(str)
-    end
+    def doctype(str); end
 
-    def comment(str)
-    end
+    def comment(str); end
 
-    def cdata(str)
-    end
+    def cdata(str); end
 
-    def text(str)
-    end
+    def text(str); end
 
-    def value(value)
-    end
+    def value(value); end
 
-    def start_element(name)
-    end
+    def start_element(name); end
 
-    def end_element(name)
-    end
+    def end_element(name); end
     
-    def error(message, line, column)
-    end
+    def error(message, line, column); end
 
-    def abort(name)
-    end
+    def abort(name); end
     
   end # Sax
 end # Ox

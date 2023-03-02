@@ -5,7 +5,7 @@ module Weather
     attr_accessor :highs
 
     def self.parse(filename, as_time)
-      handler = self.new(as_time)
+      handler = new(as_time)
       input = IO.open(IO.sysopen(filename))
       Ox.sax_parse(handler, input)
       input.close
@@ -32,17 +32,17 @@ module Weather
     end
 
     def value(v)
-      if 1 < @row
-        case @cell
-        when 2
-          if @as_time
-            @time = v.as_time
-          else
-            @time = v.as_s
-          end
-        when 4
-          @highs[@time] = v.as_f
+      return unless 1 < @row
+
+      case @cell
+      when 2
+        if @as_time
+          @time = v.as_time
+        else
+          @time = v.as_s
         end
+      when 4
+        @highs[@time] = v.as_f
       end
     end
 

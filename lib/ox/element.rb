@@ -56,7 +56,7 @@ module Ox
     # so multiple appends can be chained together.
     # - +node+ [Node] Node to append to the nodes array
     def <<(node)
-      raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
+      raise 'argument to << must be a String or Ox::Node.' unless node.is_a?(String) or node.is_a?(Node)
 
       @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       @nodes << node
@@ -67,7 +67,7 @@ module Ox
     # so multiple appends can be chained together.
     # - +node+ [Node] Node to prepend to the nodes array
     def prepend_child(node)
-      raise "argument to << must be a String or Ox::Node." unless node.is_a?(String) or node.is_a?(Node)
+      raise 'argument to << must be a String or Ox::Node.' unless node.is_a?(String) or node.is_a?(Node)
 
       @nodes = [] if !instance_variable_defined?(:@nodes) or @nodes.nil?
       @nodes.unshift(node)
@@ -80,8 +80,8 @@ module Ox
     # *return* [Boolean] true if both Objects are equivalent, otherwise false.
     def eql?(other)
       return false unless super(other)
-      return false unless self.attributes == other.attributes
-      return false unless self.nodes == other.nodes
+      return false unless attributes == other.attributes
+      return false unless nodes == other.nodes
 
       true
     end
@@ -89,7 +89,7 @@ module Ox
 
     # Returns the first String in the elements nodes array or nil if there is
     # no String node.
-    def text()
+    def text
       nodes.each { |n| return n if n.is_a?(String) }
       nil
     end
@@ -98,9 +98,9 @@ module Ox
     # (String) node. Note the existing nodes array is modified and not replaced.
     # - +txt+ [String] to become the only element of the nodes array
     def replace_text(txt)
-      raise "the argument to replace_text() must be a String" unless txt.is_a?(String)
+      raise 'the argument to replace_text() must be a String' unless txt.is_a?(String)
 
-      @nodes.clear()
+      @nodes.clear
       @nodes << txt
     end
 
@@ -214,12 +214,13 @@ module Ox
       ids = id.to_s
       i = args[0].to_i # will be 0 if no arg or parsing fails
       nodes.each do |n|
-        if (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids || name_matchs?(n.value, ids))
-          return n if 0 == i
-
-          has_some = true
-          i -= 1
+        unless (n.is_a?(Element) || n.is_a?(Instruct)) && (n.value == id || n.value == ids || name_matchs?(n.value, ids))
+          next
         end
+        return n if 0 == i
+
+        has_some = true
+        i -= 1
       end
       if instance_variable_defined?(:@attributes)
         return @attributes[id] if @attributes.has_key?(id)
@@ -280,7 +281,7 @@ module Ox
           end
           index = step[i..-2].to_i
         end
-        if '?' == name or '*' == name
+        if ['?', '*'].include?(name)
           match = nodes
         elsif '^' == name[0..0] # 1.8.7 thinks name[0] is a fixnum
           case name[1..-1]
@@ -361,7 +362,7 @@ module Ox
           end
           index = step[i..-2].to_i
         end
-        if '?' == name or '*' == name
+        if ['?', '*'].include?(name)
           match = nodes
         elsif '^' == name[0..0] # 1.8.7 thinks name[0] is a fixnum
           case name[1..-1]

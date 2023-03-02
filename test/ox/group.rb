@@ -3,7 +3,7 @@ module Test
     class Group
       attr_reader :members
       
-      def initialize()
+      def initialize
         @members = []
       end
       

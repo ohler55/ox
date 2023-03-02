@@ -6,7 +6,7 @@ module Weather
     attr_accessor :highs
 
     def self.parse(filename, as_time)
-      handler = self.new(as_time)
+      handler = new(as_time)
       nohand = Nokogiri::XML::SAX::Parser.new(handler)
       input = IO.open(IO.sysopen(filename))
       nohand.parse(input)
@@ -37,18 +37,18 @@ module Weather
       text.strip!
       return if text.empty?
 
-      if 1 < @row
-        case @cell
-        when 2
-          if @as_time
-            # @time = Time.parse(text)
-            @time = Time.at(text.to_f)
-          else
-            @time = text
-          end
-        when 4
-          @highs[@time] = text.to_f
+      return unless 1 < @row
+
+      case @cell
+      when 2
+        if @as_time
+          # @time = Time.parse(text)
+          @time = Time.at(text.to_f)
+        else
+          @time = text
         end
+      when 4
+        @highs[@time] = text.to_f
       end
     end
 
