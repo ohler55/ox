@@ -20,7 +20,7 @@ class Saxtor < Ox::Sax
   # yield it if its `ietf` matches our `needle`,
   # and throw it away otherwise.
   CYO = Struct.new(:ietf, :globs, :description) do
-    def initialize(ietf = nil, globs = Array.new, description = nil)
+    def initialize(ietf = nil, globs = [], description = nil)
       super(ietf, globs, description)
     end
     def to_s  # Pretty print
@@ -35,7 +35,7 @@ class Saxtor < Ox::Sax
 
   # Set up our parsing environment and open a file handle for our XML.
   def initialize(parent, haystack)
-    @parse_stack = Array::new  # Track our current Element as we parse.
+    @parse_stack = []  # Track our current Element as we parse.
     @parent = parent           # `Ractor` that instantiated us.
     @haystack = File.open(haystack, File::Constants::RDONLY)
     @haystack.advise(:sequential)

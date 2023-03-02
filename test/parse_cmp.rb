@@ -19,7 +19,7 @@ files = opts.parse(ARGV)
 ### XML conversion to Hash using in memory Ox parsing ###
 
 def node_to_dict(element)
-  dict = Hash.new
+  dict = {}
   key = nil
   element.nodes.each do |n|
     raise 'A dict can only contain elements.' unless n.is_a?(Ox::Element)
@@ -37,7 +37,7 @@ def node_to_dict(element)
 end
 
 def node_to_array(element)
-  a = Array.new
+  a = []
   element.nodes.each do |n|
     a.push(node_to_value(n))
   end
@@ -113,11 +113,11 @@ class Handler
 
   def start_element(name)
     if :dict == name
-      dict = Hash.new
+      dict = {}
       append(dict)
       @stack.push(dict)
     elsif :array == name
-      a = Array.new
+      a = []
       append(a)
       @stack.push(a)
     elsif :true == name
