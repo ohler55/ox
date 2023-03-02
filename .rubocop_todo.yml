@@ -1087,22 +1087,6 @@ Style/RedundantInitialize:
     - 'lib/ox/raw.rb'
     - 'test/sax/handlers.rb'
 
-# Offense count: 15
-# This cop supports safe autocorrection (--autocorrect).
-Style/RedundantSelf:
-  Exclude:
-    - 'examples/sax_ractor.rb'
-    - 'lib/ox/bag.rb'
-    - 'lib/ox/element.rb'
-    - 'lib/ox/instruct.rb'
-    - 'lib/ox/node.rb'
-    - 'test/ox/hasprops.rb'
-    - 'test/sample/hasprops.rb'
-    - 'test/tests.rb'
-    - 'test/weather/wlxsax.rb'
-    - 'test/weather/wnosax.rb'
-    - 'test/weather/wsax.rb'
-
 # Offense count: 1
 # This cop supports unsafe autocorrection (--autocorrect-all).
 # Configuration parameters: ConvertCodeThatCanStartToReturnNil, AllowedMethods, MaxChainLength.

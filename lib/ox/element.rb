@@ -80,8 +80,8 @@ module Ox
     # *return* [Boolean] true if both Objects are equivalent, otherwise false.
     def eql?(other)
       return false unless super(other)
-      return false unless self.attributes == other.attributes
-      return false unless self.nodes == other.nodes
+      return false unless attributes == other.attributes
+      return false unless nodes == other.nodes
 
       true
     end

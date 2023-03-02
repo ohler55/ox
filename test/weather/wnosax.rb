@@ -6,7 +6,7 @@ module Weather
     attr_accessor :highs
 
     def self.parse(filename, as_time)
-      handler = self.new(as_time)
+      handler = new(as_time)
       nohand = Nokogiri::XML::SAX::Parser.new(handler)
       input = IO.open(IO.sysopen(filename))
       nohand.parse(input)

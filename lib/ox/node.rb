@@ -16,7 +16,7 @@ module Ox
     def eql?(other)
       return false if (other.nil? or self.class != other.class)
 
-      other.value == self.value
+      other.value == value
     end
     alias == eql?
   end # Node

@@ -8,7 +8,7 @@ module Weather
     attr_accessor :highs
 
     def self.parse(filename, as_time)
-      handler = self.new(as_time)
+      handler = new(as_time)
       input = IO.open(IO.sysopen(filename))
       parser = LibXML::XML::SaxParser.io(input)
       parser.callbacks = handler
