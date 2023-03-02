@@ -1052,12 +1052,6 @@ Style/RedundantArgument:
     - 'test/sample/file.rb'
     - 'test/tests.rb'
 
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-Style/RedundantBegin:
-  Exclude:
-    - 'test/perf.rb'
-
 # Offense count: 5
 # This cop supports unsafe autocorrection (--autocorrect-all).
 # Configuration parameters: AllowComments.

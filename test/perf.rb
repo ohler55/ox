@@ -87,17 +87,17 @@ class Perf
     end
 
     def run(iter, base)
-      begin
-        GC.start
-        @before.call unless @before.nil?
-        start = Time.now
-        iter.times { @blk.call }
-        @duration = Time.now - start - base
-        @duration = 0.0 if @duration < 0.0
-        @rate = iter / @duration
-      rescue Exception => e
-        @error = "#{e.class}: #{e.message}"
-      end
+      
+      GC.start
+      @before.call unless @before.nil?
+      start = Time.now
+      iter.times { @blk.call }
+      @duration = Time.now - start - base
+      @duration = 0.0 if @duration < 0.0
+      @rate = iter / @duration
+    rescue Exception => e
+      @error = "#{e.class}: #{e.message}"
+      
     end
   end # Item
 end # Perf
