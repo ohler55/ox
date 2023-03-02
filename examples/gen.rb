@@ -40,9 +40,7 @@ puts "descendent type attribute value: #{root.locate('*/@type')}"
 # Delete 'i' element by iterating over the root's nodes and look for one named
 # friends. The locate method could also be used.
 root.nodes.each { |n|
-  if n.name == 'friends'
-    n.nodes.delete_if { |child| child.name == 'i' }
-  end
+  n.nodes.delete_if { |child| child.name == 'i' } if n.name == 'friends'
 }
 
 # Lets take a look at the changes by dumping the doc.

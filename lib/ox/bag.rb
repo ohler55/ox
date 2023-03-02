@@ -40,7 +40,9 @@ module Ox
     #
     # _raise_ [NoMethodError] if the instance variable is not defined.
     def method_missing(m, *args, &block)
-      raise ArgumentError.new("wrong number of arguments (#{args.size} for 0) to method #{m}") unless args.nil? or args.empty?
+      unless args.nil? or args.empty?
+        raise ArgumentError.new("wrong number of arguments (#{args.size} for 0) to method #{m}")
+      end
 
       at_m = ('@' + m.to_s).to_sym
       raise NoMethodError.new("undefined method #{m}", m) unless instance_variable_defined?(at_m)

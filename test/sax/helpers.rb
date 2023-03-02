@@ -30,9 +30,7 @@ module SaxTestHelpers
 
     if expected != actual
       expected.each_index { |i|
-        if expected[i] != actual[i]
-          puts "#{i}: #{expected[i]} != #{actual[i]}"
-        end
+        puts "#{i}: #{expected[i]} != #{actual[i]}" if expected[i] != actual[i]
       }
     end
     puts "\nexpected: #{expected}\n  actual: #{actual}" if expected != actual

@@ -845,17 +845,6 @@ Style/HashSyntax:
     - 'test/sax/smart_test.rb'
     - 'test/tests.rb'
 
-# Offense count: 6
-# This cop supports safe autocorrection (--autocorrect).
-Style/IfUnlessModifier:
-  Exclude:
-    - 'examples/gen.rb'
-    - 'lib/ox/bag.rb'
-    - 'test/perf_gen.rb'
-    - 'test/sax/helpers.rb'
-    - 'test/sax/sax_test.rb'
-    - 'test/tests.rb'
-
 # Offense count: 3
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EnforcedStyle.

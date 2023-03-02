@@ -72,9 +72,7 @@ $ox_generic_options = {
 }
 
 class Func < Test::Unit::TestCase
-  unless respond_to?(:assert_raise)
-    alias assert_raise assert_raises
-  end
+  alias assert_raise assert_raises unless respond_to?(:assert_raise)
 
   def test_get_options
     Ox::default_options = $ox_object_options
