@@ -130,7 +130,7 @@ class Handler
   end
 
   def end_element(name)
-    @stack.pop if :dict == name or :array == name
+    @stack.pop if [:dict, :array].include?(name)
   end
   
   attr_reader :plist

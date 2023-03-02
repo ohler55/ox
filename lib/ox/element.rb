@@ -281,7 +281,7 @@ module Ox
           end
           index = step[i..-2].to_i
         end
-        if '?' == name or '*' == name
+        if ['?', '*'].include?(name)
           match = nodes
         elsif '^' == name[0..0] # 1.8.7 thinks name[0] is a fixnum
           case name[1..-1]
@@ -362,7 +362,7 @@ module Ox
           end
           index = step[i..-2].to_i
         end
-        if '?' == name or '*' == name
+        if ['?', '*'].include?(name)
           match = nodes
         elsif '^' == name[0..0] # 1.8.7 thinks name[0] is a fixnum
           case name[1..-1]
