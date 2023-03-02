@@ -133,9 +133,7 @@ class Handler
     @stack.pop if :dict == name or :array == name
   end
   
-  def plist
-    @plist
-  end
+  attr_reader :plist
 
   def append(value)
     unless value.is_a?(Array) or value.is_a?(Hash)
