@@ -115,23 +115,23 @@ class Saxtor < Ox::Sax
 end # class Saxtor
 
 # Fancy "usage" help `String` fragment to concat with specific error messages.
-usage = <<-PLZ
+usage = <<~PLZ
 
-Usage: `sax_ractor.rb [SHARED-MIME-INFO_XML_PATH] [IETF_MEDIA_TYPES]…`
+  Usage: `sax_ractor.rb [SHARED-MIME-INFO_XML_PATH] [IETF_MEDIA_TYPES]…`
 
-Common file paths:
+  Common file paths:
 
-- FreeBSD:
-  `${LOCALBASE}/share/mime/packages/freedesktop.org.xml` (probably `/usr/local`)
-  https://www.freshports.org/misc/shared-mime-info/
+  - FreeBSD:
+    `${LOCALBASE}/share/mime/packages/freedesktop.org.xml` (probably `/usr/local`)
+    https://www.freshports.org/misc/shared-mime-info/
 
-- Linux:
-  `/usr/share/mime/packages/freedesktop.org.xml`
+  - Linux:
+    `/usr/share/mime/packages/freedesktop.org.xml`
 
-- macOS:
-  `/opt/homebrew/share/mime/packages/freedesktop.org.xml` (Homebrew)
-  `/opt/local/share/mime/packages/freedesktop.org.xml`    (MacPorts)
-  https://formulae.brew.sh/formula/shared-mime-info
+  - macOS:
+    `/opt/homebrew/share/mime/packages/freedesktop.org.xml` (Homebrew)
+    `/opt/local/share/mime/packages/freedesktop.org.xml`    (MacPorts)
+    https://formulae.brew.sh/formula/shared-mime-info
 PLZ
 
 # Bail out if we were given a nonexistant file.
