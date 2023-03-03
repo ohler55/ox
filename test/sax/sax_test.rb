@@ -785,11 +785,11 @@ encoding = "UTF-8" ?>},
                    [:attr, :version, '1.0'],
                    [:attr, :encoding, 'UTF-8'],
                    [:end_instruct, 'xml'],
-                   [:start_element, 'いち'.to_sym],
+                   [:start_element, :いち],
                    [:attr, :name, 'ピーター'],
-                   [:attr, 'つま'.to_sym, 'まきえ'],
+                   [:attr, :つま, 'まきえ'],
                    [:text, 'ピーター is katakana'],
-                   [:end_element, 'いち'.to_sym]])
+                   [:end_element, :いち]])
   end
 
   def test_sax_amp_hash
