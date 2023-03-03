@@ -66,7 +66,7 @@ module Ox
       true
     end
     alias == eql?
-    
+
     # Define a new class based on the Ox::Bag class. This is used internally in
     # the Ox module and is available to service wrappers that receive XML
     # requests that include Objects of Classes not defined in the storage

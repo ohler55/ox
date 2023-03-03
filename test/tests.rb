@@ -951,8 +951,8 @@ class Func < Test::Unit::TestCase
       Ox.default_options = opts
       begin
         # only 1.9.x rubies know how to parse a UTF-8 symbol
-        dump_and_load(Bag.new('@tsuma'.to_sym => 'まきえ'.to_sym), false)
-        dump_and_load(Bag.new('@つま'.to_sym => 'まきえ'.to_sym), false)
+        dump_and_load(Bag.new(:@tsuma => :まきえ), false)
+        dump_and_load(Bag.new(:@つま => :まきえ), false)
       ensure
         Ox.default_options = orig
       end
@@ -1028,7 +1028,7 @@ class Func < Test::Unit::TestCase
     Ox.default_options = $ox_object_options
     doc = Ox.parse(each_xml)
     nodes = []
-    doc.Family.Pete.each { |n| n.is_a?(Ox::Element) && nodes << n.id }
+    doc.Family.Pete.each { |n| n.is_a?(Ox::Element) && (nodes << n.id) }
     assert_equal(['Nicole', 'Pamela', 'Fictional'], nodes)
   end
 

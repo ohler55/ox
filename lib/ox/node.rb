@@ -3,7 +3,7 @@ module Ox
   class Node
     # String value associated with the Node.
     attr_accessor :value
-    
+
     # Creates a new Node with the specified String value.
     # - +value+ [String] string value for the Node
     def initialize(value)

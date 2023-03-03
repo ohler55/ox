@@ -11,11 +11,9 @@ abort('This Ractor example requires at least Ruby 3.0') if RUBY_VERSION.start_wi
 # In the Real World™ we probably wouldn't create a single-use `Ractor` for
 # every argument, but this is primarily a test of `rb_ext_ractor_safe` for Ox.
 
-
 # Miniature example Ractor-based `shared-mime-info` Ox handler à la `CHECKING::YOU::OUT`:
 # https://github.com/okeeblow/DistorteD/tree/NEW-SENSATION/CHECKING-YOU-OUT
 class Saxtor < Ox::Sax
-
   # We will fill this `Struct` as we parse,
   # yield it if its `ietf` matches our `needle`,
   # and throw it away otherwise.
@@ -23,20 +21,22 @@ class Saxtor < Ox::Sax
     def initialize(ietf = nil, globs = [], description = nil)
       super(ietf, globs, description)
     end
-    def to_s  # Pretty print
+
+    def to_s # Pretty print
       "#{self[:description]} (#{self[:ietf]}) [#{
-        self[:globs]&.map(&File.method(:extname)).join(',')
+        self[:globs]&.map(&File.method(:extname))&.join(',')
       }]"
     end
+
     def inspect
-      "#<CYO #{to_s}>"
+      "#<CYO #{self}>"
     end
   end
 
   # Set up our parsing environment and open a file handle for our XML.
   def initialize(parent, haystack)
-    @parse_stack = []  # Track our current Element as we parse.
-    @parent = parent           # `Ractor` that instantiated us.
+    @parse_stack = [] # Track our current Element as we parse.
+    @parent = parent # `Ractor` that instantiated us.
     @haystack = File.open(haystack, File::Constants::RDONLY)
     @haystack.advise(:sequential)
   end
@@ -50,7 +50,7 @@ class Saxtor < Ox::Sax
   def start_element(name)
     @parse_stack.push(name)
     case @parse_stack.last
-    when :"mime-type" then @cyo = nil  # Clear out leftovers between types.
+    when :"mime-type" then @cyo = nil # Clear out leftovers between types.
     end
   end
 
@@ -105,34 +105,33 @@ class Saxtor < Ox::Sax
         smart: false,           # [boolean] Toggle Ox's built-in hints for HTML parsing: https://github.com/ohler55/ox/blob/master/ext/ox/sax_hint.c
         strip_namespace: true,  # [nil|String|true|false] (from Element names) Strip no namespaces, all namespaces, or a specific namespace.
         symbolize: true,        # [boolean] Fill callback method `name` arguments with Symbols instead of with Strings.
-        intern_string_values: true,   # [boolean] Intern (freeze and deduplicate) String return values.
+        intern_string_values: true, # [boolean] Intern (freeze and deduplicate) String return values.
       }.update(kwargs),
     )
 
     # Let our parent `#take` our needle-equivalent `CYO`, or `nil`.
     Ractor.yield(@out)
-  end  # def awen
-
-end  # class Saxtor
+  end # def awen
+end # class Saxtor
 
 # Fancy "usage" help `String` fragment to concat with specific error messages.
-usage = <<-PLZ
+usage = <<~PLZ
 
-Usage: `sax_ractor.rb [SHARED-MIME-INFO_XML_PATH] [IETF_MEDIA_TYPES]…`
+  Usage: `sax_ractor.rb [SHARED-MIME-INFO_XML_PATH] [IETF_MEDIA_TYPES]…`
 
-Common file paths:
+  Common file paths:
 
-- FreeBSD:
-  `${LOCALBASE}/share/mime/packages/freedesktop.org.xml` (probably `/usr/local`)
-  https://www.freshports.org/misc/shared-mime-info/
+  - FreeBSD:
+    `${LOCALBASE}/share/mime/packages/freedesktop.org.xml` (probably `/usr/local`)
+    https://www.freshports.org/misc/shared-mime-info/
 
-- Linux:
-  `/usr/share/mime/packages/freedesktop.org.xml`
+  - Linux:
+    `/usr/share/mime/packages/freedesktop.org.xml`
 
-- macOS:
-  `/opt/homebrew/share/mime/packages/freedesktop.org.xml` (Homebrew)
-  `/opt/local/share/mime/packages/freedesktop.org.xml`    (MacPorts)
-  https://formulae.brew.sh/formula/shared-mime-info
+  - macOS:
+    `/opt/homebrew/share/mime/packages/freedesktop.org.xml` (Homebrew)
+    `/opt/local/share/mime/packages/freedesktop.org.xml`    (MacPorts)
+    https://formulae.brew.sh/formula/shared-mime-info
 PLZ
 
 # Bail out if we were given a nonexistant file.
@@ -151,7 +150,6 @@ abort("Please provide some media-type query arguments (e.g. 'image/jpeg')".conca
 # Resolve symlinks etc with `#realpath` before we freeze.
 haystack = haystack.realpath.freeze
 needles = ARGV[1...]
-
 
 # Hamburger Style.
 puts 'Parallel Ractors'
@@ -182,7 +180,6 @@ pp (0..head_count).map do
 end.map do
   "#{_1.name} gave us #{_2 || 'nothing'}"
 end
-
 
 # Hotdog Style.
 puts

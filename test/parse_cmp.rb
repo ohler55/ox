@@ -132,7 +132,7 @@ class Handler
   def end_element(name)
     @stack.pop if [:dict, :array].include?(name)
   end
-  
+
   attr_reader :plist
 
   def append(value)
@@ -228,7 +228,7 @@ files.each do |filename|
     parse_gen(xml)
   end
   gen_time = Time.now - start
-  
+
   start = Time.now
   $iter.times do
     parse_sax(xml)

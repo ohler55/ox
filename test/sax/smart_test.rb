@@ -386,9 +386,9 @@ Word
 }
     smart_parse_compare(html,
                         [[:start_element, :html], [:start_element, :body]] +
-                        [[:start_element, :div]] * 20 +
+                        ([[:start_element, :div]] * 20) +
                         [[:text, ' Word ']] +
-                        [[:end_element, :div]] * 20 +
+                        ([[:end_element, :div]] * 20) +
                         [[:end_element, :body], [:end_element, :html]
                         ])
   end
@@ -637,7 +637,7 @@ class SaxSmartTableTagTest < SaxSmartTest
                         [:end_element, :html]],
                        {:overlay => hints})
   end
-  
+
   def test_nest_ok_auto_closing
     html = %{<html><body><h5>test</body></html>}
     hints = Ox.sax_html_overlay

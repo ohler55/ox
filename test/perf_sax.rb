@@ -69,7 +69,7 @@ def create_file(filename, size)
     <cell id="F" type="Image"><![CDATA[xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00xx00]]></cell>
   </row>
 }
-  cnt = (size * 1000 - head.size - tail.size) / row.size
+  cnt = ((size * 1000) - head.size - tail.size) / row.size
   File.open(filename, 'w') do |f|
     f.write(head)
     cnt.times do |i|
