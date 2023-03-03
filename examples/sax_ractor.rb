@@ -22,7 +22,7 @@ class Saxtor < Ox::Sax
       super(ietf, globs, description)
     end
 
-    def to_s  # Pretty print
+    def to_s # Pretty print
       "#{self[:description]} (#{self[:ietf]}) [#{
         self[:globs]&.map(&File.method(:extname)).join(',')
       }]"
@@ -35,8 +35,8 @@ class Saxtor < Ox::Sax
 
   # Set up our parsing environment and open a file handle for our XML.
   def initialize(parent, haystack)
-    @parse_stack = []  # Track our current Element as we parse.
-    @parent = parent           # `Ractor` that instantiated us.
+    @parse_stack = [] # Track our current Element as we parse.
+    @parent = parent # `Ractor` that instantiated us.
     @haystack = File.open(haystack, File::Constants::RDONLY)
     @haystack.advise(:sequential)
   end
@@ -50,7 +50,7 @@ class Saxtor < Ox::Sax
   def start_element(name)
     @parse_stack.push(name)
     case @parse_stack.last
-    when :"mime-type" then @cyo = nil  # Clear out leftovers between types.
+    when :"mime-type" then @cyo = nil # Clear out leftovers between types.
     end
   end
 
@@ -105,14 +105,14 @@ class Saxtor < Ox::Sax
         smart: false,           # [boolean] Toggle Ox's built-in hints for HTML parsing: https://github.com/ohler55/ox/blob/master/ext/ox/sax_hint.c
         strip_namespace: true,  # [nil|String|true|false] (from Element names) Strip no namespaces, all namespaces, or a specific namespace.
         symbolize: true,        # [boolean] Fill callback method `name` arguments with Symbols instead of with Strings.
-        intern_string_values: true,   # [boolean] Intern (freeze and deduplicate) String return values.
+        intern_string_values: true, # [boolean] Intern (freeze and deduplicate) String return values.
       }.update(kwargs),
     )
 
     # Let our parent `#take` our needle-equivalent `CYO`, or `nil`.
     Ractor.yield(@out)
-  end  # def awen
-end  # class Saxtor
+  end # def awen
+end # class Saxtor
 
 # Fancy "usage" help `String` fragment to concat with specific error messages.
 usage = <<-PLZ
