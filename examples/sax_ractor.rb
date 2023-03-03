@@ -11,7 +11,6 @@ abort('This Ractor example requires at least Ruby 3.0') if RUBY_VERSION.start_wi
 # In the Real World™ we probably wouldn't create a single-use `Ractor` for
 # every argument, but this is primarily a test of `rb_ext_ractor_safe` for Ox.
 
-
 # Miniature example Ractor-based `shared-mime-info` Ox handler à la `CHECKING::YOU::OUT`:
 # https://github.com/okeeblow/DistorteD/tree/NEW-SENSATION/CHECKING-YOU-OUT
 class Saxtor < Ox::Sax
@@ -154,7 +153,6 @@ abort("Please provide some media-type query arguments (e.g. 'image/jpeg')".conca
 haystack = haystack.realpath.freeze
 needles = ARGV[1...]
 
-
 # Hamburger Style.
 puts 'Parallel Ractors'
 # Create one `Ractor` for every given media-type argument
@@ -184,7 +182,6 @@ pp (0..head_count).map do
 end.map do
   "#{_1.name} gave us #{_2 || 'nothing'}"
 end
-
 
 # Hotdog Style.
 puts
