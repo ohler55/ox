@@ -24,7 +24,7 @@ module Test
         @title = title
         @user = ENV['USER']
         @create_time = Time.now
-        @layers = { }
+        @layers = {}
         @change_history = []
       end
 

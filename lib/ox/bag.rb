@@ -14,7 +14,7 @@ module Ox
     #
     #  Ox::Bag.new(:@x => 42, :@y => 57)
     #
-    def initialize(args={ })
+    def initialize(args={})
       args.each do |k, v|
         instance_variable_set(k, v)
       end

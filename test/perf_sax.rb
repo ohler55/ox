@@ -167,7 +167,7 @@ perf = Perf.new
 
 perf.add('Ox::Sax', 'sax_parse') do
   input = $strio ? StringIO.new($xml_str) : IO.open(IO.sysopen($filename))
-  Ox.sax_parse($handler, input, :smart => $smart)
+  Ox.sax_parse($handler, input, smart: $smart)
   input.close
 end
 perf.before('Ox::Sax') do

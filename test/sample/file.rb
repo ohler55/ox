@@ -17,15 +17,18 @@ module Sample
           'user' => {
             'read' => (0 != (stat.mode & 0x0100)),
             'write' => (0 != (stat.mode & 0x0080)),
-            'execute' => (0 != (stat.mode & 0x0040))},
+            'execute' => (0 != (stat.mode & 0x0040))
+          },
           'group' => {
             'read' => (0 != (stat.mode & 0x0020)),
             'write' => (0 != (stat.mode & 0x0010)),
-            'execute' => (0 != (stat.mode & 0x0008))},
+            'execute' => (0 != (stat.mode & 0x0008))
+          },
           'other' => {
             'read' => (0 != (stat.mode & 0x0004)),
             'write' => (0 != (stat.mode & 0x0002)),
-            'execute' => (0 != (stat.mode & 0x0001))}
+            'execute' => (0 != (stat.mode & 0x0001))
+          }
         }
       else
         @permissions = {

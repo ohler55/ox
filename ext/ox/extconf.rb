@@ -16,7 +16,7 @@ dflags = {
   'RUBY_VERSION' => RUBY_VERSION,
   'RUBY_VERSION_MAJOR' => version[0],
   'RUBY_VERSION_MINOR' => version[1],
-  'RUBY_VERSION_MICRO' => version[2],
+  'RUBY_VERSION_MICRO' => version[2]
 }
 
 dflags.each do |k, v|

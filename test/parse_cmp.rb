@@ -174,13 +174,13 @@ end
 
 def convert_parse_obj(xml)
   xml = plist_to_obj_xml(xml)
-  Ox.load(xml, :mode => :object)
+  Ox.load(xml, mode: :object)
 end
 
 ### XML conversion to Hash using Ox Object parsing after gsub! replacements ###
 
 def parse_obj(xml)
-  Ox.load(xml, :mode => :object)
+  Ox.load(xml, mode: :object)
 end
 
 def plist_to_obj_xml(xml)
@@ -188,7 +188,8 @@ def plist_to_obj_xml(xml)
 }, '')
   xml.gsub!(%{
 </plist>}, '')
-  { '<dict>' => '<h>',
+  {
+    '<dict>' => '<h>',
     '</dict>' => '</h>',
     '<dict/>' => '<h/>',
     '<array>' => '<a>',
@@ -206,7 +207,7 @@ def plist_to_obj_xml(xml)
     '</real>' => '</f>',
     '<real/>' => '<f/>',
     '<true/>' => '<y/>',
-    '<false/>' => '<n/>',
+    '<false/>' => '<n/>'
   }.each do |pat, rep|
     xml.gsub!(pat, rep)
   end

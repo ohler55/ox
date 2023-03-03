@@ -8,7 +8,7 @@ module Ox
     # Returns all the attributes of the Instruct as a Hash.
     # *return* [Hash] all attributes and attribute values.
     def attributes
-      @attributes = { } if !instance_variable_defined?(:@attributes) or @attributes.nil?
+      @attributes = {} if !instance_variable_defined?(:@attributes) or @attributes.nil?
       @attributes
     end
 
@@ -26,7 +26,7 @@ module Ox
     def []=(attr, value)
       raise 'argument to [] must be a Symbol or a String.' unless attr.is_a?(Symbol) or attr.is_a?(String)
 
-      @attributes = { } if !instance_variable_defined?(:@attributes) or @attributes.nil?
+      @attributes = {} if !instance_variable_defined?(:@attributes) or @attributes.nil?
       a_str = attr.to_s
       a_sym = attr.to_sym
       if @attributes.has_key?(a_str)

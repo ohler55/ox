@@ -24,22 +24,22 @@ opts.on('-h', '--help', 'Show this display') { puts opts; Process.exit!(0) }
 opts.parse(ARGV)
 
 $ox_sax_options = {
-  :encoding => nil,
-  :indent => 2,
-  :trace => 0,
-  :with_dtd => false,
-  :with_xml => false,
-  :with_instructions => false,
-  :circular => false,
-  :xsd_date => false,
-  :mode => :object,
-  :symbolize_keys => true,
-  :skip => :skip_return,
-  :smart => false,
-  :convert_special => true,
-  :effort => :strict,
-  :invalid_replace => '',
-  :strip_namespace => false
+  encoding: nil,
+  indent: 2,
+  trace: 0,
+  with_dtd: false,
+  with_xml: false,
+  with_instructions: false,
+  circular: false,
+  xsd_date: false,
+  mode: :object,
+  symbolize_keys: true,
+  skip: :skip_return,
+  smart: false,
+  convert_special: true,
+  effort: :strict,
+  invalid_replace: '',
+  strip_namespace: false
 }
 
 class SaxBaseTest < Test::Unit::TestCase
@@ -257,7 +257,7 @@ encoding = "UTF-8" ?>},
 
   def test_sax_elements_case
     Ox.default_options = $ox_sax_options
-    Ox.default_options = { :smart => true, :skip => :skip_white }
+    Ox.default_options = { smart: true, skip: :skip_white }
     parse_compare(%{<top>
   <Child>
     <grandchild/>
@@ -271,7 +271,7 @@ encoding = "UTF-8" ?>},
                     [:end_element, :grandchild],
                     [:end_element, :Child],
                     [:end_element, :top]
-                  ], AllSax, { :smart => true })
+                  ], AllSax, { smart: true })
   end
 
   def test_sax_nested1
@@ -441,7 +441,7 @@ encoding = "UTF-8" ?>},
                     [:start_element, :top],
                     [:text, ' '],
                     [:end_element, :top]
-                  ], AllSax, { :skip => :skip_white })
+                  ], AllSax, { skip: :skip_white })
   end
 
   def test_sax_empty_element_name
@@ -473,7 +473,7 @@ encoding = "UTF-8" ?>},
                     [:start_element, :top],
                     [:text, '  '],
                     [:end_element, :top]
-                  ], AllSax, { :skip => :skip_none })
+                  ], AllSax, { skip: :skip_none })
   end
 
   def test_sax_special
@@ -484,7 +484,7 @@ encoding = "UTF-8" ?>},
                     [:attr, :name, 'A&Z'],
                     [:text, "This is <some> \u03c0 text."],
                     [:end_element, :top]
-                  ], AllSax, :convert_special => true)
+                  ], AllSax, convert_special: true)
   end
 
   def test_sax_bad_special
@@ -497,7 +497,7 @@ encoding = "UTF-8" ?>},
                     [:error, 'Invalid Format: Invalid special character sequence', 1, 22],
                     [:text, '&example;'],
                     [:end_element, :top]
-                  ], AllSax, :convert_special => true)
+                  ], AllSax, convert_special: true)
   end
 
   def test_sax_ignore_special
@@ -508,7 +508,7 @@ encoding = "UTF-8" ?>},
                     [:attr, :name, '&example;'],
                     [:text, '&example;'],
                     [:end_element, :top]
-                  ], AllSax, :convert_special => false)
+                  ], AllSax, convert_special: false)
   end
 
   def test_sax_not_special
@@ -519,13 +519,13 @@ encoding = "UTF-8" ?>},
                     [:attr, :name, 'A&amp;Z'],
                     [:text, 'This is &lt;some&gt; text.'],
                     [:end_element, :top]
-                  ], AllSax, :convert_special => false)
+                  ], AllSax, convert_special: false)
   end
 
   def test_sax_special_default
     Ox.default_options = $ox_sax_options
     orig = Ox.default_options[:convert_special]
-    Ox.default_options = { :convert_special => true }
+    Ox.default_options = { convert_special: true }
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [
                     [:start_element, :top],
@@ -533,13 +533,13 @@ encoding = "UTF-8" ?>},
                     [:text, 'This is <some> text.'],
                     [:end_element, :top]
                   ], AllSax)
-    Ox.default_options = { :convert_special => orig }
+    Ox.default_options = { convert_special: orig }
   end
 
   def test_sax_not_special_default
     Ox.default_options = $ox_sax_options
     orig = Ox.default_options[:convert_special]
-    Ox.default_options = { :convert_special => false }
+    Ox.default_options = { convert_special: false }
     parse_compare(%{<top name="A&amp;Z">This is &lt;some&gt; text.</top>},
                   [
                     [:start_element, :top],
@@ -547,7 +547,7 @@ encoding = "UTF-8" ?>},
                     [:text, 'This is &lt;some&gt; text.'],
                     [:end_element, :top]
                   ], AllSax)
-    Ox.default_options = { :convert_special => orig }
+    Ox.default_options = { convert_special: orig }
   end
 
   def test_sax_whitespace
@@ -884,7 +884,7 @@ encoding = "UTF-8" ?>},
                     [:start_element, :text],
                     [:text, 'é is e with an accent'],
                     [:end_element, :text]
-                  ], AllSax, :convert_special => true)
+                  ], AllSax, convert_special: true)
   end
 
   def test_sax_implied_encoding
@@ -943,7 +943,7 @@ encoding = "UTF-8" ?>},
 
   def test_sax_skip_none
     Ox.default_options = $ox_sax_options
-    Ox.default_options = { :skip => :skip_none }
+    Ox.default_options = { skip: :skip_none }
 
     handler = TypeSax.new(:as_s)
     xml = %{<top>  Pete\r\n  Ohler\r</top>}
@@ -953,7 +953,7 @@ encoding = "UTF-8" ?>},
 
   def test_sax_skip_none_nested
     Ox.default_options = $ox_sax_options
-    Ox.default_options = { :skip => :skip_none }
+    Ox.default_options = { skip: :skip_none }
 
     handler = AllSax.new
     xml = %{<top>  <child>Pete\r</child>\n <child> Ohler\r</child></top>}
@@ -976,7 +976,7 @@ encoding = "UTF-8" ?>},
     Ox.default_options = $ox_sax_options
     handler = TypeSax.new(:as_s)
     xml = %{<top>  Pete\r\n  Ohler\r</top>}
-    Ox.sax_parse(handler, StringIO.new(xml), :skip => :skip_return)
+    Ox.sax_parse(handler, StringIO.new(xml), skip: :skip_return)
     assert_equal(%{  Pete\n  Ohler\n}, handler.item)
   end
 
@@ -984,7 +984,7 @@ encoding = "UTF-8" ?>},
     Ox.default_options = $ox_sax_options
     handler = TypeSax.new(:as_s)
     xml = %{<top>  Pete\r\n  Ohler\r</top>}
-    Ox.sax_parse(handler, StringIO.new(xml), :skip => :skip_white)
+    Ox.sax_parse(handler, StringIO.new(xml), skip: :skip_white)
     assert_equal(%{ Pete Ohler }, handler.item)
   end
 
@@ -1158,7 +1158,7 @@ this is not part of the xml document
                     [:text, 'after thought'],
                     [:end_element, :p]
                   ],
-                  AllSax, :convert_special => false, :smart => true)
+                  AllSax, convert_special: false, smart: true)
   end
 
   def test_sax_not_symbolized
@@ -1185,7 +1185,7 @@ this is not part of the xml document
                     [:end_element, 'body'],
                     [:end_element, 'html']
                   ],
-                  AllSax, :symbolize => false, :smart => true)
+                  AllSax, symbolize: false, smart: true)
   end
 
   def test_sax_script
@@ -1220,7 +1220,7 @@ this is not part of the xml document
                     [:end_element, :body],
                     [:end_element, :html]
                   ],
-                  AllSax, :smart => true)
+                  AllSax, smart: true)
   end
 
   def test_sax_namespace_no_strip
@@ -1243,7 +1243,7 @@ this is not part of the xml document
     handler = AllSax.new
     Ox.sax_parse(handler,
                  '<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>',
-                 :strip_namespace => true)
+                 strip_namespace: true)
     assert_equal([
                    [:start_element, :one],
                    [:start_element, :two],
@@ -1257,7 +1257,7 @@ this is not part of the xml document
 
   def test_sax_namespace_strip
     Ox.default_options = $ox_sax_options
-    Ox.default_options = { :strip_namespace => 'spaced' }
+    Ox.default_options = { strip_namespace: 'spaced' }
 
     handler = AllSax.new
     Ox.sax_parse(handler, '<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>')
@@ -1276,7 +1276,7 @@ this is not part of the xml document
     Ox.default_options = $ox_sax_options
     handler = AllSax.new
 
-    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => {'hr'=>:inactive})
+    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', overlay: { 'hr'=>:inactive })
     assert_equal([
                    [:start_element, :html],
                    [:start_element, :h1],
@@ -1294,7 +1294,7 @@ this is not part of the xml document
     handler = AllSax.new
     overlay = Ox.sax_html_overlay
     overlay['hr'] = :inactive
-    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', :overlay => overlay)
+    Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>', overlay: overlay)
     assert_equal([
                    [:start_element, :html],
                    [:start_element, :h1],
@@ -1315,7 +1315,7 @@ this is not part of the xml document
     overlay['h1'] = :active
     overlay['p'] = :active
 
-    Ox.sax_html(handler, '<html class="fuzzy"><h1>title</h1><hr/><p>Hello</p></html>', :overlay => overlay)
+    Ox.sax_html(handler, '<html class="fuzzy"><h1>title</h1><hr/><p>Hello</p></html>', overlay: overlay)
     assert_equal([
                    [:start_element, :h1],
                    [:text, 'title'],
@@ -1331,7 +1331,7 @@ this is not part of the xml document
     handler = AllSax.new
     overlay = Ox.sax_html_overlay
     overlay['hr'] = :inactive
-    Ox.default_options = { :overlay => overlay }
+    Ox.default_options = { overlay: overlay }
     Ox.sax_html(handler, '<html><h1>title</h1><hr/><p>Hello</p></html>')
     assert_equal([
                    [:start_element, :html],
@@ -1351,7 +1351,7 @@ this is not part of the xml document
     overlay = Ox.sax_html_overlay
     overlay['table'] = :block
 
-    Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><tr><td>one</td></tr></table></html>', :overlay => overlay)
+    Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><tr><td>one</td></tr></table></html>', overlay: overlay)
     assert_equal([
                    [:start_element, :html],
                    [:start_element, :h1],
@@ -1369,7 +1369,7 @@ this is not part of the xml document
     overlay['td'] = :off
     overlay['!--'] = :off
 
-    Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><hr/><tr><td>one</td></tr></table></html>', :overlay => overlay)
+    Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><hr/><tr><td>one</td></tr></table></html>', overlay: overlay)
     assert_equal([
                    [:start_element, :html],
                    [:start_element, :h1],
@@ -1390,7 +1390,7 @@ this is not part of the xml document
     overlay['table'] = :inactive
     overlay['td'] = :inactive
 
-    Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><tr><td>one</td></tr></table></html>', :overlay => overlay)
+    Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><tr><td>one</td></tr></table></html>', overlay: overlay)
     assert_equal([
                    [:start_element, :html],
                    [:start_element, :h1],
@@ -1410,7 +1410,7 @@ this is not part of the xml document
     overlay = Ox.sax_html_overlay
     overlay['table'] = :abort
 
-    Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><tr><td>one</td></tr></table></html>', :overlay => overlay)
+    Ox.sax_html(handler, '<html><h1>title</h1><table><!--comment--><tr><td>one</td></tr></table></html>', overlay: overlay)
     assert_equal([
                    [:start_element, :html],
                    [:start_element, :h1],

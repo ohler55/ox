@@ -19,9 +19,9 @@ module SaxTestHelpers
     handler = handler_class.new
     input = StringIO.new(xml)
     options = {
-      :symbolize => true,
+      symbolize: true,
       # :convert_special => true,
-      :smart => false
+      smart: false
     }.merge(opts)
 
     Ox.sax_parse(handler, input, options)

@@ -25,7 +25,7 @@ module Ox
 
       # Initiates the sax parser with the provided string.
       def parse(str)
-        Ox.sax_parse(self, StringIO.new(str), :symbolize => false, :convert_special => true)
+        Ox.sax_parse(self, StringIO.new(str), symbolize: false, convert_special: true)
       end
     end
   end
