@@ -115,16 +115,6 @@ Layout/SpaceInsideParens:
   Exclude:
     - 'test/tests.rb'
 
-# Offense count: 8
-# This cop supports safe autocorrection (--autocorrect).
-Lint/AmbiguousOperatorPrecedence:
-  Exclude:
-    - 'test/perf_mars.rb'
-    - 'test/perf_sax.rb'
-    - 'test/sample.rb'
-    - 'test/sax/smart_test.rb'
-    - 'test/tests.rb'
-
 # Offense count: 1
 # This cop supports safe autocorrection (--autocorrect).
 Lint/AmbiguousRegexpLiteral:

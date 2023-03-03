@@ -59,7 +59,7 @@ s = Struct.new('Zoo', :x, :y, :z)
   data[:Float].values << ((i.to_f - 10.7) * 30.5)
   data[:String].values << "String #{i}"
   data[:Symbol].values << "Symbol#{i}".to_sym
-  data[:Time].values << Time.now + i
+  data[:Time].values << (Time.now + i)
   data[:Array].values << []
   data[:Hash].values << { }
   data[:Range].values << (0..7)

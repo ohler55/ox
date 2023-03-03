@@ -1028,7 +1028,7 @@ class Func < Test::Unit::TestCase
     Ox.default_options = $ox_object_options
     doc = Ox.parse(each_xml)
     nodes = []
-    doc.Family.Pete.each { |n| n.is_a?(Ox::Element) && nodes << n.id }
+    doc.Family.Pete.each { |n| n.is_a?(Ox::Element) && (nodes << n.id) }
     assert_equal(['Nicole', 'Pamela', 'Fictional'], nodes)
   end
 

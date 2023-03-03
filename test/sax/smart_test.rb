@@ -386,9 +386,9 @@ Word
 }
     smart_parse_compare(html,
                         [[:start_element, :html], [:start_element, :body]] +
-                        [[:start_element, :div]] * 20 +
+                        ([[:start_element, :div]] * 20) +
                         [[:text, ' Word ']] +
-                        [[:end_element, :div]] * 20 +
+                        ([[:end_element, :div]] * 20) +
                         [[:end_element, :body], [:end_element, :html]
                         ])
   end
