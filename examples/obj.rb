@@ -21,7 +21,7 @@ class Classy
   end
 end
 
-obj = Classy.new(23, ['abc', {x: true}])
+obj = Classy.new(23, ['abc', { x: true }])
 
 doc = Ox.dump(obj, mode: :object)
 

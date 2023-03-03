@@ -24,7 +24,7 @@ class Saxy < Ox::Sax
     super
     # The build is created with an indentation of 2 but that can be changed to
     # the desired indentation.
-    @builder = Ox::Builder.new(:indent => 2)
+    @builder = Ox::Builder.new(indent: 2)
     # element_name and attributes are used for deferred writing of the element
     # start.
     @element_name = nil

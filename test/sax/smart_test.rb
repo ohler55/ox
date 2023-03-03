@@ -40,7 +40,7 @@ class SaxSmartTest < Test::Unit::TestCase
     'cite' => {},
     'colgroup' => { 'parents' => ['table'], 'childs' => ['col'] },
     'data' => {},
-    'datalist' => { 'childs' => ['option']},
+    'datalist' => { 'childs' => ['option'] },
     'dl' => { 'childs' => ['dt', 'dd'] },
     'dt' => { 'parents' => ['dl'] },
     'dd' => { 'parents' => ['dl'] },
@@ -137,7 +137,7 @@ class SaxSmartTest < Test::Unit::TestCase
 
   # Make the :smart => true option the default one
   def smart_parse_compare(xml, expected, handler = AllSax, opts = {}, handler_attr = :calls)
-    parse_compare(xml, expected, handler, opts.merge(:smart => true, :skip => :skip_white), handler_attr)
+    parse_compare(xml, expected, handler, opts.merge(smart: true, skip: :skip_white), handler_attr)
   end
 end
 
@@ -363,8 +363,8 @@ class SaxSmartNormalTagTest < SaxSmartTest
     handler = AllSax.new
     input = StringIO.new(html)
     options = {
-      :overlay => overlay,
-      :skip => :skip_white,
+      overlay: overlay,
+      skip: :skip_white
     }
     Ox.sax_html(handler, input, options)
     expected = [[:comment, ' a comment ']]
@@ -592,9 +592,9 @@ class SaxSmartTableTagTest < SaxSmartTest
     handler = AllSax.new
     input = StringIO.new(xml)
     options = {
-      :symbolize => true,
-      :smart => false,
-      :skip => :skip_white,
+      symbolize: true,
+      smart: false,
+      skip: :skip_white
     }.merge(opts)
 
     Ox.sax_html(handler, input, options)
@@ -634,7 +634,7 @@ class SaxSmartTableTagTest < SaxSmartTest
                         [:end_element, :table],
                         [:end_element, :body],
                         [:end_element, :html]],
-                       {:overlay => hints})
+                       { overlay: hints })
   end
 
   def test_nest_ok_auto_closing
@@ -650,6 +650,6 @@ class SaxSmartTableTagTest < SaxSmartTest
                         [:end_element, :h5],
                         [:end_element, :body],
                         [:end_element, :html]],
-                       {:overlay => hints})
+                       { overlay: hints })
   end
 end

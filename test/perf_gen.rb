@@ -55,17 +55,17 @@ opts.on('-i', '--iterations [Int]', Integer, 'iterations')  { |it| $iter = it }
 opts.on('-h', '--help', 'Show this display')                { puts opts; Process.exit!(0) }
 files = opts.parse(ARGV)
 
-Ox.default_options = {mode: :generic}
+Ox.default_options = { mode: :generic }
 
 data = []
 
 if files.empty?
   data = []
   obj = do_sample ? sample_doc(2) : files('..')
-  xml = Ox.dump(obj, :indent => 2, :opt_format => true)
+  xml = Ox.dump(obj, indent: 2, opt_format: true)
   File.write('sample.xml', xml)
   gen = Ox.parse(xml)
-  h = { :file => 'sample.xml', :xml => xml, :ox => gen }
+  h = { file: 'sample.xml', xml: xml, ox: gen }
   h[:nokogiri] = Nokogiri::XML::Document.parse(xml) unless defined?(Nokogiri).nil?
   h[:libxml] = LibXML::XML::Document.string(xml) unless defined?(LibXML).nil?
   data << h
@@ -75,7 +75,7 @@ else
     xml = File.read(f)
     obj = Ox.parse(xml)
     gen = Ox.parse(xml)
-    h = { :file => f, :xml => xml, :ox => gen }
+    h = { file: f, xml: xml, ox: gen }
     h[:nokogiri] = Nokogiri::XML::Document.parse(xml) unless defined?(Nokogiri).nil?
     h[:libxml] = LibXML::XML::Document.string(xml) unless defined?(LibXML).nil?
     h
@@ -93,10 +93,10 @@ data.each do |d|
 
   if do_dump
     perf = Perf.new
-    perf.add('Ox', 'dump') { Ox.dump($obj, :indent => 2) }
+    perf.add('Ox', 'dump') { Ox.dump($obj, indent: 2) }
     perf.before('Ox') { $obj = d[:ox] }
     unless defined?(Nokogiri).nil?
-      perf.add('Nokogiri', 'dump') { $obj.to_xml(:indent => 2) }
+      perf.add('Nokogiri', 'dump') { $obj.to_xml(indent: 2) }
       perf.before('Nokogiri') { $obj = d[:nokogiri] }
     end
     unless defined?(LibXML).nil?
@@ -119,11 +119,11 @@ data.each do |d|
 
   $filename = 'out.xml'
   perf = Perf.new
-  perf.add('Ox', 'to_file') { Ox.to_file($filename, $obj, :indent => 0) }
+  perf.add('Ox', 'to_file') { Ox.to_file($filename, $obj, indent: 0) }
   perf.before('Ox') { $obj = d[:ox] }
   unless defined?(Nokogiri).nil?
     perf.add('Nokogiri', 'dump') do
-      xml = $obj.to_xml(:indent => 0)
+      xml = $obj.to_xml(indent: 0)
       File.write($filename, xml)
     end
   end

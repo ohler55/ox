@@ -1,6 +1,6 @@
 require 'ox'
 
-doc = Ox::Document.new(:version => '1.0')
+doc = Ox::Document.new(version: '1.0')
 
 top = Ox::Element.new('top')
 top[:name] = 'sample'

@@ -33,22 +33,22 @@ module Test
 end
 
 data = {
-  :Boolean => Test::Ox::Wrap.new,
-  :Fixnum => Test::Ox::Wrap.new,
-  :Float => Test::Ox::Wrap.new,
-  :String => Test::Ox::Wrap.new,
-  :Symbol => Test::Ox::Wrap.new,
-  :Time => Test::Ox::Wrap.new,
-  :Array => Test::Ox::Wrap.new,
-  :Hash => Test::Ox::Wrap.new,
-  :Range => Test::Ox::Wrap.new,
-  :Regexp => Test::Ox::Wrap.new,
-  :Bignum => Test::Ox::Wrap.new,
-  :Complex => Test::Ox::Wrap.new,
-  :Rational => Test::Ox::Wrap.new,
-  :Struct => Test::Ox::Wrap.new,
-  :Class => Test::Ox::Wrap.new,
-  :Object => Test::Ox::Wrap.new,
+  Boolean: Test::Ox::Wrap.new,
+  Fixnum: Test::Ox::Wrap.new,
+  Float: Test::Ox::Wrap.new,
+  String: Test::Ox::Wrap.new,
+  Symbol: Test::Ox::Wrap.new,
+  Time: Test::Ox::Wrap.new,
+  Array: Test::Ox::Wrap.new,
+  Hash: Test::Ox::Wrap.new,
+  Range: Test::Ox::Wrap.new,
+  Regexp: Test::Ox::Wrap.new,
+  Bignum: Test::Ox::Wrap.new,
+  Complex: Test::Ox::Wrap.new,
+  Rational: Test::Ox::Wrap.new,
+  Struct: Test::Ox::Wrap.new,
+  Class: Test::Ox::Wrap.new,
+  Object: Test::Ox::Wrap.new
 }
 
 s = Struct.new('Zoo', :x, :y, :z)
@@ -61,7 +61,7 @@ s = Struct.new('Zoo', :x, :y, :z)
   data[:Symbol].values << "Symbol#{i}".to_sym
   data[:Time].values << (Time.now + i)
   data[:Array].values << []
-  data[:Hash].values << { }
+  data[:Hash].values << {}
   data[:Range].values << (0..7)
   data[:Regexp].values << /^[0-9]/
   data[:Bignum].values << (7 ** 55)
@@ -76,12 +76,12 @@ puts '           load                        dump'
 puts 'type       Ox      Marshal  ratio      Ox      Marshal  ratio'
 data.each do |type, a|
   # xml = Ox.dump(a, :indent => -1, :xsd_date => true)
-  xml = Ox.dump(a, :indent => -1)
+  xml = Ox.dump(a, indent: -1)
   # pp a
   # puts xml
   start = Time.now
   (1..it).each do
-    obj = Ox.load(xml, :mode => :object)
+    obj = Ox.load(xml, mode: :object)
     # pp obj
   end
   ox_load_time = Time.now - start
@@ -93,10 +93,10 @@ data.each do |type, a|
   end
   mars_load_time = Time.now - start
 
-  obj = Ox.load(xml, :mode => :object)
+  obj = Ox.load(xml, mode: :object)
   start = Time.now
   (1..it).each do
-    xml = Ox.dump(a, :indent => -1)
+    xml = Ox.dump(a, indent: -1)
   end
   ox_dump_time = Time.now - start
 

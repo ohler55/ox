@@ -6,16 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 7
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: symmetrical, new_line, same_line
-Layout/MultilineHashBraceLayout:
-  Exclude:
-    - 'test/parse_cmp.rb'
-    - 'test/sample/file.rb'
-    - 'test/tests.rb'
-
 # Offense count: 26
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EnforcedStyle.
@@ -62,29 +52,6 @@ Layout/SpaceInsideBlockBraces:
   Exclude:
     - 'contrib/xbuilder.rb'
     - 'test/perf.rb'
-    - 'test/sax/smart_test.rb'
-    - 'test/tests.rb'
-
-# Offense count: 106
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces.
-# SupportedStyles: space, no_space, compact
-# SupportedStylesForEmptyBraces: space, no_space
-Layout/SpaceInsideHashLiteralBraces:
-  Exclude:
-    - 'contrib/xbuilder_test.rb'
-    - 'examples/obj.rb'
-    - 'lib/ox/bag.rb'
-    - 'lib/ox/document.rb'
-    - 'lib/ox/hasattrs.rb'
-    - 'test/ox/doc.rb'
-    - 'test/ox/hasprops.rb'
-    - 'test/perf_gen.rb'
-    - 'test/perf_mars.rb'
-    - 'test/sample/doc.rb'
-    - 'test/sample/file.rb'
-    - 'test/sample/hasprops.rb'
-    - 'test/sax/sax_test.rb'
     - 'test/sax/smart_test.rb'
     - 'test/tests.rb'
 
@@ -549,28 +516,6 @@ Style/GlobalVars:
     - 'test/tests.rb'
     - 'test/weather/perf_weather.rb'
 
-# Offense count: 334
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle, EnforcedShorthandSyntax, UseHashRocketsWithSymbolValues, PreferHashRocketsForNonAlnumEndingSymbols.
-# SupportedStyles: ruby19, hash_rockets, no_mixed_keys, ruby19_no_mixed_keys
-# SupportedShorthandSyntax: always, never, either, consistent
-Style/HashSyntax:
-  Exclude:
-    - 'examples/saxy_html.rb'
-    - 'lib/ox/xmlrpc_adapter.rb'
-    - 'test/gen_sample.rb'
-    - 'test/ox/file.rb'
-    - 'test/parse_cmp.rb'
-    - 'test/perf_gen.rb'
-    - 'test/perf_mars.rb'
-    - 'test/perf_obj.rb'
-    - 'test/perf_sax.rb'
-    - 'test/sax/helpers.rb'
-    - 'test/sax/sax_check.rb'
-    - 'test/sax/sax_test.rb'
-    - 'test/sax/smart_test.rb'
-    - 'test/tests.rb'
-
 # Offense count: 3
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: EnforcedStyle.
@@ -776,19 +721,6 @@ Style/SymbolProc:
 Style/TrailingCommaInArguments:
   Exclude:
     - 'examples/sax_ractor.rb'
-
-# Offense count: 12
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyleForMultiline.
-# SupportedStylesForMultiline: comma, consistent_comma, no_comma
-Style/TrailingCommaInHashLiteral:
-  Exclude:
-    - 'examples/sax_ractor.rb'
-    - 'ext/ox/extconf.rb'
-    - 'test/parse_cmp.rb'
-    - 'test/perf_mars.rb'
-    - 'test/sax/smart_test.rb'
-    - 'test/tests.rb'
 
 # Offense count: 71
 # This cop supports unsafe autocorrection (--autocorrect-all).

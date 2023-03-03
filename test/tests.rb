@@ -20,53 +20,53 @@ $ruby = 'ree' if 'ruby' == $ruby && RUBY_DESCRIPTION.include?('Ruby Enterprise E
 $indent = 2
 
 $ox_object_options = {
-  :encoding => nil,
-  :margin => '',
-  :indent => 2,
-  :trace => 0,
-  :with_dtd => false,
-  :with_xml => false,
-  :with_instructions => false,
-  :circular => false,
-  :xsd_date => false,
-  :mode => :object,
-  :symbolize_keys => true,
-  :element_key_mod => nil,
-  :attr_key_mod => nil,
-  :skip => :skip_white,
-  :smart => false,
-  :convert_special => true,
-  :effort => :strict,
-  :no_empty => false,
-  :with_cdata => false,
-  :invalid_replace => '',
-  :strip_namespace => false,
-  :overlay => nil,
+  encoding: nil,
+  margin: '',
+  indent: 2,
+  trace: 0,
+  with_dtd: false,
+  with_xml: false,
+  with_instructions: false,
+  circular: false,
+  xsd_date: false,
+  mode: :object,
+  symbolize_keys: true,
+  element_key_mod: nil,
+  attr_key_mod: nil,
+  skip: :skip_white,
+  smart: false,
+  convert_special: true,
+  effort: :strict,
+  no_empty: false,
+  with_cdata: false,
+  invalid_replace: '',
+  strip_namespace: false,
+  overlay: nil
 }
 
 $ox_generic_options = {
-  :encoding => nil,
-  :margin => '',
-  :indent => 2,
-  :trace => 0,
-  :with_dtd => false,
-  :with_xml => false,
-  :with_instructions => false,
-  :circular => false,
-  :xsd_date => false,
-  :mode => :generic,
-  :symbolize_keys => true,
-  :element_key_mod => nil,
-  :attr_key_mod => nil,
-  :skip => :skip_white,
-  :smart => false,
-  :convert_special => true,
-  :effort => :strict,
-  :no_empty => false,
-  :with_cdata => false,
-  :invalid_replace => '',
-  :strip_namespace => false,
-  :overlay => nil,
+  encoding: nil,
+  margin: '',
+  indent: 2,
+  trace: 0,
+  with_dtd: false,
+  with_xml: false,
+  with_instructions: false,
+  circular: false,
+  xsd_date: false,
+  mode: :generic,
+  symbolize_keys: true,
+  element_key_mod: nil,
+  attr_key_mod: nil,
+  skip: :skip_white,
+  smart: false,
+  convert_special: true,
+  effort: :strict,
+  no_empty: false,
+  with_cdata: false,
+  invalid_replace: '',
+  strip_namespace: false,
+  overlay: nil
 }
 
 class Func < Test::Unit::TestCase
@@ -81,30 +81,30 @@ class Func < Test::Unit::TestCase
   def test_set_options
     Ox.default_options = $ox_object_options
     o2 = {
-      :encoding => 'UTF-8',
-      :margin => 'zz',
-      :indent => 4,
-      :trace => 1,
-      :with_dtd => true,
-      :with_xml => false,
-      :with_instructions => true,
-      :circular => true,
-      :xsd_date => true,
-      :mode => :object,
-      :symbolize_keys => true,
-      :element_key_mod => nil,
-      :attr_key_mod => nil,
-      :skip => :skip_return,
-      :smart => true,
-      :convert_special => false,
-      :effort => :tolerant,
-      :no_empty => true,
-      :with_cdata => true,
-      :invalid_replace => '*',
-      :strip_namespace => 'spaced',
-      :overlay => nil,
+      encoding: 'UTF-8',
+      margin: 'zz',
+      indent: 4,
+      trace: 1,
+      with_dtd: true,
+      with_xml: false,
+      with_instructions: true,
+      circular: true,
+      xsd_date: true,
+      mode: :object,
+      symbolize_keys: true,
+      element_key_mod: nil,
+      attr_key_mod: nil,
+      skip: :skip_return,
+      smart: true,
+      convert_special: false,
+      effort: :tolerant,
+      no_empty: true,
+      with_cdata: true,
+      invalid_replace: '*',
+      strip_namespace: 'spaced',
+      overlay: nil
     }
-    o3 = { :xsd_date=>false }
+    o3 = { xsd_date: false }
     Ox.default_options = o2
     opts = Ox.default_options
     assert_equal(o2, opts);
@@ -179,7 +179,7 @@ class Func < Test::Unit::TestCase
 
   def test_hash
     Ox.default_options = $ox_object_options
-    dump_and_load({ }, false)
+    dump_and_load({}, false)
     dump_and_load({ 'a' => 1, 2 => 'b' }, false)
   end
 
@@ -241,7 +241,7 @@ class Func < Test::Unit::TestCase
 
   def test_object
     Ox.default_options = $ox_object_options
-    dump_and_load(Bag.new({ }), false)
+    dump_and_load(Bag.new({}), false)
     dump_and_load(Bag.new(:@x => 3), false)
   end
 
@@ -258,14 +258,14 @@ class Func < Test::Unit::TestCase
 </o>
 }
     assert_raise(NameError) do
-      Ox.load(xml, :mode => :object, :trace => 0)
+      Ox.load(xml, mode: :object, trace: 0)
     end
-    loaded = Ox.load(xml, :mode => :object, :trace => 0, :effort => :tolerant)
+    loaded = Ox.load(xml, mode: :object, trace: 0, effort: :tolerant)
     assert_nil(loaded)
-    loaded = Ox.load(xml, :mode => :object, :trace => 0, :effort => :auto_define)
+    loaded = Ox.load(xml, mode: :object, trace: 0, effort: :auto_define)
     assert_equal(loaded.class.to_s, 'Bad::Boy')
     assert_equal(loaded.class.superclass.to_s, 'Ox::Bag')
-    loaded = Ox.load(xml2, :mode => :object, :trace => 0, :effort => :auto_define)
+    loaded = Ox.load(xml2, mode: :object, trace: 0, effort: :auto_define)
     assert_equal(loaded.class.to_s, 'Bad')
     assert_equal(loaded.class.superclass.to_s, 'Ox::Bag')
   end
@@ -278,7 +278,7 @@ class Func < Test::Unit::TestCase
 </o>
 }
     assert_raise(Ox::ParseError) do
-      Ox.load(xml, :mode => :object, :trace => 0)
+      Ox.load(xml, mode: :object, trace: 0)
     end
   end
 
@@ -289,7 +289,7 @@ class Func < Test::Unit::TestCase
   <>
 </top>}
     assert_raise(Ox::ParseError) do
-      Ox.load(xml, :mode => :object, :trace => 0)
+      Ox.load(xml, mode: :object, trace: 0)
     end
   end
 
@@ -298,7 +298,7 @@ class Func < Test::Unit::TestCase
     xml = %{<?xml version="1.0" ?>
 <s>Test</s>
 }
-    loaded = Ox.load(xml, :mode => :object)
+    loaded = Ox.load(xml, mode: :object)
     assert_equal('Test', loaded);
   end
 
@@ -317,23 +317,23 @@ class Func < Test::Unit::TestCase
 
   def test_xml_instruction
     Ox.default_options = $ox_object_options
-    xml = Ox.dump('test', :mode => :object, :with_xml => false)
+    xml = Ox.dump('test', mode: :object, with_xml: false)
     assert_equal("<s>test</s>\n", xml)
-    xml = Ox.dump('test', :mode => :object, :with_xml => true)
+    xml = Ox.dump('test', mode: :object, with_xml: true)
     assert_equal("<?xml version=\"1.0\"?>\n<s>test</s>\n", xml)
-    xml = Ox.dump('test', :mode => :object, :with_xml => true, :encoding => 'UTF-8')
+    xml = Ox.dump('test', mode: :object, with_xml: true, encoding: 'UTF-8')
     assert_equal("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<s>test</s>\n", xml)
   end
 
   def test_ox_instruction
     Ox.default_options = $ox_object_options
-    xml = Ox.dump('test', :mode => :object, :with_xml => true, :with_instructions => true)
+    xml = Ox.dump('test', mode: :object, with_xml: true, with_instructions: true)
     assert_equal("<?xml version=\"1.0\"?>\n<?ox version=\"1.0\" mode=\"object\" circular=\"no\" xsd_date=\"no\"?>\n<s>test</s>\n", xml)
-    xml = Ox.dump('test', :mode => :object, :with_instructions => true)
+    xml = Ox.dump('test', mode: :object, with_instructions: true)
     assert_equal("<?ox version=\"1.0\" mode=\"object\" circular=\"no\" xsd_date=\"no\"?>\n<s>test</s>\n", xml)
-    xml = Ox.dump('test', :mode => :object, :with_instructions => true, :circular => true, :xsd_date => true)
+    xml = Ox.dump('test', mode: :object, with_instructions: true, circular: true, xsd_date: true)
     assert_equal("<?ox version=\"1.0\" mode=\"object\" circular=\"yes\" xsd_date=\"yes\"?>\n<s i=\"1\">test</s>\n", xml)
-    xml = Ox.dump('test', :mode => :object, :with_instructions => true, :circular => false, :xsd_date => false)
+    xml = Ox.dump('test', mode: :object, with_instructions: true, circular: false, xsd_date: false)
     assert_equal("<?ox version=\"1.0\" mode=\"object\" circular=\"no\" xsd_date=\"no\"?>\n<s>test</s>\n", xml)
   end
 
@@ -345,19 +345,19 @@ class Func < Test::Unit::TestCase
   <mid><?dog big?></mid>
 </top>
 }
-    doc = Ox.load(xml, :mode => :generic)
+    doc = Ox.load(xml, mode: :generic)
     inst = doc.top.str.nodes[1]
     assert_equal(Ox::Instruct, inst.class)
     assert_equal('attrs', inst.target)
     assert_nil(inst.content)
-    assert_equal({:dog=>'big'}, inst.attributes)
+    assert_equal({ dog: 'big' }, inst.attributes)
 
     inst = doc.top.content
     assert_equal(Ox::Instruct, inst.class)
     assert_equal('content', inst.target)
     assert_equal(' dog is big', inst.content)
     assert_equal({}, inst.attributes)
-    x = Ox.dump(doc, :with_xml => true)
+    x = Ox.dump(doc, with_xml: true)
     assert_equal(xml, x)
   end
 
@@ -389,7 +389,7 @@ class Func < Test::Unit::TestCase
   </mml:math>?>
 </top>
 }
-    doc = Ox.load(xml, :mode => :generic)
+    doc = Ox.load(xml, mode: :generic)
     inst = doc.top.nodes[1]
     assert_equal(Ox::Instruct, inst.class)
     assert_equal('MML', inst.target)
@@ -418,7 +418,7 @@ class Func < Test::Unit::TestCase
 
   def test_dtd
     Ox.default_options = $ox_object_options
-    xml = Ox.dump('test', :mode => :object, :with_dtd => true)
+    xml = Ox.dump('test', mode: :object, with_dtd: true)
     assert_equal("<!DOCTYPE s SYSTEM \"ox.dtd\">\n<s>test</s>\n", xml)
   end
 
@@ -468,7 +468,7 @@ class Func < Test::Unit::TestCase
   def test_escape_ignore
     Ox.default_options = $ox_generic_options
     xml = %{<top name="&example;">&example;</top>}
-    doc = Ox.load(xml, :convert_special => false)
+    doc = Ox.load(xml, convert_special: false)
     assert_equal('&example;', doc.attributes[:name])
     assert_equal('&example;', doc.nodes[0])
   end
@@ -489,14 +489,14 @@ class Func < Test::Unit::TestCase
 
   def test_escape_dump_tolerant
     Ox.default_options = $ox_object_options
-    dumped_xml = Ox.dump("tab\tamp&backspace\b.", :effort => :tolerant)
+    dumped_xml = Ox.dump("tab\tamp&backspace\b.", effort: :tolerant)
     assert_equal("<s>tab\tamp&amp;backspace.</s>\n", dumped_xml)
   end
 
   def test_escape_dump_strict
     Ox.default_options = $ox_object_options
     begin
-      Ox.dump("tab\tamp&backspace\b.", :effort => :strict)
+      Ox.dump("tab\tamp&backspace\b.", effort: :strict)
     rescue Exception => e
       assert_equal("'\\#x08' is not a valid XML character.", e.message)
       return
@@ -506,26 +506,26 @@ class Func < Test::Unit::TestCase
 
   def test_escape_dump_replace
     Ox.default_options = $ox_object_options
-    dumped_xml = Ox.dump("tab\tamp&backspace\b.", :effort => :tolerant, :invalid_replace => '#')
+    dumped_xml = Ox.dump("tab\tamp&backspace\b.", effort: :tolerant, invalid_replace: '#')
     assert_equal("<s>tab\tamp&amp;backspace#.</s>\n", dumped_xml)
   end
 
   def test_escape_dump_no_replace
     Ox.default_options = $ox_object_options
-    dumped_xml = Ox.dump("tab\tamp&backspace\b.", :effort => :tolerant, :invalid_replace => nil)
+    dumped_xml = Ox.dump("tab\tamp&backspace\b.", effort: :tolerant, invalid_replace: nil)
     assert_equal("<s>tab\tamp&amp;backspace&#x0008;.</s>\n", dumped_xml)
   end
 
   def test_escape_load_tolerant
     Ox.default_options = $ox_object_options
-    obj = Ox.load("<s>tab\tamp&amp;backspace\b.</s>", :effort => :tolerant, :skip => :skip_none)
+    obj = Ox.load("<s>tab\tamp&amp;backspace\b.</s>", effort: :tolerant, skip: :skip_none)
     assert_equal("tab\tamp&backspace\b.", obj)
   end
 
   def test_escape_load_strict
     Ox.default_options = $ox_object_options
     begin
-      Ox.load("<s>tab\tamp&amp;backspace\b.</s>", :effort => :strict)
+      Ox.load("<s>tab\tamp&amp;backspace\b.</s>", effort: :strict)
     rescue Exception => e
       assert_equal('invalid character at line 1, column 26 ', e.message.split('[')[0])
       return
@@ -578,7 +578,7 @@ class Func < Test::Unit::TestCase
   def test_attr_as_string
     Ox.default_options = $ox_object_options
     xml = %{<top name="Pete"/>}
-    doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false)
+    doc = Ox.load(xml, mode: :generic, symbolize_keys: false)
     assert_equal(['name'], doc.attributes.keys)
 
     # Verify :name and 'name' are the same as far as attribute keys go.
@@ -596,37 +596,37 @@ class Func < Test::Unit::TestCase
   def test_single_quote
     Ox.default_options = $ox_generic_options
     xml = %{<top name='Pete'/>}
-    doc = Ox.load(xml, :effort => :tolerant)
+    doc = Ox.load(xml, effort: :tolerant)
     assert_equal('Pete', doc.attributes[:name])
   end
 
   def test_no_quote
     Ox.default_options = $ox_generic_options
     xml = %{<top name=Pete />}
-    doc = Ox.load(xml, :effort => :tolerant)
+    doc = Ox.load(xml, effort: :tolerant)
     assert_equal('Pete', doc.attributes[:name])
   end
 
   def test_skip_none
     Ox.default_options = $ox_object_options
     xml = %{<top>  Pete\r  Ohler <b>P</b> <b>O</b></top>}
-    doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_none)
-    x2 = Ox.dump(doc, :indent => -1)
+    doc = Ox.load(xml, mode: :generic, symbolize_keys: false, skip: :skip_none)
+    x2 = Ox.dump(doc, indent: -1)
     assert_equal(%{<top>  Pete\n  Ohler <b>P</b><b>O</b></top>}, x2)
   end
 
   def test_skip_off
     Ox.default_options = $ox_object_options
     xml = %{<top>  Pete\r\n  Ohler <b>P</b> <b>O</b></top>}
-    doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_off)
-    x2 = Ox.dump(doc, :indent => -1)
+    doc = Ox.load(xml, mode: :generic, symbolize_keys: false, skip: :skip_off)
+    x2 = Ox.dump(doc, indent: -1)
     assert_equal(%{<top>  Pete\n  Ohler <b>P</b> <b>O</b></top>}, x2)
   end
 
   def test_skip_return
     Ox.default_options = $ox_object_options
     xml = %{<top>  Pete\r\n  Ohler</top>}
-    doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_return)
+    doc = Ox.load(xml, mode: :generic, symbolize_keys: false, skip: :skip_return)
     x2 = Ox.dump(doc)
     assert_equal(%{\n<top>  Pete\n  Ohler</top>\n}, x2)
   end
@@ -634,7 +634,7 @@ class Func < Test::Unit::TestCase
   def test_skip_return2
     Ox.default_options = $ox_object_options
     xml = %{<top>  Pete\rOhler</top>}
-    doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_return)
+    doc = Ox.load(xml, mode: :generic, symbolize_keys: false, skip: :skip_return)
     x2 = Ox.dump(doc)
     assert_equal(%{\n<top>  Pete\nOhler</top>\n}, x2)
   end
@@ -642,14 +642,14 @@ class Func < Test::Unit::TestCase
   def test_skip_space
     Ox.default_options = $ox_object_options
     xml = %{<top>  Pete\r\n  Ohler</top>}
-    doc = Ox.load(xml, :mode => :generic, :symbolize_keys => false, :skip => :skip_white)
+    doc = Ox.load(xml, mode: :generic, symbolize_keys: false, skip: :skip_white)
     x2 = Ox.dump(doc)
     assert_equal(%{\n<top> Pete Ohler</top>\n}, x2)
   end
 
   def test_tolerant
     Ox.default_options = $ox_generic_options
-    Ox.default_options = { :skip => :skip_return }
+    Ox.default_options = { skip: :skip_return }
     xml = %{<!doctype HTML>
 <html lang=en>
   <head garbage='trash'>
@@ -676,9 +676,9 @@ class Func < Test::Unit::TestCase
 </html>
 <ps>after thought</ps>
 }
-    doc = Ox.load(xml, :effort => :tolerant)
+    doc = Ox.load(xml, effort: :tolerant)
     # puts Ox.dump(doc)
-    assert_equal(expected, Ox.dump(doc, :with_xml => false))
+    assert_equal(expected, Ox.dump(doc, with_xml: false))
   end
 
   def test_tolerant_case
@@ -702,9 +702,9 @@ class Func < Test::Unit::TestCase
   <Body> Some text. </Body>
 </html>
 }
-    doc = Ox.load(xml, :effort => :tolerant)
+    doc = Ox.load(xml, effort: :tolerant)
     # puts Ox.dump(doc)
-    assert_equal(expected, Ox.dump(doc, :with_xml => false))
+    assert_equal(expected, Ox.dump(doc, with_xml: false))
   end
 
   def test_class
@@ -738,7 +738,7 @@ class Func < Test::Unit::TestCase
   </a>
 </e>
 }
-      x = Ox.load(xml, :mode => :object, :effort => :auto_define)
+      x = Ox.load(xml, mode: :object, effort: :auto_define)
       assert_equal('Some Error', x.message)
       assert(x.is_a?(Exception))
     end
@@ -758,7 +758,7 @@ class Func < Test::Unit::TestCase
     Ox.default_options = $ox_object_options
     xml = "<?xml version=\"1.0\"?>\n<tag>test</tagz>\n"
     assert_raise(Ox::ParseError) do
-      Ox.load(xml, :mode => :generic, :trace => 0)
+      Ox.load(xml, mode: :generic, trace: 0)
     end
   end
 
@@ -782,12 +782,12 @@ class Func < Test::Unit::TestCase
 
   def test_complex
     Ox.default_options = $ox_object_options
-    dump_and_load(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, {:b => 3, :a => [5], :c => Bag.new(:@x => 7)}]), false)
+    dump_and_load(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, { b: 3, a: [5], c: Bag.new(:@x => 7) }]), false)
   end
 
   def test_dump_margin
     Ox.default_options = $ox_object_options
-    x = Ox.dump(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, {:b => 3, :a => [5], :c => Bag.new(:@x => 7)}]), :indent => 1, :margin => '##')
+    x = Ox.dump(Bag.new(:@o => Bag.new(:@a => [2]), :@a => [1, { b: 3, a: [5], c: Bag.new(:@x => 7) }]), indent: 1, margin: '##')
 
     assert(x.include?('## <o a="@o" c="Bag">
 ##  <a a="@a">
@@ -881,9 +881,9 @@ class Func < Test::Unit::TestCase
     begin
       raise StandardError.new('An error message,')
     rescue Exception => e
-      xml = Ox.dump(e, :effort => :tolerant)
-      o = Ox.load(xml, :mode => :object)
-      xml2 = Ox.dump(o, :effort => :tolerant)
+      xml = Ox.dump(e, effort: :tolerant)
+      o = Ox.load(xml, mode: :object)
+      xml2 = Ox.dump(o, effort: :tolerant)
       assert_equal(xml, xml2)
       return
     end
@@ -903,10 +903,10 @@ class Func < Test::Unit::TestCase
     Ox.default_options = $ox_object_options
     if defined?(Mutex) && 'rubinius' != $ruby
       # Mutex can not be serialize but it should not raise an exception.
-      xml = Ox.dump(Mutex.new, :indent => 2, :effort => :tolerant)
+      xml = Ox.dump(Mutex.new, indent: 2, effort: :tolerant)
       assert_equal(%{<z/>
 }, xml)
-      xml = Ox.dump(Bag.new(:@x => Mutex.new), :indent => 2, :effort => :tolerant)
+      xml = Ox.dump(Bag.new(:@x => Mutex.new), indent: 2, effort: :tolerant)
       assert_equal(%{<o c="Bag">
   <z a="@x"/>
 </o>
@@ -919,11 +919,11 @@ class Func < Test::Unit::TestCase
   def test_encoding
     Ox.default_options = $ox_object_options
     s = 'ピーター'
-    xml = Ox.dump(s, :with_xml => true, :encoding => 'UTF-8')
+    xml = Ox.dump(s, with_xml: true, encoding: 'UTF-8')
     # puts xml
     # puts xml.encoding.to_s
     assert_equal('UTF-8', xml.encoding.to_s)
-    obj = Ox.load(xml, :mode => :object)
+    obj = Ox.load(xml, mode: :object)
     assert_equal(s, obj)
   end
 
@@ -933,7 +933,7 @@ class Func < Test::Unit::TestCase
 <いち name="ピーター" つま="まきえ">ピーター</いち>
 }
     obj = Ox.load(xml)
-    dumped = Ox.dump(obj, :with_xml => true)
+    dumped = Ox.dump(obj, with_xml: true)
     assert_equal('UTF-8', dumped.encoding.to_s)
     assert_equal(xml, dumped)
   end
@@ -961,7 +961,7 @@ class Func < Test::Unit::TestCase
 
   def test_instructions
     Ox.default_options = $ox_object_options
-    xml = Ox.dump('test', :with_instructions => true)
+    xml = Ox.dump('test', with_instructions: true)
     # puts xml
     obj = Ox.load(xml) # should convert it to an object
     assert_equal('test', obj)
@@ -972,8 +972,8 @@ class Func < Test::Unit::TestCase
     xml = %{<?xml?>
 <Str>A &lt;boo&gt;</Str>
 }
-    doc = Ox.load(xml, :mode => :generic)
-    xml2 = Ox.dump(doc, :with_xml => true)
+    doc = Ox.load(xml, mode: :generic)
+    xml2 = Ox.dump(doc, with_xml: true)
     assert_equal(xml, xml2)
   end
 
@@ -982,7 +982,7 @@ class Func < Test::Unit::TestCase
     xml = %{<?xml?>
 <Str> </Str>
 }
-    doc = Ox.load(xml, :skip => :skip_none)
+    doc = Ox.load(xml, skip: :skip_none)
     assert_equal(' ', doc.root.nodes[0])
   end
 
@@ -994,8 +994,8 @@ class Func < Test::Unit::TestCase
       xml = %{<?xml encoding="UTF-8"?>
 <Str>&lt;まきえ&gt;</Str>
 }
-      doc = Ox.load(xml, :mode => :generic)
-      xml2 = Ox.dump(doc, :with_xml => true)
+      doc = Ox.load(xml, mode: :generic)
+      xml2 = Ox.dump(doc, with_xml: true)
       assert_equal(xml, xml2)
     end
   end
@@ -1004,10 +1004,10 @@ class Func < Test::Unit::TestCase
     Ox.default_options = $ox_object_options
     f = File.open(__FILE__, 'r')
     assert_raise(NotImplementedError) do
-      Ox.dump(f, :effort => :strict)
+      Ox.dump(f, effort: :strict)
     end
-    xml = Ox.dump(f, :effort => :tolerant)
-    obj = Ox.load(xml, :mode => :object) # should convert it to an object
+    xml = Ox.dump(f, effort: :tolerant)
+    obj = Ox.load(xml, mode: :object) # should convert it to an object
     assert_nil(obj)
   end
 
@@ -1418,7 +1418,7 @@ class Func < Test::Unit::TestCase
   def test_namespace_strip_wild
     Ox.default_options = $ox_generic_options
     results = []
-    doc = Ox.load('<spaced:one><two spaced:out="no">inside</two></spaced:one>', :strip_namespace => true )
+    doc = Ox.load('<spaced:one><two spaced:out="no">inside</two></spaced:one>', strip_namespace: true )
     assert_equal(%|
 <one>
   <two out="no">inside</two>
@@ -1428,7 +1428,7 @@ class Func < Test::Unit::TestCase
 
   def test_namespace_strip
     Ox.default_options = $ox_generic_options
-    Ox.default_options = { :strip_namespace => 'spaced' }
+    Ox.default_options = { strip_namespace: 'spaced' }
     results = []
     doc = Ox.load('<spaced:one><two spaced:out="no" other:space="yes">inside</two></spaced:one>')
     assert_equal(%|
@@ -1464,12 +1464,12 @@ class Func < Test::Unit::TestCase
   end
 
   def test_builder
-    b = Ox::Builder.new(:indent => 2)
+    b = Ox::Builder.new(indent: 2)
     assert_equal(2, b.indent)
     assert_equal(1, b.line)
     assert_equal(1, b.column)
     assert_equal(0, b.pos)
-    b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+    b.instruct(:xml, version: '1.0', encoding: 'UTF-8')
     assert_equal(1, b.line)
     assert_equal(39, b.column)
     assert_equal(38, b.pos)
@@ -1506,14 +1506,14 @@ comment -->
   end
 
   def test_builder_set_indent
-    b = Ox::Builder.new(:indent => 2)
+    b = Ox::Builder.new(indent: 2)
     assert_equal(2, b.indent)
-    b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+    b.instruct(:xml, version: '1.0', encoding: 'UTF-8')
     b.element('one')
     b.element('two')
     b.indent = 0
     b.text('Sample ')
-    b.element('three', :a => 'ack')
+    b.element('three', a: 'ack')
     b.text('sample')
     b.pop # </three>
     b.pop # </two>
@@ -1532,8 +1532,8 @@ comment -->
 
   def test_builder_file
     filename = File.join(File.dirname(__FILE__), 'create_file_test.xml')
-    b = Ox::Builder.file(filename, :indent => 2)
-    b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+    b = Ox::Builder.file(filename, indent: 2)
+    b.instruct(:xml, version: '1.0', encoding: 'UTF-8')
     b.element('one', :a => 'ack', 'b' => 'back')
     b.element('two')
     b.pop
@@ -1571,8 +1571,8 @@ comment -->
 |, xml)
       else
         r.close
-        b = Ox::Builder.io(w, :indent => 2)
-        b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+        b = Ox::Builder.io(w, indent: 2)
+        b.instruct(:xml, version: '1.0', encoding: 'UTF-8')
         b.element('one', :a => 'ack', 'b' => 'back')
         b.element('two')
         b.pop
@@ -1589,8 +1589,8 @@ comment -->
   end
 
   def test_builder_block
-    xml = Ox::Builder.new(:indent => 2) do |b|
-      b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+    xml = Ox::Builder.new(indent: 2) do |b|
+      b.instruct(:xml, version: '1.0', encoding: 'UTF-8')
       b.element('one', :a => 'ack', 'b' => 'back') do
         b.element('two') {}
         b.comment(' just a comment ')
@@ -1610,8 +1610,8 @@ comment -->
 
   def test_builder_block_file
     filename = File.join(File.dirname(__FILE__), 'create_file_test.xml')
-    Ox::Builder.file(filename, :indent => 2) do |b|
-      b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+    Ox::Builder.file(filename, indent: 2) do |b|
+      b.instruct(:xml, version: '1.0', encoding: 'UTF-8')
       b.element('one', :a => 'ack', 'b' => 'back') do
         b.element('two') {}
         b.comment(' just a comment ')
@@ -1647,8 +1647,8 @@ comment -->
 |, xml)
       else
         r.close
-        Ox::Builder.io(w, :indent => 2) do |b|
-          b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+        Ox::Builder.io(w, indent: 2) do |b|
+          b.instruct(:xml, version: '1.0', encoding: 'UTF-8')
           b.element('one', :a => 'ack', 'b' => 'back') do
             b.element('two') {}
             b.comment(' just a comment ')
@@ -1664,8 +1664,8 @@ comment -->
   end
 
   def test_builder_no_newline
-    b = Ox::Builder.new(:indent => -1)
-    b.instruct(:xml, :version => '1.0', :encoding => 'UTF-8')
+    b = Ox::Builder.new(indent: -1)
+    b.instruct(:xml, version: '1.0', encoding: 'UTF-8')
     b.element('one', :a => 'ack', 'b' => 'back')
     b.text('hello')
     b.close
@@ -1721,8 +1721,8 @@ comment -->
     Ox.default_options = $ox_generic_options
     xml = %{<top>This is the top.</top>
 }
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: 'This is the top.'}, doc)
+    doc = Ox.load(xml, mode: :hash)
+    assert_equal({ top: 'This is the top.' }, doc)
   end
 
   def test_hash_no_attrs_mode_simple_nested
@@ -1736,24 +1736,24 @@ comment -->
   </mid>
 </top>
 }
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: {one: 'This is a one.', mid: {a: 'alpha', b: 'bravo'}}}, doc)
+    doc = Ox.load(xml, mode: :hash)
+    assert_equal({ top: { one: 'This is a one.', mid: { a: 'alpha', b: 'bravo' } } }, doc)
   end
 
   def test_hash_no_attrs_mode_multi_text
     Ox.default_options = $ox_generic_options
     xml = %{<top>First<empty/>Second<empty></empty>Third</top>
 }
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: ['First', {empty: nil}, 'Second', {empty: nil}, 'Third']}, doc)
+    doc = Ox.load(xml, mode: :hash)
+    assert_equal({ top: ['First', { empty: nil }, 'Second', { empty: nil }, 'Third'] }, doc)
   end
 
   def test_hash_mode_simple
     Ox.default_options = $ox_generic_options
     xml = %{<top>This is the top.</top>
 }
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: 'This is the top.'}, doc)
+    doc = Ox.load(xml, mode: :hash)
+    assert_equal({ top: 'This is the top.' }, doc)
   end
 
   def test_hash_mode_simple_nested
@@ -1767,8 +1767,8 @@ comment -->
   </mid>
 </top>
 }
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: {one: 'This is a one.', mid: {a: 'alpha', b: 'bravo'}}}, doc)
+    doc = Ox.load(xml, mode: :hash)
+    assert_equal({ top: { one: 'This is a one.', mid: { a: 'alpha', b: 'bravo' } } }, doc)
   end
 
   def test_hash_mode_simple_cdata
@@ -1783,26 +1783,26 @@ comment -->
 </top>
 }
     doc = Ox.load(xml, mode: :hash, with_cdata: true)
-    assert_equal({top: {one: 'This is a one.', mid: {a: 'alpha', b: 'bravo'}}}, doc)
+    assert_equal({ top: { one: 'This is a one.', mid: { a: 'alpha', b: 'bravo' } } }, doc)
 
     doc = Ox.load(xml, mode: :hash, with_cdata: false)
-    assert_equal({top: {one: 'This is a one.', mid: {a: nil, b: nil}}}, doc)
+    assert_equal({ top: { one: 'This is a one.', mid: { a: nil, b: nil } } }, doc)
   end
 
   def test_hash_mode_multi_text
     Ox.default_options = $ox_generic_options
     xml = %{<top>First<empty/>Second<empty></empty>Third</top>
 }
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: ['First', {empty: nil}, 'Second', {empty: nil}, 'Third']}, doc)
+    doc = Ox.load(xml, mode: :hash)
+    assert_equal({ top: ['First', { empty: nil }, 'Second', { empty: nil }, 'Third'] }, doc)
   end
 
   def test_hash_mode_simple_attrs
     Ox.default_options = $ox_generic_options
     xml = %{<top type="string">This is the top.</top>
 }
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({top: [{type: 'string'}, 'This is the top.']}, doc)
+    doc = Ox.load(xml, mode: :hash)
+    assert_equal({ top: [{ type: 'string' }, 'This is the top.'] }, doc)
   end
 
   def test_hash_mode_attrs
@@ -1817,17 +1817,18 @@ comment -->
   </variables>
 </result>
 }
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({result: {
-                   variables: {
-                     var: [
-                       [{name: 'Blue'}, '14'],
-                       [{name: 'Jack'}, '14'],
-                       [{name: 'Magenta'}, '12'],
-                       [{name: 'Yellow'}, '14']
-                     ],
+    doc = Ox.load(xml, mode: :hash)
+    assert_equal({
+                   result: {
+                     variables: {
+                       var: [
+                         [{ name: 'Blue' }, '14'],
+                         [{ name: 'Jack' }, '14'],
+                         [{ name: 'Magenta' }, '12'],
+                         [{ name: 'Yellow' }, '14']
+                       ]
+                     }
                    }
-                 }
                  }, doc)
   end
 
@@ -1843,17 +1844,18 @@ comment -->
   </variables>
 </result>
 }
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({result: {
-                   variables: {
-                     var: [
-                       '14',
-                       [{name: 'Jack'}, '14'],
-                       [{name: 'Magenta'}, '12'],
-                       [{name: 'Yellow'}, '14']
-                     ],
+    doc = Ox.load(xml, mode: :hash)
+    assert_equal({
+                   result: {
+                     variables: {
+                       var: [
+                         '14',
+                         [{ name: 'Jack' }, '14'],
+                         [{ name: 'Magenta' }, '12'],
+                         [{ name: 'Yellow' }, '14']
+                       ]
+                     }
                    }
-                 }
                  }, doc)
   end
 
@@ -1869,17 +1871,18 @@ comment -->
   </variables>
 </result>
 }
-    doc = Ox.load(xml, :mode => :hash)
-    assert_equal({result: {
-                   variables: {
-                     var: [
-                       [{name: 'Blue'}, '14'],
-                       '14',
-                       [{name: 'Magenta'}, '12'],
-                       [{name: 'Yellow'}, '14']
-                     ],
+    doc = Ox.load(xml, mode: :hash)
+    assert_equal({
+                   result: {
+                     variables: {
+                       var: [
+                         [{ name: 'Blue' }, '14'],
+                         '14',
+                         [{ name: 'Magenta' }, '12'],
+                         [{ name: 'Yellow' }, '14']
+                       ]
+                     }
                    }
-                 }
                  }, doc)
   end
 
@@ -1906,9 +1909,9 @@ comment -->
   end
 
   def dump_and_load(obj, trace=false, circular=false)
-    xml = Ox.dump(obj, :indent => $indent, :circular => circular)
+    xml = Ox.dump(obj, indent: $indent, circular: circular)
     puts xml if trace
-    loaded = Ox.load(xml, :trace => (trace ? 2 : 0))
+    loaded = Ox.load(xml, trace: (trace ? 2 : 0))
     if obj.nil?
       assert_nil(loaded)
     else
