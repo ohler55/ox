@@ -18,7 +18,7 @@ require 'ox'
 # First create a handler for the SAX callbacks. The class instances include a
 # builder that builds as parsing takes place.
 class Saxy < Ox::Sax
-  VOID_ELEMENTS = [ :area, :base, :br, :col, :embed, :hr, :img, :input, :link, :meta, :param, :source, :track, :wbr ]
+  VOID_ELEMENTS = [:area, :base, :br, :col, :embed, :hr, :img, :input, :link, :meta, :param, :source, :track, :wbr]
 
   def initialize
     super
