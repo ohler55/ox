@@ -14,7 +14,6 @@ abort('This Ractor example requires at least Ruby 3.0') if RUBY_VERSION.start_wi
 # Miniature example Ractor-based `shared-mime-info` Ox handler à la `CHECKING::YOU::OUT`:
 # https://github.com/okeeblow/DistorteD/tree/NEW-SENSATION/CHECKING-YOU-OUT
 class Saxtor < Ox::Sax
-
   # We will fill this `Struct` as we parse,
   # yield it if its `ietf` matches our `needle`,
   # and throw it away otherwise.
@@ -113,7 +112,6 @@ class Saxtor < Ox::Sax
     # Let our parent `#take` our needle-equivalent `CYO`, or `nil`.
     Ractor.yield(@out)
   end  # def awen
-
 end  # class Saxtor
 
 # Fancy "usage" help `String` fragment to concat with specific error messages.
