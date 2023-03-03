@@ -389,8 +389,7 @@ Word
                         ([[:start_element, :div]] * 20) +
                         [[:text, ' Word ']] +
                         ([[:end_element, :div]] * 20) +
-                        [[:end_element, :body], [:end_element, :html]
-                        ])
+                        [[:end_element, :body], [:end_element, :html]])
   end
 
   # The expected behaviour is to trigger an error and then trigger the start / end events
