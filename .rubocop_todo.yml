@@ -115,21 +115,6 @@ Layout/SpaceInsideParens:
   Exclude:
     - 'test/tests.rb'
 
-# Offense count: 8
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: final_newline, final_blank_line
-Layout/TrailingEmptyLines:
-  Exclude:
-    - 'test/cache8_test.rb'
-    - 'test/cache_test.rb'
-    - 'test/files.rb'
-    - 'test/ox/doc.rb'
-    - 'test/ox/group.rb'
-    - 'test/ox/shape.rb'
-    - 'test/sample/group.rb'
-    - 'test/sample/shape.rb'
-
 # Offense count: 84
 # This cop supports safe autocorrection (--autocorrect).
 # Configuration parameters: AllowInHeredoc.

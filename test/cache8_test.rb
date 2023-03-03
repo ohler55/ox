@@ -12,4 +12,3 @@ end
 require 'ox'
 
 Ox.cache8_test
-
