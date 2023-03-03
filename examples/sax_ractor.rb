@@ -23,11 +23,13 @@ class Saxtor < Ox::Sax
     def initialize(ietf = nil, globs = [], description = nil)
       super(ietf, globs, description)
     end
+
     def to_s  # Pretty print
       "#{self[:description]} (#{self[:ietf]}) [#{
         self[:globs]&.map(&File.method(:extname)).join(',')
       }]"
     end
+
     def inspect
       "#<CYO #{to_s}>"
     end
