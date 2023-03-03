@@ -28,7 +28,7 @@ io = StringIO.new %{
     </Item>
   </Items>
 </ItemLookupResponse>
-}.strip.gsub />\s+</, '><'
+}.strip.gsub(/>\s+</, '><')
 
 class OxHandler < Ox::Sax
   attr :root
