@@ -29,7 +29,7 @@ class Saxtor < Ox::Sax
     end
 
     def inspect
-      "#<CYO #{to_s}>"
+      "#<CYO #{self}>"
     end
   end
 

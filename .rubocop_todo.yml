@@ -152,12 +152,6 @@ Lint/MissingSuper:
   Exclude:
     - 'test/perf_sax.rb'
 
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-Lint/RedundantStringCoercion:
-  Exclude:
-    - 'examples/sax_ractor.rb'
-
 # Offense count: 18
 Lint/RescueException:
   Exclude:
