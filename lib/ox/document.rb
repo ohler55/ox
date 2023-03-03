@@ -9,7 +9,7 @@ module Ox
     #   - _:standalone_ [String] indicates the document is standalone
     def initialize(prolog={})
       super(nil)
-      @attributes = { }
+      @attributes = {}
       @attributes[:version] = prolog[:version] unless prolog[:version].nil?
       @attributes[:encoding] = prolog[:encoding] unless prolog[:encoding].nil?
       @attributes[:standalone] = prolog[:standalone] unless prolog[:standalone].nil?

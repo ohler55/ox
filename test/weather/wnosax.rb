@@ -23,7 +23,7 @@ module Weather
       @cell = 0
     end
 
-    def start_element(name, attrs = [])
+    def start_element(name, attrs=[])
       case name
       when 'Cell'
         @cell += 1

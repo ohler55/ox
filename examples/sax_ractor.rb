@@ -18,7 +18,7 @@ class Saxtor < Ox::Sax
   # yield it if its `ietf` matches our `needle`,
   # and throw it away otherwise.
   CYO = Struct.new(:ietf, :globs, :description) do
-    def initialize(ietf = nil, globs = [], description = nil)
+    def initialize(ietf=nil, globs=[], description=nil)
       super(ietf, globs, description)
     end
 

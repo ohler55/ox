@@ -4,6 +4,9 @@ AllCops:
   TargetRubyVersion: 2.7
   NewCops: enable
 
+Layout/SpaceAroundEqualsInParameterDefault:
+  EnforcedStyle: no_space
+
 Naming/MethodName:
   EnforcedStyle: snake_case
   Exclude:

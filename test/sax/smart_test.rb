@@ -40,7 +40,7 @@ class SaxSmartTest < Test::Unit::TestCase
     'cite' => {},
     'colgroup' => { 'parents' => ['table'], 'childs' => ['col'] },
     'data' => {},
-    'datalist' => { 'childs' => ['option']},
+    'datalist' => { 'childs' => ['option'] },
     'dl' => { 'childs' => ['dt', 'dd'] },
     'dt' => { 'parents' => ['dl'] },
     'dd' => { 'parents' => ['dl'] },
@@ -136,7 +136,7 @@ class SaxSmartTest < Test::Unit::TestCase
   }
 
   # Make the :smart => true option the default one
-  def smart_parse_compare(xml, expected, handler = AllSax, opts = {}, handler_attr = :calls)
+  def smart_parse_compare(xml, expected, handler=AllSax, opts={}, handler_attr=:calls)
     parse_compare(xml, expected, handler, opts.merge(:smart => true, :skip => :skip_white), handler_attr)
   end
 end
@@ -155,7 +155,7 @@ class ErrorsOnParentNormalElementTest < SaxSmartTest
     NORMALELEMENTS[el]['parents'] || ['body']
   end
 
-  def ancestry_of(el, parent = nil)
+  def ancestry_of(el, parent=nil)
     p = parent || parents_of(el)[0]
     [el] + (p ? ancestry_of(p) : [])
   end
@@ -357,7 +357,7 @@ class SaxSmartNormalTagTest < SaxSmartTest
 </html>
 }
     overlay = Ox.sax_html_overlay.dup
-    overlay.each_key {|k| overlay[k] = :off }
+    overlay.each_key { |k| overlay[k] = :off }
     overlay['!--'] = :active
 
     handler = AllSax.new
@@ -588,7 +588,7 @@ class SaxSmartTableTagTest < SaxSmartTest
                          [:end_element, :html]])
   end
 
-  def html_parse_compare(xml, expected, opts = {})
+  def html_parse_compare(xml, expected, opts={})
     handler = AllSax.new
     input = StringIO.new(xml)
     options = {
@@ -634,7 +634,7 @@ class SaxSmartTableTagTest < SaxSmartTest
                         [:end_element, :table],
                         [:end_element, :body],
                         [:end_element, :html]],
-                       {:overlay => hints})
+                       { :overlay => hints })
   end
 
   def test_nest_ok_auto_closing
@@ -650,6 +650,6 @@ class SaxSmartTableTagTest < SaxSmartTest
                         [:end_element, :h5],
                         [:end_element, :body],
                         [:end_element, :html]],
-                       {:overlay => hints})
+                       { :overlay => hints })
   end
 end

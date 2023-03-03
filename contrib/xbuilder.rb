@@ -16,7 +16,7 @@ module Ox
         when Hash
           arg.each { |k, v| n[k.to_s] = v }
         when Array
-          arg.each { |c| n << c if c}
+          arg.each { |c| n << c if c }
         else
           n << arg if arg
         end
