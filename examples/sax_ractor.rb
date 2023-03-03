@@ -24,7 +24,7 @@ class Saxtor < Ox::Sax
 
     def to_s # Pretty print
       "#{self[:description]} (#{self[:ietf]}) [#{
-        self[:globs]&.map(&File.method(:extname)).join(',')
+        self[:globs]&.map(&File.method(:extname))&.join(',')
       }]"
     end
 

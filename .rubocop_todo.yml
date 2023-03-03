@@ -162,14 +162,6 @@ Lint/RescueException:
     - 'test/tests.rb'
     - 'test/weather/perf_weather.rb'
 
-# Offense count: 1
-# This cop supports safe autocorrection (--autocorrect).
-# Configuration parameters: AllowedMethods.
-# AllowedMethods: present?, blank?, presence, try, try!, in?
-Lint/SafeNavigationChain:
-  Exclude:
-    - 'examples/sax_ractor.rb'
-
 # Offense count: 2
 Lint/ShadowingOuterLocalVariable:
   Exclude:
