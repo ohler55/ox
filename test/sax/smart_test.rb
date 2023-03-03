@@ -637,7 +637,7 @@ class SaxSmartTableTagTest < SaxSmartTest
                         [:end_element, :html]],
                        {:overlay => hints})
   end
-  
+
   def test_nest_ok_auto_closing
     html = %{<html><body><h5>test</body></html>}
     hints = Ox.sax_html_overlay

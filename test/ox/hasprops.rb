@@ -10,7 +10,6 @@ module Test
         @props = { } unless instance_variable_defined?(:@props)
         @props
       end
-      
     end # HashProps
   end # Ox
 end # Test

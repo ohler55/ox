@@ -11,7 +11,6 @@ $: << File.join(File.dirname(__FILE__), '../../ext')
 require 'ox'
 
 class QuietSax < Ox::Sax
-  
   def initialize
     @line = nil
     @column = nil

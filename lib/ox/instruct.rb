@@ -17,7 +17,7 @@ module Ox
       @content = nil
     end
     alias target value
-    
+
     # Returns true if this Object and other are of the same type and have the
     # equivalent value and the equivalent elements otherwise false is returned.
     # - +other+ [Object] Object compare _self_ to.
@@ -30,6 +30,5 @@ module Ox
       true
     end
     alias == eql?
-    
   end # Instruct
 end # Ox

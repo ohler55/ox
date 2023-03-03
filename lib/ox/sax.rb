@@ -5,7 +5,7 @@ module Ox
   # IO streams.<p/>
   #
   # *Example*
-  # 
+  #
   #  require 'ox'
   #
   #  class MySax < ::Ox::Sax
@@ -89,10 +89,9 @@ module Ox
     def start_element(name); end
 
     def end_element(name); end
-    
+
     def error(message, line, column); end
 
     def abort(name); end
-    
   end # Sax
 end # Ox

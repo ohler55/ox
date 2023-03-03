@@ -15,14 +15,14 @@ class Perf
       end
     end
   end
-  
+
   def run(iter)
     base = Item.new(nil, nil) { }
     base.run(iter, 0.0)
     @items.each do |i|
       i.run(iter, base.duration)
       if i.error.nil?
-        puts format("#{i.title}.#{i.op} #{iter} times in %0.3f seconds or %0.3f #{i.op}/sec.", i.duration, 
+        puts format("#{i.title}.#{i.op} #{iter} times in %0.3f seconds or %0.3f #{i.op}/sec.", i.duration,
                     iter / i.duration)
       else
         puts "***** #{i.title}.#{i.op} failed! #{i.error}"
@@ -88,7 +88,6 @@ class Perf
     end
 
     def run(iter, base)
-      
       GC.start
       @before.call unless @before.nil?
       start = Time.now
@@ -98,7 +97,6 @@ class Perf
       @rate = iter / @duration
     rescue Exception => e
       @error = "#{e.class}: #{e.message}"
-      
     end
   end # Item
 end # Perf

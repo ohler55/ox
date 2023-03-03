@@ -12,7 +12,7 @@ module Test
   module Ox
     class Doc
       include HasProps
-      
+
       attr_accessor :title
       attr_accessor :create_time
       attr_accessor :user
@@ -27,7 +27,7 @@ module Test
         @layers = { }
         @change_history = []
       end
-      
+
       def add_change(comment, time=nil, user=nil)
         @change_history << Change.new(comment, time, user)
       end

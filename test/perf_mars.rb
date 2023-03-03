@@ -32,14 +32,14 @@ module Test
   end
 end
 
-data = { 
+data = {
   :Boolean => Test::Ox::Wrap.new,
   :Fixnum => Test::Ox::Wrap.new,
   :Float => Test::Ox::Wrap.new,
   :String => Test::Ox::Wrap.new,
   :Symbol => Test::Ox::Wrap.new,
-  :Time => Test::Ox::Wrap.new, 
-  :Array => Test::Ox::Wrap.new, 
+  :Time => Test::Ox::Wrap.new,
+  :Array => Test::Ox::Wrap.new,
   :Hash => Test::Ox::Wrap.new,
   :Range => Test::Ox::Wrap.new,
   :Regexp => Test::Ox::Wrap.new,
@@ -85,7 +85,7 @@ data.each do |type, a|
     # pp obj
   end
   ox_load_time = Time.now - start
-  
+
   m = Marshal.dump(a)
   start = Time.now
   (1..it).each do

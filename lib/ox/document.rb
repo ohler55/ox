@@ -14,7 +14,7 @@ module Ox
       @attributes[:encoding] = prolog[:encoding] unless prolog[:encoding].nil?
       @attributes[:standalone] = prolog[:standalone] unless prolog[:standalone].nil?
     end
-    
+
     # Returns the first Element in the document.
     def root
       unless !instance_variable_defined?(:@nodes) || @nodes.nil?
