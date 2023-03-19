@@ -761,17 +761,19 @@ CB:
  * code.
  */
 static char read_element_start(SaxDrive dr) {
-    const char    *ename = 0;
+    const char    *ename = NULL;
+    char           ebuf[128];
     size_t         nlen;
     volatile VALUE name = Qnil;
     char           c;
-    int            closed;
     long           pos       = (long)(dr->buf.pos);
     long           line      = (long)(dr->buf.line);
     long           col       = (long)(dr->buf.col);
     Hint           h         = NULL;
     int            stackless = 0;
     Nv             parent    = stack_peek(&dr->stack);
+    bool           closed;
+    bool           efree = false;
 
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
@@ -864,6 +866,16 @@ static char read_element_start(SaxDrive dr) {
         }
     }
     name = str2sym(dr, dr->buf.str, nlen, &ename);
+    if (NULL == ename) {
+        if (sizeof(ebuf) <= nlen) {
+            ename = strndup(dr->buf.str, nlen);
+            efree = true;
+        } else {
+            memcpy(ebuf, dr->buf.str, nlen);
+            ebuf[nlen] = '\0';
+            ename = ebuf;
+        }
+    }
     if (dr->has_start_element && 0 >= dr->blocked &&
         (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
         VALUE args[1];
@@ -875,9 +887,9 @@ static char read_element_start(SaxDrive dr) {
         rb_funcall2(dr->handler, ox_start_element_id, 1, args);
     }
     if ('/' == c) {
-        closed = 1;
+        closed = true;
     } else if ('>' == c) {
-        closed = 0;
+        closed = false;
     } else {
         buf_protect(&dr->buf);
         c = read_attrs(dr, c, '/', '>', 0, 0, h);
@@ -906,11 +918,14 @@ static char read_element_start(SaxDrive dr) {
     } else {
         stack_push(&dr->stack, ename, nlen, name, h);
     }
+    if (efree) {
+        free((char*)ename);
+    }
     if ('>' != c) {
         ox_sax_drive_error(dr, WRONG_CHAR "element not closed");
         return c;
     }
-    dr->buf.str = 0;
+    dr->buf.str = NULL;
 
     return buf_get(&dr->buf);
 }
