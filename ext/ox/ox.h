@@ -146,7 +146,7 @@ struct _pInfo {
     VALUE              *marked;
     int                 mark_size;  // allocated size
     int                 mark_cnt;
-    char                last;  // last character read, rarely set
+    char                last;       // last character read, rarely set
 };
 
 extern VALUE ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options, Err err);

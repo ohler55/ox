@@ -90,7 +90,7 @@ inline static Nv stack_pop(NStack stack) {
     return NULL;
 }
 
-inline static const char* nv_name(Nv nv) {
+inline static const char *nv_name(Nv nv) {
     if (NULL == nv->name) {
         return nv->name_buf;
     }

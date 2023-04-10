@@ -873,7 +873,7 @@ static char read_element_start(SaxDrive dr) {
         } else {
             memcpy(ebuf, dr->buf.str, nlen);
             ebuf[nlen] = '\0';
-            ename = ebuf;
+            ename      = ebuf;
         }
     }
     if (dr->has_start_element && 0 >= dr->blocked &&
@@ -919,7 +919,7 @@ static char read_element_start(SaxDrive dr) {
         stack_push(&dr->stack, ename, nlen, name, h);
     }
     if (efree) {
-        free((char*)ename);
+        free((char *)ename);
     }
     if ('>' != c) {
         ox_sax_drive_error(dr, WRONG_CHAR "element not closed");

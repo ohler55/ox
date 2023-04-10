@@ -82,8 +82,8 @@ slot_cache_get(SlotCache cache, const char *key, VALUE **slot, const char **keyp
                     orig->key    = form_key(key);
                     orig->value  = Qundef;
                 }
-            } else {                   /* not exact match but on the path */
-                if (0 != cache->key) { /* there is a key/value here already */
+            } else {                                                           /* not exact match but on the path */
+                if (0 != cache->key) {                                         /* there is a key/value here already */
                     if (depth == *cache->key || (255 <= depth && 0 == strncmp(cache->key, key, depth) &&
                                                  '\0' == cache->key[depth])) { /* key belongs here */
                         continue;
