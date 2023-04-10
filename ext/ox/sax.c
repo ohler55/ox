@@ -761,17 +761,19 @@ CB:
  * code.
  */
 static char read_element_start(SaxDrive dr) {
-    const char    *ename = 0;
+    const char    *ename = NULL;
+    char           ebuf[128];
     size_t         nlen;
     volatile VALUE name = Qnil;
     char           c;
-    int            closed;
     long           pos       = (long)(dr->buf.pos);
     long           line      = (long)(dr->buf.line);
     long           col       = (long)(dr->buf.col);
     Hint           h         = NULL;
     int            stackless = 0;
     Nv             parent    = stack_peek(&dr->stack);
+    bool           closed;
+    bool           efree = false;
 
     if ('\0' == (c = read_name_token(dr))) {
         return '\0';
@@ -827,7 +829,7 @@ static char read_element_start(SaxDrive dr) {
             if (0 != top_nv) {
                 char msg[256];
 
-                if (!h->nest && NestOverlay != h->overlay && 0 == strcasecmp(top_nv->name, h->name)) {
+                if (!h->nest && NestOverlay != h->overlay && nv_same_name(top_nv, h->name, true)) {
                     snprintf(msg,
                              sizeof(msg) - 1,
                              "%s%s can not be nested in a %s document, closing previous.",
@@ -844,7 +846,7 @@ static char read_element_start(SaxDrive dr) {
                     int          ok = 0;
 
                     for (p = h->parents; 0 != *p; p++) {
-                        if (0 == strcasecmp(*p, top_nv->name)) {
+                        if (nv_same_name(top_nv, *p, true)) {
                             ok = 1;
                             break;
                         }
@@ -855,7 +857,7 @@ static char read_element_start(SaxDrive dr) {
                                  "%s%s can not be a child of a %s in a %s document.",
                                  INV_ELEMENT,
                                  h->name,
-                                 top_nv->name,
+                                 nv_name(top_nv),
                                  dr->options.hints->name);
                         ox_sax_drive_error(dr, msg);
                     }
@@ -864,6 +866,16 @@ static char read_element_start(SaxDrive dr) {
         }
     }
     name = str2sym(dr, dr->buf.str, nlen, &ename);
+    if (NULL == ename) {
+        if (sizeof(ebuf) <= nlen) {
+            ename = strndup(dr->buf.str, nlen);
+            efree = true;
+        } else {
+            memcpy(ebuf, dr->buf.str, nlen);
+            ebuf[nlen] = '\0';
+            ename = ebuf;
+        }
+    }
     if (dr->has_start_element && 0 >= dr->blocked &&
         (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
         VALUE args[1];
@@ -875,9 +887,9 @@ static char read_element_start(SaxDrive dr) {
         rb_funcall2(dr->handler, ox_start_element_id, 1, args);
     }
     if ('/' == c) {
-        closed = 1;
+        closed = true;
     } else if ('>' == c) {
-        closed = 0;
+        closed = false;
     } else {
         buf_protect(&dr->buf);
         c = read_attrs(dr, c, '/', '>', 0, 0, h);
@@ -906,11 +918,14 @@ static char read_element_start(SaxDrive dr) {
     } else {
         stack_push(&dr->stack, ename, nlen, name, h);
     }
+    if (efree) {
+        free((char*)ename);
+    }
     if ('>' != c) {
         ox_sax_drive_error(dr, WRONG_CHAR "element not closed");
         return c;
     }
-    dr->buf.str = 0;
+    dr->buf.str = NULL;
 
     return buf_get(&dr->buf);
 }
@@ -919,7 +934,7 @@ static Nv stack_rev_find(SaxDrive dr, const char *name) {
     Nv nv;
 
     for (nv = dr->stack.tail - 1; dr->stack.head <= nv; nv--) {
-        if (0 == (dr->options.smart ? strcasecmp(name, nv->name) : strcmp(name, nv->name))) {
+        if (nv_same_name(nv, name, dr->options.smart)) {
             return nv;
         }
     }
@@ -944,7 +959,7 @@ static char read_element_end(SaxDrive dr) {
     // c should be > and current is one past so read another char
     c  = buf_get(&dr->buf);
     nv = stack_peek(&dr->stack);
-    if (0 != nv && 0 == (dr->options.smart ? strcasecmp(dr->buf.str, nv->name) : strcmp(dr->buf.str, nv->name))) {
+    if (0 != nv && nv_same_name(nv, dr->buf.str, dr->options.smart)) {
         name = nv->val;
         h    = nv->hint;
         stack_pop(&dr->stack);
@@ -997,7 +1012,7 @@ static char read_element_end(SaxDrive dr) {
                          "%selement '%s' close does not match '%s' open",
                          EL_MISMATCH,
                          dr->buf.str,
-                         nv->name);
+                         nv_name(nv));
                 ox_sax_drive_error_at(dr, msg, pos, line, col);
                 for (nv = stack_pop(&dr->stack); match < nv; nv = stack_pop(&dr->stack)) {
                     end_element_cb(dr, nv->val, pos, line, col, nv->hint);
@@ -1512,7 +1527,7 @@ static Nv hint_try_close(SaxDrive dr, const char *name) {
         return 0;
     }
     for (nv = stack_peek(&dr->stack); 0 != nv; nv = stack_peek(&dr->stack)) {
-        if (0 == strcasecmp(name, nv->name)) {
+        if (nv_same_name(nv, name, true)) {
             stack_pop(&dr->stack);
             return nv;
         }

@@ -64,7 +64,7 @@ inline static void stack_push(NStack stack, const char *name, size_t nlen, VALUE
     } else {
         strncpy(stack->tail->name_buf, name, nlen);
         stack->tail->name_buf[nlen] = '\0';
-        stack->tail->name           = stack->tail->name_buf;
+        stack->tail->name           = NULL;
     }
     stack->tail->val      = val;
     stack->tail->hint     = hint;
@@ -76,18 +76,38 @@ inline static Nv stack_peek(NStack stack) {
     if (stack->head < stack->tail) {
         return stack->tail - 1;
     }
-    return 0;
+    return NULL;
 }
 
 inline static Nv stack_pop(NStack stack) {
     if (stack->head < stack->tail) {
         stack->tail--;
-        if (stack->tail->name != stack->tail->name_buf) {
+        if (NULL != stack->tail->name) {
             xfree((char *)(stack->tail->name));
         }
         return stack->tail;
     }
-    return 0;
+    return NULL;
+}
+
+inline static const char* nv_name(Nv nv) {
+    if (NULL == nv->name) {
+        return nv->name_buf;
+    }
+    return nv->name;
+}
+
+inline static int nv_same_name(Nv nv, const char *name, bool smart) {
+    if (smart) {
+        if (NULL == nv->name) {
+            return (0 == strcasecmp(name, nv->name_buf));
+        }
+        return (0 == strcasecmp(name, nv->name));
+    }
+    if (NULL == nv->name) {
+        return (0 == strcmp(name, nv->name_buf));
+    }
+    return (0 == strcmp(name, nv->name));
 }
 
 #endif /* OX_SAX_STACK_H */
