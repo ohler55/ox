@@ -868,7 +868,7 @@ static char read_element_start(SaxDrive dr) {
     name = str2sym(dr, dr->buf.str, nlen, &ename);
     if (NULL == ename) {
         if (sizeof(ebuf) <= nlen) {
-            ename = strndup(dr->buf.str, nlen);
+            ename = ox_strndup(dr->buf.str, nlen);
             efree = true;
         } else {
             memcpy(ebuf, dr->buf.str, nlen);
