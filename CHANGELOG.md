@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.16] - 2023-04-11
+
+### Fixed
+
+- Window issue with strndup fixed thats to alexanderfast.
+
 ## [2.14.15] - 2023-04-10
 
 ### Fixed
