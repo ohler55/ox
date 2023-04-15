@@ -14,6 +14,7 @@ module Weather
     end
 
     def initialize(as_time)
+      super
       @as_time = as_time
       @highs = {}
       @time = nil

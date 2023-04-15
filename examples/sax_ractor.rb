@@ -35,6 +35,7 @@ class Saxtor < Ox::Sax
 
   # Set up our parsing environment and open a file handle for our XML.
   def initialize(parent, haystack)
+    super
     @parse_stack = [] # Track our current Element as we parse.
     @parent = parent # `Ractor` that instantiated us.
     @haystack = File.open(haystack, File::Constants::RDONLY)

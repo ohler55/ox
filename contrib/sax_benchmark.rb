@@ -34,6 +34,7 @@ class OxHandler < Ox::Sax
   attr :root
 
   def initialize
+    super
     @stack = [@node = @root = {}]
   end
 

@@ -12,6 +12,7 @@ require 'ox'
 
 class QuietSax < Ox::Sax
   def initialize
+    super
     @line = nil
     @column = nil
   end

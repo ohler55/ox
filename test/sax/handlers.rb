@@ -4,6 +4,7 @@ class StartSax < Ox::Sax
   attr_accessor :calls
 
   def initialize
+    super
     @calls = []
   end
 
@@ -117,6 +118,7 @@ class TypeSax < Ox::Sax
   attr_accessor :type
 
   def initialize(type)
+    super
     @item = nil
     @type = type
   end
@@ -134,6 +136,7 @@ class ErrorSax < Ox::Sax
   attr_reader :errors
 
   def initialize
+    super
     @path = []
     @tags = []
     @errors = []
@@ -153,6 +156,7 @@ class HtmlSax < Ox::Sax
   attr_accessor :calls
 
   def initialize
+    super
     @calls = []
   end
 
