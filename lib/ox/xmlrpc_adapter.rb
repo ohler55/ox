@@ -12,6 +12,7 @@ module Ox
   class StreamParser < XMLRPC::XMLParser::AbstractStreamParser
     # Create a new instance.
     def initialize
+      super
       @parser_class = OxParser
     end
 
