@@ -469,7 +469,7 @@ DONE:
         Nv   sp;
 
         for (sp = dr->stack.tail - 1; dr->stack.head <= sp; sp--) {
-            snprintf(msg, sizeof(msg) - 1, "%selement '%s' not closed", EL_MISMATCH, sp->name);
+            snprintf(msg, sizeof(msg) - 1, "%selement '%s' not closed", EL_MISMATCH, nv_name(sp));
             ox_sax_drive_error_at(dr, msg, dr->buf.pos, dr->buf.line, dr->buf.col);
             end_element_cb(dr, sp->val, dr->buf.pos, dr->buf.line, dr->buf.col, sp->hint);
         }

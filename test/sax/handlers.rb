@@ -118,7 +118,7 @@ class TypeSax < Ox::Sax
   attr_accessor :type
 
   def initialize(type)
-    super
+    super()
     @item = nil
     @type = type
   end
