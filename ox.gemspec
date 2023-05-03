@@ -28,5 +28,7 @@ serialization. }
 
   s.required_ruby_version = '>= 2.7.0'
 
+  s.add_development_dependency 'rake-compiler', '>= 1.2', '< 2.0'
+
   s.metadata['rubygems_mfa_required'] = 'true'
 end
