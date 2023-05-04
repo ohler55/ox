@@ -952,11 +952,7 @@ static VALUE load_str(int argc, VALUE *argv, VALUE self) {
     } else {
         xml = ALLOCA_N(char, len);
     }
-#if HAVE_RB_OBJ_ENCODING
     encoding = rb_obj_encoding(*argv);
-#else
-    encoding = Qnil;
-#endif
     memcpy(xml, StringValuePtr(*argv), len);
     xml[len - 1] = '\0';
     obj          = load(xml, len - 1, argc - 1, argv + 1, self, encoding, &err);
