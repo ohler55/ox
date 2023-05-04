@@ -32,12 +32,5 @@ jobs:
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
-      - name: build
-        run: |
-          cd ./ext/ox
-          ruby extconf.rb
-          make
-      - name: test
-        run: |
-          cd test
-          ./tests.rb
+          bundler-cache: true
+      - run: bundle exec rake

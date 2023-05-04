@@ -14,3 +14,5 @@ Makefile
 .yardoc
 doc
 Gemfile.lock
+test/create_file_test.xml
+tmp

@@ -1556,6 +1556,8 @@ comment -->
   end
 
   def test_builder_io
+    omit 'needs fork' unless Process.respond_to?(:fork)
+
     IO.pipe do |r, w|
       if fork
         w.close
@@ -1632,6 +1634,8 @@ comment -->
   end
 
   def test_builder_block_io
+    omit 'needs fork' unless Process.respond_to?(:fork)
+
     IO.pipe do |r, w|
       if fork
         w.close
