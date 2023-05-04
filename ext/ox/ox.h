@@ -207,9 +207,6 @@ extern ID ox_text_id;
 extern ID ox_to_c_id;
 extern ID ox_to_s_id;
 extern ID ox_to_sym_id;
-extern ID ox_tv_sec_id;
-extern ID ox_tv_nsec_id;
-extern ID ox_tv_usec_id;
 extern ID ox_value_id;
 
 extern rb_encoding *ox_utf8_encoding;

@@ -440,19 +440,13 @@ inline static void dump_num(Out out, VALUE obj) {
 }
 
 static void dump_time_thin(Out out, VALUE obj) {
-    char  buf[64];
-    char *b = buf + sizeof(buf) - 1;
-#if HAVE_RB_TIME_TIMESPEC
+    char            buf[64];
+    char           *b    = buf + sizeof(buf) - 1;
     struct timespec ts   = rb_time_timespec(obj);
     time_t          sec  = ts.tv_sec;
     long            nsec = ts.tv_nsec;
-#else
-    time_t sec  = NUM2LONG(rb_funcall2(obj, ox_tv_sec_id, 0, 0));
-    long   nsec = NUM2LONG(rb_funcall2(obj, ox_tv_nsec_id, 0, 0));
-    // long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0)) * 1000;
-#endif
-    char *dot = b - 10;
-    long  size;
+    char           *dot  = b - 10;
+    long            size;
 
     *b-- = '\0';
     for (; dot < b; b--, nsec /= 10) {
@@ -495,18 +489,12 @@ static void dump_date(Out out, VALUE obj) {
 }
 
 static void dump_time_xsd(Out out, VALUE obj) {
-    struct tm *tm;
-#if HAVE_RB_TIME_TIMESPEC
+    struct tm      *tm;
     struct timespec ts   = rb_time_timespec(obj);
     time_t          sec  = ts.tv_sec;
     long            nsec = ts.tv_nsec;
-#else
-    time_t sec  = NUM2LONG(rb_funcall2(obj, ox_tv_sec_id, 0, 0));
-    long   nsec = NUM2LONG(rb_funcall2(obj, ox_tv_nsec_id, 0, 0));
-    // long		nsec = NUM2LONG(rb_funcall2(obj, ox_tv_usec_id, 0, 0)) * 1000;
-#endif
-    int  tzhour, tzmin;
-    char tzsign = '+';
+    int             tzhour, tzmin;
+    char            tzsign = '+';
 
     if (out->end - out->cur <= 33) {
         grow(out, 33);

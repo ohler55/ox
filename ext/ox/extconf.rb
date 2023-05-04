@@ -32,7 +32,6 @@ CONFIG['warnflags'].slice!(/ -Wsuggest-attribute=format/)
 CONFIG['warnflags'].slice!(/ -Wdeclaration-after-statement/)
 CONFIG['warnflags'].slice!(/ -Wmissing-noreturn/)
 
-have_func('rb_time_timespec')
 have_func('rb_ext_ractor_safe', 'ruby.h')
 have_func('pthread_mutex_init')
 have_func('rb_enc_interned_str')
