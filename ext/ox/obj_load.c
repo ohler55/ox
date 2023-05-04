@@ -106,11 +106,7 @@ inline static VALUE structname2obj(const char *name) {
         }
     }
     ost = rb_const_get(ox_struct_class, rb_intern(s));
-#if HAVE_RB_STRUCT_ALLOC_NOINIT
     return rb_struct_alloc_noinit(ost);
-#else
-    return rb_struct_new(ost);
-#endif
 }
 
 inline static VALUE parse_ulong(const char *s, PInfo pi) {
