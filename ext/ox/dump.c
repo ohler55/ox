@@ -866,7 +866,6 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
             dump_gen_element(obj, depth + 1, out);
             out->w_end(out, &e);
         } else { /* Object */
-#if HAVE_RB_IVAR_FOREACH
             e.type   = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
             cnt      = (int)rb_ivar_count(obj);
             e.closed = (0 >= cnt);
@@ -879,29 +878,6 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
                 out->depth = od;
                 out->w_end(out, &e);
             }
-#else
-            volatile VALUE vars = rb_obj_instance_variables(obj);
-            // volatile VALUE	   vars = rb_funcall2(obj, rb_intern("instance_variables"), 0, 0);
-
-            e.type   = (Qtrue == rb_obj_is_kind_of(obj, rb_eException)) ? ExceptionCode : ObjectCode;
-            cnt      = (int)RARRAY_LEN(vars);
-            e.closed = (0 >= cnt);
-            out->w_start(out, &e);
-            if (0 < cnt) {
-                const VALUE *np = RARRAY_PTR(vars);
-                ID           vid;
-                unsigned int od = out->depth;
-                int          i;
-
-                out->depth = depth + 1;
-                for (i = cnt; 0 < i; i--, np++) {
-                    vid = rb_to_id(*np);
-                    dump_var(vid, rb_ivar_get(obj, vid), out);
-                }
-                out->depth = od;
-                out->w_end(out, &e);
-            }
-#endif
         }
         break;
     }
