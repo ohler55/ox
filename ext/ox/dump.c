@@ -809,13 +809,8 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
         } else {
             char num_buf[16];
             int  d2 = depth + 1;
-#ifdef RUBY_INTEGER_UNIFICATION
             long i;
-            long cnt = NUM2LONG(rb_struct_size(obj));
-#else   // UNIFY_FIXNUM_AND_INTEGER
-            int i;
-            int cnt = (int)RSTRUCT_LEN(obj);
-#endif  // UNIFY_FIXNUM_AND_INTEGER
+            long cnt   = NUM2LONG(rb_struct_size(obj));
             e.type     = StructCode;
             e.clas.str = rb_class2name(clas);
             e.clas.len = strlen(e.clas.str);
