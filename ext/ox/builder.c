@@ -708,9 +708,7 @@ static VALUE builder_text(int argc, VALUE *argv, VALUE self) {
         strip_invalid_chars = Qfalse;
     }
 
-    if (T_STRING != rb_type(v)) {
-        v = rb_funcall(v, ox_to_s_id, 0);
-    }
+    v = rb_String(v);
     i_am_a_child(b, true);
     append_string(b, StringValuePtr(v), RSTRING_LEN(v), xml_element_chars, RTEST(strip_invalid_chars));
 
@@ -730,9 +728,7 @@ static VALUE builder_cdata(VALUE self, VALUE data) {
     const char    *end;
     int            len;
 
-    if (T_STRING != rb_type(v)) {
-        v = rb_funcall(v, ox_to_s_id, 0);
-    }
+    v   = rb_String(v);
     str = StringValuePtr(v);
     len = (int)RSTRING_LEN(v);
     s   = str;
@@ -772,9 +768,7 @@ static VALUE builder_raw(VALUE self, VALUE text) {
     const char    *end;
     int            len;
 
-    if (T_STRING != rb_type(v)) {
-        v = rb_funcall(v, ox_to_s_id, 0);
-    }
+    v   = rb_String(v);
     str = StringValuePtr(v);
     len = (int)RSTRING_LEN(v);
     s   = str;
