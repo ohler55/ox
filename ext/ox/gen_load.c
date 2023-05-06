@@ -73,9 +73,7 @@ static void create_doc(PInfo pi) {
 
     helper_stack_init(&pi->helpers);
     doc = rb_obj_alloc(ox_document_clas);
-#ifdef RB_GC_GUARD
     RB_GC_GUARD(doc);
-#endif
     nodes = rb_ary_new();
     rb_ivar_set(doc, ox_attributes_id, rb_hash_new());
     rb_ivar_set(doc, ox_nodes_id, nodes);

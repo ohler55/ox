@@ -159,12 +159,8 @@ static Type obj_class_code(VALUE obj) {
     case T_OBJECT: return (ox_document_clas == clas || ox_element_clas == clas) ? RawCode : ObjectCode;
     case T_REGEXP: return RegexpCode;
     case T_BIGNUM: return BignumCode;
-#ifdef T_COMPLEX
     case T_COMPLEX: return ComplexCode;
-#endif
-#ifdef T_RATIONAL
     case T_RATIONAL: return RationalCode;
-#endif
     case T_CLASS: return ClassCode;
     default: return 0;
     }
@@ -899,7 +895,6 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
         out->w_end(out, &e);
         break;
     }
-#ifdef T_COMPLEX
     case T_COMPLEX: e.type = ComplexCode; out->w_start(out, &e);
 #ifdef RCOMPLEX
         dump_obj(0, RCOMPLEX(obj)->real, depth + 1, out);
@@ -910,8 +905,6 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
 #endif
         out->w_end(out, &e);
         break;
-#endif
-#ifdef T_RATIONAL
     case T_RATIONAL: e.type = RationalCode; out->w_start(out, &e);
 #ifdef RRATIONAL
         dump_obj(0, RRATIONAL(obj)->num, depth + 1, out);
@@ -922,7 +915,6 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
 #endif
         out->w_end(out, &e);
         break;
-#endif
     case T_CLASS: {
         e.type     = ClassCode;
         e.clas.str = rb_class2name(obj);
