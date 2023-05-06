@@ -104,7 +104,7 @@ static void create_prolog_doc(PInfo pi, const char *target, Attr attrs) {
                 VALUE rstr = rb_str_new2(attrs->name);
 
                 rb_enc_associate(rstr, pi->options->rb_enc);
-                sym = rb_funcall(rstr, ox_to_sym_id, 0);
+                sym = rb_str_intern(rstr);
             } else {
                 sym = ID2SYM(rb_intern(attrs->name));
             }

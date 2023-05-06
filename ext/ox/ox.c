@@ -74,7 +74,6 @@ ID ox_string_id;
 ID ox_text_id;
 ID ox_to_c_id;
 ID ox_to_s_id;
-ID ox_to_sym_id;
 ID ox_value_id;
 
 VALUE ox_encoding_sym;
@@ -1463,7 +1462,6 @@ void Init_ox() {
     ox_text_id              = rb_intern("text");
     ox_to_c_id              = rb_intern("to_c");
     ox_to_s_id              = rb_intern("to_s");
-    ox_to_sym_id            = rb_intern("to_sym");
     ox_value_id             = rb_intern("value");
 
     encoding_id = rb_intern("encoding");
