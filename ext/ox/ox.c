@@ -731,130 +731,123 @@ static VALUE to_gen(VALUE self, VALUE ruby_xml) {
     return obj;
 }
 
-static VALUE load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
-    VALUE           obj;
-    struct _options options = ox_default_options;
+static int load_options_cb(VALUE k, VALUE v, VALUE opts) {
+    Options copts = (Options)opts;
 
-    if (1 == argc && rb_cHash == rb_obj_class(*argv)) {
-        VALUE h = *argv;
-        VALUE v;
-
-        if (Qnil != (v = rb_hash_lookup(h, mode_sym))) {
-            if (object_sym == v) {
-                options.mode = ObjMode;
-            } else if (optimized_sym == v) {
-                options.mode = ObjMode;
-            } else if (generic_sym == v) {
-                options.mode = GenMode;
-            } else if (limited_sym == v) {
-                options.mode = LimMode;
-            } else if (hash_sym == v) {
-                options.mode = HashMode;
-            } else if (hash_no_attrs_sym == v) {
-                options.mode = HashNoAttrMode;
-            } else {
-                rb_raise(ox_parse_error_class, ":mode must be :generic, :object, :limited, :hash, :hash_no_attrs.\n");
-            }
+    if (mode_sym == k) {
+        if (object_sym == v) {
+            copts->mode = ObjMode;
+        } else if (optimized_sym == v) {
+            copts->mode = ObjMode;
+        } else if (generic_sym == v) {
+            copts->mode = GenMode;
+        } else if (limited_sym == v) {
+            copts->mode = LimMode;
+        } else if (hash_sym == v) {
+            copts->mode = HashMode;
+        } else if (hash_no_attrs_sym == v) {
+            copts->mode = HashNoAttrMode;
+        } else {
+            rb_raise(ox_parse_error_class, ":mode must be :generic, :object, :limited, :hash, :hash_no_attrs.\n");
         }
-        if (Qnil != (v = rb_hash_lookup(h, effort_sym))) {
-            if (auto_define_sym == v) {
-                options.effort = AutoEffort;
-            } else if (tolerant_sym == v) {
-                options.effort = TolerantEffort;
-            } else if (strict_sym == v) {
-                options.effort = StrictEffort;
-            } else {
-                rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
-            }
+    } else if (effort_sym == k) {
+        if (auto_define_sym == v) {
+            copts->effort = AutoEffort;
+        } else if (tolerant_sym == v) {
+            copts->effort = TolerantEffort;
+        } else if (strict_sym == v) {
+            copts->effort = StrictEffort;
+        } else {
+            rb_raise(ox_parse_error_class, ":effort must be :strict, :tolerant, or :auto_define.\n");
         }
-        if (Qnil != (v = rb_hash_lookup(h, skip_sym))) {
-            if (skip_none_sym == v) {
-                options.skip = NoSkip;
-            } else if (skip_off_sym == v) {
-                options.skip = OffSkip;
-            } else if (skip_return_sym == v) {
-                options.skip = CrSkip;
-            } else if (skip_white_sym == v) {
-                options.skip = SpcSkip;
-            } else {
-                rb_raise(ox_parse_error_class, ":skip must be :skip_none, :skip_return, :skip_white, or :skip_off.\n");
-            }
+    } else if (skip_sym == k) {
+        if (skip_none_sym == v) {
+            copts->skip = NoSkip;
+        } else if (skip_off_sym == v) {
+            copts->skip = OffSkip;
+        } else if (skip_return_sym == v) {
+            copts->skip = CrSkip;
+        } else if (skip_white_sym == v) {
+            copts->skip = SpcSkip;
+        } else {
+            rb_raise(ox_parse_error_class, ":skip must be :skip_none, :skip_return, :skip_white, or :skip_off.\n");
         }
-
-        if (Qnil != (v = rb_hash_lookup(h, trace_sym))) {
-            Check_Type(v, T_FIXNUM);
-            options.trace = FIX2INT(v);
-        }
-        if (Qnil != (v = rb_hash_lookup(h, symbolize_keys_sym))) {
-            options.sym_keys = (Qfalse == v) ? No : Yes;
-        }
-        options.element_key_mod = rb_hash_lookup2(h, element_key_mod_sym, options.element_key_mod);
-        options.attr_key_mod    = rb_hash_lookup2(h, attr_key_mod_sym, options.attr_key_mod);
-
-        if (Qnil != (v = rb_hash_lookup(h, convert_special_sym))) {
-            options.convert_special = (Qfalse != v);
-        }
-        if (Qnil != (v = rb_hash_lookup(h, no_empty_sym))) {
-            options.no_empty = (Qfalse != v);
-        }
-
-        v = rb_hash_lookup(h, invalid_replace_sym);
+    } else if (trace_sym == k) {
+        Check_Type(v, T_FIXNUM);
+        copts->trace = FIX2INT(v);
+    } else if (symbolize_keys_sym == k) {
+        copts->sym_keys = (Qfalse == v) ? No : Yes;
+    } else if (element_key_mod_sym == k) {
+        copts->element_key_mod = v;
+    } else if (attr_key_mod_sym == k) {
+        copts->attr_key_mod = v;
+    } else if (convert_special_sym == k) {
+        copts->convert_special = (Qfalse != v);
+    } else if (no_empty_sym == k) {
+        copts->no_empty = (Qfalse != v);
+    } else if (invalid_replace_sym == k) {
         if (Qnil == v) {
-            if (Qtrue == rb_funcall(h, has_key_id, 1, invalid_replace_sym)) {
-                options.allow_invalid = Yes;
-            }
+            copts->allow_invalid = Yes;
         } else {
             long slen;
 
             Check_Type(v, T_STRING);
             slen = RSTRING_LEN(v);
-            if (sizeof(options.inv_repl) - 2 < (size_t)slen) {
+            if (sizeof(copts->inv_repl) - 2 < (size_t)slen) {
                 rb_raise(ox_parse_error_class,
                          ":invalid_replace can be no longer than %d characters.",
-                         (int)sizeof(options.inv_repl) - 2);
+                         (int)sizeof(copts->inv_repl) - 2);
             }
-            strncpy(options.inv_repl + 1, StringValuePtr(v), sizeof(options.inv_repl) - 1);
-            options.inv_repl[sizeof(options.inv_repl) - 1] = '\0';
-            *options.inv_repl                              = (char)slen;
-            options.allow_invalid                          = No;
+            strncpy(copts->inv_repl + 1, StringValuePtr(v), sizeof(copts->inv_repl) - 1);
+            copts->inv_repl[sizeof(copts->inv_repl) - 1] = '\0';
+            *copts->inv_repl                             = (char)slen;
+            copts->allow_invalid                         = No;
         }
-        v = rb_hash_lookup(h, strip_namespace_sym);
+    } else if (strip_namespace_sym == k) {
         if (Qfalse == v) {
-            *options.strip_ns = '\0';
+            *copts->strip_ns = '\0';
         } else if (Qtrue == v) {
-            *options.strip_ns   = '*';
-            options.strip_ns[1] = '\0';
+            *copts->strip_ns   = '*';
+            copts->strip_ns[1] = '\0';
         } else if (Qnil != v) {
             long slen;
 
             Check_Type(v, T_STRING);
             slen = RSTRING_LEN(v);
-            if (sizeof(options.strip_ns) - 1 < (size_t)slen) {
+            if (sizeof(copts->strip_ns) - 1 < (size_t)slen) {
                 rb_raise(ox_parse_error_class,
                          ":strip_namespace can be no longer than %d characters.",
-                         (int)sizeof(options.strip_ns) - 1);
+                         (int)sizeof(copts->strip_ns) - 1);
             }
-            strncpy(options.strip_ns, StringValuePtr(v), sizeof(options.strip_ns) - 1);
-            options.strip_ns[sizeof(options.strip_ns) - 1] = '\0';
+            strncpy(copts->strip_ns, StringValuePtr(v), sizeof(copts->strip_ns) - 1);
+            copts->strip_ns[sizeof(copts->strip_ns) - 1] = '\0';
         }
-        v = rb_hash_lookup(h, margin_sym);
-        if (Qnil != v) {
-            long slen;
+    } else if (margin_sym == k) {
+        long slen;
 
-            Check_Type(v, T_STRING);
-            slen = RSTRING_LEN(v);
-            if (sizeof(options.margin) - 1 < (size_t)slen) {
-                rb_raise(ox_parse_error_class,
-                         ":margin can be no longer than %d characters.",
-                         (int)sizeof(options.margin) - 1);
-            }
-            strncpy(options.margin, StringValuePtr(v), sizeof(options.margin) - 1);
-            options.margin[sizeof(options.margin) - 1] = '\0';
-            options.margin_len                         = strlen(options.margin);
+        Check_Type(v, T_STRING);
+        slen = RSTRING_LEN(v);
+        if (sizeof(copts->margin) - 1 < (size_t)slen) {
+            rb_raise(ox_parse_error_class,
+                     ":margin can be no longer than %d characters.",
+                     (int)sizeof(copts->margin) - 1);
         }
-        if (Qnil != (v = rb_hash_lookup(h, with_cdata_sym))) {
-            options.with_cdata = (Qtrue == v);
-        }
+        strncpy(copts->margin, StringValuePtr(v), sizeof(copts->margin) - 1);
+        copts->margin[sizeof(copts->margin) - 1] = '\0';
+        copts->margin_len                        = strlen(copts->margin);
+    } else if (with_cdata_sym == k) {
+        copts->with_cdata = (Qtrue == v);
+    }
+
+    return ST_CONTINUE;
+}
+
+static VALUE load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
+    VALUE           obj;
+    struct _options options = ox_default_options;
+
+    if (1 == argc && rb_cHash == rb_obj_class(*argv)) {
+        rb_hash_foreach(*argv, load_options_cb, (VALUE)&options);
     }
     if ('\0' == *options.encoding) {
         if (Qnil != encoding) {
