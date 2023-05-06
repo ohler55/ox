@@ -794,7 +794,7 @@ static void debug_stack(PInfo pi, const char *comment) {
                 if (HashCode == h->type) {
                     VALUE v;
 
-                    v   = rb_funcall2(h->var, rb_intern("to_s"), 0, 0);
+                    v   = rb_String(h->var);
                     key = StringValuePtr(v);
                 } else if (ObjectCode == (h - 1)->type || ExceptionCode == (h - 1)->type ||
                            RangeCode == (h - 1)->type || StructCode == (h - 1)->type) {

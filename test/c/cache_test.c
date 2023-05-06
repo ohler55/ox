@@ -44,7 +44,7 @@ void ox_cache_test() {
                 *slot = v;
             }
         } else {
-            VALUE rs = rb_funcall2(v, rb_intern("to_s"), 0, 0);
+            VALUE rs = rb_String(v);
 
             printf("*** get on '%s' returned '%s' (%s)\n", *d, StringValuePtr(rs), rb_class2name(rb_obj_class(v)));
         }

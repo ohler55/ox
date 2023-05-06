@@ -761,7 +761,7 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
                 e.indent = -1;
                 out->w_end(out, &e);
             } else if (0 == strcmp("BigDecimal", classname)) {
-                volatile VALUE rs = rb_funcall(obj, ox_to_s_id, 0);
+                volatile VALUE rs = rb_String(obj);
 
                 e.type = BigDecimalCode;
                 out->w_start(out, &e);

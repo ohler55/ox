@@ -145,7 +145,7 @@ static void slot_print(SlotCache c, unsigned int depth) {
                     vs   = "undefined";
                     clas = "";
                 } else {
-                    VALUE rs = rb_funcall2((*cp)->value, rb_intern("to_s"), 0, 0);
+                    VALUE rs = rb_String((*cp)->value);
 
                     vs   = StringValuePtr(rs);
                     clas = rb_class2name(rb_obj_class((*cp)->value));

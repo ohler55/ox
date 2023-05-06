@@ -90,7 +90,7 @@ static void slot_print(Cache16 c, unsigned int depth) {
 }
 
 static void v2s(VALUE v, char *buf, unsigned long len) {
-    VALUE rs = rb_funcall2(v, rb_intern("to_s"), 0, 0);
+    VALUE rs = rb_String(v);
 
     snprintf(buf, len, "%s", StringValuePtr(rs));
 }
