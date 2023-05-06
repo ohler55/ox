@@ -337,21 +337,13 @@ static VALUE builder_new(int argc, VALUE *argv, VALUE self) {
 
         rb_check_type(*argv, T_HASH);
         if (Qnil != (v = rb_hash_lookup(*argv, ox_indent_sym))) {
-#ifdef RUBY_INTEGER_UNIFICATION
             if (rb_cInteger != rb_obj_class(v)) {
-#else
-            if (rb_cFixnum != rb_obj_class(v)) {
-#endif
                 rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
             }
             indent = NUM2INT(v);
         }
         if (Qnil != (v = rb_hash_lookup(*argv, ox_size_sym))) {
-#ifdef RUBY_INTEGER_UNIFICATION
             if (rb_cInteger != rb_obj_class(v)) {
-#else
-            if (rb_cFixnum != rb_obj_class(v)) {
-#endif
                 rb_raise(ox_parse_error_class, ":size must be a fixnum.\n");
             }
             buf_size = NUM2LONG(v);
@@ -400,21 +392,13 @@ static VALUE builder_file(int argc, VALUE *argv, VALUE self) {
 
         rb_check_type(argv[1], T_HASH);
         if (Qnil != (v = rb_hash_lookup(argv[1], ox_indent_sym))) {
-#ifdef RUBY_INTEGER_UNIFICATION
             if (rb_cInteger != rb_obj_class(v)) {
-#else
-            if (rb_cFixnum != rb_obj_class(v)) {
-#endif
                 rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
             }
             indent = NUM2INT(v);
         }
         if (Qnil != (v = rb_hash_lookup(argv[1], ox_size_sym))) {
-#ifdef RUBY_INTEGER_UNIFICATION
             if (rb_cInteger != rb_obj_class(v)) {
-#else
-            if (rb_cFixnum != rb_obj_class(v)) {
-#endif
                 rb_raise(ox_parse_error_class, ":size must be a fixnum.\n");
             }
             buf_size = NUM2LONG(v);
@@ -461,21 +445,13 @@ static VALUE builder_io(int argc, VALUE *argv, VALUE self) {
 
         rb_check_type(argv[1], T_HASH);
         if (Qnil != (v = rb_hash_lookup(argv[1], ox_indent_sym))) {
-#ifdef RUBY_INTEGER_UNIFICATION
             if (rb_cInteger != rb_obj_class(v)) {
-#else
-            if (rb_cFixnum != rb_obj_class(v)) {
-#endif
                 rb_raise(ox_parse_error_class, ":indent must be a fixnum.\n");
             }
             indent = NUM2INT(v);
         }
         if (Qnil != (v = rb_hash_lookup(argv[1], ox_size_sym))) {
-#ifdef RUBY_INTEGER_UNIFICATION
             if (rb_cInteger != rb_obj_class(v)) {
-#else
-            if (rb_cFixnum != rb_obj_class(v)) {
-#endif
                 rb_raise(ox_parse_error_class, ":size must be a fixnum.\n");
             }
             buf_size = NUM2LONG(v);
@@ -857,11 +833,7 @@ static VALUE builder_get_indent(VALUE self) {
  * - +indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  */
 static VALUE builder_set_indent(VALUE self, VALUE indent) {
-#ifdef RUBY_INTEGER_UNIFICATION
     if (rb_cInteger != rb_obj_class(indent)) {
-#else
-    if (rb_cFixnum != rb_obj_class(indent)) {
-#endif
         rb_raise(ox_parse_error_class, "indent must be a fixnum.\n");
     }
 

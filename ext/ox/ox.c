@@ -1194,21 +1194,13 @@ static void parse_dump_options(VALUE ropts, Options copts) {
         VALUE v;
 
         if (Qnil != (v = rb_hash_lookup(ropts, ox_indent_sym))) {
-#ifdef RUBY_INTEGER_UNIFICATION
             if (rb_cInteger != rb_obj_class(v) && T_FIXNUM != rb_type(v)) {
-#else
-            if (rb_cFixnum != rb_obj_class(v)) {
-#endif
                 rb_raise(ox_parse_error_class, ":indent must be a Fixnum.\n");
             }
             copts->indent = NUM2INT(v);
         }
         if (Qnil != (v = rb_hash_lookup(ropts, trace_sym))) {
-#ifdef RUBY_INTEGER_UNIFICATION
             if (rb_cInteger != rb_obj_class(v) && T_FIXNUM != rb_type(v)) {
-#else
-            if (rb_cFixnum != rb_obj_class(v)) {
-#endif
                 rb_raise(ox_parse_error_class, ":trace must be a Fixnum.\n");
             }
             copts->trace = NUM2INT(v);
