@@ -683,17 +683,13 @@ static VALUE to_obj(VALUE self, VALUE ruby_xml) {
         xml = ALLOCA_N(char, len);
     }
     memcpy(xml, x, len);
-#ifdef RB_GC_GUARD
     rb_gc_disable();
-#endif
     obj = ox_parse(xml, len - 1, ox_obj_callbacks, 0, &options, &err);
     if (SMALL_XML < len) {
         xfree(xml);
     }
-#ifdef RB_GC_GUARD
     RB_GC_GUARD(obj);
     rb_gc_enable();
-#endif
     if (err_has(&err)) {
         ox_err_raise(&err);
     }
@@ -873,14 +869,10 @@ static VALUE load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALU
     xml = defuse_bom(xml, &options);
     switch (options.mode) {
     case ObjMode:
-#ifdef RB_GC_GUARD
         rb_gc_disable();
-#endif
         obj = ox_parse(xml, len, ox_obj_callbacks, 0, &options, err);
-#ifdef RB_GC_GUARD
         RB_GC_GUARD(obj);
         rb_gc_enable();
-#endif
         break;
     case GenMode: obj = ox_parse(xml, len, ox_gen_callbacks, 0, &options, err); break;
     case LimMode: obj = ox_parse(xml, len, ox_limited_callbacks, 0, &options, err); break;
@@ -1655,8 +1647,6 @@ _ox_raise_error(const char *msg, const char *xml, const char *current, const cha
             xline++;
         }
     }
-#ifdef RB_GC_GUARD
     rb_gc_enable();
-#endif
     rb_raise(ox_parse_error_class, "%s at line %d, column %d [%s:%d]\n", msg, xline, col, file, line);
 }
