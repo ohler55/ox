@@ -639,23 +639,17 @@ static void end_element(PInfo pi, const char *ename) {
                 rb_hash_aset(gh->obj, ph->obj, h->obj);
             } break;
             case ComplexCode:
-#ifdef T_COMPLEX
                 if (Qundef == ph->obj) {
                     ph->obj = h->obj;
                 } else {
                     ph->obj = rb_complex_new(ph->obj, h->obj);
                 }
-#else
-                set_error(&pi->err, "Complex Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
-                return;
-#endif
                 break;
             case RationalCode: {
                 if (Qundef == h->obj || RUBY_T_FIXNUM != rb_type(h->obj)) {
                     set_error(&pi->err, "Invalid object format", pi->str, pi->s);
                     return;
                 }
-#ifdef T_RATIONAL
                 if (Qundef == ph->obj) {
                     ph->obj = h->obj;
                 } else {
@@ -669,10 +663,6 @@ static void end_element(PInfo pi, const char *ename) {
                     ph->obj = rb_rational_new(ph->obj, h->obj);
 #endif
                 }
-#else
-                set_error(&pi->err, "Rational Objects not implemented in Ruby 1.8.7", pi->str, pi->s);
-                return;
-#endif
                 break;
             }
             default:
