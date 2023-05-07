@@ -653,7 +653,7 @@ static void end_element(PInfo pi, const char *ename) {
                 if (Qundef == ph->obj) {
                     ph->obj = h->obj;
                 } else {
-                    if (Qundef == ph->obj || RUBY_T_FIXNUM != rb_type(h->obj)) {
+                    if (Qundef == ph->obj || RUBY_T_FIXNUM != rb_type(ph->obj)) {
                         set_error(&pi->err, "Corrupt parse stack, container is wrong type", pi->str, pi->s);
                         return;
                     }
