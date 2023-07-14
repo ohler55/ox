@@ -1341,7 +1341,7 @@ static char read_quoted_value(SaxDrive dr, bool inst) {
             *(dr->buf.tail - 1) = '\0'; /* terminate value */
             // dr->buf.tail is in the correct position, one after the word terminator
             return c;
-        case '?':  // for instructions
+        case '?':
             if (inst) {
                 *(dr->buf.tail - 1) = '\0'; /* terminate value */
                 return c;
