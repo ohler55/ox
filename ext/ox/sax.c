@@ -55,7 +55,7 @@ static char read_text(SaxDrive dr);
 static char read_jump(SaxDrive dr, const char *pat);
 static char read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, int eq_req, Hint h);
 static char read_name_token(SaxDrive dr);
-static char read_quoted_value(SaxDrive dr);
+static char read_quoted_value(SaxDrive dr, bool inst);
 
 static void hint_clear_empty(SaxDrive dr);
 static Nv   hint_try_close(SaxDrive dr, const char *name);
@@ -1219,6 +1219,7 @@ static char read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, 
             c = buf_next_non_white(&dr->buf);
         }
         if ('=' != c) {
+	    // TBD allow in smart mode
             if (eq_req) {
                 dr->err = 1;
                 return c;
@@ -1230,7 +1231,7 @@ static char read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, 
             pos        = dr->buf.pos + 1;
             line       = dr->buf.line;
             col        = dr->buf.col + 1;
-            c          = read_quoted_value(dr);
+            c          = read_quoted_value(dr, '?' == termc);
             attr_value = dr->buf.str;
 
             if (is_encoding) {
@@ -1297,10 +1298,11 @@ static char read_name_token(SaxDrive dr) {
     return '\0';
 }
 
-/* The character after the quote or if there is no quote, the character after the word is returned. dr->buf.tail is one
- * past that. dr->buf.str will point to the token which will be '\0' terminated.
+/* The character after the quote or if there is no quote, the character after
+ * the word is returned. dr->buf.tail is one past that. dr->buf.str will point
+ * to the token which will be '\0' terminated.
  */
-static char read_quoted_value(SaxDrive dr) {
+static char read_quoted_value(SaxDrive dr, bool inst) {
     char c;
 
     c = buf_get(&dr->buf);
@@ -1324,19 +1326,27 @@ static char read_quoted_value(SaxDrive dr) {
     }
     // not quoted, look for something that terminates the string
     dr->buf.str = dr->buf.tail - 1;
-    ox_sax_drive_error(dr, WRONG_CHAR "attribute value not in quotes");
+    // TBD if smart or html then no error
+    if (!(dr->options.smart && ox_hints_html() != dr->options.hints)) {
+	ox_sax_drive_error(dr, WRONG_CHAR "attribute value not in quotes");
+    }
     while ('\0' != (c = buf_get(&dr->buf))) {
         switch (c) {
         case ' ':
             // case '/':
         case '>':
-        case '?':  // for instructions
         case '\t':
         case '\n':
         case '\r':
             *(dr->buf.tail - 1) = '\0'; /* terminate value */
             // dr->buf.tail is in the correct position, one after the word terminator
             return c;
+        case '?':  // for instructions
+	    if (inst) {
+		*(dr->buf.tail - 1) = '\0'; /* terminate value */
+		return c;
+	    }
+	    break;
         default: break;
         }
     }

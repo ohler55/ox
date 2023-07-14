@@ -1419,4 +1419,28 @@ this is not part of the xml document
                    [:abort, :table]
                  ], handler.calls)
   end
+
+  def test_sax_html_attr
+    Ox.default_options = $ox_sax_options
+    handler = AllSax.new
+    overlay = Ox.sax_html_overlay
+    html = %{<!doctype HTML>
+<html lang=en>
+  <head url=http://ohler.com?x=2>
+  </head>
+</html>
+}
+    Ox.sax_html(handler, html, overlay: overlay, skip: :skip_white)
+    assert_equal([
+                   [:doctype, ' HTML'],
+                   [:start_element, :html],
+                   [:attr, :lang, 'en'],
+                   [:start_element, :head],
+                   [:attr, :url, "http://ohler.com?x=2"],
+                   [:text, " "],
+                   [:end_element, :head],
+                   [:end_element, :html],
+                 ], handler.calls)
+  end
+
 end
