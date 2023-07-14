@@ -1219,7 +1219,7 @@ static char read_attrs(SaxDrive dr, char c, char termc, char term2, int is_xml, 
             c = buf_next_non_white(&dr->buf);
         }
         if ('=' != c) {
-	    // TBD allow in smart mode
+            // TBD allow in smart mode
             if (eq_req) {
                 dr->err = 1;
                 return c;
@@ -1328,7 +1328,7 @@ static char read_quoted_value(SaxDrive dr, bool inst) {
     dr->buf.str = dr->buf.tail - 1;
     // TBD if smart or html then no error
     if (!(dr->options.smart && ox_hints_html() != dr->options.hints)) {
-	ox_sax_drive_error(dr, WRONG_CHAR "attribute value not in quotes");
+        ox_sax_drive_error(dr, WRONG_CHAR "attribute value not in quotes");
     }
     while ('\0' != (c = buf_get(&dr->buf))) {
         switch (c) {
@@ -1342,11 +1342,11 @@ static char read_quoted_value(SaxDrive dr, bool inst) {
             // dr->buf.tail is in the correct position, one after the word terminator
             return c;
         case '?':  // for instructions
-	    if (inst) {
-		*(dr->buf.tail - 1) = '\0'; /* terminate value */
-		return c;
-	    }
-	    break;
+            if (inst) {
+                *(dr->buf.tail - 1) = '\0'; /* terminate value */
+                return c;
+            }
+            break;
         default: break;
         }
     }
