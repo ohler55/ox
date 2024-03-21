@@ -944,7 +944,7 @@ class Func < Test::Unit::TestCase
 <いち name="ピーター" つま="まきえ">ピーター</いち>
 }
     obj = Ox.load(xml, mode: :hash)
-    assert_equal(obj, {いち: [{name: "ピーター", つま: "まきえ"}, "ピーター"]})
+    assert_equal(obj, { :いち => [{ :name => 'ピーター', :つま => 'まきえ' }, 'ピーター'] })
   end
 
   def test_obj_encoding
