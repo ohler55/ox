@@ -938,6 +938,15 @@ class Func < Test::Unit::TestCase
     assert_equal(xml, dumped)
   end
 
+  def test_full_encoding_mode_hash
+    Ox.default_options = $ox_generic_options
+    xml = %{<?xml version="1.0" encoding="UTF-8"?>
+<いち name="ピーター" つま="まきえ">ピーター</いち>
+}
+    obj = Ox.load(xml, mode: :hash)
+    assert_equal(obj, {いち: [{name: "ピーター", つま: "まきえ"}, "ピーター"]})
+  end
+
   def test_obj_encoding
     Ox.default_options = $ox_object_options
     if RUBY_VERSION.start_with?('1.8')

@@ -93,14 +93,26 @@ static void add_str(PInfo pi, VALUE s) {
 }
 
 static void add_text(PInfo pi, char *text, int closed) {
-    add_str(pi, rb_str_new2(text));
+    VALUE s = rb_str_new2(text);
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
+    }
+    add_str(pi, s);
 }
 
 static void add_cdata(PInfo pi, const char *text, size_t len) {
-    add_str(pi, rb_str_new(text, len));
+    VALUE s = rb_str_new2(text);
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
+    }
+    add_str(pi, s);
 }
 
 static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
+    VALUE s = rb_str_new2(ename);
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
+    }
     if (helper_stack_empty(&pi->helpers)) {
         create_top(pi);
     }
@@ -111,12 +123,14 @@ static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren
         volatile VALUE a;
 
         for (; 0 != attrs->name; attrs++) {
+            key = rb_str_new2(attrs->name);
+            if (0 != pi->options->rb_enc) {
+                rb_enc_associate(key, pi->options->rb_enc);
+            }
             if (Qnil != pi->options->attr_key_mod) {
-                key = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, rb_str_new2(attrs->name));
+                key = rb_funcall(pi->options->attr_key_mod, ox_call_id, 1, key);
             } else if (Yes == pi->options->sym_keys) {
-                key = rb_id2sym(rb_intern(attrs->name));
-            } else {
-                key = rb_str_new2(attrs->name);
+                key = rb_id2sym(rb_intern_str(key));
             }
             val = rb_str_new2(attrs->value);
             if (0 != pi->options->rb_enc) {
@@ -127,17 +141,21 @@ static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren
         a = rb_ary_new();
         rb_ary_push(a, h);
         mark_value(pi, a);
-        helper_stack_push(&pi->helpers, rb_intern(ename), a, ArrayCode);
+        helper_stack_push(&pi->helpers, rb_intern_str(s), a, ArrayCode);
     } else {
-        helper_stack_push(&pi->helpers, rb_intern(ename), Qnil, NoCode);
+        helper_stack_push(&pi->helpers, rb_intern_str(s), Qnil, NoCode);
     }
 }
 
 static void add_element_no_attrs(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
+    VALUE s = rb_str_new2(ename);
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(s, pi->options->rb_enc);
+    }
     if (helper_stack_empty(&pi->helpers)) {
         create_top(pi);
     }
-    helper_stack_push(&pi->helpers, rb_intern(ename), Qnil, NoCode);
+    helper_stack_push(&pi->helpers, rb_intern_str(s), Qnil, NoCode);
 }
 
 static int umark_hash_cb(VALUE key, VALUE value, VALUE x) {
@@ -224,8 +242,22 @@ static void finish(PInfo pi) {
     xfree(pi->marked);
 }
 
+static void set_encoding_from_instruct(PInfo pi, Attr attrs) {
+    for (; 0 != attrs->name; attrs++) {
+        if (0 == strcmp("encoding", attrs->name)) {
+            pi->options->rb_enc = rb_enc_find(attrs->value);
+        }
+    }
+}
+
+static void instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
+    if (0 == strcmp("xml", target)) {
+        set_encoding_from_instruct(pi, attrs);
+    }
+}
+
 struct _parseCallbacks _ox_hash_callbacks = {
-    NULL,
+    instruct,
     NULL,
     NULL,
     NULL,
@@ -238,7 +270,7 @@ struct _parseCallbacks _ox_hash_callbacks = {
 ParseCallbacks ox_hash_callbacks = &_ox_hash_callbacks;
 
 struct _parseCallbacks _ox_hash_cdata_callbacks = {
-    NULL,
+    instruct,
     NULL,
     NULL,
     add_cdata,
@@ -251,7 +283,7 @@ struct _parseCallbacks _ox_hash_cdata_callbacks = {
 ParseCallbacks ox_hash_cdata_callbacks = &_ox_hash_cdata_callbacks;
 
 struct _parseCallbacks _ox_hash_no_attrs_callbacks = {
-    NULL,
+    instruct,
     NULL,
     NULL,
     NULL,
@@ -264,7 +296,7 @@ struct _parseCallbacks _ox_hash_no_attrs_callbacks = {
 ParseCallbacks ox_hash_no_attrs_callbacks = &_ox_hash_no_attrs_callbacks;
 
 struct _parseCallbacks _ox_hash_no_attrs_cdata_callbacks = {
-    NULL,
+    instruct,
     NULL,
     NULL,
     add_cdata,
