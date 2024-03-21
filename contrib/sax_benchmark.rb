@@ -31,7 +31,7 @@ io = StringIO.new %{
 }.strip.gsub(/>\s+</, '><')
 
 class OxHandler < Ox::Sax
-  attr :root
+  attr_reader :root
 
   def initialize
     super
@@ -70,7 +70,7 @@ class OxHandler < Ox::Sax
 end
 
 class NokogiriHandler < Nokogiri::XML::SAX::Document
-  attr :root
+  attr_reader :root
 
   def characters(val)
     (@node['__content__'] ||= '') << val

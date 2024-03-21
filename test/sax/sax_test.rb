@@ -1436,11 +1436,10 @@ this is not part of the xml document
                    [:start_element, :html],
                    [:attr, :lang, 'en'],
                    [:start_element, :head],
-                   [:attr, :url, "http://ohler.com?x=2"],
-                   [:text, " "],
+                   [:attr, :url, 'http://ohler.com?x=2'],
+                   [:text, ' '],
                    [:end_element, :head],
-                   [:end_element, :html],
+                   [:end_element, :html]
                  ], handler.calls)
   end
-
 end

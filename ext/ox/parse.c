@@ -167,7 +167,7 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
             helper_stack_cleanup(&pi.helpers);
             return Qnil;
         }
-        pi.s++;    // past <
+        pi.s++;  // past <
         switch (*pi.s) {
         case '?':  // processing instruction
             pi.s++;
