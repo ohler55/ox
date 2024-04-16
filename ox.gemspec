@@ -14,6 +14,14 @@ Optimized XML (Ox), as the name implies was written to provide speed optimized
 XML handling. It was designed to be an alternative to Nokogiri and other Ruby
 XML parsers for generic XML parsing and as an alternative to Marshal for Object
 serialization. }
+  s.metadata = {
+    'bug_tracker_uri' => 'https://github.com/ohler55/ox/issues',
+    'changelog_uri' => 'https://github.com/ohler55/ox/blob/master/CHANGELOG.md',
+    'documentation_uri' => 'http://www.ohler.com/ox/doc/index.html',
+    'homepage_uri' => 'http://www.ohler.com/ox/',
+    'source_code_uri' => 'https://github.com/ohler55/ox',
+    'rubygems_mfa_required' => 'true'
+  }
 
   s.licenses = ['MIT']
   s.files = Dir['{lib,ext}/**/*.{rb,h,c}'] + ['LICENSE', 'README.md', 'CHANGELOG.md']
