@@ -37,4 +37,6 @@ serialization. }
   s.required_ruby_version = '>= 2.7.0'
 
   s.metadata['rubygems_mfa_required'] = 'true'
+
+  s.add_runtime_dependency 'bigdecimal', '>= 3.0'
 end
