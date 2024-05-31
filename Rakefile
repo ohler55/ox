@@ -13,7 +13,7 @@ task test_all: [:clean, :compile] do
   exitcode = 0
   status = 0
 
-  cmds = 'ruby test/tests.rb -v'
+  cmds = 'bundle exec ruby test/tests.rb -v'
 
   $stdout.syswrite "\n#{'#' * 90}\n#{cmds}\n"
   Bundler.with_original_env do
