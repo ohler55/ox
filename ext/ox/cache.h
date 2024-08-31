@@ -11,9 +11,11 @@
 
 struct _cache;
 
+extern const rb_data_type_t ox_cache_type;
+
 extern struct _cache *ox_cache_create(size_t size, VALUE (*form)(const char *str, size_t len), bool mark, bool locking);
-extern void           ox_cache_free(struct _cache *c);
-extern void           ox_cache_mark(struct _cache *c);
+extern void           ox_cache_free(void *ptr);
+extern void           ox_cache_mark(void *ptr);
 extern VALUE          ox_cache_intern(struct _cache *c, const char *key, size_t len, const char **keyp);
 
 #endif /* OX_CACHE_H */
