@@ -198,7 +198,7 @@ static int read_from_str(Buf buf) {
     if (max < cnt) {
         cnt = max;
     }
-    strncpy(buf->tail, buf->in.str, cnt);
+    memcpy(buf->tail, buf->in.str, cnt);
     s   = buf->tail + cnt - 1;
     *s  = '\0';
     cnt = s - buf->tail;
