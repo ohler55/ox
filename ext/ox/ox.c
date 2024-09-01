@@ -1363,7 +1363,7 @@ static VALUE cache8_test(VALUE self) {
 }
 #endif
 
-void Init_ox() {
+void Init_ox(void) {
 #if HAVE_RB_EXT_RACTOR_SAFE
     rb_ext_ractor_safe(true);
 #endif

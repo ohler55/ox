@@ -367,7 +367,7 @@ static Slot cache_get(const char *key) {
     return NULL;
 }
 
-static void cache_init() {
+static void cache_init(void) {
     Slot e = entities;
 
     memset(&entity_cache, 0, sizeof(struct _cache));
