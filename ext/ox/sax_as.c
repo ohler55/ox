@@ -106,8 +106,10 @@ static VALUE parse_xsd_time(const char *text) {
  * *return* value as an String.
  */
 static VALUE sax_value_as_s(VALUE self) {
-    SaxDrive dr = DATA_PTR(self);
+    SaxDrive dr;
     VALUE    rs;
+
+    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
 
     if ('\0' == *dr->buf.str) {
         return Qnil;
@@ -132,7 +134,9 @@ static VALUE sax_value_as_s(VALUE self) {
  * *return* value as an Symbol.
  */
 static VALUE sax_value_as_sym(VALUE self) {
-    SaxDrive dr = DATA_PTR(self);
+    SaxDrive dr;
+
+    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
 
     if ('\0' == *dr->buf.str) {
         return Qnil;
@@ -145,7 +149,9 @@ static VALUE sax_value_as_sym(VALUE self) {
  * *return* value as an Float.
  */
 static VALUE sax_value_as_f(VALUE self) {
-    SaxDrive dr = DATA_PTR(self);
+    SaxDrive dr;
+
+    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
 
     if ('\0' == *dr->buf.str) {
         return Qnil;
@@ -158,10 +164,13 @@ static VALUE sax_value_as_f(VALUE self) {
  * *return* value as an Fixnum.
  */
 static VALUE sax_value_as_i(VALUE self) {
-    SaxDrive    dr  = DATA_PTR(self);
-    const char *s   = dr->buf.str;
+    SaxDrive    dr;
+    const char *s;
     long        n   = 0;
     int         neg = 0;
+
+    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
+    s = dr->buf.str;
 
     if ('\0' == *s) {
         return Qnil;
@@ -190,9 +199,12 @@ static VALUE sax_value_as_i(VALUE self) {
  * *return* value as an Time.
  */
 static VALUE sax_value_as_time(VALUE self) {
-    SaxDrive    dr  = DATA_PTR(self);
-    const char *str = dr->buf.str;
+    SaxDrive    dr;
+    const char *str;
     VALUE       t;
+
+    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
+    str = dr->buf.str;
 
     if ('\0' == *str) {
         return Qnil;
@@ -212,7 +224,10 @@ static VALUE sax_value_as_time(VALUE self) {
  * *return* value as an boolean.
  */
 static VALUE sax_value_as_bool(VALUE self) {
-    return (0 == strcasecmp("true", ((SaxDrive)DATA_PTR(self))->buf.str)) ? Qtrue : Qfalse;
+    SaxDrive dr;
+
+    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
+    return (0 == strcasecmp("true", dr->buf.str)) ? Qtrue : Qfalse;
 }
 
 /* call-seq: empty()
@@ -220,7 +235,10 @@ static VALUE sax_value_as_bool(VALUE self) {
  * *return* true if the value is empty.
  */
 static VALUE sax_value_empty(VALUE self) {
-    return ('\0' == *((SaxDrive)DATA_PTR(self))->buf.str) ? Qtrue : Qfalse;
+    SaxDrive dr;
+
+    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
+    return ('\0' == *dr->buf.str) ? Qtrue : Qfalse;
 }
 
 /* Document-class: Ox::Sax::Value

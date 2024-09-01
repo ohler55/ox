@@ -54,6 +54,17 @@ typedef struct _cache {
     bool    mark;
 } *Cache;
 
+const rb_data_type_t ox_cache_type = {
+    "Ox/Cache",
+    {
+        ox_cache_mark,
+        ox_cache_free,
+        NULL,
+    },
+    0,
+    0,
+};
+
 static uint64_t hash_calc(const uint8_t *key, size_t len) {
     const uint8_t *end     = key + len;
     const uint8_t *endless = key + (len & 0xFFFFFFFC);
@@ -263,7 +274,8 @@ Cache ox_cache_create(size_t size, VALUE (*form)(const char *str, size_t len), b
     return c;
 }
 
-void ox_cache_free(Cache c) {
+void ox_cache_free(void *ptr) {
+    Cache    c = (Cache)ptr;
     uint64_t i;
 
     for (i = 0; i < c->size; i++) {
@@ -279,7 +291,8 @@ void ox_cache_free(Cache c) {
     free(c);
 }
 
-void ox_cache_mark(Cache c) {
+void ox_cache_mark(void *ptr) {
+    Cache    c = (Cache)ptr;
     uint64_t i;
 
 #if !HAVE_PTHREAD_MUTEX_INIT

@@ -54,6 +54,8 @@ typedef struct _saxDrive {
 
 } *SaxDrive;
 
+extern const rb_data_type_t ox_sax_value_type;
+
 extern void ox_collapse_return(char *str);
 extern void ox_sax_parse(VALUE handler, VALUE io, SaxOptions options);
 extern void ox_sax_drive_cleanup(SaxDrive dr);

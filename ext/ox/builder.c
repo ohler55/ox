@@ -17,6 +17,19 @@
 
 #define MAX_DEPTH 128
 
+static void builder_free(void *ptr);
+
+static const rb_data_type_t ox_builder_type = {
+    "Ox/builder",
+    {
+        NULL,
+        builder_free,
+        NULL,
+    },
+    0,
+    0,
+};
+
 typedef struct _element {
     char *name;
     char  buf[64];
@@ -353,14 +366,14 @@ static VALUE builder_new(int argc, VALUE *argv, VALUE self) {
     init(b, 0, indent, buf_size);
 
     if (rb_block_given_p()) {
-        volatile VALUE rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        volatile VALUE rb = TypedData_Wrap_Struct(builder_class, &ox_builder_type, b);
 
         rb_yield(rb);
         bclose(b);
 
         return to_s(b);
     } else {
-        return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        return TypedData_Wrap_Struct(builder_class, &ox_builder_type, b);
     }
 }
 
@@ -408,12 +421,12 @@ static VALUE builder_file(int argc, VALUE *argv, VALUE self) {
     init(b, fileno(f), indent, buf_size);
 
     if (rb_block_given_p()) {
-        volatile VALUE rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        volatile VALUE rb = TypedData_Wrap_Struct(builder_class, &ox_builder_type, b);
         rb_yield(rb);
         bclose(b);
         return Qnil;
     } else {
-        return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        return TypedData_Wrap_Struct(builder_class, &ox_builder_type, b);
     }
 }
 
@@ -461,12 +474,12 @@ static VALUE builder_io(int argc, VALUE *argv, VALUE self) {
     init(b, fd, indent, buf_size);
 
     if (rb_block_given_p()) {
-        volatile VALUE rb = Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        volatile VALUE rb = TypedData_Wrap_Struct(builder_class, &ox_builder_type, b);
         rb_yield(rb);
         bclose(b);
         return Qnil;
     } else {
-        return Data_Wrap_Struct(builder_class, NULL, builder_free, b);
+        return TypedData_Wrap_Struct(builder_class, &ox_builder_type, b);
     }
 }
 
@@ -478,8 +491,9 @@ static VALUE builder_io(int argc, VALUE *argv, VALUE self) {
  * - +options+ - (Hash) version or encoding
  */
 static VALUE builder_instruct(int argc, VALUE *argv, VALUE self) {
-    Builder b = (Builder)DATA_PTR(self);
+    Builder b;
 
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
     i_am_a_child(b, false);
     append_indent(b);
     if (0 == argc) {
@@ -548,10 +562,12 @@ static VALUE builder_instruct(int argc, VALUE *argv, VALUE self) {
  * - +attributes+ - (Hash) of the element
  */
 static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
-    Builder     b = (Builder)DATA_PTR(self);
+    Builder     b;
     Element     e;
     const char *name;
     long        len;
+
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
 
     if (1 > argc) {
         rb_raise(ox_arg_error_class, "missing element name");
@@ -608,9 +624,11 @@ static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
  * - +attributes+ - (Hash) of the element
  */
 static VALUE builder_void_element(int argc, VALUE *argv, VALUE self) {
-    Builder     b = (Builder)DATA_PTR(self);
+    Builder     b;
     const char *name;
     long        len;
+
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
 
     if (1 > argc) {
         rb_raise(ox_arg_error_class, "missing element name");
@@ -649,8 +667,9 @@ static VALUE builder_void_element(int argc, VALUE *argv, VALUE self) {
  * - +text+ - (String) contents of the comment
  */
 static VALUE builder_comment(VALUE self, VALUE text) {
-    Builder b = (Builder)DATA_PTR(self);
+    Builder b;
 
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
     rb_check_type(text, T_STRING);
     i_am_a_child(b, false);
     append_indent(b);
@@ -671,8 +690,9 @@ static VALUE builder_comment(VALUE self, VALUE text) {
  * - +text+ - (String) contents of the doctype
  */
 static VALUE builder_doctype(VALUE self, VALUE text) {
-    Builder b = (Builder)DATA_PTR(self);
+    Builder b;
 
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
     rb_check_type(text, T_STRING);
     i_am_a_child(b, false);
     append_indent(b);
@@ -694,9 +714,11 @@ static VALUE builder_doctype(VALUE self, VALUE text) {
  * - +strip_invalid_chars+ - [true|false] strips any characters invalid for XML, defaults to false
  */
 static VALUE builder_text(int argc, VALUE *argv, VALUE self) {
-    Builder        b = (Builder)DATA_PTR(self);
+    Builder        b;
     volatile VALUE v;
     volatile VALUE strip_invalid_chars;
+
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
 
     if ((0 == argc) || (argc > 2)) {
         rb_raise(rb_eArgError, "wrong number of arguments (given %d, expected 1..2)", argc);
@@ -721,12 +743,14 @@ static VALUE builder_text(int argc, VALUE *argv, VALUE self) {
  * - +data+ - (String) contents of the CDATA element
  */
 static VALUE builder_cdata(VALUE self, VALUE data) {
-    Builder        b = (Builder)DATA_PTR(self);
+    Builder        b;
     volatile VALUE v = data;
     const char    *str;
     const char    *s;
     const char    *end;
     int            len;
+
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
 
     v   = rb_String(v);
     str = StringValuePtr(v);
@@ -761,13 +785,14 @@ static VALUE builder_cdata(VALUE self, VALUE data) {
  * - +text+ - (String) contents to be added
  */
 static VALUE builder_raw(VALUE self, VALUE text) {
-    Builder        b = (Builder)DATA_PTR(self);
+    Builder        b;
     volatile VALUE v = text;
     const char    *str;
     const char    *s;
     const char    *end;
     int            len;
 
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
     v   = rb_String(v);
     str = StringValuePtr(v);
     len = (int)RSTRING_LEN(v);
@@ -792,7 +817,10 @@ static VALUE builder_raw(VALUE self, VALUE text) {
  * Returns the JSON document string in what ever state the construction is at.
  */
 static VALUE builder_to_s(VALUE self) {
-    return to_s((Builder)DATA_PTR(self));
+    Builder b;
+
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
+    return to_s(b);
 }
 
 /* call-seq: line()
@@ -800,7 +828,10 @@ static VALUE builder_to_s(VALUE self) {
  * Returns the current line in the output. The first line is line 1.
  */
 static VALUE builder_line(VALUE self) {
-    return LONG2NUM(((Builder)DATA_PTR(self))->line);
+    Builder b;
+
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
+    return LONG2NUM(b->line);
 }
 
 /* call-seq: column()
@@ -809,7 +840,10 @@ static VALUE builder_line(VALUE self) {
  * column 1.
  */
 static VALUE builder_column(VALUE self) {
-    return LONG2NUM(((Builder)DATA_PTR(self))->col);
+    Builder b;
+
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
+    return LONG2NUM(b->col);
 }
 
 /* call-seq: indent()
@@ -817,7 +851,10 @@ static VALUE builder_column(VALUE self) {
  * Returns the indentation level
  */
 static VALUE builder_get_indent(VALUE self) {
-    return INT2NUM(((Builder)DATA_PTR(self))->indent);
+    Builder b;
+
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
+    return INT2NUM(b->indent);
 }
 
 /* call-seq: indent=(indent)
@@ -827,11 +864,15 @@ static VALUE builder_get_indent(VALUE self) {
  * - +indent+ (Fixnum) indentaion level, negative values excludes terminating newline
  */
 static VALUE builder_set_indent(VALUE self, VALUE indent) {
+    Builder b;
+
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
+
     if (rb_cInteger != rb_obj_class(indent)) {
         rb_raise(ox_parse_error_class, "indent must be a fixnum.\n");
     }
 
-    ((Builder)DATA_PTR(self))->indent = NUM2INT(indent);
+    b->indent = NUM2INT(indent);
     return Qnil;
 }
 
@@ -840,7 +881,10 @@ static VALUE builder_set_indent(VALUE self, VALUE indent) {
  * Returns the number of bytes written.
  */
 static VALUE builder_pos(VALUE self) {
-    return LONG2NUM(((Builder)DATA_PTR(self))->pos);
+    Builder b;
+
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
+    return LONG2NUM(b->pos);
 }
 
 /* call-seq: pop()
@@ -848,7 +892,9 @@ static VALUE builder_pos(VALUE self) {
  * Closes the current element.
  */
 static VALUE builder_pop(VALUE self) {
-    pop((Builder)DATA_PTR(self));
+    Builder b;
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
+    pop(b);
 
     return Qnil;
 }
@@ -858,7 +904,10 @@ static VALUE builder_pop(VALUE self) {
  * Closes the all elements and the document.
  */
 static VALUE builder_close(VALUE self) {
-    bclose((Builder)DATA_PTR(self));
+    Builder b;
+
+    TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
+    bclose(b);
 
     return Qnil;
 }

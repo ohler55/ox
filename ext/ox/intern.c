@@ -74,19 +74,19 @@ void ox_hash_init() {
 #endif
 
     ox_str_cache     = ox_cache_create(0, form_str, true, false);
-    ox_str_cache_obj = Data_Wrap_Struct(cache_class, ox_cache_mark, ox_cache_free, ox_str_cache);
+    ox_str_cache_obj = TypedData_Wrap_Struct(cache_class, &ox_cache_type, ox_str_cache);
     rb_gc_register_address(&ox_str_cache_obj);
 
     ox_sym_cache     = ox_cache_create(0, form_sym, true, false);
-    ox_sym_cache_obj = Data_Wrap_Struct(cache_class, ox_cache_mark, ox_cache_free, ox_sym_cache);
+    ox_sym_cache_obj = TypedData_Wrap_Struct(cache_class, &ox_cache_type, ox_sym_cache);
     rb_gc_register_address(&ox_sym_cache_obj);
 
     ox_attr_cache     = ox_cache_create(0, form_attr, false, false);
-    ox_attr_cache_obj = Data_Wrap_Struct(cache_class, ox_cache_mark, ox_cache_free, ox_attr_cache);
+    ox_attr_cache_obj = TypedData_Wrap_Struct(cache_class, &ox_cache_type, ox_attr_cache);
     rb_gc_register_address(&ox_attr_cache_obj);
 
     ox_id_cache     = ox_cache_create(0, form_id, false, false);
-    ox_id_cache_obj = Data_Wrap_Struct(cache_class, ox_cache_mark, ox_cache_free, ox_id_cache);
+    ox_id_cache_obj = TypedData_Wrap_Struct(cache_class, &ox_cache_type, ox_id_cache);
     rb_gc_register_address(&ox_id_cache_obj);
 }
 

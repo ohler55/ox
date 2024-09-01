@@ -18,6 +18,7 @@
 #include "ruby.h"
 #include "special.h"
 
+static void  mark_pi_cb(void *ptr);
 static void  read_instruction(PInfo pi);
 static void  read_doctype(PInfo pi);
 static void  read_comment(PInfo pi);
@@ -32,6 +33,17 @@ static char *read_10_uint64(char *b, uint64_t *up);
 static char *read_coded_chars(PInfo pi, char *text);
 static void  next_non_white(PInfo pi);
 static int   collapse_special(PInfo pi, char *str);
+
+static const rb_data_type_t ox_wrap_type = {
+    "Object",
+    {
+        mark_pi_cb,
+        NULL,
+        NULL,
+    },
+    0,
+    0,
+};
 
 /* This XML parser is a single pass, destructive, callback parser. It is a
  * single pass parse since it only make one pass over the characters in the
@@ -140,7 +152,7 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
     // initialize parse info
     helper_stack_init(&pi.helpers);
     // Protect against GC
-    wrap = Data_Wrap_Struct(rb_cObject, mark_pi_cb, NULL, &pi);
+    wrap = TypedData_Wrap_Struct(rb_cObject, &ox_wrap_type, &pi);
 
     err_init(&pi.err);
     pi.str        = xml;

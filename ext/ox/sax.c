@@ -62,6 +62,17 @@ static Nv   hint_try_close(SaxDrive dr, const char *name);
 
 VALUE ox_sax_value_class = Qnil;
 
+const rb_data_type_t ox_sax_value_type = {
+    "Ox/Sax/Value",
+    {
+        NULL,
+        NULL,
+        NULL,
+    },
+    0,
+    0,
+};
+
 static VALUE protect_parse(VALUE drp) {
     parse((SaxDrive)drp);
 
@@ -256,7 +267,7 @@ static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions opti
     dr->buf.dr = dr;
     stack_init(&dr->stack);
     dr->handler   = handler;
-    dr->value_obj = Data_Wrap_Struct(ox_sax_value_class, 0, 0, dr);
+    dr->value_obj = TypedData_Wrap_Struct(ox_sax_value_class, &ox_sax_value_type, dr);
     rb_gc_register_address(&dr->value_obj);
     dr->options = *options;
     dr->err     = 0;
