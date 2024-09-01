@@ -234,7 +234,7 @@ static unsigned long get_id_from_attrs(PInfo pi, Attr a) {
     return 0;
 }
 
-static CircArray circ_array_new() {
+static CircArray circ_array_new(void) {
     CircArray ca;
 
     ca       = ALLOC(struct _circArray);

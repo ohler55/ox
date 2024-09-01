@@ -67,7 +67,7 @@ static VALUE form_id(const char *str, size_t len) {
     return (VALUE)rb_intern3(str, len, rb_utf8_encoding());
 }
 
-void ox_hash_init() {
+void ox_hash_init(void) {
     VALUE cache_class = rb_define_class_under(Ox, "Cache", rb_cObject);
 #if RUBY_API_VERSION_CODE >= 30200
     rb_undef_alloc_func(cache_class);

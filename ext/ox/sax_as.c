@@ -246,7 +246,7 @@ static VALUE sax_value_empty(VALUE self) {
  * Values in the SAX callbacks. They can be converted to various different
  * types. with the _as_x()_ methods.
  */
-void ox_sax_define() {
+void ox_sax_define(void) {
 #if 0
     ox = rb_define_module("Ox");
 #if RUBY_API_VERSION_CODE >= 30200

@@ -153,7 +153,7 @@ static struct _hint html_hint_array[] = {
 };
 static struct _hints html_hints = {"HTML", html_hint_array, sizeof(html_hint_array) / sizeof(*html_hint_array)};
 
-Hints ox_hints_html() {
+Hints ox_hints_html(void) {
     return &html_hints;
 }
 
