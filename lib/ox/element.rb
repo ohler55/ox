@@ -100,7 +100,11 @@ module Ox
     def replace_text(txt)
       raise 'the argument to replace_text() must be a String' unless txt.is_a?(String)
 
-      @nodes.clear
+      if !instance_variable_defined?(:@nodes) or @nodes.nil?
+        @node = []
+      else
+        @nodes.clear
+      end
       @nodes << txt
     end
 

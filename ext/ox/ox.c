@@ -1273,6 +1273,9 @@ static void parse_dump_options(VALUE ropts, Options copts) {
  * :strict
  *     - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
  *     - _:tolerant_ - replaces undumplable objects with nil
+ *   - *:with_dtd* [true|false|nil] include DTD in the dump
+ *   - *:with_instruct* [true|false|nil] include instructions in the dump
+ *   - *:with_xml* [true|false|nil] include XML prolog in the dump
  *
  * Note that an indent of less than zero will result in a tight one line output
  * unless the text in the XML fields contain new line characters.
@@ -1310,6 +1313,9 @@ static VALUE dump(int argc, VALUE *argv, VALUE self) {
  * :strict
  *     - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
  *     - _:tolerant_ - replaces undumplable objects with nil
+ *   - *:with_dtd* [true|false|nil] include DTD in the dump
+ *   - *:with_instruct* [true|false|nil] include instructions in the dump
+ *   - *:with_xml* [true|false|nil] include XML prolog in the dump
  *
  * Note that an indent of less than zero will result in a tight one line output
  * unless the text in the XML fields contain new line characters.
@@ -1331,6 +1337,9 @@ static VALUE to_xml(int argc, VALUE *argv, VALUE self) {
  * :strict
  *     - _:strict_ - raise an NotImplementedError if an undumpable object is encountered
  *     - _:tolerant_ - replaces undumplable objects with nil
+ *   - *:with_dtd* [true|false|nil] include DTD in the dump
+ *   - *:with_instruct* [true|false|nil] include instructions in the dump
+ *   - *:with_xml* [true|false|nil] include XML prolog in the dump
  *
  * Note that an indent of less than zero will result in a tight one line output
  * unless the text in the XML fields contain new line characters.

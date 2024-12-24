@@ -2,6 +2,18 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.19] - 2024-12-25
+
+### Fixed
+
+- Code cleanup in sax.c  to close issue #363.
+
+- Updated the dump options documentation to `:with_xml` option to resolve #352.
+
+- Updated the sax tests to pass to resolve #335.
+
+- Element#replace_text on nil `@nodes` no longer fails. Closes #364.
+
 ## [2.14.18] - 2024-03-21
 
 ### Fixed
