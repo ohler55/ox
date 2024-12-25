@@ -434,6 +434,26 @@ encoding = "UTF-8" ?>},
                   ])
   end
 
+  def test_sax_last_element_closed_not_opened
+    Ox.default_options = $ox_sax_options
+    parse_compare(%{</top>},
+                  [
+                    [:error, "Start End Mismatch: element 'top' closed but not opened", 1, 1],
+                    [:start_element, :top],
+                    [:end_element, :top]
+                  ])
+  end
+
+  def test_sax_last_unnamed_element_closed_not_opened
+    Ox.default_options = $ox_sax_options
+    parse_compare(%{</>},
+                  [
+                    [:error, "Start End Mismatch: element '' closed but not opened", 1, 1],
+                    [:start_element, :''],
+                    [:end_element, :'']
+                  ])
+  end
+
   def test_sax_empty_element
     Ox.default_options = $ox_sax_options
     parse_compare(%{  <top>  </top>},

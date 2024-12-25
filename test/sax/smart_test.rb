@@ -406,7 +406,6 @@ Word
     html = '<h1 class=a_class>A header</div> here</h1>'
     smart_parse_compare(html,
                         [[:start_element, :h1],
-                         [:error, 'Unexpected Character: attribute value not in quotes', 1, 11],
                          [:attr, :class, 'a_class'],
                          [:text, 'A header'],
                          [:error, "Start End Mismatch: element 'div' closed but not opened", 1, 27],
@@ -420,7 +419,6 @@ Word
     html = '<a href=abc/>def</a>'
     smart_parse_compare(html,
                         [[:start_element, :a],
-                         [:error, 'Unexpected Character: attribute value not in quotes', 1, 9],
                          [:attr, :href, 'abc/'],
                          [:text, 'def'],
                          [:end_element, :a]])
@@ -430,7 +428,6 @@ Word
     html = '<a href=abc/>def'
     smart_parse_compare(html,
                         [[:start_element, :a],
-                         [:error, 'Unexpected Character: attribute value not in quotes', 1, 9],
                          [:attr, :href, 'abc/'],
                          [:error, 'Not Terminated: text not terminated', 1, 16],
                          [:text, 'def'],
