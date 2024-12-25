@@ -995,11 +995,11 @@ static char read_element_end(SaxDrive dr) {
             } else {
                 snprintf(msg, sizeof(msg) - 1, "%selement '%s' closed but not opened", EL_MISMATCH, dr->buf.str);
                 ox_sax_drive_error_at(dr, msg, pos, line, col);
-				if ('\x00' == *dr->buf.tail) {
-					name = str2sym(dr, dr->buf.str, dr->buf.tail - dr->buf.str - 1, 0);
-				} else {
-					name = str2sym(dr, dr->buf.str, dr->buf.tail - dr->buf.str - 2, 0);
-				}
+                if ('\x00' == *dr->buf.tail) {
+                    name = str2sym(dr, dr->buf.str, dr->buf.tail - dr->buf.str - 1, 0);
+                } else {
+                    name = str2sym(dr, dr->buf.str, dr->buf.tail - dr->buf.str - 2, 0);
+                }
                 if (dr->has_start_element && 0 >= dr->blocked &&
                     (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {
                     VALUE args[1];

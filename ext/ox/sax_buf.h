@@ -39,8 +39,7 @@ typedef struct _checkPt {
     char  c;
 } *CheckPt;
 
-#define CHECK_PT_INIT \
-    { -1, 0, 0, 0, '\0' }
+#define CHECK_PT_INIT {-1, 0, 0, 0, '\0'}
 
 extern void ox_sax_buf_init(Buf buf, VALUE io);
 extern int  ox_sax_buf_read(Buf buf);
