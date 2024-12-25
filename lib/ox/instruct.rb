@@ -23,7 +23,7 @@ module Ox
     # - +other+ [Object] Object compare _self_ to.
     # *return* [Boolean] true if both Objects are equivalent, otherwise false.
     def eql?(other)
-      return false unless super(other)
+      return false unless super
       return false unless attributes == other.attributes
       return false unless content == other.content
 

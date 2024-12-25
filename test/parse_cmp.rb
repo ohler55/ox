@@ -38,7 +38,7 @@ end
 
 def node_to_array(element)
   a = []
-  element.nodes.each do |n|
+  element.nodes.map do |n|
     a.push(node_to_value(n))
   end
   a

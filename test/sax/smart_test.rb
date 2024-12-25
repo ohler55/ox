@@ -146,7 +146,7 @@ class ErrorsOnParentNormalElementTest < SaxSmartTest
 
   def initialize(*args)
     @w = lambda { |s, ws| "<#{ws}>" + s + "</#{ws}>" }
-    super(*args)
+    super
   end
 
   def parents_of(el)

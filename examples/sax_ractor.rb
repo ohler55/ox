@@ -19,7 +19,7 @@ class Saxtor < Ox::Sax
   # and throw it away otherwise.
   CYO = Struct.new(:ietf, :globs, :description) do
     def initialize(ietf = nil, globs = [], description = nil)
-      super(ietf, globs, description)
+      super
     end
 
     def to_s # Pretty print

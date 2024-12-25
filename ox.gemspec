@@ -38,5 +38,5 @@ serialization. }
 
   s.metadata['rubygems_mfa_required'] = 'true'
 
-  s.add_runtime_dependency 'bigdecimal', '>= 3.0'
+  s.add_dependency 'bigdecimal', '>= 3.0'
 end
