@@ -347,7 +347,7 @@ DONE:
             if (0 == strcasecmp(a->name, "encoding")) {
                 strncpy(pi->options->encoding, a->value, sizeof(pi->options->encoding) - 1);
                 pi->options->encoding[sizeof(pi->options->encoding) - 1] = '\0';
-                pi->options->rb_enc = rb_enc_find(a->value);
+                pi->options->rb_enc                                      = rb_enc_find(a->value);
                 break;
             }
         }
