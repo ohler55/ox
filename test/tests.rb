@@ -1932,6 +1932,14 @@ comment -->
     end
     loaded
   end
+
+  def test_limit_encoding
+    Ox.default_options = $ox_object_options
+    xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><doc><name>Martin</name></doc>".encode('ASCII-8BIT')
+    enc = Ox.load(xml, mode: :limited).locate('name').first.text.encoding
+    assert_equal('UTF-8', enc.to_s)
+  end
+
 end
 
 class Bag
