@@ -342,6 +342,15 @@ DONE:
         } else {
             pi->pcb->instruct(pi, target, attrs.head, content_ptr);
         }
+    } else {
+	for (Attr a = attrs.head; a < attrs.tail; a++) {
+	    if (0 == strcasecmp(a->name, "encoding")) {
+		strncpy(pi->options->encoding, a->value, sizeof(pi->options->encoding) - 1);
+		pi->options->encoding[sizeof(pi->options->encoding) - 1] = '\0';
+		pi->options->rb_enc = rb_enc_find(a->value);
+		break;
+	    }
+	}
     }
     attr_stack_cleanup(&attrs);
     if (content_ptr != content) {
