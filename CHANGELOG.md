@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.20] - 2025-01-12
+
+### Fixed
+
+- The instruction encoding attribute is now used to set the encoding in the `:limited` mode.
+
 ## [2.14.19] - 2024-12-25
 
 ### Fixed
