@@ -13,10 +13,10 @@ end
 require 'optparse'
 require 'ox'
 
-it = 5000
+iter = 5000
 
 opts = OptionParser.new
-opts.on('-i', '--iterations [Int]', Integer, 'iterations')    { |i| it = i }
+opts.on('-i', '--iterations [Int]', Integer, 'iterations')    { |i| iter = i }
 opts.on('-h', '--help', 'Show this display')                  { puts opts; Process.exit!(0) }
 files = opts.parse(ARGV)
 
@@ -80,7 +80,7 @@ data.each do |type, a|
   # pp a
   # puts xml
   start = Time.now
-  (1..it).each do
+  (1..iter).each do
     obj = Ox.load(xml, mode: :object)
     # pp obj
   end
@@ -88,20 +88,20 @@ data.each do |type, a|
 
   m = Marshal.dump(a)
   start = Time.now
-  (1..it).each do
+  (1..iter).each do
     obj = Marshal.load(m)
   end
   mars_load_time = Time.now - start
 
   obj = Ox.load(xml, mode: :object)
   start = Time.now
-  (1..it).each do
+  (1..iter).each do
     xml = Ox.dump(a, indent: -1)
   end
   ox_dump_time = Time.now - start
 
   start = Time.now
-  (1..it).each do
+  (1..iter).each do
     m = Marshal.dump(a)
   end
   mars_dump_time = Time.now - start
