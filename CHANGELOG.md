@@ -2,6 +2,14 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.21] - 2025-01-15
+
+### Fixed
+
+- Removed internal dependency on BigDecimal. If BigDecimal is use it
+  must now be included in the calling code. This was forced by the
+  change in BigDecimal no longer being included in the Ruby core.
+
 ## [2.14.20] - 2025-01-12
 
 ### Fixed

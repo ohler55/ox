@@ -3,6 +3,8 @@
 # required. That can be set in the RUBYOPT environment variable.
 # export RUBYOPT=-w
 
+# frozen_string_literal: true
+
 $VERBOSE = true
 
 $: << File.join(File.dirname(__FILE__), '../lib')
@@ -836,9 +838,6 @@ class Func < Test::Unit::TestCase
       a << e
       a << b
       loaded = dump_and_load(b, false, true)
-      # modify the string
-      loaded.instance_variable_get(:@s).gsub!(',', '_')
-      b.instance_variable_get(:@s).gsub!(',', '_')
       # modify hash
       loaded.instance_variable_get(:@h)[1] = 3
       b.instance_variable_get(:@h)[1] = 3
@@ -1915,7 +1914,8 @@ comment -->
 
   def test_encoding_ascii
     Ox.default_options = $ox_generic_options
-    xml = '<?xml version="1.0" encoding="UTF-8" ?><text>H&#233;ra&#239;dios</text>'.force_encoding(Encoding::ASCII_8BIT)
+    xml = '<?xml version="1.0" encoding="UTF-8" ?><text>H&#233;ra&#239;dios</text>'.dup
+    xml.force_encoding(Encoding::ASCII_8BIT)
     text = Ox.load(xml).root.text
     assert_equal('Héraïdios', text)
     assert_equal(Encoding::UTF_8, text.encoding)

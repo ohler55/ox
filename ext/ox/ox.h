@@ -218,7 +218,6 @@ extern VALUE ox_sym_bank;  // Array
 extern VALUE ox_version_sym;
 extern VALUE ox_zero_fixnum;
 
-extern VALUE ox_bigdecimal_class;
 extern VALUE ox_date_class;
 extern VALUE ox_stringio_class;
 extern VALUE ox_struct_class;

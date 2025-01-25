@@ -87,7 +87,6 @@ VALUE ox_sym_bank;  // Array
 
 VALUE ox_arg_error_class;
 VALUE ox_bag_clas;
-VALUE ox_bigdecimal_class;
 VALUE ox_cdata_clas;
 VALUE ox_comment_clas;
 VALUE ox_raw_clas;
@@ -1399,7 +1398,7 @@ void Init_ox(void) {
 
     rb_require("time");
     rb_require("date");
-    rb_require("bigdecimal");
+    // rb_require("bigdecimal");
     rb_require("stringio");
 
     ox_abort_id             = rb_intern("abort");
@@ -1471,7 +1470,6 @@ void Init_ox(void) {
     ox_arg_error_class    = rb_const_get_at(Ox, rb_intern("ArgError"));
     ox_struct_class       = rb_const_get(rb_cObject, rb_intern("Struct"));
     ox_stringio_class     = rb_const_get(rb_cObject, rb_intern("StringIO"));
-    ox_bigdecimal_class   = rb_const_get(rb_cObject, rb_intern("BigDecimal"));
 
     abort_sym = ID2SYM(rb_intern("abort"));
     rb_gc_register_address(&abort_sym);
@@ -1589,7 +1587,6 @@ void Init_ox(void) {
     rb_gc_register_address(&ox_arg_error_class);
     rb_gc_register_address(&ox_bag_clas);
     rb_gc_register_address(&ox_bag_clas);
-    rb_gc_register_address(&ox_bigdecimal_class);
     rb_gc_register_address(&ox_cdata_clas);
     rb_gc_register_address(&ox_cdata_clas);
     rb_gc_register_address(&ox_comment_clas);
