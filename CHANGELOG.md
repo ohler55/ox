@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.22] - 2025-02-11
+
+### Fixed
+
+- Fix issue with first text character lost after unquoted attribute value.
+
 ## [2.14.21] - 2025-01-15
 
 ### Fixed

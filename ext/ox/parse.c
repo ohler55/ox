@@ -692,8 +692,12 @@ static char *read_element(PInfo pi) {
                     break;
                 }
             } else { /* read as TEXT */
+                char prev = *(start - 1);
+
                 pi->s = start;
-                /*pi->s--; */
+                if ('>' != prev && (' ' <= prev || is_white(prev))) {
+                    pi->s--;
+                }
                 read_text(pi);
                 /*read_reduced_text(pi); */
 
