@@ -260,11 +260,11 @@ void ox_sax_define(void) {
     rb_undef_alloc_func(ox_sax_value_class);
 #endif
 
-    rb_define_method(ox_sax_value_class, "as_s", sax_value_as_s, 0);
-    rb_define_method(ox_sax_value_class, "as_sym", sax_value_as_sym, 0);
-    rb_define_method(ox_sax_value_class, "as_i", sax_value_as_i, 0);
-    rb_define_method(ox_sax_value_class, "as_f", sax_value_as_f, 0);
-    rb_define_method(ox_sax_value_class, "as_time", sax_value_as_time, 0);
-    rb_define_method(ox_sax_value_class, "as_bool", sax_value_as_bool, 0);
-    rb_define_method(ox_sax_value_class, "empty?", sax_value_empty, 0);
+    rb_define_method(ox_sax_value_class, "as_s", RUBY_METHOD_FUNC(sax_value_as_s), 0);
+    rb_define_method(ox_sax_value_class, "as_sym", RUBY_METHOD_FUNC(sax_value_as_sym), 0);
+    rb_define_method(ox_sax_value_class, "as_i", RUBY_METHOD_FUNC(sax_value_as_i), 0);
+    rb_define_method(ox_sax_value_class, "as_f", RUBY_METHOD_FUNC(sax_value_as_f), 0);
+    rb_define_method(ox_sax_value_class, "as_time", RUBY_METHOD_FUNC(sax_value_as_time), 0);
+    rb_define_method(ox_sax_value_class, "as_bool", RUBY_METHOD_FUNC(sax_value_as_bool), 0);
+    rb_define_method(ox_sax_value_class, "empty?", RUBY_METHOD_FUNC(sax_value_empty), 0);
 }

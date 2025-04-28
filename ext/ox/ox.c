@@ -1377,22 +1377,22 @@ void Init_ox(void) {
 #endif
     Ox = rb_define_module("Ox");
 
-    rb_define_module_function(Ox, "default_options", get_def_opts, 0);
-    rb_define_module_function(Ox, "default_options=", set_def_opts, 1);
+    rb_define_module_function(Ox, "default_options", RUBY_METHOD_FUNC(get_def_opts), 0);
+    rb_define_module_function(Ox, "default_options=", RUBY_METHOD_FUNC(set_def_opts), 1);
 
-    rb_define_module_function(Ox, "parse_obj", to_obj, 1);
-    rb_define_module_function(Ox, "parse", to_gen, 1);
-    rb_define_module_function(Ox, "load", load_str, -1);
-    rb_define_module_function(Ox, "sax_parse", sax_parse, -1);
-    rb_define_module_function(Ox, "sax_html", sax_html, -1);
+    rb_define_module_function(Ox, "parse_obj", RUBY_METHOD_FUNC(to_obj), 1);
+    rb_define_module_function(Ox, "parse", RUBY_METHOD_FUNC(to_gen), 1);
+    rb_define_module_function(Ox, "load", RUBY_METHOD_FUNC(load_str), -1);
+    rb_define_module_function(Ox, "sax_parse", RUBY_METHOD_FUNC(sax_parse), -1);
+    rb_define_module_function(Ox, "sax_html", RUBY_METHOD_FUNC(sax_html), -1);
 
-    rb_define_module_function(Ox, "to_xml", to_xml, -1);
-    rb_define_module_function(Ox, "dump", dump, -1);
+    rb_define_module_function(Ox, "to_xml", RUBY_METHOD_FUNC(to_xml), -1);
+    rb_define_module_function(Ox, "dump", RUBY_METHOD_FUNC(dump), -1);
 
-    rb_define_module_function(Ox, "load_file", load_file, -1);
-    rb_define_module_function(Ox, "to_file", to_file, -1);
+    rb_define_module_function(Ox, "load_file", RUBY_METHOD_FUNC(load_file), -1);
+    rb_define_module_function(Ox, "to_file", RUBY_METHOD_FUNC(to_file), -1);
 
-    rb_define_module_function(Ox, "sax_html_overlay", sax_html_overlay, 0);
+    rb_define_module_function(Ox, "sax_html_overlay", RUBY_METHOD_FUNC(sax_html_overlay), 0);
 
     ox_init_builder(Ox);
 

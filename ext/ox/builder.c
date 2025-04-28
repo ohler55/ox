@@ -926,23 +926,23 @@ void ox_init_builder(VALUE ox) {
 #if RUBY_API_VERSION_CODE >= 30200
     rb_undef_alloc_func(builder_class);
 #endif
-    rb_define_module_function(builder_class, "new", builder_new, -1);
-    rb_define_module_function(builder_class, "file", builder_file, -1);
-    rb_define_module_function(builder_class, "io", builder_io, -1);
-    rb_define_method(builder_class, "instruct", builder_instruct, -1);
-    rb_define_method(builder_class, "comment", builder_comment, 1);
-    rb_define_method(builder_class, "doctype", builder_doctype, 1);
-    rb_define_method(builder_class, "element", builder_element, -1);
-    rb_define_method(builder_class, "void_element", builder_void_element, -1);
-    rb_define_method(builder_class, "text", builder_text, -1);
-    rb_define_method(builder_class, "cdata", builder_cdata, 1);
-    rb_define_method(builder_class, "raw", builder_raw, 1);
-    rb_define_method(builder_class, "pop", builder_pop, 0);
-    rb_define_method(builder_class, "close", builder_close, 0);
-    rb_define_method(builder_class, "to_s", builder_to_s, 0);
-    rb_define_method(builder_class, "line", builder_line, 0);
-    rb_define_method(builder_class, "column", builder_column, 0);
-    rb_define_method(builder_class, "pos", builder_pos, 0);
-    rb_define_method(builder_class, "indent", builder_get_indent, 0);
-    rb_define_method(builder_class, "indent=", builder_set_indent, 1);
+    rb_define_module_function(builder_class, "new", RUBY_METHOD_FUNC(builder_new), -1);
+    rb_define_module_function(builder_class, "file", RUBY_METHOD_FUNC(builder_file), -1);
+    rb_define_module_function(builder_class, "io", RUBY_METHOD_FUNC(builder_io), -1);
+    rb_define_method(builder_class, "instruct", RUBY_METHOD_FUNC(builder_instruct), -1);
+    rb_define_method(builder_class, "comment", RUBY_METHOD_FUNC(builder_comment), 1);
+    rb_define_method(builder_class, "doctype", RUBY_METHOD_FUNC(builder_doctype), 1);
+    rb_define_method(builder_class, "element", RUBY_METHOD_FUNC(builder_element), -1);
+    rb_define_method(builder_class, "void_element", RUBY_METHOD_FUNC(builder_void_element), -1);
+    rb_define_method(builder_class, "text", RUBY_METHOD_FUNC(builder_text), -1);
+    rb_define_method(builder_class, "cdata", RUBY_METHOD_FUNC(builder_cdata), 1);
+    rb_define_method(builder_class, "raw", RUBY_METHOD_FUNC(builder_raw), 1);
+    rb_define_method(builder_class, "pop", RUBY_METHOD_FUNC(builder_pop), 0);
+    rb_define_method(builder_class, "close", RUBY_METHOD_FUNC(builder_close), 0);
+    rb_define_method(builder_class, "to_s", RUBY_METHOD_FUNC(builder_to_s), 0);
+    rb_define_method(builder_class, "line", RUBY_METHOD_FUNC(builder_line), 0);
+    rb_define_method(builder_class, "column", RUBY_METHOD_FUNC(builder_column), 0);
+    rb_define_method(builder_class, "pos", RUBY_METHOD_FUNC(builder_pos), 0);
+    rb_define_method(builder_class, "indent", RUBY_METHOD_FUNC(builder_get_indent), 0);
+    rb_define_method(builder_class, "indent=", RUBY_METHOD_FUNC(builder_set_indent), 1);
 }
