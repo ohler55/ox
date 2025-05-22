@@ -1409,7 +1409,7 @@ class Func < Test::Unit::TestCase
     Ox.load('<one>first</one><two>second</two><!--three-->') do |x|
       results << Ox.dump(x)
     end
-    assert_equal("\n<one>first</one>\n\n<two>second</two>\n\n<!-- three -->\n", results.join)
+    assert_equal("\n<one>first</one>\n\n<two>second</two>\n\n<!--three-->\n", results.join)
   end
 
   def test_namespace_no_strip

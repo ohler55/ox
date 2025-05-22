@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.23] - 2025-05-23
+
+### Changed
+
+- Comments are no longer space padded to be similar with other XML writers.
+
 ## [2.14.22] - 2025-02-11
 
 ### Fixed

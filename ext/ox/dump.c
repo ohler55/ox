@@ -1112,7 +1112,7 @@ static int dump_gen_nodes(VALUE obj, int depth, Out out) {
                 dump_str_value(out, StringValuePtr(*(VALUE *)np), RSTRING_LEN(*np), xml_element_chars);
                 indent_needed = (1 == cnt) ? 0 : 1;
             } else if (ox_comment_clas == clas) {
-                dump_gen_val_node(*np, d2, "<!-- ", 5, " -->", 4, out);
+                dump_gen_val_node(*np, d2, "<!--", 4, "-->", 3, out);
             } else if (ox_raw_clas == clas) {
                 dump_gen_val_node(*np, d2, "", 0, "", 0, out);
             } else if (ox_cdata_clas == clas) {
