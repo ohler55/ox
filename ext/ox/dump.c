@@ -1080,7 +1080,7 @@ static void dump_gen_instruct(VALUE obj, int depth, Out out) {
     *out->cur++ = '?';
     fill_value(out, name, nlen);
     if (0 != content) {
-	if (' ' != *content) {
+        if (' ' != *content) {
             dump_value(out, " ", 1);
         }
         fill_value(out, content, clen);
