@@ -1460,6 +1460,15 @@ class Func < Test::Unit::TestCase
 |, Ox.dump(doc))
   end
 
+  def test_generic_cdata
+    Ox.default_options = $ox_generic_options
+    g = Ox::CData.new('test')
+    assert_equal(%|
+<![CDATA[test]]>
+|, Ox.dump(g))
+  end
+
+
   def test_prepend_child_invalid_node
     parent = Ox::Element.new('Parent')
     invalid_node = 12_345

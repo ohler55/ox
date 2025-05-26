@@ -1213,6 +1213,14 @@ static void dump_obj_to_xml(VALUE obj, Options copts, Out out) {
         dump_gen_doc(obj, -1, out);
     } else if (ox_element_clas == clas) {
         dump_gen_element(obj, 0, out);
+    } else if (ox_cdata_clas == clas) {
+        dump_gen_val_node(obj, 0, "<![CDATA[", 9, "]]>", 3, out);
+    } else if (ox_instruct_clas == clas) {
+        dump_gen_instruct(obj, 0, out);
+    } else if (ox_comment_clas == clas) {
+        dump_gen_val_node(obj, 0, "<!--", 4, "-->", 3, out);
+    } else if (ox_doctype_clas == clas) {
+        dump_gen_val_node(obj, 0, "<!DOCTYPE ", 10, ">", 1, out);
     } else {
         out->w_start = dump_start;
         out->w_end   = dump_end;
