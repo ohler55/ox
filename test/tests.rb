@@ -363,6 +363,20 @@ class Func < Test::Unit::TestCase
     assert_equal(xml, x)
   end
 
+  def test_gen_instruction
+    doc = Ox::Document.new
+    inst = Ox::Instruct.new("xml")
+    inst.content = ' quux'
+    doc << inst
+    assert_equal("<?xml quux?>\n", Ox.dump(doc))
+
+    doc = Ox::Document.new
+    inst = Ox::Instruct.new("xml")
+    inst.content = 'quux'
+    doc << inst
+    assert_equal("<?xml quux?>\n", Ox.dump(doc))
+  end
+
   def test_big_instruction
     Ox.default_options = $ox_object_options
     xml = %{<?xml version="1.0"?>

@@ -1080,6 +1080,9 @@ static void dump_gen_instruct(VALUE obj, int depth, Out out) {
     *out->cur++ = '?';
     fill_value(out, name, nlen);
     if (0 != content) {
+	if (' ' != *content) {
+            dump_value(out, " ", 1);
+        }
         fill_value(out, content, clen);
     } else if (Qnil != attrs) {
         rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
