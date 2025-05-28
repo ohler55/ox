@@ -278,7 +278,7 @@ module Ox
 
           i += 1
           qual = step[i..i] # step[i] would be better but some rubies (jruby, ree, rbx) take that as a Fixnum.
-          if '0' <= qual and qual <= '9'
+          if qual.between?('0', '9')
             qual = '+'
           else
             i += 1
