@@ -1080,6 +1080,9 @@ static void dump_gen_instruct(VALUE obj, int depth, Out out) {
     *out->cur++ = '?';
     fill_value(out, name, nlen);
     if (0 != content) {
+        if (' ' != *content) {
+            dump_value(out, " ", 1);
+        }
         fill_value(out, content, clen);
     } else if (Qnil != attrs) {
         rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
@@ -1112,7 +1115,7 @@ static int dump_gen_nodes(VALUE obj, int depth, Out out) {
                 dump_str_value(out, StringValuePtr(*(VALUE *)np), RSTRING_LEN(*np), xml_element_chars);
                 indent_needed = (1 == cnt) ? 0 : 1;
             } else if (ox_comment_clas == clas) {
-                dump_gen_val_node(*np, d2, "<!-- ", 5, " -->", 4, out);
+                dump_gen_val_node(*np, d2, "<!--", 4, "-->", 3, out);
             } else if (ox_raw_clas == clas) {
                 dump_gen_val_node(*np, d2, "", 0, "", 0, out);
             } else if (ox_cdata_clas == clas) {
@@ -1210,6 +1213,14 @@ static void dump_obj_to_xml(VALUE obj, Options copts, Out out) {
         dump_gen_doc(obj, -1, out);
     } else if (ox_element_clas == clas) {
         dump_gen_element(obj, 0, out);
+    } else if (ox_cdata_clas == clas) {
+        dump_gen_val_node(obj, 0, "<![CDATA[", 9, "]]>", 3, out);
+    } else if (ox_instruct_clas == clas) {
+        dump_gen_instruct(obj, 0, out);
+    } else if (ox_comment_clas == clas) {
+        dump_gen_val_node(obj, 0, "<!--", 4, "-->", 3, out);
+    } else if (ox_doctype_clas == clas) {
+        dump_gen_val_node(obj, 0, "<!DOCTYPE ", 10, ">", 1, out);
     } else {
         out->w_start = dump_start;
         out->w_end   = dump_end;

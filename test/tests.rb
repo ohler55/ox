@@ -190,12 +190,12 @@ class Func < Test::Unit::TestCase
     if RUBY_VERSION.start_with?('1.8')
       assert(true)
     else
-      dump_and_load((0..3), false)
-      dump_and_load((-2..3.7), false)
-      dump_and_load(('a'...'f'), false)
+      dump_and_load(0..3, false)
+      dump_and_load(-2..3.7, false)
+      dump_and_load('a'...'f', false)
       t = Time.local(2012, 1, 5, 23, 58, 7)
       t2 = t + 20
-      dump_and_load((t..t2), false)
+      dump_and_load(t..t2, false)
     end
   end
 
@@ -361,6 +361,20 @@ class Func < Test::Unit::TestCase
     assert_equal({}, inst.attributes)
     x = Ox.dump(doc, with_xml: true)
     assert_equal(xml, x)
+  end
+
+  def test_gen_instruction
+    doc = Ox::Document.new
+    inst = Ox::Instruct.new('xml')
+    inst.content = ' quux'
+    doc << inst
+    assert_equal("<?xml quux?>\n", Ox.dump(doc))
+
+    doc = Ox::Document.new
+    inst = Ox::Instruct.new('xml')
+    inst.content = 'quux'
+    doc << inst
+    assert_equal("<?xml quux?>\n", Ox.dump(doc))
   end
 
   def test_big_instruction
@@ -1409,7 +1423,7 @@ class Func < Test::Unit::TestCase
     Ox.load('<one>first</one><two>second</two><!--three-->') do |x|
       results << Ox.dump(x)
     end
-    assert_equal("\n<one>first</one>\n\n<two>second</two>\n\n<!-- three -->\n", results.join)
+    assert_equal("\n<one>first</one>\n\n<two>second</two>\n\n<!--three-->\n", results.join)
   end
 
   def test_namespace_no_strip
@@ -1444,6 +1458,14 @@ class Func < Test::Unit::TestCase
   <two out="no" other:space="yes">inside</two>
 </one>
 |, Ox.dump(doc))
+  end
+
+  def test_generic_cdata
+    Ox.default_options = $ox_generic_options
+    g = Ox::CData.new('test')
+    assert_equal(%|
+<![CDATA[test]]>
+|, Ox.dump(g))
   end
 
   def test_prepend_child_invalid_node
