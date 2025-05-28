@@ -192,7 +192,7 @@ class Func < Test::Unit::TestCase
     else
       dump_and_load(0..3, false)
       dump_and_load(-2..3.7, false)
-      dump_and_load(('a'...'f'), false)
+      dump_and_load('a'...'f', false)
       t = Time.local(2012, 1, 5, 23, 58, 7)
       t2 = t + 20
       dump_and_load(t..t2, false)
