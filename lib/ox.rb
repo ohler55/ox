@@ -76,4 +76,4 @@ require 'ox/bag'
 require 'ox/sax'
 
 # C extension
-require_relative "ox.#{RbConfig::CONFIG['DLEXT']}"
+require "ox.#{RbConfig::CONFIG['DLEXT']}"
