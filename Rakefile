@@ -4,9 +4,7 @@ require 'bundler/gem_tasks'
 require 'rake/extensiontask'
 require 'rake/testtask'
 
-Rake::ExtensionTask.new('ox') do |ext|
-  ext.lib_dir = 'lib/ox'
-end
+Rake::ExtensionTask.new('ox')
 
 task test_all: [:clean, :compile] do
   $stdout.flush
