@@ -1,5 +1,10 @@
 #!/usr/bin/env ruby
 
+# Use the current repo if run from the examples directory.
+ox_dir = File.dirname(File.dirname(File.expand_path(__FILE__)))
+$LOAD_PATH << File.join(ox_dir, 'ext')
+$LOAD_PATH << File.join(ox_dir, 'lib')
+
 require 'ox'
 require 'pathname'
 
@@ -35,7 +40,7 @@ class Saxtor < Ox::Sax
 
   # Set up our parsing environment and open a file handle for our XML.
   def initialize(parent, haystack)
-    super
+    super()
     @parse_stack = [] # Track our current Element as we parse.
     @parent = parent # `Ractor` that instantiated us.
     @haystack = File.open(haystack, File::Constants::RDONLY)
@@ -176,11 +181,15 @@ end
 (0..head_count).each { herd[_1].send(needles[_1]) }
 
 # Wait for every `Ractor` to have a result, and then pretty print all of them :)
-pp (0..head_count).map do
+# rubocop:disable Lint/AmbiguousBlockAssociation
+# rubocop:disable Style/BlockDelimiters
+pp (0..head_count).map {
   [herd[_1], herd[_1].take]
-end.map do
+}.map {
   "#{_1.name} gave us #{_2 || 'nothing'}"
-end
+}
+# rubocop:enable Lint/AmbiguousBlockAssociation
+# rubocop:enable Style/BlockDelimiters
 
 # Hotdog Style.
 puts
