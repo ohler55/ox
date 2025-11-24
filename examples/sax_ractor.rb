@@ -39,12 +39,13 @@ class Saxtor < Ox::Sax
   end
 
   # Set up our parsing environment and open a file handle for our XML.
-  def initialize(parent, haystack)
+  def initialize(parent, haystack, port = nil)
     super()
     @parse_stack = [] # Track our current Element as we parse.
     @parent = parent # `Ractor` that instantiated us.
     @haystack = File.open(haystack, File::Constants::RDONLY)
     @haystack.advise(:sequential)
+    @port = port
   end
 
   # Stratch `Struct`.
@@ -116,7 +117,7 @@ class Saxtor < Ox::Sax
     )
 
     # Let our parent `#take` our needle-equivalent `CYO`, or `nil`.
-    Ractor.yield(@out)
+    @port ? @port.send(@out) : Ractor.yield(@out)
   end # def awen
 end # class Saxtor
 
@@ -161,18 +162,19 @@ needles = ARGV[1...]
 puts 'Parallel Ractors'
 # Create one `Ractor` for every given media-type argument
 moo = ['Heifer', 'Cow', 'Bull', 'Steer'].tally
+port = defined?(Ractor::Port) ? Ractor::Port.new : nil
 head_count = needles.size - 1
 herd = (0..head_count).map do
   # Give our worker `Ractor` a name, otherwise its `#name` will return `nil`.
   individual = moo.keys.sample
   moo[individual] += 1
-  Ractor.new(haystack, name: "#{individual} #{moo[individual] - 1}") do |haystack|
+  Ractor.new(haystack, port, name: "#{individual} #{moo[individual] - 1}") do |haystack, port|
     # Initialize an `Ox::Sax` handler for our given source file.
-    handler = Saxtor.new(Ractor.current, haystack)
+    handler = Saxtor.new(Ractor.current, haystack, port)
 
     # Now we can `#send` a needle to this `Ractor` and make it search the haystack!
     while ietf_string = Ractor.receive
-      Ractor.yield(handler.awen(ietf_string))
+      port ? port.send(handler.awen(ietf_string)) : Ractor.yield(handler.awen(ietf_string))
     end
   end
 end
@@ -184,7 +186,7 @@ end
 # rubocop:disable Lint/AmbiguousBlockAssociation
 # rubocop:disable Style/BlockDelimiters
 pp (0..head_count).map {
-  [herd[_1], herd[_1].take]
+  [herd[_1], port ? port.receive : herd[_1].take]
 }.map {
   "#{_1.name} gave us #{_2 || 'nothing'}"
 }
@@ -194,12 +196,13 @@ pp (0..head_count).map {
 # Hotdog Style.
 puts
 puts 'Serial Ractor'
+port = defined?(Ractor::Port) ? Ractor::Port.new : nil
 # Create a single `Ractor` and send every media-type to it in series.
-only_one_ox = Ractor.new(haystack, name: 'ONLY ONE OX') do |haystack|
-  handler = Saxtor.new(Ractor.current, haystack)
+only_one_ox = Ractor.new(haystack, port, name: 'ONLY ONE OX') do |haystack, port|
+  handler = Saxtor.new(Ractor.current, haystack, port)
   while ietf_string = Ractor.receive
     handler.awen(ietf_string)
   end
 end
 (0..head_count).each { only_one_ox.send(needles[_1]) }
-pp "#{only_one_ox.name} gave us #{(0..head_count).map { only_one_ox.take }}"
+pp "#{only_one_ox.name} gave us #{(0..head_count).map { port ? port.receive : only_one_ox.take }}"
