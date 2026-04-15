@@ -76,8 +76,4 @@ require 'ox/bag'
 require 'ox/sax'
 
 # C extension
-begin
-  require_relative "ox.#{RbConfig::CONFIG['DLEXT']}"
-rescue LoadError
-  require 'ox/ox'
-end
+require 'ox/ox'

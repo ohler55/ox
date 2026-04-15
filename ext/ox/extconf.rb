@@ -42,6 +42,6 @@ have_header('sys/uio.h')
 
 have_struct_member('struct tm', 'tm_gmtoff')
 
-create_makefile(extension_name)
+create_makefile("ox/#{extension_name}")
 
 `make clean`
