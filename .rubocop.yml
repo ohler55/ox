@@ -29,7 +29,7 @@ Style/WordArray:
   EnforcedStyle: brackets
 
 Style/SelectByKind:
-  EnforcedStyle: disable
+  Enabled: false
 
 Style/FileOpen:
   Exclude:
