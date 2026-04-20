@@ -1,13 +1,14 @@
 inherit_from: .rubocop_todo.yml
 
 AllCops:
-  TargetRubyVersion: 2.7
+  TargetRubyVersion: 3.4
   NewCops: enable
 
 Naming/MethodName:
   EnforcedStyle: snake_case
   Exclude:
     - 'test/tests.rb' # test_IO doesn't match
+    - 'test/sax/sax_test.rb'
 
 Style/FormatStringToken:
   EnforcedStyle: unannotated
@@ -26,3 +27,11 @@ Style/SymbolArray:
 
 Style/WordArray:
   EnforcedStyle: brackets
+
+Style/SelectByKind:
+  EnforcedStyle: disable
+
+Style/FileOpen:
+  Exclude:
+    - 'test/tests.rb' # test_IO doesn't match
+    - 'test/sax/sax_test.rb'
