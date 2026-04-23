@@ -19,13 +19,15 @@ end
 task test_all: [:clean, :compile] do
   $stdout.flush
   exitcode = 0
-  status = 0
+  status = true
 
-  cmds = 'bundle exec ruby test/tests.rb -v'
+  %w[test/tests.rb test/sax/sax_test.rb].each do |test|
+    cmds = "bundle exec ruby #{test} -v"
 
-  $stdout.syswrite "\n#{'#' * 90}\n#{cmds}\n"
-  Bundler.with_original_env do
-    status = run(cmds)
+    $stdout.syswrite "\n#{'#' * 90}\n#{cmds}\n"
+    Bundler.with_original_env do
+      status = status && run(cmds)
+    end
   end
   exitcode = 1 unless status
 
