@@ -11,7 +11,7 @@ end
 def run(command)
   if ENV['OX_ASAN']
     @ld_preload ||= `gcc -print-file-name=libasan.so`.strip
-    command = "LD_PRELOAD=#{@ld_preload} #{command}"
+    command = "LD_PRELOAD=#{@ld_preload} ASAN_OPTIONS=detect_leaks=0 #{command}"
   end
   system command
 end

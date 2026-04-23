@@ -13,6 +13,8 @@ if [ -z "$OX_ASAN" ]; then
 fi
 
 if [ -n "$OX_ASAN" ]; then
+    # Hide leaks detection as recommended for Ruby VM
+    export ASAN_OPTIONS=detect_leaks=0
     export LD_PRELOAD=`gcc -print-file-name=libasan.so`
 fi
 
