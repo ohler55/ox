@@ -32,6 +32,16 @@ CONFIG['warnflags'].slice!(/ -Wsuggest-attribute=format/)
 CONFIG['warnflags'].slice!(/ -Wdeclaration-after-statement/)
 CONFIG['warnflags'].slice!(/ -Wmissing-noreturn/)
 
+if ENV['OX_ASAN'] || ENV['OX_DEBUG']
+  CONFIG["optflags"] = "-O0"
+  CONFIG["debugflags"] = "-ggdb3"
+end
+
+if ENV['OX_ASAN']
+  $LDFLAGS << " -fsanitize=address"
+  $CFLAGS << " -fsanitize=address"
+end
+
 have_func('rb_ext_ractor_safe', 'ruby.h')
 have_func('pthread_mutex_init')
 have_func('rb_enc_interned_str')
