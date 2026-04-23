@@ -8,6 +8,14 @@ Rake::ExtensionTask.new('ox') do |ext|
   ext.lib_dir = 'lib/ox'
 end
 
+def run(command)
+  if ENV['OX_ASAN']
+    @ld_preload ||= `gcc -print-file-name=libasan.so`.strip
+    command = "LD_PRELOAD=#{@ld_preload} #{command}"
+  end
+  system command
+end
+
 task test_all: [:clean, :compile] do
   $stdout.flush
   exitcode = 0
@@ -17,11 +25,15 @@ task test_all: [:clean, :compile] do
 
   $stdout.syswrite "\n#{'#' * 90}\n#{cmds}\n"
   Bundler.with_original_env do
-    status = system(cmds)
+    status = run(cmds)
   end
   exitcode = 1 unless status
 
-  Rake::Task['test'].invoke
+  unless ENV['OX_ASAN']
+    Rake::Task['test'].invoke
+  else
+    run('rake test')
+  end
   exit(1) if exitcode == 1
 end
 
