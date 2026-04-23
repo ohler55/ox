@@ -583,6 +583,14 @@ class Func < Test::Unit::TestCase
     end
   end
 
+  def test_escape_too_long
+    Ox.default_options = $ox_object_options
+    xml = %{<?xml encoding="UTF-8"?><top name="&0123456789ABCDE;"/>}
+    assert_raise(Ox::ParseError) do
+      Ox.parse(xml).root
+    end
+  end
+
   def test_escape_open_close_tag_names
     Ox.default_options = $ox_object_options
     b = Ox::Builder.new
