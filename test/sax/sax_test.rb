@@ -591,6 +591,16 @@ encoding = "UTF-8" ?>},
                     [:end_element, :top]
                   ])
   end
+
+  def test_sax_no_tag_only_text
+    Ox.default_options = $ox_sax_options
+    parse_compare(%{no tag, only text},
+                  [
+                    [:error, 'Not Terminated: text not terminated', 0, 17],
+                    [:text, 'no tag, only text']
+                  ])
+  end
+
   # TBD invalid chacters in text
 
   def test_sax_doctype
