@@ -579,7 +579,7 @@ static char *read_element(PInfo pi) {
             c = *pi->s++;
             if ('\0' == c) {
                 attr_stack_cleanup(&attrs);
-                set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
+                set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s - 1);
                 return 0;
             }
             if ('<' == c) {
