@@ -69,7 +69,7 @@ void ox_sax_buf_init(Buf buf, VALUE io) {
 }
 
 int ox_sax_buf_read(Buf buf) {
-    int    err;
+    int  err;
     long shift = 0;
 
     // if there is not much room to read into, shift or realloc a larger buffer.
