@@ -303,6 +303,14 @@ class Func < Test::Unit::TestCase
     end
   end
 
+  def test_not_closed_element_with_text
+    Ox.default_options = $ox_object_options
+    xml = %{<top>a}
+    assert_raise(Ox::ParseError) do
+      Ox.load(xml)
+    end
+  end
+
   def test_xml_instruction_format
     Ox.default_options = $ox_object_options
     xml = %{<?xml version="1.0" ?>

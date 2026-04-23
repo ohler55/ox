@@ -701,6 +701,11 @@ static char *read_element(PInfo pi) {
                 read_text(pi);
                 /*read_reduced_text(pi); */
 
+                if (err_has(&pi->err)) {
+                    attr_stack_cleanup(&attrs);
+                    return 0;
+                }
+
                 /* to exit read_text with no errors the next character must be < */
                 if ('/' == *(pi->s + 1) &&
                     0 == ((TolerantEffort == pi->options->effort) ? strncasecmp(ename, pi->s + 2, elen)
@@ -734,7 +739,10 @@ static void read_text(PInfo pi) {
             done = 1;
             pi->s--;
             break;
-        case '\0': set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s); return;
+        case '\0':
+            pi->s--;
+            set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
+            return;
         default:
             if (end <= (b + (('&' == c) ? 7 : 0))) { /* extra 8 for special just in case it is sequence of bytes */
                 unsigned long size;
