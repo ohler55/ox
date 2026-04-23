@@ -1146,7 +1146,7 @@ static int collapse_special(PInfo pi, char *str) {
                             return EDOM;
                         }
                         if (kend <= k) {
-                            k = key;
+                            k = key+1; // because k-- follows
                             break;
                         }
                         *k++ = *s;
