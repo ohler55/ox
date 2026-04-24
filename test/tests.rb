@@ -657,6 +657,14 @@ class Func < Test::Unit::TestCase
     assert_equal('Pete', doc.attributes[:name])
   end
 
+  def test_attribute_no_equal_but_white_space
+    Ox.default_options = $ox_generic_options
+    xml = %{<top name }
+    assert_raise(Ox::ParseError) do
+      Ox.load(xml)
+    end
+  end
+
   def test_skip_none
     Ox.default_options = $ox_object_options
     xml = %{<top>  Pete\r  Ohler <b>P</b> <b>O</b></top>}
