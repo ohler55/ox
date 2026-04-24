@@ -468,6 +468,16 @@ class Func < Test::Unit::TestCase
     assert_equal(%{Objects [<!ELEMENT Objects (RentObjects)><!ENTITY euml "&#235;"><!ENTITY Atilde "&#195;">]}, doc.nodes[0].value)
   end
 
+  def test_truncated_dtd
+    Ox.default_options = $ox_object_options
+    xml = %{<!DOCTYPE s SYSTEM \"ox.dtd\"}
+    ('<!DOCTYPE'.length..xml.length).each do |partial_length|
+      assert_raise(Ox::ParseError) do
+        Ox.parse(xml[0..partial_length])
+      end
+    end
+  end
+
   def test_quote_value
     Ox.default_options = $ox_object_options
     xml = %{<top name="Pete"/>}
