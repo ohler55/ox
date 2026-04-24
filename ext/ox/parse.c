@@ -535,6 +535,7 @@ static char *read_element(PInfo pi) {
                     break;
                 } else {
                     attr_stack_cleanup(&attrs);
+                    pi->s--;
                     set_error(&pi->err, "invalid format, no attribute value", pi->str, pi->s);
                     return 0;
                 }
