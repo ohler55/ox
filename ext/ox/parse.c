@@ -364,7 +364,8 @@ static void read_delimited(PInfo pi, char end) {
     if ('"' == end || '\'' == end) {
         for (c = *pi->s++; end != c; c = *pi->s++) {
             if ('\0' == c) {
-                set_error(&pi->err, "invalid format, dectype not terminated", pi->str, pi->s);
+                pi->s--;
+                set_error(&pi->err, "invalid format, doctype not terminated", pi->str, pi->s);
                 return;
             }
         }
@@ -375,7 +376,10 @@ static void read_delimited(PInfo pi, char end) {
                 return;
             }
             switch (c) {
-            case '\0': set_error(&pi->err, "invalid format, dectype not terminated", pi->str, pi->s); return;
+            case '\0':
+                pi->s--;
+                set_error(&pi->err, "invalid format, doctype not terminated", pi->str, pi->s);
+                return;
             case '"': read_delimited(pi, c); break;
             case '\'': read_delimited(pi, c); break;
             case '[': read_delimited(pi, ']'); break;
