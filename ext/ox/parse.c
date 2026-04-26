@@ -1040,6 +1040,10 @@ static char *read_coded_chars(PInfo pi, char *text) {
 
     for (b = buf, s = pi->s; b < end; b++, s++) {
         *b = *s;
+        if ('\0' == *s) {
+            set_error(&pi->err, "Not terminated coded char.", pi->str, pi->s);
+            return NULL;
+        }
         if (';' == *s) {
             *(b + 1) = '\0';
             blen     = b - buf;

@@ -609,7 +609,15 @@ class Func < Test::Unit::TestCase
     end
   end
 
-  def test_escape_too_long
+  def test_escape_truncated
+    Ox.default_options = $ox_object_options
+    xml = %{<top>&</top>}
+    assert_raise(Ox::ParseError) do
+      Ox.parse(xml)
+    end
+  end
+
+  def test_escape_too_long_in_attribute
     Ox.default_options = $ox_object_options
     xml = %{<?xml encoding="UTF-8"?><top name="&0123456789ABCDE;"/>}
     assert_raise(Ox::ParseError) do
