@@ -187,6 +187,30 @@ encoding = "UTF-8" ?>},
                   ])
   end
 
+  def test_sax_instruct_too_long
+    Ox.default_options = $ox_sax_options
+
+    parse_compare("<?bad #{'a' * 5000}",
+                   [
+                     [:instruct, 'bad'],
+                     [:error, 'processing instruction content too large', 1, 4102]
+                   ])
+  end
+
+  # See releted github issue:
+  def test_sax_instruct_too_long_ended_by_entity
+    Ox.default_options = $ox_sax_options
+
+    size = 4087
+    # The entity must be the last characters of an content with invalid attribute longer than 4096 bytes
+    content = "foo #{'a' * size} &lt;overflow"
+    parse_compare("<?bad #{content}",
+                   [
+                     [:instruct, 'bad'],
+                     [:error, 'processing instruction content too large', 1, 4102]
+                   ])
+  end
+
   def test_sax_element_simple
     Ox.default_options = $ox_sax_options
     parse_compare(%{<top/>},
