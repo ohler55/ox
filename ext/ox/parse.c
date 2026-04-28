@@ -302,6 +302,11 @@ DONE:
             }
             end = pi->s;
             next_non_white(pi);
+            if ('\0' == *pi->s) {
+                attr_stack_cleanup(&attrs);
+                set_error(&pi->err, "invalid format, processing instruction not terminated", pi->str, pi->s);
+                return;
+            }
             if ('=' != *pi->s++) {
                 attrs_ok = false;
                 break;
