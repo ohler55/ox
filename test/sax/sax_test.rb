@@ -192,8 +192,12 @@ encoding = "UTF-8" ?>},
 
     parse_compare("<?bad #{'a' * 5000}",
                    [
-                     [:instruct, 'bad'],
-                     [:error, 'processing instruction content too large', 1, 4102]
+                     [:instruct, "bad"],
+                     [:error, "processing instruction content too large", 1, 4102],
+                     [:error, "Not Terminated: document not terminated", 1, 5006],
+                     [:error, "Not Terminated: error reading token", 1, 5006],
+                     [:error, "Not Terminated: instruction not terminated", 1, 5006],
+                     [:end_instruct, "bad"]
                    ])
   end
 
@@ -206,9 +210,14 @@ encoding = "UTF-8" ?>},
     content = "foo #{'a' * size} &lt;overflow"
     parse_compare("<?bad #{content}",
                    [
-                     [:instruct, 'bad'],
-                     [:error, 'processing instruction content too large', 1, 4102]
-                   ])
+                     [:instruct, "bad"],
+                     [:error, "processing instruction content too large", 1, 4102],
+                     [:text, "foo #{'a' * size} <"],
+                     [:end_instruct, "bad"],
+                     [:error, "Not Terminated: text not terminated", 1, 19],
+                     [:text, "overflow"]
+                   ]
+                 )
   end
 
   def test_sax_element_simple

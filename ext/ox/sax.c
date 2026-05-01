@@ -1508,7 +1508,11 @@ int ox_sax_collapse_special(SaxDrive dr, char *str, long pos, long line, long co
                     c = '&';
                 } else {
                     b = bn;
-                    s = s2 + 1;
+                    if ('\0' != *s2) {
+                        s = s2 + 1;
+                    } else {
+                        s = s2;
+                    }
                     continue;
                 }
             }

@@ -302,6 +302,11 @@ DONE:
             }
             end = pi->s;
             next_non_white(pi);
+            if ('\0' == *pi->s) {
+                attr_stack_cleanup(&attrs);
+                set_error(&pi->err, "invalid format, processing instruction not terminated", pi->str, pi->s);
+                return;
+            }
             if ('=' != *pi->s++) {
                 attrs_ok = false;
                 break;
@@ -364,7 +369,8 @@ static void read_delimited(PInfo pi, char end) {
     if ('"' == end || '\'' == end) {
         for (c = *pi->s++; end != c; c = *pi->s++) {
             if ('\0' == c) {
-                set_error(&pi->err, "invalid format, dectype not terminated", pi->str, pi->s);
+                pi->s--;
+                set_error(&pi->err, "invalid format, doctype not terminated", pi->str, pi->s);
                 return;
             }
         }
@@ -375,7 +381,10 @@ static void read_delimited(PInfo pi, char end) {
                 return;
             }
             switch (c) {
-            case '\0': set_error(&pi->err, "invalid format, dectype not terminated", pi->str, pi->s); return;
+            case '\0':
+                pi->s--;
+                set_error(&pi->err, "invalid format, doctype not terminated", pi->str, pi->s);
+                return;
             case '"': read_delimited(pi, c); break;
             case '\'': read_delimited(pi, c); break;
             case '[': read_delimited(pi, ']'); break;
@@ -535,6 +544,7 @@ static char *read_element(PInfo pi) {
                     break;
                 } else {
                     attr_stack_cleanup(&attrs);
+                    pi->s--;
                     set_error(&pi->err, "invalid format, no attribute value", pi->str, pi->s);
                     return 0;
                 }
@@ -1035,6 +1045,10 @@ static char *read_coded_chars(PInfo pi, char *text) {
 
     for (b = buf, s = pi->s; b < end; b++, s++) {
         *b = *s;
+        if ('\0' == *s) {
+            set_error(&pi->err, "Not terminated coded char.", pi->str, pi->s);
+            return NULL;
+        }
         if (';' == *s) {
             *(b + 1) = '\0';
             blen     = b - buf;

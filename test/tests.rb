@@ -320,6 +320,14 @@ class Func < Test::Unit::TestCase
     assert_equal('Test', loaded);
   end
 
+  def test_xml_instruction_invalid
+    Ox.default_options = $ox_object_options
+    xml = %{<?xml foo="?>" bar }
+    assert_raise(Ox::ParseError) do
+      Ox.load(xml)
+    end
+  end
+
   def test_dump_invalid_character
     assert_raise(Ox::SyntaxError) { Ox.dump("foo\x19bar") }
   end
@@ -468,6 +476,16 @@ class Func < Test::Unit::TestCase
     assert_equal(%{Objects [<!ELEMENT Objects (RentObjects)><!ENTITY euml "&#235;"><!ENTITY Atilde "&#195;">]}, doc.nodes[0].value)
   end
 
+  def test_truncated_dtd
+    Ox.default_options = $ox_object_options
+    xml = %{<!DOCTYPE s SYSTEM \"ox.dtd\"}
+    ('<!DOCTYPE'.length..xml.length).each do |partial_length|
+      assert_raise(Ox::ParseError) do
+        Ox.parse(xml[0..partial_length])
+      end
+    end
+  end
+
   def test_quote_value
     Ox.default_options = $ox_object_options
     xml = %{<top name="Pete"/>}
@@ -599,7 +617,15 @@ class Func < Test::Unit::TestCase
     end
   end
 
-  def test_escape_too_long
+  def test_escape_truncated
+    Ox.default_options = $ox_object_options
+    xml = %{<top>&</top>}
+    assert_raise(Ox::ParseError) do
+      Ox.parse(xml)
+    end
+  end
+
+  def test_escape_too_long_in_attribute
     Ox.default_options = $ox_object_options
     xml = %{<?xml encoding="UTF-8"?><top name="&0123456789ABCDE;"/>}
     assert_raise(Ox::ParseError) do
@@ -645,6 +671,14 @@ class Func < Test::Unit::TestCase
     xml = %{<top name=Pete />}
     doc = Ox.load(xml, effort: :tolerant)
     assert_equal('Pete', doc.attributes[:name])
+  end
+
+  def test_attribute_no_equal_but_white_space
+    Ox.default_options = $ox_generic_options
+    xml = %{<top name }
+    assert_raise(Ox::ParseError) do
+      Ox.load(xml)
+    end
   end
 
   def test_skip_none
