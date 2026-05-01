@@ -364,7 +364,12 @@ static void parse(SaxDrive dr) {
         if ('<' == c) {
             c = buf_get(&dr->buf);
             switch (c) {
-            case '?': /* instructions (xml or otherwise) */ c = read_instruction(dr); break;
+            case '?': /* instructions (xml or otherwise) */
+                c = read_instruction(dr);
+                if ('\0' == c) {
+                    goto DONE;
+                }
+                break;
             case '!': /* comment or doctype */
                 buf_protect(&dr->buf);
                 c = buf_get(&dr->buf);
@@ -489,11 +494,12 @@ DONE:
 
 static void read_content(SaxDrive dr, char *content, size_t len) {
     char  c;
-    char *end = content + len;
+    char *start = content;
+    char *end   = content + len;
 
     while ('\0' != (c = buf_get(&dr->buf))) {
         if (end <= content) {
-            *content = '\0';
+            *start = '\0';
             ox_sax_drive_error(dr, "processing instruction content too large");
             return;
         }
@@ -537,7 +543,13 @@ static char read_instruction(SaxDrive dr) {
     pos  = dr->buf.pos;
     line = dr->buf.line;
     col  = dr->buf.col;
+
     read_content(dr, content, sizeof(content) - 1);
+    if (*content == '\0') {
+        // Content should not be read
+        return '\0';
+    }
+
     coff = (int)(dr->buf.tail - dr->buf.head);
     buf_reset(&dr->buf);
     dr->err = 0;
