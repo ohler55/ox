@@ -2,6 +2,12 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.26] - 2026-05-09
+
+### Fixed
+
+- Several fixes by by @albanpeignier
+
 ## [2.14.25] - 2026-04-23
 
 ### Added
