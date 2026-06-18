@@ -2,6 +2,20 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.27] - 2026-06-18
+
+### Fixed
+
+- Fixed stack overflow issue in the parser that occurred when reading
+  special character sequences.
+
+- Set a limit of 1000 as the maximum nesting depth of elements to
+  avoid stack exhaustion.
+
+- Added a note on the symbolize_keys option indicating it should not
+  be used on unregulated input where the symbol table could grow
+  indefinitely.
+
 ## [2.14.26] - 2026-05-09
 
 ### Fixed

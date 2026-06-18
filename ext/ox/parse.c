@@ -18,11 +18,13 @@
 #include "ruby.h"
 #include "special.h"
 
+#define MAX_ELEMENT_DEPTH 1000
+
 static void  mark_pi_cb(void *ptr);
 static void  read_instruction(PInfo pi);
 static void  read_doctype(PInfo pi);
 static void  read_comment(PInfo pi);
-static char *read_element(PInfo pi);
+static char *read_element(PInfo pi, int depth);
 static void  read_text(PInfo pi);
 /*static void	  read_reduced_text(PInfo pi); */
 static void  read_cdata(PInfo pi);
@@ -216,7 +218,7 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
             helper_stack_cleanup(&pi.helpers);
             return Qnil;
         default:
-            read_element(&pi);
+            read_element(&pi, 0);
             body_read = 1;
             break;
         }
@@ -452,7 +454,7 @@ static void read_comment(PInfo pi) {
 
 // Entered after the '<' and the first character after that. Returns stat
 // code.
-static char *read_element(PInfo pi) {
+static char *read_element(PInfo pi, int depth) {
     struct _attrStack attrs;
     const char       *attr_name;
     const char       *attr_value;
@@ -464,6 +466,10 @@ static char *read_element(PInfo pi) {
     int               hasChildren = 0;
     int               done        = 0;
 
+    if (MAX_ELEMENT_DEPTH < depth) {
+        set_error(&pi->err, "element nested too deeply, limit is 1000", pi->str, pi->s);
+        return 0;
+    }
     attr_stack_init(&attrs);
     if (0 == (ename = read_name_token(pi))) {
         return 0;
@@ -684,7 +690,7 @@ static char *read_element(PInfo pi) {
                     first = 0;
                     /* a child element */
                     // Child closed with mismatched name.
-                    if (0 != (name = read_element(pi))) {
+                    if (0 != (name = read_element(pi, depth + 1))) {
                         attr_stack_cleanup(&attrs);
 
                         if (0 ==
@@ -1056,7 +1062,8 @@ static char *read_coded_chars(PInfo pi, char *text) {
             break;
         }
     }
-    if (b > end) {
+    if (b >= end) {
+        // No terminating ; found in the first 31 bytes after an &.
         *text++ = '&';
     } else if ('#' == *buf) {
         uint64_t u = 0;

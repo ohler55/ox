@@ -274,7 +274,9 @@ static VALUE hints_to_overlay(Hints hints) {
  * - _:xsd_date_ [true|false|nil] use XSD date format instead of decimal format
  * - _:mode_ [:object|:generic|:limited|:hash|:hash_no_attrs|nil] load method to use for XML
  * - _:effort_ [:strict|:tolerant|:auto_define] set the tolerance level for loading
- * - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings
+ * - _:symbolize_keys_ [true|false|nil] symbolize element attribute keys or leave as Strings.
+ * Note that symbolized keys are more efficient but for uncontrolled input it can lead to unlimited
+ * growth of the symbol (intern) table.
  * - _:element_key_mod_ [Proc|nil] converts element keys on parse if not nil
  * - _:attr_key_mod_ [Proc|nil] converts attribute keys on parse if not nil
  * - _:skip_ [:skip_none|:skip_return|:skip_white|:skip_off] determines how to handle white space in text
