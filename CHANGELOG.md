@@ -2,6 +2,13 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.28] - 2026-06-28
+
+### Fixed
+
+- Parsing an excessively long DOCTYPE now raises and error instead of
+  waiting for a stack too deep system error.
+
 ## [2.14.27] - 2026-06-18
 
 ### Fixed

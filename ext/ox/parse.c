@@ -19,6 +19,9 @@
 #include "special.h"
 
 #define MAX_ELEMENT_DEPTH 1000
+// Anything even close to the max prolog length is most likely someone trying
+// to break something.
+#define MAX_PROLOG 32767
 
 static void  mark_pi_cb(void *ptr);
 static void  read_instruction(PInfo pi);
@@ -382,6 +385,11 @@ static void read_delimited(PInfo pi, char end) {
             if (end == c) {
                 return;
             }
+	    if (MAX_PROLOG < (pi->s - pi->str)) {
+                pi->s--;
+                set_error(&pi->err, "prolog (doctype) too long", pi->str, pi->s);
+                return;
+	    }
             switch (c) {
             case '\0':
                 pi->s--;
