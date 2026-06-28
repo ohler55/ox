@@ -385,11 +385,11 @@ static void read_delimited(PInfo pi, char end) {
             if (end == c) {
                 return;
             }
-	    if (MAX_PROLOG < (pi->s - pi->str)) {
+            if (MAX_PROLOG < (pi->s - pi->str)) {
                 pi->s--;
                 set_error(&pi->err, "prolog (doctype) too long", pi->str, pi->s);
                 return;
-	    }
+            }
             switch (c) {
             case '\0':
                 pi->s--;
