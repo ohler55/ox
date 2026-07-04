@@ -483,8 +483,19 @@ static VALUE set_def_opts(VALUE self, VALUE opts) {
 
     v = rb_hash_aref(opts, ox_indent_sym);
     if (Qnil != v) {
+        int indent;
+
         Check_Type(v, T_FIXNUM);
-        ox_default_options.indent = FIX2INT(v);
+        indent = FIX2INT(v);
+        // Bound the indent so that depth * indent (depth up to MAX_DEPTH) cannot
+        // overflow the int arithmetic in dump.c and smash the output buffer.
+        // Any negative value already means "tight, no newlines"; normalize it.
+        if (indent < 0) {
+            indent = -1;
+        } else if (OX_MAX_INDENT < indent) {
+            rb_raise(ox_parse_error_class, ":indent can be no larger than %d.\n", OX_MAX_INDENT);
+        }
+        ox_default_options.indent = indent;
     }
 
     v = rb_hash_aref(opts, trace_sym);
@@ -1178,10 +1189,20 @@ static void parse_dump_options(VALUE ropts, Options copts) {
         VALUE v;
 
         if (Qnil != (v = rb_hash_lookup(ropts, ox_indent_sym))) {
+            int indent;
+
             if (rb_cInteger != rb_obj_class(v) && T_FIXNUM != rb_type(v)) {
                 rb_raise(ox_parse_error_class, ":indent must be a Fixnum.\n");
             }
-            copts->indent = NUM2INT(v);
+            indent = NUM2INT(v);
+            // See load_default_options(): bound indent to avoid int overflow in
+            // the dump.c indent arithmetic (oj CVE-2026-54502 class of bug).
+            if (indent < 0) {
+                indent = -1;
+            } else if (OX_MAX_INDENT < indent) {
+                rb_raise(ox_parse_error_class, ":indent can be no larger than %d.\n", OX_MAX_INDENT);
+            }
+            copts->indent = indent;
         }
         if (Qnil != (v = rb_hash_lookup(ropts, trace_sym))) {
             if (rb_cInteger != rb_obj_class(v) && T_FIXNUM != rb_type(v)) {

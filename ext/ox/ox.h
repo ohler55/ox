@@ -35,6 +35,11 @@ extern "C" {
 
 #define MAX_TEXT_LEN 4096
 
+/* Upper bound for the :indent dump option. Keeps depth * indent (depth is
+ * capped at the dump MAX_DEPTH of 1000) far below INT_MAX so the indent size
+ * arithmetic in dump.c cannot overflow and under-grow the output buffer. */
+#define OX_MAX_INDENT 16384
+
 #define SILENT 0
 #define TRACE 1
 #define DEBUG 2
