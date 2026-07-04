@@ -133,14 +133,22 @@ static VALUE partial_io_cb(VALUE rbuf) {
     VALUE  args[1];
     VALUE  rstr;
     char  *str;
+    size_t max = (size_t)(buf->end - buf->tail);
     size_t cnt;
 
-    args[0] = ULONG2NUM(buf->end - buf->tail);
+    args[0] = ULONG2NUM(max);
     rstr    = rb_funcall2(buf->in.io, ox_readpartial_id, 1, args);
     str     = StringValuePtr(rstr);
-    cnt     = strlen(str);
+    // Clamp to the space actually requested. A misbehaving IO can return more
+    // than max bytes; copying it unclamped overflows the buffer (which starts
+    // on the C stack). Use the real byte length, not strlen(), so an embedded
+    // NUL does not cause a short copy that still leaves a longer string.
+    cnt = (size_t)RSTRING_LEN(rstr);
+    if (cnt > max) {
+        cnt = max;
+    }
     // printf("*** read partial %lu bytes, str: '%s'\n", cnt, str);
-    strcpy(buf->tail, str);
+    memcpy(buf->tail, str, cnt);
     buf->read_end = buf->tail + cnt;
 
     return Qtrue;
@@ -151,14 +159,19 @@ static VALUE io_cb(VALUE rbuf) {
     VALUE  args[1];
     VALUE  rstr;
     char  *str;
+    size_t max = (size_t)(buf->end - buf->tail);
     size_t cnt;
 
-    args[0] = ULONG2NUM(buf->end - buf->tail);
+    args[0] = ULONG2NUM(max);
     rstr    = rb_funcall2(buf->in.io, ox_read_id, 1, args);
     str     = StringValuePtr(rstr);
-    cnt     = strlen(str);
+    // See partial_io_cb: clamp to the requested size to prevent overflow.
+    cnt = (size_t)RSTRING_LEN(rstr);
+    if (cnt > max) {
+        cnt = max;
+    }
     // printf("*** read %lu bytes, str: '%s'\n", cnt, str);
-    strcpy(buf->tail, str);
+    memcpy(buf->tail, str, cnt);
     buf->read_end = buf->tail + cnt;
 
     return Qtrue;
