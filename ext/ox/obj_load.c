@@ -143,7 +143,8 @@ static VALUE classname2class(const char *name, PInfo pi, VALUE base_class) {
     if (Qundef == (clas = slot_cache_get(ox_class_cache, name, &slot, 0))) {
         char        class_name[1024];
         char       *s;
-        const char *n = name;
+        char       *class_name_end = class_name + sizeof(class_name) - 1;
+        const char *n              = name;
 
         clas = rb_cObject;
         for (s = class_name; '\0' != *n; n++) {
@@ -159,6 +160,13 @@ static VALUE classname2class(const char *name, PInfo pi, VALUE base_class) {
                 }
                 s = class_name;
             } else {
+                if (class_name_end <= s) {
+                    // Guard the fixed-size stack buffer: an over-long class name
+                    // (from the attacker-controlled `c` attribute in object mode)
+                    // would otherwise overflow class_name[].
+                    set_error(&pi->err, "Invalid classname, too long", pi->str, pi->s);
+                    return Qundef;
+                }
                 *s++ = *n;
             }
         }
