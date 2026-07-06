@@ -440,6 +440,7 @@ inline static void dump_num(Out out, VALUE obj) {
     char *b   = buf + sizeof(buf) - 1;
     long  num = NUM2LONG(obj);
     bool  neg = false;
+    long  size;
 
     if (0 > num) {
         neg = true;
@@ -451,12 +452,12 @@ inline static void dump_num(Out out, VALUE obj) {
     } else {
         *b = '0';
     }
-    if (out->end - out->cur <= (long)(sizeof(buf) - (b - buf))) {
-        grow(out, sizeof(buf) - (b - buf));
+    size = sizeof(buf) - (b - buf) - 1;
+    if (out->end - out->cur <= size) {
+        grow(out, size);
     }
-    for (; '\0' != *b; b++) {
-        *out->cur++ = *b;
-    }
+    memcpy(out->cur, b, size);
+    out->cur += size;
     *out->cur = '\0';
 }
 
