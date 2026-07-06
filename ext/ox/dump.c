@@ -4,6 +4,7 @@
  */
 
 #include <errno.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -206,16 +207,47 @@ inline static void fill_attr(Out out, char name, const char *value, size_t len) 
     *out->cur++ = '"';
 }
 
-inline static const char *ulong2str(ulong num, char *end) {
-    char *b;
+static const char digits_table[] = "\
+00010203040506070809\
+10111213141516171819\
+20212223242526272829\
+30313233343536373839\
+40414243444546474849\
+50515253545556575859\
+60616263646566676869\
+70717273747576777879\
+80818283848586878889\
+90919293949596979899";
 
-    *end-- = '\0';
-    for (b = end; 0 < num || b == end; num /= 10, b--) {
-        *b = (num % 10) + '0';
+static char *ox_longlong_to_string(long long num, bool negative, char *b) {
+    while (100 <= num) {
+        unsigned idx = (unsigned)(num % 100) * 2;
+
+        *b-- = digits_table[idx + 1];
+        *b-- = digits_table[idx];
+        num /= 100;
     }
-    b++;
-
+    if (num < 10) {
+        *b-- = (char)(num + '0');
+    } else {
+        *b-- = digits_table[num * 2 + 1];
+        *b-- = digits_table[num * 2];
+    }
+    if (negative) {
+        *b = '-';
+    } else {
+        b++;
+    }
     return b;
+}
+
+inline static const char *ulong2str(ulong num, char *end) {
+    *end-- = '\0';
+    if (0 == num) {
+        *end = '0';
+        return end;
+    }
+    return ox_longlong_to_string((long long)num, false, end);
 }
 
 static int check_circular(Out out, VALUE obj, Element e) {
@@ -407,22 +439,15 @@ inline static void dump_num(Out out, VALUE obj) {
     char  buf[32];
     char *b   = buf + sizeof(buf) - 1;
     long  num = NUM2LONG(obj);
-    int   neg = 0;
+    bool  neg = false;
 
     if (0 > num) {
-        neg = 1;
+        neg = true;
         num = -num;
     }
     *b-- = '\0';
     if (0 < num) {
-        for (; 0 < num; num /= 10, b--) {
-            *b = (num % 10) + '0';
-        }
-        if (neg) {
-            *b = '-';
-        } else {
-            b++;
-        }
+        b = ox_longlong_to_string(num, neg, b);
     } else {
         *b = '0';
     }
@@ -468,12 +493,9 @@ static void dump_date(Out out, VALUE obj) {
     long  size;
 
     *b-- = '\0';
-    for (; 0 < jd; b--, jd /= 10) {
-        *b = '0' + (jd % 10);
-    }
-    b++;
-    if ('\0' == *b) {
-        b--;
+    if (0 < jd) {
+        b = ox_longlong_to_string((long long)jd, false, b);
+    } else {
         *b = '0';
     }
     size = sizeof(buf) - (b - buf) - 1;
