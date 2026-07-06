@@ -77,6 +77,12 @@ static int is_xml_friendly(const uchar *str, int len, const char *table);
 
 static const char hex_chars[17] = "0123456789abcdef";
 
+#define APPEND_CHARS(buffer, chars, size) \
+    {                                     \
+        memcpy(buffer, chars, size);      \
+        buffer += size;                   \
+    }
+
 // The : character is equivalent to 10. Used for replacement characters up to 10
 // characters long such as '&#x10FFFF;'.
 static const char xml_friendly_chars[257] = "\
@@ -337,46 +343,22 @@ inline static void dump_str_value(Out out, const char *value, size_t size, const
     if (out->end - out->cur <= (long)xsize) {
         grow(out, xsize);
     }
+    if (xsize == size) {
+        memcpy(out->cur, value, size);
+        out->cur += size;
+        *out->cur = '\0';
+        return;
+    }
     for (; 0 < size; size--, value++) {
         if ('1' == table[(uchar)*value]) {
             *out->cur++ = *value;
         } else {
             switch (*value) {
-            case '"':
-                *out->cur++ = '&';
-                *out->cur++ = 'q';
-                *out->cur++ = 'u';
-                *out->cur++ = 'o';
-                *out->cur++ = 't';
-                *out->cur++ = ';';
-                break;
-            case '&':
-                *out->cur++ = '&';
-                *out->cur++ = 'a';
-                *out->cur++ = 'm';
-                *out->cur++ = 'p';
-                *out->cur++ = ';';
-                break;
-            case '\'':
-                *out->cur++ = '&';
-                *out->cur++ = 'a';
-                *out->cur++ = 'p';
-                *out->cur++ = 'o';
-                *out->cur++ = 's';
-                *out->cur++ = ';';
-                break;
-            case '<':
-                *out->cur++ = '&';
-                *out->cur++ = 'l';
-                *out->cur++ = 't';
-                *out->cur++ = ';';
-                break;
-            case '>':
-                *out->cur++ = '&';
-                *out->cur++ = 'g';
-                *out->cur++ = 't';
-                *out->cur++ = ';';
-                break;
+            case '"': APPEND_CHARS(out->cur, "&quot;", 6); break;
+            case '&': APPEND_CHARS(out->cur, "&amp;", 5); break;
+            case '\'': APPEND_CHARS(out->cur, "&apos;", 6); break;
+            case '<': APPEND_CHARS(out->cur, "&lt;", 4); break;
+            case '>': APPEND_CHARS(out->cur, "&gt;", 4); break;
             default:
                 // Must be one of the invalid characters.
                 if (StrictEffort == out->opts->effort) {
