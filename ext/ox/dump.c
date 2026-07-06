@@ -179,8 +179,9 @@ inline static void fill_indent(Out out, int cnt) {
             memcpy(out->cur, out->opts->margin, out->opts->margin_len);
             out->cur += out->opts->margin_len;
         }
-        for (; 0 < cnt; cnt--) {
-            *out->cur++ = ' ';
+        if (0 < cnt) {
+            memset(out->cur, ' ', cnt);
+            out->cur += cnt;
         }
     }
 }
