@@ -13,6 +13,7 @@
 
 #define STACK_INC 32
 #define NV_BUF_MAX 64
+#define MAX_ELEMENT_DEPTH 1000
 
 typedef struct _nv {
     char        name_buf[NV_BUF_MAX];
@@ -50,6 +51,9 @@ inline static void stack_push(NStack stack, const char *name, size_t nlen, VALUE
         size_t len  = stack->end - stack->head;
         size_t toff = stack->tail - stack->head;
 
+        if (MAX_ELEMENT_DEPTH < toff) {
+            rb_raise(ox_arg_error_class, "sax nesting depth exceeded.\n");
+        }
         if (stack->base == stack->head) {
             stack->head = ALLOC_N(struct _nv, len + STACK_INC);
             memcpy(stack->head, stack->base, sizeof(struct _nv) * len);
