@@ -34,6 +34,9 @@ extern "C" {
 #define raise_error(msg, xml, current) _ox_raise_error(msg, xml, current, __FILE__, __LINE__)
 
 #define MAX_TEXT_LEN 4096
+// Anything even close to the max prolog length is most likely someone trying
+// to break something.
+#define MAX_PROLOG 32767
 
 /* Upper bound for the :indent dump option. Keeps depth * indent (depth is
  * capped at the dump MAX_DEPTH of 1000) far below INT_MAX so the indent size
