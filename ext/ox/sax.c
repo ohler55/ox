@@ -581,7 +581,7 @@ static char read_instruction(SaxDrive dr) {
     return c;
 }
 
-static char read_delimited(SaxDrive dr, char end) {
+static char read_delimited(SaxDrive dr, char end, int depth) {
     char c;
 
     if ('"' == end || '\'' == end) {
@@ -591,6 +591,9 @@ static char read_delimited(SaxDrive dr, char end) {
                 return c;
             }
         }
+    } else if (MAX_PROLOG <= depth) {
+        rb_raise(ox_parse_error_class, "prolog (doctype) too long.\n");
+        return '\0';
     } else {
         while (1) {
             c = buf_get(&dr->buf);
@@ -599,10 +602,10 @@ static char read_delimited(SaxDrive dr, char end) {
             }
             switch (c) {
             case '\0': ox_sax_drive_error(dr, NO_TERM "doctype not terminated"); return c;
-            case '"': c = read_delimited(dr, c); break;
-            case '\'': c = read_delimited(dr, c); break;
-            case '[': c = read_delimited(dr, ']'); break;
-            case '<': c = read_delimited(dr, '>'); break;
+            case '"': c = read_delimited(dr, c, depth + 1); break;
+            case '\'': c = read_delimited(dr, c, depth + 1); break;
+            case '[': c = read_delimited(dr, ']', depth + 1); break;
+            case '<': c = read_delimited(dr, '>', depth + 1); break;
             default: break;
             }
         }
@@ -621,7 +624,7 @@ static char read_doctype(SaxDrive dr) {
 
     buf_backup(&dr->buf); /* back up to the start in case the doctype is empty */
     buf_protect(&dr->buf);
-    read_delimited(dr, '>');
+    read_delimited(dr, '>', 0);
     if (dr->options.smart && 0 == dr->options.hints) {
         for (s = dr->buf.str; is_white(*s); s++) {
         }

@@ -52,7 +52,7 @@ inline static void stack_push(NStack stack, const char *name, size_t nlen, VALUE
         size_t toff = stack->tail - stack->head;
 
         if (MAX_ELEMENT_DEPTH < toff) {
-            rb_raise(ox_arg_error_class, "sax nesting depth exceeded.\n");
+            rb_raise(ox_parse_error_class, "sax nesting depth exceeded.\n");
         }
         if (stack->base == stack->head) {
             stack->head = ALLOC_N(struct _nv, len + STACK_INC);
