@@ -94,8 +94,9 @@ static const char xml_element_chars[257] = "\
 
 inline static size_t xml_str_len(const unsigned char *str, size_t len, const char *table) {
     size_t size = 0;
+    size_t i    = len;
 
-    for (; 0 < len; str++, len--) {
+    for (; 0 < i; str++, i--) {
         size += table[*str];
     }
     return size - len * (size_t)'0';
