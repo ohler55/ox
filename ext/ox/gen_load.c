@@ -21,7 +21,7 @@ static void nomode_instruct(PInfo pi, const char *target, Attr attrs, const char
 static void add_doctype(PInfo pi, const char *docType);
 static void add_comment(PInfo pi, const char *comment);
 static void add_cdata(PInfo pi, const char *cdata, size_t len);
-static void add_text(PInfo pi, char *text, int closed);
+static void add_text(PInfo pi, char *text, size_t len, int closed);
 static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren);
 static void end_element(PInfo pi, const char *ename);
 static void add_instruct(PInfo pi, const char *name, Attr attrs, const char *content);
@@ -230,8 +230,8 @@ static void add_cdata(PInfo pi, const char *cdata, size_t len) {
     rb_ary_push(helper_stack_peek(&pi->helpers)->obj, n);
 }
 
-static void add_text(PInfo pi, char *text, int closed) {
-    VALUE s = rb_str_new2(text);
+static void add_text(PInfo pi, char *text, size_t len, int closed) {
+    VALUE s = rb_str_new(text, len);
 
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);

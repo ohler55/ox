@@ -92,8 +92,8 @@ static void add_str(PInfo pi, VALUE s) {
     }
 }
 
-static void add_text(PInfo pi, char *text, int closed) {
-    VALUE s = rb_str_new2(text);
+static void add_text(PInfo pi, char *text, size_t len, int closed) {
+    VALUE s = rb_str_new(text, len);
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(s, pi->options->rb_enc);
     }

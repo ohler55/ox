@@ -98,7 +98,7 @@ typedef struct _parseCallbacks {
     void (*add_doctype)(PInfo pi, const char *docType);
     void (*add_comment)(PInfo pi, const char *comment);
     void (*add_cdata)(PInfo pi, const char *cdata, size_t len);
-    void (*add_text)(PInfo pi, char *text, int closed);
+    void (*add_text)(PInfo pi, char *text, size_t len, int closed);
     void (*add_element)(PInfo pi, const char *ename, Attr attrs, int hasChildren);
     void (*end_element)(PInfo pi, const char *ename);
     void (*finish)(PInfo pi);
