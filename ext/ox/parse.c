@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -774,6 +775,53 @@ static char *read_element(PInfo pi, int depth) {
     return 0;
 }
 
+#define TEXT_ONES 0x0101010101010101ULL
+#define TEXT_HIGH 0x8080808080808080ULL
+
+/* Sets the high bit of every byte of a word that read_text can not copy
+ * through as is, that is a byte less than or equal to 0x20, a '&', or a '<'.
+ * Bytes with the high bit set are never flagged because ~v clears them, which
+ * matches the byte loop where a signed char with the high bit set is negative
+ * and so falls to the plain copy.
+ *
+ * A borrow out of one byte can also flag the byte above it, but a borrow is
+ * only produced by a byte that matched, so the lowest flagged byte is always a
+ * real match and there are never false negatives.
+ */
+inline static uint64_t text_bytes_of_interest(uint64_t v) {
+    uint64_t a = v ^ (TEXT_ONES * (uint64_t)'&');
+    uint64_t l = v ^ (TEXT_ONES * (uint64_t)'<');
+
+    return (((v - TEXT_ONES * 0x21) & ~v) | ((a - TEXT_ONES) & ~a) | ((l - TEXT_ONES) & ~l)) & TEXT_HIGH;
+}
+
+/* Offset of the lowest flagged byte, which is the first byte of the word that
+ * has to go through the switch below. Only ever called with a non-zero mask.
+ */
+inline static int text_first_of_interest(const char *s, uint64_t mask) {
+#if defined(__GNUC__) || defined(__clang__)
+#if defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+    (void)s;
+    return (int)(__builtin_clzll(mask) >> 3);
+#else
+    (void)s;
+    return (int)(__builtin_ctzll(mask) >> 3);
+#endif
+#else
+    int i;
+
+    (void)mask;
+    for (i = 0; i < 8; i++) {
+        unsigned char u = (unsigned char)s[i];
+
+        if (u <= 0x20 || '&' == u || '<' == u) {
+            break;
+        }
+    }
+    return i;
+#endif
+}
+
 static void read_text(PInfo pi) {
     char  buf[MAX_TEXT_LEN];
     char *b         = buf;
@@ -783,6 +831,44 @@ static void read_text(PInfo pi) {
     int   done = 0;
 
     while (!done) {
+        /* A byte above 0x20 that is neither '&' nor '<' is copied through
+         * unchanged for every skip mode and every effort, so runs of them can
+         * be moved a word at a time instead of one switch dispatch per byte.
+         * pi->end addresses the terminating '\0' so the loads never leave the
+         * document, which keeps the loop clean under ASan.
+         */
+        while (pi->s + 8 <= pi->end && b + 8 <= end) {
+            uint64_t v;
+            uint64_t mask;
+
+            memcpy(&v, pi->s, 8);
+            mask = text_bytes_of_interest(v);
+            /* b + 8 <= end so the whole word can be stored even when only part
+             * of it is kept. The bytes past the kept prefix are overwritten by
+             * the next copy or cut off by the terminating '\0'.
+             */
+            memcpy(b, pi->s, 8);
+            if (0 != mask) {
+                int n = text_first_of_interest(pi->s, mask);
+
+                b += n;
+                pi->s += n;
+                break;
+            }
+            b += 8;
+            pi->s += 8;
+        }
+        /* Only reached when a bound stopped the word loop, or for the byte the
+         * word loop stopped on.
+         */
+        while (pi->s < pi->end && b < end) {
+            unsigned char u = (unsigned char)*pi->s;
+
+            if (u <= 0x20 || '&' == u || '<' == u) {
+                break;
+            }
+            *b++ = *pi->s++;
+        }
         c = *pi->s++;
         switch (c) {
         case '<':
