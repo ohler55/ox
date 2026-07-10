@@ -655,6 +655,32 @@ class Func < Test::Unit::TestCase
     GC.enable
   end
 
+  # The document is larger than SMALL_XML so that the copy the parser works on
+  # is heap allocated. Before the BOM length fix the copy read past the end of
+  # the Ruby string, which OX_ASAN=1 reports as a heap-buffer-overflow.
+  def test_bom_large_document
+    Ox.default_options = $ox_object_options
+    text = 'x' * 6000
+    xml = %{\xEF\xBB\xBF<?xml?>\n<top name="bom">#{text}</top>\n}
+
+    doc = Ox.parse(xml).root
+    assert_equal('bom', doc.attributes[:name])
+    assert_equal(text, doc.nodes[0])
+
+    doc = Ox.load(xml, mode: :generic).root
+    assert_equal('bom', doc.attributes[:name])
+    assert_equal(text, doc.nodes[0])
+
+    assert_equal({ top: [{ name: 'bom' }, text] }, Ox.load(xml, mode: :hash))
+  end
+
+  def test_bom_parse_obj_large_document
+    Ox.default_options = $ox_object_options
+    str = 'y' * 6000
+    xml = "\xEF\xBB\xBF#{Ox.dump(str, mode: :object)}"
+    assert_equal(str, Ox.parse_obj(xml))
+  end
+
   def test_escape_truncated
     Ox.default_options = $ox_object_options
     xml = %{<top>&</top>}

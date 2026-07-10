@@ -700,7 +700,7 @@ static VALUE obj_parse_reenable(VALUE was_disabled) {
 }
 
 static VALUE to_obj(VALUE self, VALUE ruby_xml) {
-    char            *xml, *x;
+    char            *xml, *x, *str;
     size_t           len;
     VALUE            obj;
     VALUE            was_disabled;
@@ -711,8 +711,12 @@ static VALUE to_obj(VALUE self, VALUE ruby_xml) {
     err_init(&err);
     Check_Type(ruby_xml, T_STRING);
     /* the xml string gets modified so make a copy of it */
+    str = StringValuePtr(ruby_xml);
     len = RSTRING_LEN(ruby_xml) + 1;
-    x   = defuse_bom(StringValuePtr(ruby_xml), &options);
+    x   = defuse_bom(str, &options);
+    // Drop the BOM from len as well, otherwise the copy below reads past the
+    // end of the Ruby string and xml is left without a terminating '\0'.
+    len -= (size_t)(x - str);
     if (SMALL_XML < len) {
         xml = ALLOC_N(char, len);
     } else {
@@ -744,7 +748,7 @@ static VALUE to_obj(VALUE self, VALUE ruby_xml) {
  * _raise_ [Exception] if the XML is malformed.
  */
 static VALUE to_gen(VALUE self, VALUE ruby_xml) {
-    char           *xml, *x;
+    char           *xml, *x, *str;
     size_t          len;
     VALUE           obj;
     struct _options options = ox_default_options;
@@ -753,8 +757,12 @@ static VALUE to_gen(VALUE self, VALUE ruby_xml) {
     err_init(&err);
     Check_Type(ruby_xml, T_STRING);
     /* the xml string gets modified so make a copy of it */
+    str = StringValuePtr(ruby_xml);
     len = RSTRING_LEN(ruby_xml) + 1;
-    x   = defuse_bom(StringValuePtr(ruby_xml), &options);
+    x   = defuse_bom(str, &options);
+    // Drop the BOM from len as well, otherwise the copy below reads past the
+    // end of the Ruby string and xml is left without a terminating '\0'.
+    len -= (size_t)(x - str);
     if (SMALL_XML < len) {
         xml = ALLOC_N(char, len);
     } else {
@@ -884,6 +892,7 @@ static int load_options_cb(VALUE k, VALUE v, VALUE opts) {
 
 static VALUE load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALUE encoding, Err err) {
     VALUE           obj;
+    char           *body;
     struct _options options = ox_default_options;
 
     if (1 == argc && rb_cHash == rb_obj_class(*argv)) {
@@ -898,7 +907,11 @@ static VALUE load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALU
     } else if (0 == options.rb_enc) {
         options.rb_enc = rb_enc_find(options.encoding);
     }
-    xml = defuse_bom(xml, &options);
+    // Shorten len by the size of the BOM so that xml + len stays the address
+    // of the terminating '\0' rather than running past the end of the buffer.
+    body = defuse_bom(xml, &options);
+    len -= (size_t)(body - xml);
+    xml = body;
     switch (options.mode) {
     case ObjMode: {
         struct _objParse args = {xml, len, &options, err};
