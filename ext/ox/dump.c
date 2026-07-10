@@ -84,18 +84,9 @@ static const char hex_chars[17] = "0123456789abcdef";
         buffer += size;                   \
     }
 
-// The : character is equivalent to 10. Used for replacement characters up to 10
-// characters long such as '&#x10FFFF;'.
-static const char xml_friendly_chars[257] = "\
-:::::::::11::1::::::::::::::::::\
-11611156111111111111111111114141\
-11111111111111111111111111111111\
-11111111111111111111111111111111\
-11111111111111111111111111111111\
-11111111111111111111111111111111\
-11111111111111111111111111111111\
-11111111111111111111111111111111";
-
+// Each table below maps a byte to the length of its escaped form, held as an ASCII digit so that
+// xml_str_len() can sum the entries directly. The : character is equivalent to 10, used for replacement
+// characters up to 10 characters long such as '&#x10FFFF;'.
 static const char xml_quote_chars[257] = "\
 :::::::::11::1::::::::::::::::::\
 11611151111111111111111111114141\
@@ -127,9 +118,10 @@ inline static int is_xml_friendly(const uchar *str, int len, const char *table) 
 
 inline static size_t xml_str_len(const uchar *str, size_t len, const char *table) {
     size_t size = 0;
+    size_t i    = len;
 
-    for (; 0 < len; str++, len--) {
-        size += xml_friendly_chars[*str];
+    for (; 0 < i; str++, i--) {
+        size += table[*str];
     }
     return size - len * (size_t)'0';
 }
