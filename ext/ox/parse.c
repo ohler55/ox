@@ -137,12 +137,107 @@ static void mark_pi_cb(void *ptr) {
     }
 }
 
+// State shared between the parse body and its ensure block. Bundled so the
+// whole parse can run under rb_ensure and clean up even when a callback raises.
+typedef struct _parseCtx {
+    PInfo  pi;
+    char **endp;
+    Err    err;
+    VALUE  wrap;
+    int    block_given;
+} *ParseCtx;
+
+static VALUE ox_parse_body(VALUE ctxv) {
+    ParseCtx ctx         = (ParseCtx)ctxv;
+    PInfo    pi          = ctx->pi;
+    char   **endp        = ctx->endp;
+    Err      err         = ctx->err;
+    int      block_given = ctx->block_given;
+    int      body_read   = 0;
+
+    while (1) {
+        next_non_white(pi);  // skip white space
+        if ('\0' == *pi->s) {
+            break;
+        }
+        if (body_read && 0 != endp) {
+            *endp = pi->s;
+            break;
+        }
+        if ('<' != *pi->s) {  // all top level entities start with <
+            set_error(err, "invalid format, expected <", pi->str, pi->s);
+            return Qnil;
+        }
+        pi->s++;  // past <
+        switch (*pi->s) {
+        case '?':  // processing instruction
+            pi->s++;
+            read_instruction(pi);
+            break;
+        case '!':  // comment or doctype
+            pi->s++;
+            if ('\0' == *pi->s) {
+                set_error(err, "invalid format, DOCTYPE or comment not terminated", pi->str, pi->s);
+                return Qnil;
+            } else if ('-' == *pi->s) {
+                pi->s++;  // skip -
+                if ('-' != *pi->s) {
+                    set_error(err, "invalid format, bad comment format", pi->str, pi->s);
+                    return Qnil;
+                } else {
+                    pi->s++;  // skip second -
+                    read_comment(pi);
+                }
+            } else if ((TolerantEffort == pi->options->effort) ? 0 == strncasecmp("DOCTYPE", pi->s, 7)
+                                                               : 0 == strncmp("DOCTYPE", pi->s, 7)) {
+                pi->s += 7;
+                read_doctype(pi);
+            } else {
+                set_error(err, "invalid format, DOCTYPE or comment expected", pi->str, pi->s);
+                return Qnil;
+            }
+            break;
+        case '\0': set_error(err, "invalid format, document not terminated", pi->str, pi->s); return Qnil;
+        default:
+            read_element(pi, 0);
+            body_read = 1;
+            break;
+        }
+        if (err_has(&pi->err)) {
+            *err = pi->err;
+            return Qnil;
+        }
+        if (block_given && Qnil != pi->obj && Qundef != pi->obj) {
+            if (NULL != pi->pcb->finish) {
+                pi->pcb->finish(pi);
+            }
+            rb_yield(pi->obj);
+        }
+    }
+    if (NULL != pi->pcb->finish) {
+        pi->pcb->finish(pi);
+    }
+    return pi->obj;
+}
+
+static VALUE ox_parse_ensure(VALUE ctxv) {
+    ParseCtx ctx = (ParseCtx)ctxv;
+
+    // pi is a stack value wrapped for GC marking. Detach the wrapper before
+    // this frame is gone so a later conservative GC can not mark a dead helper
+    // stack, and free the helper stack whether the parse returned normally or a
+    // callback raised out of it.
+    if (Qnil != ctx->wrap) {
+        DATA_PTR(ctx->wrap) = NULL;
+    }
+    helper_stack_cleanup(&ctx->pi->helpers);
+    return Qnil;
+}
+
 VALUE
 ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options, Err err) {
-    struct _pInfo  pi;
-    int            body_read   = 0;
-    int            block_given = rb_block_given_p();
-    volatile VALUE wrap;
+    struct _pInfo    pi;
+    struct _parseCtx ctx;
 
     if (0 == xml) {
         set_error(err, "Invalid arg, xml string can not be null", xml, 0);
@@ -153,9 +248,6 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
     }
     // initialize parse info
     helper_stack_init(&pi.helpers);
-    // Protect against GC
-    wrap = TypedData_Wrap_Struct(rb_cObject, &ox_wrap_type, &pi);
-
     err_init(&pi.err);
     pi.str        = xml;
     pi.end        = pi.str + len;
@@ -167,79 +259,16 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
     pi.marked     = NULL;
     pi.mark_size  = 0;
     pi.mark_cnt   = 0;
-    while (1) {
-        next_non_white(&pi);  // skip white space
-        if ('\0' == *pi.s) {
-            break;
-        }
-        if (body_read && 0 != endp) {
-            *endp = pi.s;
-            break;
-        }
-        if ('<' != *pi.s) {  // all top level entities start with <
-            set_error(err, "invalid format, expected <", pi.str, pi.s);
-            helper_stack_cleanup(&pi.helpers);
-            return Qnil;
-        }
-        pi.s++;  // past <
-        switch (*pi.s) {
-        case '?':  // processing instruction
-            pi.s++;
-            read_instruction(&pi);
-            break;
-        case '!':  // comment or doctype
-            pi.s++;
-            if ('\0' == *pi.s) {
-                set_error(err, "invalid format, DOCTYPE or comment not terminated", pi.str, pi.s);
-                helper_stack_cleanup(&pi.helpers);
-                return Qnil;
-            } else if ('-' == *pi.s) {
-                pi.s++;  // skip -
-                if ('-' != *pi.s) {
-                    set_error(err, "invalid format, bad comment format", pi.str, pi.s);
-                    helper_stack_cleanup(&pi.helpers);
-                    return Qnil;
-                } else {
-                    pi.s++;  // skip second -
-                    read_comment(&pi);
-                }
-            } else if ((TolerantEffort == options->effort) ? 0 == strncasecmp("DOCTYPE", pi.s, 7)
-                                                           : 0 == strncmp("DOCTYPE", pi.s, 7)) {
-                pi.s += 7;
-                read_doctype(&pi);
-            } else {
-                set_error(err, "invalid format, DOCTYPE or comment expected", pi.str, pi.s);
-                helper_stack_cleanup(&pi.helpers);
-                return Qnil;
-            }
-            break;
-        case '\0':
-            set_error(err, "invalid format, document not terminated", pi.str, pi.s);
-            helper_stack_cleanup(&pi.helpers);
-            return Qnil;
-        default:
-            read_element(&pi, 0);
-            body_read = 1;
-            break;
-        }
-        if (err_has(&pi.err)) {
-            *err = pi.err;
-            helper_stack_cleanup(&pi.helpers);
-            return Qnil;
-        }
-        if (block_given && Qnil != pi.obj && Qundef != pi.obj) {
-            if (NULL != pcb->finish) {
-                pcb->finish(&pi);
-            }
-            rb_yield(pi.obj);
-        }
-    }
-    DATA_PTR(wrap) = NULL;
-    helper_stack_cleanup(&pi.helpers);
-    if (NULL != pcb->finish) {
-        pcb->finish(&pi);
-    }
-    return pi.obj;
+
+    ctx.pi          = &pi;
+    ctx.endp        = endp;
+    ctx.err         = err;
+    ctx.block_given = rb_block_given_p();
+    // Protect against GC. The wrapper marks the helper stack while parsing;
+    // ox_parse_ensure detaches it on every exit, including a callback raise.
+    ctx.wrap = TypedData_Wrap_Struct(rb_cObject, &ox_wrap_type, &pi);
+
+    return rb_ensure(ox_parse_body, (VALUE)&ctx, ox_parse_ensure, (VALUE)&ctx);
 }
 
 // Entered after the "<?" sequence. Ready to read the rest.

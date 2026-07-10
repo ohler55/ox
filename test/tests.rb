@@ -617,6 +617,44 @@ class Func < Test::Unit::TestCase
     end
   end
 
+  # An object-mode parse disables GC while it runs. When a callback raised
+  # (here a <t> Time element whose text is not a time) the matching
+  # rb_gc_enable was skipped, leaving GC disabled for the rest of the process.
+  def test_object_mode_error_reenables_gc
+    GC.enable  # start from a known enabled state
+    begin
+      Ox.load('<t>not a time</t>', mode: :object)
+    rescue StandardError
+      # expected: ArgumentError from Time.parse
+    end
+    # GC.enable returns true only if GC was still disabled. After the fix the
+    # parse re-enabled it, so this returns false.
+    assert_equal(false, GC.enable, 'object-mode error left GC disabled')
+  ensure
+    GC.enable
+  end
+
+  # ox_parse wraps a stack PInfo for GC marking and used to clear that wrapper
+  # only on the normal return. When a callback raised, the wrapper was left
+  # pointing at the dead stack frame and a later GC could walk a freed helper
+  # stack and crash in mark_pi_cb. Drive the raise-then-mark path hard; a
+  # regression segfaults the process.
+  def test_object_mode_error_wrapper_not_marked_after_raise
+    sink = []
+    200.times do |i|
+      begin
+        Ox.load("<top><a><b>#{'x' * (i % 20)}</b></a></top>", mode: :object)
+      rescue StandardError
+      end
+      GC.enable
+      GC.start(full_mark: true, immediate_sweep: true)
+      sink << Ox.load("<top><a><b>#{'y' * (i % 25)}</b></a></top>", mode: :hash)
+    end
+    assert_equal(200, sink.size)
+  ensure
+    GC.enable
+  end
+
   def test_escape_truncated
     Ox.default_options = $ox_object_options
     xml = %{<top>&</top>}

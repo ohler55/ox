@@ -676,12 +676,37 @@ static VALUE set_def_opts(VALUE self, VALUE opts) {
  * - +xml+ [String] XML String in optimized Object format.
  * *return* [Object] deserialized Object.
  */
+// Arguments for an object-mode parse that runs with GC disabled.
+struct _objParse {
+    char   *xml;
+    size_t  len;
+    Options options;
+    Err     err;
+};
+
+static VALUE obj_parse_body(VALUE argsv) {
+    struct _objParse *args = (struct _objParse *)argsv;
+
+    return ox_parse(args->xml, args->len, ox_obj_callbacks, 0, args->options, args->err);
+}
+
+// rb_gc_disable() returns Qtrue when GC was already disabled. Only re-enable
+// when this call is the one that disabled it. Runs even if the parse raised.
+static VALUE obj_parse_reenable(VALUE was_disabled) {
+    if (Qtrue != was_disabled) {
+        rb_gc_enable();
+    }
+    return Qnil;
+}
+
 static VALUE to_obj(VALUE self, VALUE ruby_xml) {
-    char           *xml, *x;
-    size_t          len;
-    VALUE           obj;
-    struct _options options = ox_default_options;
-    struct _err     err;
+    char            *xml, *x;
+    size_t           len;
+    VALUE            obj;
+    VALUE            was_disabled;
+    struct _options  options = ox_default_options;
+    struct _err      err;
+    struct _objParse args;
 
     err_init(&err);
     Check_Type(ruby_xml, T_STRING);
@@ -694,13 +719,16 @@ static VALUE to_obj(VALUE self, VALUE ruby_xml) {
         xml = ALLOCA_N(char, len);
     }
     memcpy(xml, x, len);
-    rb_gc_disable();
-    obj = ox_parse(xml, len - 1, ox_obj_callbacks, 0, &options, &err);
+    args.xml     = xml;
+    args.len     = len - 1;
+    args.options = &options;
+    args.err     = &err;
+    was_disabled = rb_gc_disable();
+    obj          = rb_ensure(obj_parse_body, (VALUE)&args, obj_parse_reenable, was_disabled);
     if (SMALL_XML < len) {
         xfree(xml);
     }
     RB_GC_GUARD(obj);
-    rb_gc_enable();
     if (err_has(&err)) {
         ox_err_raise(&err);
     }
@@ -872,12 +900,15 @@ static VALUE load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALU
     }
     xml = defuse_bom(xml, &options);
     switch (options.mode) {
-    case ObjMode:
-        rb_gc_disable();
-        obj = ox_parse(xml, len, ox_obj_callbacks, 0, &options, err);
+    case ObjMode: {
+        struct _objParse args = {xml, len, &options, err};
+        VALUE            was_disabled;
+
+        was_disabled = rb_gc_disable();
+        obj          = rb_ensure(obj_parse_body, (VALUE)&args, obj_parse_reenable, was_disabled);
         RB_GC_GUARD(obj);
-        rb_gc_enable();
         break;
+    }
     case GenMode: obj = ox_parse(xml, len, ox_gen_callbacks, 0, &options, err); break;
     case LimMode: obj = ox_parse(xml, len, ox_limited_callbacks, 0, &options, err); break;
     case HashMode:
