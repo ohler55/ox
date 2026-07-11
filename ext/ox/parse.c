@@ -624,7 +624,7 @@ static char *read_element(PInfo pi, int depth) {
             if (OffSkip == pi->options->skip && start < pi->s && '<' == *pi->s) {
                 c      = *pi->s;
                 *pi->s = '\0';
-                pi->pcb->add_text(pi, start, 1);
+                pi->pcb->add_text(pi, start, (size_t)(pi->s - start), 1);
                 *pi->s = c;
             }
             c = *pi->s++;
@@ -706,7 +706,9 @@ static char *read_element(PInfo pi, int depth) {
                         default: break;
                         }
                         if ('\0' != *start) {
-                            pi->pcb->add_text(pi, start, 1);
+                            // The skip handling above moves the terminator, so
+                            // the length is whatever survived it.
+                            pi->pcb->add_text(pi, start, strlen(start), 1);
                         }
                     }
                     pi->s++;
@@ -829,6 +831,13 @@ static void read_text(PInfo pi) {
     char *end       = b + sizeof(buf) - 2;
     char  c;
     int   done = 0;
+    /* fix_newlines only rewrites '\r'. SpcSkip folds every '\r' to a space, so
+     * the only way one reaches buf under it is an entity like &#13;. Any other
+     * skip mode can keep a '\r', so assume one might be present there and run
+     * fix_newlines as before. SpcSkip text with no such entity, the common
+     * case, then skips the fix_newlines scan and second pass entirely.
+     */
+    int maybe_cr = (SpcSkip != pi->options->skip);
 
     while (!done) {
         /* A byte above 0x20 that is neither '&' nor '<' is copied through
@@ -901,6 +910,8 @@ static void read_text(PInfo pi) {
                 if (0 == (b = read_coded_chars(pi, b))) {
                     return;
                 }
+                /* An entity such as &#13; can decode to '\r'; be conservative. */
+                maybe_cr = 1;
             } else {
                 if (0 <= c && c <= 0x20) {
                     if (StrictEffort == pi->options->effort && 'x' == xml_valid_lower_chars[(unsigned char)c]) {
@@ -935,14 +946,19 @@ static void read_text(PInfo pi) {
             break;
         }
     }
-    *b = '\0';
+    *b          = '\0';
+    char  *text = (0 != alloc_buf) ? alloc_buf : buf;
+    size_t len  = (size_t)(b - text);
+    if (maybe_cr) {
+        // fix_newlines can fold "\r\n" to "\n" and shorten the text, so the
+        // length is only known after it runs. When it was skipped the text is
+        // exactly b - text, so add_text avoids a strlen on the common path.
+        fix_newlines(text);
+        len = strlen(text);
+    }
+    pi->pcb->add_text(pi, text, len, ('/' == *(pi->s + 1)));
     if (0 != alloc_buf) {
-        fix_newlines(alloc_buf);
-        pi->pcb->add_text(pi, alloc_buf, ('/' == *(pi->s + 1)));
         xfree(alloc_buf);
-    } else {
-        fix_newlines(buf);
-        pi->pcb->add_text(pi, buf, ('/' == *(pi->s + 1)));
     }
 }
 

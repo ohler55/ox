@@ -17,7 +17,7 @@
 #include "ruby/encoding.h"
 
 static void instruct(PInfo pi, const char *target, Attr attrs, const char *content);
-static void add_text(PInfo pi, char *text, int closed);
+static void add_text(PInfo pi, char *text, size_t len, int closed);
 static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren);
 static void end_element(PInfo pi, const char *ename);
 
@@ -323,7 +323,7 @@ static void instruct(PInfo pi, const char *target, Attr attrs, const char *conte
     }
 }
 
-static void add_text(PInfo pi, char *text, int closed) {
+static void add_text(PInfo pi, char *text, size_t len, int closed) {
     Helper h = helper_stack_peek(&pi->helpers);
 
     if (!closed) {
@@ -343,7 +343,7 @@ static void add_text(PInfo pi, char *text, int closed) {
     switch (h->type) {
     case NoCode:
     case StringCode:
-        h->obj = rb_str_new2(text);
+        h->obj = rb_str_new(text, len);
         if (0 != pi->options->rb_enc) {
             rb_enc_associate(h->obj, pi->options->rb_enc);
         }
