@@ -14,6 +14,7 @@
 #include "ruby.h"
 #include "ruby/encoding.h"
 #include "ruby/version.h"
+#include "xml_str.h"
 
 #define MAX_DEPTH 128
 
@@ -92,16 +93,6 @@ static const char xml_element_chars[257] = "\
 11111111111111111111111111111111\
 11111111111111111111111111111111";
 
-inline static size_t xml_str_len(const unsigned char *str, size_t len, const char *table) {
-    size_t size = 0;
-    size_t i    = len;
-
-    for (; 0 < i; str++, i--) {
-        size += table[*str];
-    }
-    return size - len * (size_t)'0';
-}
-
 static void append_indent(Builder b) {
     if (0 >= b->indent) {
         return;
@@ -136,45 +127,102 @@ static void append_string(Builder b, const char *str, size_t size, const char *t
         }
         b->pos += size;
     } else {
-        char   buf[256];
-        char  *end = buf + sizeof(buf) - 1;
-        char  *bp  = buf;
-        size_t i   = size;
-        int    fcnt;
+        char        buf[256];
+        char       *bp   = buf;
+        char       *bend = buf + sizeof(buf) - 1;
+        const char *send = str + size;
 
-        for (; '\0' != *str && 0 < i; i--, str++) {
-            if ('1' == (fcnt = table[(unsigned char)*str])) {
-                if (end <= bp) {
+        while (str < send && '\0' != *str) {
+            /* Copy runs of pass-through bytes a word at a time into the staging
+             * buffer. A clean word has no byte below 0x20, so it can hold no
+             * newline and no '\0': col and pos advance by the whole word and the
+             * line is unchanged. On a hit the store is kept up to the first
+             * flagged byte and the rest is redone by the loops below.
+             */
+            while (str + 8 <= send) {
+                uint64_t v;
+                uint64_t mask;
+
+                memcpy(&v, str, 8);
+                mask = xml_bytes_of_interest(v);
+                if (bend < bp + 8) {
                     buf_append_string(&b->buf, buf, bp - buf);
                     bp = buf;
                 }
-                if ('\n' == *str) {
-                    b->line++;
-                    b->col = 1;
-                } else {
-                    b->col++;
-                }
-                b->pos++;
-                *bp++ = *str;
-            } else {
-                b->pos += fcnt - '0';
-                b->col += fcnt - '0';
-                if (buf < bp) {
-                    buf_append_string(&b->buf, buf, bp - buf);
-                    bp = buf;
-                }
-                switch (*str) {
-                case '"': buf_append_string(&b->buf, "&quot;", 6); break;
-                case '&': buf_append_string(&b->buf, "&amp;", 5); break;
-                case '\'': buf_append_string(&b->buf, "&apos;", 6); break;
-                case '<': buf_append_string(&b->buf, "&lt;", 4); break;
-                case '>': buf_append_string(&b->buf, "&gt;", 4); break;
-                default:
-                    // Must be one of the invalid characters.
-                    if (!strip_invalid_chars) {
-                        rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *str);
-                    }
+                memcpy(bp, str, 8);
+                if (0 != mask) {
+                    int n = xml_first_of_interest((const unsigned char *)str, mask);
+
+                    bp += n;
+                    str += n;
+                    b->col += n;
+                    b->pos += n;
                     break;
+                }
+                bp += 8;
+                str += 8;
+                b->col += 8;
+                b->pos += 8;
+            }
+            /* Pass-through bytes the word loop left: the tail shorter than a
+             * word. These are all >= 0x20 and not escape characters, so no
+             * newline check is needed.
+             */
+            while (str < send && '\0' != *str) {
+                unsigned char c = (unsigned char)*str;
+
+                if (c < 0x20 || '"' == c || '\'' == c || '&' == c || '<' == c || '>' == c) {
+                    break;
+                }
+                if (bend <= bp) {
+                    buf_append_string(&b->buf, buf, bp - buf);
+                    bp = buf;
+                }
+                *bp++ = *str++;
+                b->col++;
+                b->pos++;
+            }
+            /* One byte the predicate flagged: an escape, an invalid character,
+             * or a byte the table keeps unchanged ('"' and '\'' in the element
+             * table, and 0x09/0x0a/0x0d in every table).
+             */
+            if (str < send && '\0' != *str) {
+                int fcnt = table[(unsigned char)*str];
+
+                if ('1' == fcnt) {
+                    if (bend <= bp) {
+                        buf_append_string(&b->buf, buf, bp - buf);
+                        bp = buf;
+                    }
+                    if ('\n' == *str) {
+                        b->line++;
+                        b->col = 1;
+                    } else {
+                        b->col++;
+                    }
+                    b->pos++;
+                    *bp++ = *str++;
+                } else {
+                    b->pos += fcnt - '0';
+                    b->col += fcnt - '0';
+                    if (buf < bp) {
+                        buf_append_string(&b->buf, buf, bp - buf);
+                        bp = buf;
+                    }
+                    switch (*str) {
+                    case '"': buf_append_string(&b->buf, "&quot;", 6); break;
+                    case '&': buf_append_string(&b->buf, "&amp;", 5); break;
+                    case '\'': buf_append_string(&b->buf, "&apos;", 6); break;
+                    case '<': buf_append_string(&b->buf, "&lt;", 4); break;
+                    case '>': buf_append_string(&b->buf, "&gt;", 4); break;
+                    default:
+                        // Must be one of the invalid characters.
+                        if (!strip_invalid_chars) {
+                            rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *str);
+                        }
+                        break;
+                    }
+                    str++;
                 }
             }
         }

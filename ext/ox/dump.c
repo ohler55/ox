@@ -13,6 +13,7 @@
 #include "base64.h"
 #include "cache8.h"
 #include "ox.h"
+#include "xml_str.h"
 
 #define USE_B64 0
 #define MAX_DEPTH 1000
@@ -114,16 +115,6 @@ inline static int is_xml_friendly(const uchar *str, int len, const char *table) 
         }
     }
     return 1;
-}
-
-inline static size_t xml_str_len(const uchar *str, size_t len, const char *table) {
-    size_t size = 0;
-    size_t i    = len;
-
-    for (; 0 < i; str++, i--) {
-        size += table[*str];
-    }
-    return size - len * (size_t)'0';
 }
 
 inline static void dump_hex(uchar c, Out out) {
@@ -374,36 +365,78 @@ inline static void dump_str_value(Out out, const char *value, size_t size, const
         *out->cur = '\0';
         return;
     }
-    for (; 0 < size; size--, value++) {
-        if ('1' == table[(uchar)*value]) {
-            *out->cur++ = *value;
-        } else {
-            switch (*value) {
-            case '"': APPEND_CHARS(out->cur, "&quot;", 6); break;
-            case '&': APPEND_CHARS(out->cur, "&amp;", 5); break;
-            case '\'': APPEND_CHARS(out->cur, "&apos;", 6); break;
-            case '<': APPEND_CHARS(out->cur, "&lt;", 4); break;
-            case '>': APPEND_CHARS(out->cur, "&gt;", 4); break;
-            default:
-                // Must be one of the invalid characters.
-                if (StrictEffort == out->opts->effort) {
-                    rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *value);
-                }
-                if (Yes == out->opts->allow_invalid) {
-                    *out->cur++ = '&';
-                    *out->cur++ = '#';
-                    *out->cur++ = 'x';
-                    *out->cur++ = '0';
-                    *out->cur++ = '0';
-                    dump_hex(*value, out);
-                    *out->cur++ = ';';
-                } else if ('\0' != *out->opts->inv_repl) {
-                    // If the empty string then ignore. The first character of
-                    // the replacement is the length.
-                    memcpy(out->cur, out->opts->inv_repl + 1, (size_t)*out->opts->inv_repl);
-                    out->cur += *out->opts->inv_repl;
-                }
+    const char *end = value + size;
+
+    while (value < end) {
+        /* Copy runs of pass-through bytes a word at a time. A word with no byte
+         * of interest is stored whole; on a hit the store is kept up to the
+         * first flagged byte and the rest is redone by the loops below. xsize
+         * was reserved for the whole escaped result so out->cur stays inside the
+         * buffer, and out->cur + 8 <= out->end keeps the wide store in bounds on
+         * its own.
+         */
+        while (value + 8 <= end && out->cur + 8 <= out->end) {
+            uint64_t v;
+            uint64_t mask;
+
+            memcpy(&v, value, 8);
+            mask = xml_bytes_of_interest(v);
+            memcpy(out->cur, value, 8);
+            if (0 != mask) {
+                int n = xml_first_of_interest((const unsigned char *)value, mask);
+
+                value += n;
+                out->cur += n;
                 break;
+            }
+            value += 8;
+            out->cur += 8;
+        }
+        /* Pass-through bytes the word loop could not take: the tail shorter than
+         * a word, and the '"' or '\'' the element table keeps that the predicate
+         * flags anyway.
+         */
+        while (value < end) {
+            uchar c = (uchar)*value;
+
+            if (c < 0x20 || '"' == c || '\'' == c || '&' == c || '<' == c || '>' == c) {
+                break;
+            }
+            *out->cur++ = *value++;
+        }
+        if (value < end) {
+            char c = *value++;
+
+            if ('1' == table[(uchar)c]) {
+                *out->cur++ = c;
+            } else {
+                switch (c) {
+                case '"': APPEND_CHARS(out->cur, "&quot;", 6); break;
+                case '&': APPEND_CHARS(out->cur, "&amp;", 5); break;
+                case '\'': APPEND_CHARS(out->cur, "&apos;", 6); break;
+                case '<': APPEND_CHARS(out->cur, "&lt;", 4); break;
+                case '>': APPEND_CHARS(out->cur, "&gt;", 4); break;
+                default:
+                    // Must be one of the invalid characters.
+                    if (StrictEffort == out->opts->effort) {
+                        rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", c);
+                    }
+                    if (Yes == out->opts->allow_invalid) {
+                        *out->cur++ = '&';
+                        *out->cur++ = '#';
+                        *out->cur++ = 'x';
+                        *out->cur++ = '0';
+                        *out->cur++ = '0';
+                        dump_hex(c, out);
+                        *out->cur++ = ';';
+                    } else if ('\0' != *out->opts->inv_repl) {
+                        // If the empty string then ignore. The first character of
+                        // the replacement is the length.
+                        memcpy(out->cur, out->opts->inv_repl + 1, (size_t)*out->opts->inv_repl);
+                        out->cur += *out->opts->inv_repl;
+                    }
+                    break;
+                }
             }
         }
     }
