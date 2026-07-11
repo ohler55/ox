@@ -85,6 +85,16 @@ static const char hex_chars[17] = "0123456789abcdef";
         buffer += size;                   \
     }
 
+#ifdef HAVE_FAST_MEMCPY
+#define APPEND_CHARS_SMALL(buffer, chars, size) \
+    {                                           \
+        fast_memcpy16(buffer, chars, size);     \
+        buffer += size;                         \
+    }
+#else
+#define APPEND_CHARS_SMALL(buffer, chars, size) APPEND_CHARS(buffer, chars, size)
+#endif
+
 // Each table below maps a byte to the length of its escaped form, held as an ASCII digit so that
 // xml_str_len() can sum the entries directly. The : character is equivalent to 10, used for replacement
 // characters up to 10 characters long such as '&#x10FFFF;'.
@@ -171,28 +181,21 @@ inline static void fill_indent(Out out, int cnt) {
 }
 
 inline static void fill_value(Out out, const char *value, size_t len) {
-    if (6 < len) {
-        memcpy(out->cur, value, len);
-        out->cur += len;
+    if (16 < len) {
+        APPEND_CHARS(out->cur, value, len);
     } else {
-        for (; 0 < len; len--, value++) {
-            *out->cur++ = *value;
-        }
+        APPEND_CHARS_SMALL(out->cur, value, len);
     }
 }
 
 inline static void fill_attr(Out out, char name, const char *value, size_t len) {
     *out->cur++ = ' ';
     *out->cur++ = name;
-    *out->cur++ = '=';
-    *out->cur++ = '"';
-    if (6 < len) {
-        memcpy(out->cur, value, len);
-        out->cur += len;
+    APPEND_CHARS_SMALL(out->cur, "=\"", 2);
+    if (16 < len) {
+        APPEND_CHARS(out->cur, value, len);
     } else {
-        for (; 0 < len; len--, value++) {
-            *out->cur++ = *value;
-        }
+        APPEND_CHARS_SMALL(out->cur, value, len);
     }
     *out->cur++ = '"';
 }
@@ -312,9 +315,7 @@ static void dump_start(Out out, Element e) {
     }
     if (e->closed) {
         if (out->opts->no_empty) {
-            *out->cur++ = '>';
-            *out->cur++ = '<';
-            *out->cur++ = '/';
+            APPEND_CHARS_SMALL(out->cur, "></", 3);
             *out->cur++ = e->type;
         } else {
             *out->cur++ = '/';
@@ -331,8 +332,7 @@ static void dump_end(Out out, Element e) {
         grow(out, size);
     }
     fill_indent(out, e->indent);
-    *out->cur++ = '<';
-    *out->cur++ = '/';
+    APPEND_CHARS_SMALL(out->cur, "</", 2);
     *out->cur++ = e->type;
     *out->cur++ = '>';
     *out->cur   = '\0';
@@ -342,13 +342,10 @@ inline static void dump_value(Out out, const char *value, size_t size) {
     if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }
-    if (6 < size) {
-        memcpy(out->cur, value, size);
-        out->cur += size;
+    if (16 < size) {
+        APPEND_CHARS(out->cur, value, size);
     } else {
-        for (; 0 < size; size--, value++) {
-            *out->cur++ = *value;
-        }
+        APPEND_CHARS_SMALL(out->cur, value, size);
     }
     *out->cur = '\0';
 }
@@ -360,8 +357,11 @@ inline static void dump_str_value(Out out, const char *value, size_t size, const
         grow(out, xsize);
     }
     if (xsize == size) {
-        memcpy(out->cur, value, size);
-        out->cur += size;
+        if (16 < size) {
+            APPEND_CHARS(out->cur, value, size);
+        } else {
+            APPEND_CHARS_SMALL(out->cur, value, size);
+        }
         *out->cur = '\0';
         return;
     }
@@ -411,22 +411,18 @@ inline static void dump_str_value(Out out, const char *value, size_t size, const
                 *out->cur++ = c;
             } else {
                 switch (c) {
-                case '"': APPEND_CHARS(out->cur, "&quot;", 6); break;
-                case '&': APPEND_CHARS(out->cur, "&amp;", 5); break;
-                case '\'': APPEND_CHARS(out->cur, "&apos;", 6); break;
-                case '<': APPEND_CHARS(out->cur, "&lt;", 4); break;
-                case '>': APPEND_CHARS(out->cur, "&gt;", 4); break;
+                case '"': APPEND_CHARS_SMALL(out->cur, "&quot;", 6); break;
+                case '&': APPEND_CHARS_SMALL(out->cur, "&amp;", 5); break;
+                case '\'': APPEND_CHARS_SMALL(out->cur, "&apos;", 6); break;
+                case '<': APPEND_CHARS_SMALL(out->cur, "&lt;", 4); break;
+                case '>': APPEND_CHARS_SMALL(out->cur, "&gt;", 4); break;
                 default:
                     // Must be one of the invalid characters.
                     if (StrictEffort == out->opts->effort) {
                         rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", c);
                     }
                     if (Yes == out->opts->allow_invalid) {
-                        *out->cur++ = '&';
-                        *out->cur++ = '#';
-                        *out->cur++ = 'x';
-                        *out->cur++ = '0';
-                        *out->cur++ = '0';
+                        APPEND_CHARS_SMALL(out->cur, "&#x00", 5);
                         dump_hex(c, out);
                         *out->cur++ = ';';
                     } else if ('\0' != *out->opts->inv_repl) {
@@ -464,8 +460,11 @@ inline static void dump_num(Out out, VALUE obj) {
     if (out->end - out->cur <= size) {
         grow(out, size);
     }
-    memcpy(out->cur, b, size);
-    out->cur += size;
+    if (16 < size) {
+        APPEND_CHARS(out->cur, b, size);
+    } else {
+        APPEND_CHARS_SMALL(out->cur, b, size);
+    }
     *out->cur = '\0';
 }
 
@@ -491,8 +490,11 @@ static void dump_time_thin(Out out, VALUE obj) {
     if (out->end - out->cur <= size) {
         grow(out, size);
     }
-    memcpy(out->cur, b, size);
-    out->cur += size;
+    if (16 < size) {
+        APPEND_CHARS(out->cur, b, size);
+    } else {
+        APPEND_CHARS_SMALL(out->cur, b, size);
+    }
 }
 
 static void dump_date(Out out, VALUE obj) {
@@ -511,8 +513,11 @@ static void dump_date(Out out, VALUE obj) {
     if (out->end - out->cur <= size) {
         grow(out, size);
     }
-    memcpy(out->cur, b, size);
-    out->cur += size;
+    if (16 < size) {
+        APPEND_CHARS(out->cur, b, size);
+    } else {
+        APPEND_CHARS_SMALL(out->cur, b, size);
+    }
 }
 
 static void dump_time_xsd(Out out, VALUE obj) {
@@ -1072,13 +1077,10 @@ static void dump_gen_element(VALUE obj, int depth, Out out) {
         if (do_indent) {
             fill_indent(out, indent);
         }
-        *out->cur++ = '<';
-        *out->cur++ = '/';
+        APPEND_CHARS_SMALL(out->cur, "</", 2);
         fill_value(out, name, nlen);
     } else if (out->opts->no_empty) {
-        *out->cur++ = '>';
-        *out->cur++ = '<';
-        *out->cur++ = '/';
+        APPEND_CHARS_SMALL(out->cur, "></", 3);
         fill_value(out, name, nlen);
     } else {
         *out->cur++ = '/';
@@ -1107,8 +1109,7 @@ static void dump_gen_instruct(VALUE obj, int depth, Out out) {
     if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }
-    *out->cur++ = '<';
-    *out->cur++ = '?';
+    APPEND_CHARS_SMALL(out->cur, "<?", 2);
     fill_value(out, name, nlen);
     if (0 != content) {
         if (' ' != *content) {
@@ -1118,9 +1119,8 @@ static void dump_gen_instruct(VALUE obj, int depth, Out out) {
     } else if (Qnil != attrs) {
         rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
     }
-    *out->cur++ = '?';
-    *out->cur++ = '>';
-    *out->cur   = '\0';
+    APPEND_CHARS_SMALL(out->cur, "?>", 2);
+    *out->cur = '\0';
 }
 
 static int dump_gen_nodes(VALUE obj, int depth, Out out) {
@@ -1184,8 +1184,7 @@ static int dump_gen_attr(VALUE key, VALUE value, VALUE ov) {
     }
     *out->cur++ = ' ';
     fill_value(out, ks, klen);
-    *out->cur++ = '=';
-    *out->cur++ = '"';
+    APPEND_CHARS_SMALL(out->cur, "=\"", 2);
     dump_str_value(out, StringValuePtr(value), RSTRING_LEN(value), xml_quote_chars);
     *out->cur++ = '"';
 
