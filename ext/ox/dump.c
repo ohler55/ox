@@ -1222,22 +1222,13 @@ dump_gen_val_node(VALUE obj, int depth, const char *pre, size_t plen, const char
     *out->cur = '\0';
 }
 
-static void dump_obj_to_xml(VALUE obj, Options copts, Out out) {
+// The dump traversal, run under rb_protect so the output buffer is freed even
+// when it raises (invalid character, oversized indent, deep-recursion circular
+// reference, ...). out->obj and out->opts carry everything it needs.
+static VALUE dump_obj_to_xml_body(VALUE outv) {
+    Out   out  = (Out)outv;
+    VALUE obj  = out->obj;
     VALUE clas = rb_obj_class(obj);
-
-    out->w_time     = (Yes == copts->xsd_date) ? dump_time_xsd : dump_time_thin;
-    out->buf        = ALLOC_N(char, 65336);
-    out->end        = out->buf + 65325; /* 10 less than end plus extra for possible errors */
-    out->cur        = out->buf;
-    out->circ_cache = 0;
-    out->circ_cnt   = 0;
-    out->opts       = copts;
-    out->obj        = obj;
-    *out->cur       = '\0';
-    if (Yes == copts->circular) {
-        ox_cache8_new(&out->circ_cache);
-    }
-    out->indent = copts->indent;
 
     if (ox_document_clas == clas) {
         dump_gen_doc(obj, -1, out);
@@ -1259,8 +1250,38 @@ static void dump_obj_to_xml(VALUE obj, Options copts, Out out) {
     if (0 <= out->indent) {
         dump_value(out, "\n", 1);
     }
+    return Qnil;
+}
+
+static void dump_obj_to_xml(VALUE obj, Options copts, Out out) {
+    int state = 0;
+
+    out->w_time     = (Yes == copts->xsd_date) ? dump_time_xsd : dump_time_thin;
+    out->buf        = ALLOC_N(char, 65336);
+    out->end        = out->buf + 65325; /* 10 less than end plus extra for possible errors */
+    out->cur        = out->buf;
+    out->circ_cache = 0;
+    out->circ_cnt   = 0;
+    out->opts       = copts;
+    out->obj        = obj;
+    *out->cur       = '\0';
+    if (Yes == copts->circular) {
+        ox_cache8_new(&out->circ_cache);
+    }
+    out->indent = copts->indent;
+
+    // Run the traversal under rb_protect. On the normal path out->buf is handed
+    // back to the caller; on a raise the longjmp would otherwise skip the free,
+    // so release the buffer (and the circular cache) here before re-raising.
+    rb_protect(dump_obj_to_xml_body, (VALUE)out, &state);
+
     if (Yes == copts->circular) {
         ox_cache8_delete(out->circ_cache);
+    }
+    if (0 != state) {
+        xfree(out->buf);
+        out->buf = NULL;
+        rb_jump_tag(state);
     }
 }
 
@@ -1279,10 +1300,14 @@ void ox_write_obj_to_file(VALUE obj, const char *path, Options copts) {
     dump_obj_to_xml(obj, copts, &out);
     size = out.cur - out.buf;
     if (0 == (f = fopen(path, "w"))) {
+        xfree(out.buf);
         rb_raise(rb_eIOError, "%s\n", strerror(errno));
     }
     if (size != fwrite(out.buf, 1, size, f)) {
         int err = ferror(f);
+
+        fclose(f);
+        xfree(out.buf);
         rb_raise(rb_eIOError, "Write failed. [%d:%s]\n", err, strerror(err));
     }
     xfree(out.buf);
