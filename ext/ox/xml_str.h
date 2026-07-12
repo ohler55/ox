@@ -9,6 +9,32 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
+#if __has_builtin(__builtin_memcpy)
+#define HAVE_FAST_MEMCPY 1
+
+inline static void fast_memcpy16(void *dest, const void *src, size_t n) {
+    char       *d = (char *)dest;
+    const char *s = (const char *)src;
+
+    if (n >= 8) {
+        __builtin_memcpy(d, s, 8);
+        __builtin_memcpy(d + n - 8, s + n - 8, 8);
+    } else if (n >= 4) {
+        __builtin_memcpy(d, s, 4);
+        __builtin_memcpy(d + n - 4, s + n - 4, 4);
+    } else if (n >= 2) {
+        __builtin_memcpy(d, s, 2);
+        __builtin_memcpy(d + n - 2, s + n - 2, 2);
+    } else if (n >= 1) {
+        *d = *s;
+    }
+}
+#endif
+
 /* Shared helpers for the serializer escape path used by both dump.c and
  * builder.c. The size scan and the escape loop both walk the source string a
  * word at a time and only fall to a byte at a time when a word contains a byte
