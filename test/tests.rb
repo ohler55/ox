@@ -1709,6 +1709,9 @@ comment -->
 
   def test_builder_io
     omit 'needs fork' unless Process.respond_to?(:fork)
+    # A forked child stays under Valgrind and only adds noise there; the
+    # ruby_memcheck task (rake test:valgrind) sets this to skip these two tests.
+    omit 'skipped under Valgrind' if ENV['OX_SKIP_FORK_TESTS']
 
     IO.pipe do |r, w|
       if fork
@@ -1787,6 +1790,9 @@ comment -->
 
   def test_builder_block_io
     omit 'needs fork' unless Process.respond_to?(:fork)
+    # A forked child stays under Valgrind and only adds noise there; the
+    # ruby_memcheck task (rake test:valgrind) sets this to skip these two tests.
+    omit 'skipped under Valgrind' if ENV['OX_SKIP_FORK_TESTS']
 
     IO.pipe do |r, w|
       if fork
