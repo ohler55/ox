@@ -41,6 +41,15 @@ inline static int stack_empty(NStack stack) {
 }
 
 inline static void stack_cleanup(NStack stack) {
+    Nv nv;
+
+    // Elements still on the stack were never popped, so their over-long names
+    // are still owned here.
+    for (nv = stack->head; nv < stack->tail; nv++) {
+        if (NULL != nv->name) {
+            xfree((char *)(nv->name));
+        }
+    }
     if (stack->base != stack->head) {
         xfree(stack->head);
     }

@@ -275,7 +275,7 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
 // Entered after the "<?" sequence. Ready to read the rest.
 static void read_instruction(PInfo pi) {
     char              content[256];
-    char             *content_ptr;
+    char             *content_ptr = content;
     struct _attrStack attrs;
     char             *attr_name;
     char             *attr_value;
@@ -289,7 +289,7 @@ static void read_instruction(PInfo pi) {
     *content = '\0';
     attr_stack_init(&attrs);
     if (0 == (target = read_name_token(pi))) {
-        return;
+        goto CLEANUP;
     }
     end = pi->s;
     for (; true; pi->s++) {
@@ -300,7 +300,7 @@ static void read_instruction(PInfo pi) {
                 goto DONE;
             }
             break;
-        case '\0': set_error(&pi->err, "processing instruction not terminated", pi->str, pi->s); return;
+        case '\0': set_error(&pi->err, "processing instruction not terminated", pi->str, pi->s); goto CLEANUP;
         default: break;
         }
     }
@@ -323,21 +323,18 @@ DONE:
         while ('?' != c) {
             pi->last = 0;
             if ('\0' == *pi->s) {
-                attr_stack_cleanup(&attrs);
                 set_error(&pi->err, "invalid format, processing instruction not terminated", pi->str, pi->s);
-                return;
+                goto CLEANUP;
             }
             next_non_white(pi);
             if (0 == (attr_name = read_name_token(pi))) {
-                attr_stack_cleanup(&attrs);
-                return;
+                goto CLEANUP;
             }
             end = pi->s;
             next_non_white(pi);
             if ('\0' == *pi->s) {
-                attr_stack_cleanup(&attrs);
                 set_error(&pi->err, "invalid format, processing instruction not terminated", pi->str, pi->s);
-                return;
+                goto CLEANUP;
             }
             if ('=' != *pi->s++) {
                 attrs_ok = false;
@@ -347,8 +344,7 @@ DONE:
             // read value
             next_non_white(pi);
             if (0 == (attr_value = read_quoted_value(pi))) {
-                attr_stack_cleanup(&attrs);
-                return;
+                goto CLEANUP;
             }
             attr_stack_push(&attrs, attr_name, attr_value);
             next_non_white(pi);
@@ -366,9 +362,8 @@ DONE:
     }
     if (attrs_ok) {
         if ('>' != *pi->s++) {
-            attr_stack_cleanup(&attrs);
             set_error(&pi->err, "invalid format, processing instruction not terminated", pi->str, pi->s);
-            return;
+            goto CLEANUP;
         }
     } else {
         pi->s = cend + 1;
@@ -389,6 +384,9 @@ DONE:
             }
         }
     }
+    // Single exit, so no error return can leak the heap content buffer or the
+    // heap-grown attribute stack.
+CLEANUP:
     attr_stack_cleanup(&attrs);
     if (content_ptr != content) {
         xfree(content_ptr);
@@ -594,6 +592,7 @@ static char *read_element(PInfo pi, int depth) {
             /* read value */
             next_non_white(pi);
             if (0 == (attr_value = read_quoted_value(pi))) {
+                attr_stack_cleanup(&attrs);
                 return 0;
             }
             if (pi->options->convert_special && 0 != strchr(attr_value, '&')) {
@@ -740,6 +739,7 @@ static char *read_element(PInfo pi, int depth) {
                             return name;
                         }
                     } else if (err_has(&pi->err)) {
+                        attr_stack_cleanup(&attrs);
                         return 0;
                     }
                     break;
@@ -825,12 +825,14 @@ inline static int text_first_of_interest(const char *s, uint64_t mask) {
 }
 
 static void read_text(PInfo pi) {
-    char  buf[MAX_TEXT_LEN];
-    char *b         = buf;
-    char *alloc_buf = 0;
-    char *end       = b + sizeof(buf) - 2;
-    char  c;
-    int   done = 0;
+    char   buf[MAX_TEXT_LEN];
+    char  *b         = buf;
+    char  *alloc_buf = 0;
+    char  *end       = b + sizeof(buf) - 2;
+    char  *text;
+    size_t len;
+    char   c;
+    int    done = 0;
     /* fix_newlines only rewrites '\r'. SpcSkip folds every '\r' to a space, so
      * the only way one reaches buf under it is an entity like &#13;. Any other
      * skip mode can keep a '\r', so assume one might be present there and run
@@ -887,7 +889,7 @@ static void read_text(PInfo pi) {
         case '\0':
             pi->s--;
             set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
-            return;
+            goto CLEANUP;
         default:
             if (end <= (b + (('&' == c) ? 7 : 0))) { /* extra 8 for special just in case it is sequence of bytes */
                 unsigned long size;
@@ -908,7 +910,7 @@ static void read_text(PInfo pi) {
             }
             if ('&' == c) {
                 if (0 == (b = read_coded_chars(pi, b))) {
-                    return;
+                    goto CLEANUP;
                 }
                 /* An entity such as &#13; can decode to '\r'; be conservative. */
                 maybe_cr = 1;
@@ -916,7 +918,7 @@ static void read_text(PInfo pi) {
                 if (0 <= c && c <= 0x20) {
                     if (StrictEffort == pi->options->effort && 'x' == xml_valid_lower_chars[(unsigned char)c]) {
                         set_error(&pi->err, "invalid character", pi->str, pi->s);
-                        return;
+                        goto CLEANUP;
                     }
                     switch (pi->options->skip) {
                     case CrSkip:
@@ -946,9 +948,9 @@ static void read_text(PInfo pi) {
             break;
         }
     }
-    *b          = '\0';
-    char  *text = (0 != alloc_buf) ? alloc_buf : buf;
-    size_t len  = (size_t)(b - text);
+    *b   = '\0';
+    text = (0 != alloc_buf) ? alloc_buf : buf;
+    len  = (size_t)(b - text);
     if (maybe_cr) {
         // fix_newlines can fold "\r\n" to "\n" and shorten the text, so the
         // length is only known after it runs. When it was skipped the text is
@@ -957,6 +959,8 @@ static void read_text(PInfo pi) {
         len = strlen(text);
     }
     pi->pcb->add_text(pi, text, len, ('/' == *(pi->s + 1)));
+    // Single exit, so no error return can leak the heap-grown text buffer.
+CLEANUP:
     if (0 != alloc_buf) {
         xfree(alloc_buf);
     }

@@ -277,15 +277,19 @@ Cache ox_cache_create(size_t size, VALUE (*form)(const char *str, size_t len), b
 void ox_cache_free(void *ptr) {
     Cache    c = (Cache)ptr;
     uint64_t i;
+    Slot     next;
+    Slot     s;
 
     for (i = 0; i < c->size; i++) {
-        Slot next;
-        Slot s;
-
         for (s = c->slots[i]; NULL != s; s = next) {
             next = s->next;
             free(s);
         }
+    }
+    // ox_cache_mark retires unused slots onto the reuse list, off the buckets.
+    for (s = c->reuse; NULL != s; s = next) {
+        next = s->next;
+        free(s);
     }
     free((void *)c->slots);
     free(c);
