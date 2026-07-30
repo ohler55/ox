@@ -27,6 +27,7 @@ jobs:
           - windows
 
     runs-on: ${{ matrix.os }}-latest
+    timeout-minutes: 20
     continue-on-error: ${{ matrix.ruby == '3.0' || matrix.ruby == 'head'}}
     name: Ruby ${{ matrix.ruby }} (${{ matrix.os }})
     steps:
