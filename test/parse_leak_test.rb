@@ -14,6 +14,12 @@
 #     ATTR_STACK_INC (8) attributes, and two of its error returns -- the
 #     read_quoted_value() failure and the "a child element errored" unwind --
 #     omitted attr_stack_cleanup(). One block leaked per nesting level.
+#   * read_text() heap allocates alloc_buf once the text passes MAX_TEXT_LEN
+#     (4096) and freed it only on the normal return, so its three error returns
+#     dropped the whole grown buffer.
+#   * stack_cleanup() freed the SAX element stack array but not the ox_strndup'd
+#     name of any element still on it, so an unclosed element whose name reaches
+#     NV_BUF_MAX (64) bytes leaked that name.
 #
 # Both leaked once per parse and were invisible to Ruby's GC, so a service
 # parsing untrusted XML grew until the process was OOM killed while the parse
@@ -27,6 +33,7 @@
 $LOAD_PATH << File.join(File.dirname(__FILE__), '../lib')
 $LOAD_PATH << File.join(File.dirname(__FILE__), '../ext')
 
+require 'stringio'
 require 'test/unit'
 require 'ox'
 
@@ -101,6 +108,52 @@ class ParseLeakTest < ::Test::Unit::TestCase
     xml = "<r #{ATTRS}>" + (1..20).map { |i| "<m#{i} #{ATTRS}>" }.join + "<c #{CHILD_ATTRS} b10=\"oops"
     100.times do
       assert_raise(Ox::ParseError) { Ox.load(xml) }
+    end
+    assert_still_healthy
+  end
+
+  # read_text: the text grows onto the heap and then an unterminated character
+  # reference makes read_coded_chars() fail. Reachable with default options in
+  # every mode, so cover the three that route through read_text.
+  def test_text_buffer_freed_on_unterminated_character_reference
+    ['&#x', '&#', '&#x41'].each do |ent|
+      xml = "<a>#{'x' * 4090}#{ent}</a>"
+      50.times do
+        assert_raise(Ox::ParseError) { Ox.load(xml) }
+        assert_raise(Ox::ParseError) { Ox.load(xml, mode: :hash) }
+        assert_raise(Ox::ParseError) { Ox.load(xml, mode: :object) }
+      end
+    end
+    assert_still_healthy
+  end
+
+  # read_text: the other two error returns out of a grown buffer.
+  def test_text_buffer_freed_on_other_error_returns
+    50.times do
+      # Document ends inside the text.
+      assert_raise(Ox::ParseError) { Ox.load("<a>#{'x' * 5000}") }
+      # An invalid character under the default :strict effort.
+      assert_raise(Ox::ParseError) { Ox.load("<a>#{'x' * 5000}\x08</a>") }
+    end
+    assert_still_healthy
+  end
+
+  # stack_cleanup: an unclosed element whose name reaches NV_BUF_MAX is
+  # ox_strndup'd, and the parse ends with it still on the stack.
+  def test_sax_stack_frees_long_names_of_unclosed_elements
+    handler = Class.new(::Ox::Sax) do
+      def start_element(_name); end
+      def end_element(_name); end
+      def text(_value); end
+      def error(_message, _line, _column); end
+    end
+    50.times do |i|
+      # Over NV_BUF_MAX (64), so the name is heap allocated.
+      Ox.sax_parse(handler.new, StringIO.new("<#{'n' * 100}#{i}>"))
+      # Under it, so the inline buffer is used and nothing should be freed.
+      Ox.sax_parse(handler.new, StringIO.new("<short#{i}>"))
+      # Several unclosed long names at once.
+      Ox.sax_parse(handler.new, StringIO.new((0..4).map { |j| "<#{'m' * 80}#{i}_#{j}>" }.join))
     end
     assert_still_healthy
   end

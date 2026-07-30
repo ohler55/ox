@@ -825,12 +825,14 @@ inline static int text_first_of_interest(const char *s, uint64_t mask) {
 }
 
 static void read_text(PInfo pi) {
-    char  buf[MAX_TEXT_LEN];
-    char *b         = buf;
-    char *alloc_buf = 0;
-    char *end       = b + sizeof(buf) - 2;
-    char  c;
-    int   done = 0;
+    char   buf[MAX_TEXT_LEN];
+    char  *b         = buf;
+    char  *alloc_buf = 0;
+    char  *end       = b + sizeof(buf) - 2;
+    char  *text;
+    size_t len;
+    char   c;
+    int    done = 0;
     /* fix_newlines only rewrites '\r'. SpcSkip folds every '\r' to a space, so
      * the only way one reaches buf under it is an entity like &#13;. Any other
      * skip mode can keep a '\r', so assume one might be present there and run
@@ -887,7 +889,7 @@ static void read_text(PInfo pi) {
         case '\0':
             pi->s--;
             set_error(&pi->err, "invalid format, document not terminated", pi->str, pi->s);
-            return;
+            goto CLEANUP;
         default:
             if (end <= (b + (('&' == c) ? 7 : 0))) { /* extra 8 for special just in case it is sequence of bytes */
                 unsigned long size;
@@ -908,7 +910,7 @@ static void read_text(PInfo pi) {
             }
             if ('&' == c) {
                 if (0 == (b = read_coded_chars(pi, b))) {
-                    return;
+                    goto CLEANUP;
                 }
                 /* An entity such as &#13; can decode to '\r'; be conservative. */
                 maybe_cr = 1;
@@ -916,7 +918,7 @@ static void read_text(PInfo pi) {
                 if (0 <= c && c <= 0x20) {
                     if (StrictEffort == pi->options->effort && 'x' == xml_valid_lower_chars[(unsigned char)c]) {
                         set_error(&pi->err, "invalid character", pi->str, pi->s);
-                        return;
+                        goto CLEANUP;
                     }
                     switch (pi->options->skip) {
                     case CrSkip:
@@ -946,9 +948,9 @@ static void read_text(PInfo pi) {
             break;
         }
     }
-    *b          = '\0';
-    char  *text = (0 != alloc_buf) ? alloc_buf : buf;
-    size_t len  = (size_t)(b - text);
+    *b   = '\0';
+    text = (0 != alloc_buf) ? alloc_buf : buf;
+    len  = (size_t)(b - text);
     if (maybe_cr) {
         // fix_newlines can fold "\r\n" to "\n" and shorten the text, so the
         // length is only known after it runs. When it was skipped the text is
@@ -957,6 +959,8 @@ static void read_text(PInfo pi) {
         len = strlen(text);
     }
     pi->pcb->add_text(pi, text, len, ('/' == *(pi->s + 1)));
+    // Single exit, so no error return can leak the heap-grown text buffer.
+CLEANUP:
     if (0 != alloc_buf) {
         xfree(alloc_buf);
     }
