@@ -275,7 +275,7 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
 // Entered after the "<?" sequence. Ready to read the rest.
 static void read_instruction(PInfo pi) {
     char              content[256];
-    char             *content_ptr;
+    char             *content_ptr = content;
     struct _attrStack attrs;
     char             *attr_name;
     char             *attr_value;
@@ -289,7 +289,7 @@ static void read_instruction(PInfo pi) {
     *content = '\0';
     attr_stack_init(&attrs);
     if (0 == (target = read_name_token(pi))) {
-        return;
+        goto CLEANUP;
     }
     end = pi->s;
     for (; true; pi->s++) {
@@ -300,7 +300,7 @@ static void read_instruction(PInfo pi) {
                 goto DONE;
             }
             break;
-        case '\0': set_error(&pi->err, "processing instruction not terminated", pi->str, pi->s); return;
+        case '\0': set_error(&pi->err, "processing instruction not terminated", pi->str, pi->s); goto CLEANUP;
         default: break;
         }
     }
@@ -323,21 +323,18 @@ DONE:
         while ('?' != c) {
             pi->last = 0;
             if ('\0' == *pi->s) {
-                attr_stack_cleanup(&attrs);
                 set_error(&pi->err, "invalid format, processing instruction not terminated", pi->str, pi->s);
-                return;
+                goto CLEANUP;
             }
             next_non_white(pi);
             if (0 == (attr_name = read_name_token(pi))) {
-                attr_stack_cleanup(&attrs);
-                return;
+                goto CLEANUP;
             }
             end = pi->s;
             next_non_white(pi);
             if ('\0' == *pi->s) {
-                attr_stack_cleanup(&attrs);
                 set_error(&pi->err, "invalid format, processing instruction not terminated", pi->str, pi->s);
-                return;
+                goto CLEANUP;
             }
             if ('=' != *pi->s++) {
                 attrs_ok = false;
@@ -347,8 +344,7 @@ DONE:
             // read value
             next_non_white(pi);
             if (0 == (attr_value = read_quoted_value(pi))) {
-                attr_stack_cleanup(&attrs);
-                return;
+                goto CLEANUP;
             }
             attr_stack_push(&attrs, attr_name, attr_value);
             next_non_white(pi);
@@ -366,9 +362,8 @@ DONE:
     }
     if (attrs_ok) {
         if ('>' != *pi->s++) {
-            attr_stack_cleanup(&attrs);
             set_error(&pi->err, "invalid format, processing instruction not terminated", pi->str, pi->s);
-            return;
+            goto CLEANUP;
         }
     } else {
         pi->s = cend + 1;
@@ -389,6 +384,9 @@ DONE:
             }
         }
     }
+    // Single exit, so no error return can leak the heap content buffer or the
+    // heap-grown attribute stack.
+CLEANUP:
     attr_stack_cleanup(&attrs);
     if (content_ptr != content) {
         xfree(content_ptr);
@@ -594,6 +592,7 @@ static char *read_element(PInfo pi, int depth) {
             /* read value */
             next_non_white(pi);
             if (0 == (attr_value = read_quoted_value(pi))) {
+                attr_stack_cleanup(&attrs);
                 return 0;
             }
             if (pi->options->convert_special && 0 != strchr(attr_value, '&')) {
@@ -740,6 +739,7 @@ static char *read_element(PInfo pi, int depth) {
                             return name;
                         }
                     } else if (err_has(&pi->err)) {
+                        attr_stack_cleanup(&attrs);
                         return 0;
                     }
                     break;
