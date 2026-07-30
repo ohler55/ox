@@ -825,18 +825,19 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
         }
         clas = rb_obj_class(obj);
         if (rb_cRange == clas) {
-            VALUE beg  = RSTRUCT_GET(obj, 0);
-            VALUE end  = RSTRUCT_GET(obj, 1);
-            VALUE excl = RSTRUCT_GET(obj, 2);
-            int   d2   = depth + 1;
+            VALUE beg;
+            VALUE end;
+            int   excl;
+            int   d2 = depth + 1;
 
+            rb_range_values(obj, &beg, &end, &excl);
             e.type     = RangeCode;
             e.clas.len = 5;
             e.clas.str = "Range";
             out->w_start(out, &e);
             dump_obj(ox_beg_id, beg, d2, out);
             dump_obj(ox_end_id, end, d2, out);
-            dump_obj(ox_excl_id, excl, d2, out);
+            dump_obj(ox_excl_id, excl ? Qtrue : Qfalse, d2, out);
             out->w_end(out, &e);
         } else {
             char num_buf[16];
