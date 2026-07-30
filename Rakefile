@@ -8,6 +8,23 @@ Rake::ExtensionTask.new('ox') do |ext|
   ext.lib_dir = 'lib/ox'
 end
 
+# test_all invokes this. Without it Rake::Task['test'] silently resolved to a
+# synthesized file task for the test/ directory, so everything below never ran.
+#
+# tests.rb and sax/sax_test.rb are excluded because test_all runs them
+# separately through run(), which adds the ASAN preload when OX_ASAN is set.
+# cache_test.rb / cache8_test.rb call Ox.cache_test / Ox.cache8_test, C
+# self-tests only compiled into a debug build, and smart_test.rb runs
+# opts.parse(ARGV) at load and exits on the test runner's -v flag.
+Rake::TestTask.new(:test) do |t|
+  t.test_files = FileList['test/**/*_test.rb']
+                 .exclude('test/cache_test.rb',
+                          'test/cache8_test.rb',
+                          'test/sax/smart_test.rb',
+                          'test/sax/sax_test.rb')
+  t.verbose = true
+end
+
 if RUBY_PLATFORM.include?('linux')
   begin
     require 'ruby_memcheck'
