@@ -306,7 +306,7 @@ static void builder_free(void *ptr) {
     }
     b = (Builder)ptr;
     buf_cleanup(&b->buf);
-    for (e = b->stack, d = b->depth; 0 < d; d--, e++) {
+    for (e = b->stack, d = b->depth; 0 <= d; d--, e++) {
         if (e->name != e->buf) {
             free(e->name);
         }
@@ -623,10 +623,10 @@ static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
     }
     i_am_a_child(b, false);
     append_indent(b);
-    b->depth++;
-    if (MAX_DEPTH <= b->depth) {
+    if (MAX_DEPTH <= b->depth + 1) {
         rb_raise(ox_arg_error_class, "XML too deeply nested");
     }
+    b->depth++;
     switch (rb_type(*argv)) {
     case T_STRING:
         name = StringValuePtr(*argv);
