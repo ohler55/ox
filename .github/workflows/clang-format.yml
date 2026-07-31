@@ -14,6 +14,9 @@ on:
       - "**/*.c"
       - "**/*.h"
 
+permissions:
+  contents: read
+
 jobs:
   formatting-check:
     name: Formatting Check
@@ -22,6 +25,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v7
+      with:
+        persist-credentials: false
 
     - name: Run clang-format style check
       uses: jidicula/clang-format-action@v4.18.0
