@@ -159,6 +159,7 @@ struct _pInfo {
 
 extern VALUE ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options, Err err);
 extern void  _ox_raise_error(const char *msg, const char *xml, const char *current, const char *file, int line);
+extern void  ox_circ_array_free(CircArray ca);
 
 extern void ox_sax_define(void);
 

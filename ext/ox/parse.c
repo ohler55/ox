@@ -232,6 +232,12 @@ static VALUE ox_parse_ensure(VALUE ctxv) {
         DATA_PTR(ctx->wrap) = NULL;
     }
     helper_stack_cleanup(&ctx->pi->helpers);
+    // end_element() only frees the circular reference table on a complete
+    // parse, so release it here for an error or a callback raising out.
+    if (0 != ctx->pi->circ_array) {
+        ox_circ_array_free(ctx->pi->circ_array);
+        ctx->pi->circ_array = 0;
+    }
     return Qnil;
 }
 
