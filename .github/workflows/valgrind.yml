@@ -22,6 +22,8 @@ jobs:
           - '4.0'
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Install Valgrind
         run: |
           sudo apt-get update
