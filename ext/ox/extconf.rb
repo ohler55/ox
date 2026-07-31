@@ -46,6 +46,9 @@ have_func('rb_ext_ractor_safe', 'ruby.h')
 have_func('pthread_mutex_init')
 have_func('rb_enc_interned_str')
 have_func('index')
+# Seeds the name cache hash. Not on every implementation, so cache.c falls back
+# to String#hash, which is per process randomized everywhere it matters.
+have_func('rb_hash_start', 'ruby.h')
 
 have_header('ruby/st.h')
 have_header('sys/uio.h')

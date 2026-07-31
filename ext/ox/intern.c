@@ -68,7 +68,12 @@ static VALUE form_id(const char *str, size_t len) {
 }
 
 void ox_hash_init(void) {
-    VALUE cache_class = rb_define_class_under(Ox, "Cache", rb_cObject);
+    VALUE cache_class;
+
+    // Before the first cache exists, so no name is ever hashed unseeded.
+    ox_hash_seed_init();
+
+    cache_class = rb_define_class_under(Ox, "Cache", rb_cObject);
 #if RUBY_API_VERSION_CODE >= 30200
     rb_undef_alloc_func(cache_class);
 #endif

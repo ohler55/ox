@@ -27,6 +27,23 @@
 // almost the Murmur hash algorithm
 #define M 0x5bd1e995
 
+// Mixed into the initial state of hash_calc(). Element and attribute names come
+// straight from the document, so without a per process seed the bucket every
+// name lands in can be precomputed offline. Written once by ox_hash_seed_init()
+// during Init_ox and only read afterwards, so the caches stay Ractor safe.
+static uint64_t hash_seed = 0;
+
+void ox_hash_seed_init(void) {
+#ifdef HAVE_RB_HASH_START
+    // Folds in the random seed Ruby uses to defend Hash against the same attack.
+    hash_seed = (uint64_t)rb_hash_start(0);
+#else
+    // String#hash is per process randomized too. It can be negative, so take it
+    // as signed and reinterpret rather than letting NUM2ULL reject it.
+    hash_seed = (uint64_t)(int64_t)NUM2LL(rb_funcall(rb_str_new_literal("ox"), rb_intern("hash"), 0));
+#endif
+}
+
 typedef struct _slot {
     struct _slot     *next;
     VALUE             val;
@@ -68,7 +85,7 @@ const rb_data_type_t ox_cache_type = {
 static uint64_t hash_calc(const uint8_t *key, size_t len) {
     const uint8_t *end     = key + len;
     const uint8_t *endless = key + (len & 0xFFFFFFFC);
-    uint64_t       h       = (uint64_t)len;
+    uint64_t       h       = (uint64_t)len ^ hash_seed;
     uint64_t       k;
 
     while (key < endless) {
