@@ -13,6 +13,8 @@ struct _cache;
 
 extern const rb_data_type_t ox_cache_type;
 
+extern void ox_hash_seed_init(void);
+
 extern struct _cache *ox_cache_create(size_t size, VALUE (*form)(const char *str, size_t len), bool mark, bool locking);
 extern void           ox_cache_free(void *ptr);
 extern void           ox_cache_mark(void *ptr);
