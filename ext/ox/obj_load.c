@@ -219,16 +219,25 @@ static VALUE get_class_from_attrs(Attr a, PInfo pi, VALUE base_class) {
     return Qundef;
 }
 
+// The id indexes the circular reference table, which is grown to fit it, so an
+// unbounded id is an unbounded heap write. Cap it at the document length: every
+// referenced object needs at least one element, so no valid id can exceed it.
 static unsigned long get_id_from_attrs(PInfo pi, Attr a) {
     for (; 0 != a->name; a++) {
         if ('i' == *a->name && '\0' == *(a->name + 1)) {
-            unsigned long id   = 0;
-            const char   *text = a->value;
-            char          c;
+            unsigned long       id    = 0;
+            const unsigned long limit = (unsigned long)(pi->end - pi->str);
+            const char         *text  = a->value;
+            char                c;
 
             for (; '\0' != *text; text++) {
                 c = *text;
                 if ('0' <= c && c <= '9') {
+                    // Checked before the multiply so id can not overflow.
+                    if (limit / 10 < id || limit < id * 10 + (unsigned long)(c - '0')) {
+                        set_error(&pi->err, "circular reference id out of range", pi->str, pi->s);
+                        return 0;
+                    }
                     id = id * 10 + (c - '0');
                 } else {
                     set_error(&pi->err, "bad number format", pi->str, pi->s);
@@ -289,7 +298,9 @@ static void circ_array_set(CircArray ca, VALUE obj, unsigned long id) {
 static VALUE circ_array_get(CircArray ca, unsigned long id) {
     VALUE obj = Qundef;
 
-    if (id <= ca->cnt) {
+    // id is 0 when the `i` attribute is missing or invalid. Without the lower
+    // bound that reads objs[-1] and hands the word to Ruby as an object.
+    if (0 < id && id <= ca->cnt) {
         obj = ca->objs[id - 1];
     }
     return obj;
@@ -398,7 +409,8 @@ static void add_text(PInfo pi, char *text, size_t len, int closed) {
             rb_enc_associate(v, pi->options->rb_enc);
         }
         if (0 != pi->circ_array) {
-            circ_array_set(pi->circ_array, v, (unsigned long)h->obj);
+            // h->obj is still Qundef; add_element() parked the id in pi->id.
+            circ_array_set(pi->circ_array, v, pi->id);
         }
         h->obj = v;
         break;
