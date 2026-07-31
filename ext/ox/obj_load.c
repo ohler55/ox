@@ -32,7 +32,6 @@ static VALUE         get_class_from_attrs(Attr a, PInfo pi, VALUE base_class);
 static VALUE         classname2class(const char *name, PInfo pi, VALUE base_class);
 static unsigned long get_id_from_attrs(PInfo pi, Attr a);
 static CircArray     circ_array_new(void);
-static void          circ_array_free(CircArray ca);
 static void          circ_array_set(CircArray ca, VALUE obj, unsigned long id);
 static VALUE         circ_array_get(CircArray ca, unsigned long id);
 
@@ -253,7 +252,8 @@ static CircArray circ_array_new(void) {
     return ca;
 }
 
-static void circ_array_free(CircArray ca) {
+// Also called from ox_parse_ensure() when a parse ends before end_element().
+void ox_circ_array_free(CircArray ca) {
     if (ca->objs != ca->obj_array) {
         xfree(ca->objs);
     }
@@ -681,7 +681,7 @@ static void end_element(PInfo pi, const char *ename) {
         }
     }
     if (0 != pi->circ_array && helper_stack_empty(&pi->helpers)) {
-        circ_array_free(pi->circ_array);
+        ox_circ_array_free(pi->circ_array);
         pi->circ_array = 0;
     }
     if (DEBUG <= pi->options->trace) {

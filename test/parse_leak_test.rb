@@ -20,6 +20,11 @@
 #   * stack_cleanup() freed the SAX element stack array but not the ox_strndup'd
 #     name of any element still on it, so an unclosed element whose name reaches
 #     NV_BUF_MAX (64) bytes leaked that name.
+#   * obj_load.c allocates the circular reference table when the top level
+#     element of an object mode document carries an `i` attribute, and freed it
+#     only in end_element(), when that element closes. Every parse error and
+#     every callback raise therefore dropped the table -- 8 KB, plus the grown
+#     objs array once the document has more than 1024 referenced objects.
 #
 # Both leaked once per parse and were invisible to Ruby's GC, so a service
 # parsing untrusted XML grew until the process was OOM killed while the parse
@@ -155,6 +160,61 @@ class ParseLeakTest < ::Test::Unit::TestCase
       # Several unclosed long names at once.
       Ox.sax_parse(handler.new, StringIO.new((0..4).map { |j| "<#{'m' * 80}#{i}_#{j}>" }.join))
     end
+    assert_still_healthy
+  end
+
+  # obj_load: the top level `i` attribute allocates the circular reference
+  # table, then a bad reference ends the parse before end_element() can free it.
+  def test_circ_array_freed_on_invalid_circular_reference
+    200.times do
+      assert_raise(Ox::ParseError) { Ox.parse_obj('<a i="1"><s i="2">x</s><p i="3"/></a>') }
+    end
+    assert_still_healthy
+  end
+
+  # obj_load: the document is unterminated, so the parse ends with the table
+  # still held and the helper stack not empty.
+  def test_circ_array_freed_on_unterminated_document
+    200.times do
+      assert_raise(Ox::ParseError) { Ox.parse_obj('<a i="1"><s i="2">x</s>') }
+    end
+    assert_still_healthy
+  end
+
+  # obj_load: past the table's 1024 inline slots, so objs is a second heap
+  # allocation that leaked with it. The document is deliberately long enough
+  # that its ids stay well inside the valid range.
+  def test_circ_array_freed_after_the_table_grows
+    body = (2..1100).map { |i| %(<s i="#{i}">x</s>) }.join
+    20.times do
+      assert_raise(Ox::ParseError) { Ox.parse_obj(%(<a i="1">#{body}<p i="99999"/></a>)) }
+      assert_raise(Ox::ParseError) { Ox.parse_obj(%(<a i="1">#{body})) }
+    end
+    assert_still_healthy
+  end
+
+  # obj_load: a callback raising out of the parse (rb_const_get on an undefined
+  # class under the default :strict effort) unwinds past end_element entirely.
+  def test_circ_array_freed_when_a_callback_raises
+    200.times do
+      assert_raise(NameError) do
+        Ox.parse_obj('<a i="1"><s i="2">x</s><o c="NoSuchClassXYZ"/></a>')
+      end
+    end
+    assert_still_healthy
+  end
+
+  # The success path still frees the table exactly once. A double free would
+  # surface here rather than as a leak.
+  def test_valid_circular_documents_unchanged
+    200.times do
+      a = Ox.parse_obj('<a i="1"><s i="2">x</s><p i="2"/></a>')
+      assert_same(a[0], a[1])
+    end
+    obj = { 'one' => %w[shared shared] }
+    obj['two'] = obj['one']
+    back = Ox.parse_obj(Ox.dump(obj, circular: true, indent: 2))
+    assert_same(back['one'], back['two'])
     assert_still_healthy
   end
 
