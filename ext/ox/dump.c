@@ -476,14 +476,37 @@ static void dump_time_thin(Out out, VALUE obj) {
     long            nsec = ts.tv_nsec;
     char           *dot  = b - 10;
     long            size;
+    bool            neg = 0 > sec;
 
+    // tv_nsec is never negative, so a time before the epoch is a negative
+    // second count carrying a positive fraction. Writing those two out as they
+    // are would read as -1.5 for what is really -0.5, so move the fraction over
+    // and write the magnitude with a sign in front of it.
+    if (neg && 0 < nsec) {
+        sec++;
+        nsec = 1000000000L - nsec;
+    }
     *b-- = '\0';
     for (; dot < b; b--, nsec /= 10) {
         *b = '0' + (nsec % 10);
     }
     *b-- = '.';
-    for (; 0 < sec; b--, sec /= 10) {
-        *b = '0' + (sec % 10);
+    if (0 == sec) {
+        *b-- = '0';
+    } else if (neg) {
+        // sec is left negative instead of negated so that the most negative
+        // time_t does not overflow. C truncates the quotient toward zero, so
+        // the remainder carries the sign with it.
+        for (; 0 != sec; b--, sec /= 10) {
+            *b = (char)('0' - sec % 10);
+        }
+    } else {
+        for (; 0 < sec; b--, sec /= 10) {
+            *b = '0' + (sec % 10);
+        }
+    }
+    if (neg) {
+        *b-- = '-';
     }
     b++;
     size = sizeof(buf) - (b - buf) - 1;
