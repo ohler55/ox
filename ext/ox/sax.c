@@ -879,16 +879,17 @@ static char read_element_start(SaxDrive dr) {
             }
         }
     }
-    name = str2sym(dr, dr->buf.str, nlen, &ename);
-    if (NULL == ename) {
-        if (sizeof(ebuf) <= nlen) {
-            ename = ox_strndup(dr->buf.str, nlen);
-            efree = true;
-        } else {
-            memcpy(ebuf, dr->buf.str, nlen);
-            ebuf[nlen] = '\0';
-            ename      = ebuf;
-        }
+    name = str2sym(dr, dr->buf.str, nlen, NULL);
+    // ename lives until stack_push() copies it, across the start_element
+    // callback and read_attrs. The cache's key is inside a Slot, which a GC can
+    // retire and a later intern free, so copy it instead.
+    if (sizeof(ebuf) <= nlen) {
+        ename = ox_strndup(dr->buf.str, nlen);
+        efree = true;
+    } else {
+        memcpy(ebuf, dr->buf.str, nlen);
+        ebuf[nlen] = '\0';
+        ename      = ebuf;
     }
     if (dr->has_start_element && 0 >= dr->blocked &&
         (NULL == h || ActiveOverlay == h->overlay || NestOverlay == h->overlay)) {

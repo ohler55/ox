@@ -117,14 +117,19 @@ static uint64_t hash_calc(const uint8_t *key, size_t len) {
 }
 
 static void rehash(Cache c) {
-    uint64_t osize;
+    uint64_t osize = c->size;
+    Slot    *slots;
     Slot    *end;
     Slot    *sp;
 
-    osize    = c->size;
+    // Growing is only an optimization, and rehash() runs with the lock held, so
+    // on failure keep the current size rather than raising.
+    if (NULL == (slots = realloc((void *)c->slots, sizeof(Slot) * osize * 4))) {
+        return;
+    }
     c->size  = osize * 4;
     c->mask  = c->size - 1;
-    c->slots = realloc((void *)c->slots, sizeof(Slot) * c->size);
+    c->slots = slots;
     memset((Slot *)c->slots + osize, 0, sizeof(Slot) * osize * 3);
     end = (Slot *)c->slots + osize;
     for (sp = (Slot *)c->slots; sp < end; sp++) {
@@ -170,7 +175,10 @@ static VALUE ox_lockless_intern(Cache c, const char *key, size_t len, const char
     }
     rkey = c->form(key, len);
     if (NULL == (b = c->reuse)) {
-        b = calloc(1, sizeof(struct _slot));
+        if (NULL == (b = calloc(1, sizeof(struct _slot)))) {
+            // Nothing modified yet and no lock held, so raising is safe.
+            rb_memerror();
+        }
     } else {
         c->reuse = b->next;
         c->rcnt--;
@@ -232,8 +240,8 @@ static VALUE ox_locking_intern(Cache c, const char *key, size_t len, const char 
         c->rcnt--;
     }
     CACHE_UNLOCK(c);
-    if (NULL == b) {
-        b = calloc(1, sizeof(struct _slot));
+    if (NULL == b && NULL == (b = calloc(1, sizeof(struct _slot)))) {
+        rb_memerror();  // the lock was released above
     }
     rkey    = c->form(key, len);
     b->hash = h;
@@ -267,6 +275,9 @@ Cache ox_cache_create(size_t size, VALUE (*form)(const char *str, size_t len), b
     Cache c     = calloc(1, sizeof(struct _cache));
     int   shift = 0;
 
+    if (NULL == c) {
+        rb_memerror();
+    }
     for (; REHASH_LIMIT < size; size /= 2, shift++) {
     }
     if (shift < MIN_SHIFT) {
@@ -277,9 +288,12 @@ Cache ox_cache_create(size_t size, VALUE (*form)(const char *str, size_t len), b
 #else
     c->mutex = rb_mutex_new();
 #endif
-    c->size  = 1 << shift;
-    c->mask  = c->size - 1;
-    c->slots = calloc(c->size, sizeof(Slot));
+    c->size = 1 << shift;
+    c->mask = c->size - 1;
+    if (NULL == (c->slots = calloc(c->size, sizeof(Slot)))) {
+        free(c);
+        rb_memerror();
+    }
     c->form  = form;
     c->xrate = 1;  // low
     c->mark  = mark;
