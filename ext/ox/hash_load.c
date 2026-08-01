@@ -239,7 +239,12 @@ static void end_element_no_attrs(PInfo pi, const char *ename) {
 }
 
 static void finish(PInfo pi) {
+    // Called once per yielded entity and once after the loop, so the pointer
+    // and the count have to go with the block.
     xfree(pi->marked);
+    pi->marked    = NULL;
+    pi->mark_size = 0;
+    pi->mark_cnt  = 0;
 }
 
 static void set_encoding_from_instruct(PInfo pi, Attr attrs) {
