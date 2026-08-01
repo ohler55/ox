@@ -17,6 +17,9 @@
 #include "ruby.h"
 #include "ruby/encoding.h"
 
+// No Struct has this many members, so a larger index is always out of range.
+#define MAX_STRUCT_INDEX (1 << 24)
+
 static void instruct(PInfo pi, const char *target, Attr attrs, const char *content);
 static void add_text(PInfo pi, char *text, size_t len, int closed);
 static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren);
@@ -27,7 +30,7 @@ static VALUE parse_xsd_time(const char *text, VALUE clas);
 static VALUE parse_double_time(const char *text, VALUE clas);
 static VALUE parse_regexp(const char *text);
 
-static ID            get_var_sym_from_attrs(Attr a, void *encoding);
+static ID            get_var_sym_from_attrs(Attr a, void *encoding, bool *indexp);
 static VALUE         get_obj_from_attrs(Attr a, PInfo pi, VALUE base_class);
 static VALUE         get_class_from_attrs(Attr a, PInfo pi, VALUE base_class);
 static VALUE         classname2class(const char *name, PInfo pi, VALUE base_class);
@@ -179,13 +182,30 @@ static VALUE classname2class(const char *name, PInfo pi, VALUE base_class) {
     return clas;
 }
 
-static ID get_var_sym_from_attrs(Attr a, void *encoding) {
+// Returns a Struct member index as a Fixnum or an instance variable ID. An ID
+// is odd, so it satisfies FIXNUM_P too; indexp says which one it is.
+static ID get_var_sym_from_attrs(Attr a, void *encoding, bool *indexp) {
+    *indexp = false;
     for (; 0 != a->name; a++) {
         if ('a' == *a->name && '\0' == *(a->name + 1)) {
             const char *val = a->value;
 
             if ('0' <= *val && *val <= '9') {
-                return INT2NUM(atoi(val));
+                // atoi() wrapped past INT_MAX into a negative index, which Ruby
+                // counts from the end. Stopping at INT_MAX is no good either:
+                // FIXNUM_MAX is 2**30 - 1 where long is 32 bits, and INT2NUM of
+                // INT_MAX came back as -1 there.
+                int i = 0;
+
+                for (; '0' <= *val && *val <= '9'; val++) {
+                    i = i * 10 + (*val - '0');
+                    if (MAX_STRUCT_INDEX < i) {
+                        i = MAX_STRUCT_INDEX;
+                        break;
+                    }
+                }
+                *indexp = true;
+                return (ID)INT2NUM(i);
             }
             return ox_id_intern(val, strlen(val));
         }
@@ -442,7 +462,20 @@ static void add_text(PInfo pi, char *text, size_t len, int closed) {
         break;
     case BignumCode: h->obj = rb_cstr_to_inum(text, 10, 1); break;
     case BigDecimalCode: h->obj = rb_funcall(rb_cObject, ox_bigdecimal_id, 1, rb_str_new2(text)); break;
-    default: h->obj = Qnil; break;
+    default: {
+        // The rest are containers add_element() built. Replacing one with Qnil
+        // left end_element() reading the nil back as an Array or a Struct.
+        // skip_off delivers the indentation between children here.
+        size_t i;
+
+        for (i = 0; i < len; i++) {
+            if (' ' != text[i] && '\t' != text[i] && '\n' != text[i] && '\r' != text[i]) {
+                set_error(&pi->err, "Unexpected text", pi->str, pi->s);
+                return;
+            }
+        }
+        break;
+    }
     }
 }
 
@@ -450,6 +483,8 @@ static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren
     Attr          a;
     Helper        h;
     unsigned long id;
+    bool          index;
+    ID            var;
 
     if (TRACE <= pi->options->trace) {
         char  buf[1024];
@@ -480,7 +515,9 @@ static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren
         set_error(&pi->err, "Invalid element name", pi->str, pi->s);
         return;
     }
-    h = helper_stack_push(&pi->helpers, get_var_sym_from_attrs(attrs, (void *)pi->options->rb_enc), Qundef, *ename);
+    var      = get_var_sym_from_attrs(attrs, (void *)pi->options->rb_enc, &index);
+    h        = helper_stack_push(&pi->helpers, var, Qundef, *ename);
+    h->index = index;
     switch (h->type) {
     case NilClassCode: h->obj = Qnil; break;
     case TrueClassCode: h->obj = Qtrue; break;
@@ -553,7 +590,12 @@ static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren
         }
         break;
     case StructCode:
-        h->obj = get_struct_from_attrs(attrs);
+        // Returns Qundef with no c attribute and, unlike the helpers above, does
+        // not set the error itself. The Qundef reached rb_struct_aset().
+        if (Qundef == (h->obj = get_struct_from_attrs(attrs))) {
+            set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
+            return;
+        }
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
         }
@@ -620,7 +662,9 @@ static void end_element(PInfo pi, const char *ename) {
             case ExceptionCode:
             case ObjectCode:
                 if (Qnil != ph->obj) {
-                    if (0 == h->var || NULL == rb_id2name(h->var)) {
+                    // An index is a valid ID too, so a numeric a attribute set an
+                    // instance variable named whatever was interned in that slot.
+                    if (0 == h->var || h->index || NULL == rb_id2name(h->var)) {
                         set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
                         return;
                     }
@@ -632,7 +676,9 @@ static void end_element(PInfo pi, const char *ename) {
                 }
                 break;
             case StructCode:
-                if (0 == h->var) {
+                // An ID landed in rb_struct_aset() as a Fixnum, so a name picked
+                // whichever member that number happened to be.
+                if (0 == h->var || !h->index) {
                     set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
                     return;
                 }
@@ -640,9 +686,14 @@ static void end_element(PInfo pi, const char *ename) {
                 break;
             case HashCode:
                 // put back h
-                helper_stack_push(&pi->helpers, h->var, h->obj, KeyCode);
+                helper_stack_push(&pi->helpers, h->var, h->obj, KeyCode)->index = h->index;
                 break;
             case RangeCode:
+                // An index can equal one of these IDs, so turn it away first.
+                if (h->index) {
+                    set_error(&pi->err, "Invalid range attribute", pi->str, pi->s);
+                    return;
+                }
                 if (ox_beg_id == h->var) {
                     rb_ary_store(ph->obj, 0, h->obj);
                 } else if (ox_end_id == h->var) {
@@ -834,7 +885,7 @@ static void debug_stack(PInfo pi, const char *comment) {
                 clas = rb_class2name(c);
             }
             if (0 != h->var) {
-                if (HashCode == h->type) {
+                if (h->index) {
                     VALUE v;
 
                     v   = rb_String(h->var);
