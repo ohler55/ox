@@ -11,6 +11,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
+// Not defined by every C library, and it is only these three bits.
+#ifndef S_ISREG
+#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#endif
 
 #include "intern.h"
 #include "ruby.h"
@@ -1030,6 +1037,7 @@ static VALUE load_file(int argc, VALUE *argv, VALUE self) {
     char       *xml;
     FILE       *f;
     off_t       len;
+    struct stat st;
     VALUE       obj;
     struct _err err;
 
@@ -1039,14 +1047,21 @@ static VALUE load_file(int argc, VALUE *argv, VALUE self) {
     if (0 == (f = fopen(path, "r"))) {
         rb_raise(rb_eIOError, "%s\n", strerror(errno));
     }
-    fseek(f, 0, SEEK_END);
-    len = ftello(f);
-    if (SMALL_XML < len) {
-        xml = ALLOC_N(char, len + 1);
-    } else {
-        xml = ALLOCA_N(char, len + 1);
+    // A stream that can not seek leaves len at -1, which allocates nothing and
+    // then asks fread for SIZE_MAX bytes.
+    // Only a regular file has a size worth sizing a read from. A FIFO reports
+    // -1, and a directory can report anything at all, including off_t's
+    // maximum.
+    if (0 != fstat(fileno(f), &st) || !S_ISREG(st.st_mode)) {
+        fclose(f);
+        rb_raise(rb_eIOError, "%s is not a regular file.\n", path);
     }
-    fseek(f, 0, SEEK_SET);
+    len = st.st_size;
+    if (SMALL_XML < len) {
+        xml = ALLOC_N(char, (size_t)len + 1);
+    } else {
+        xml = ALLOCA_N(char, (size_t)len + 1);
+    }
     if ((size_t)len != fread(xml, 1, len, f)) {
         ox_err_set(&err, rb_eLoadError, "Failed to read %ld bytes from %s.\n", (long)len, path);
         obj = Qnil;
