@@ -6,14 +6,17 @@
 #ifndef OX_HELPER_H
 #define OX_HELPER_H
 
+#include <stdbool.h>
+
 #include "type.h"
 
 #define HELPER_STACK_INC 16
 
 typedef struct _helper {
-    ID    var;  /* Object var ID */
-    VALUE obj;  /* object created or Qundef if not appropriate */
-    Type  type; /* type of object in obj */
+    ID    var;   /* Object var ID, or a Struct member index when index is set */
+    VALUE obj;   /* object created or Qundef if not appropriate */
+    Type  type;  /* type of object in obj */
+    bool  index; /* var is a member index and not an ID */
 } *Helper;
 
 typedef struct _helperStack {
@@ -58,9 +61,10 @@ inline static Helper helper_stack_push(HelperStack stack, ID var, VALUE obj, Typ
         stack->tail = stack->head + toff;
         stack->end  = stack->head + len + HELPER_STACK_INC;
     }
-    stack->tail->var  = var;
-    stack->tail->obj  = obj;
-    stack->tail->type = type;
+    stack->tail->var   = var;
+    stack->tail->obj   = obj;
+    stack->tail->type  = type;
+    stack->tail->index = false;  // obj_load.c sets its own
     stack->tail++;
 
     return stack->tail - 1;
