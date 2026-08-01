@@ -122,7 +122,7 @@
       <name>FJT-IASDB01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.16.1</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -150,7 +150,7 @@
       <name>FJT-OASDB01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.16.1</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -178,7 +178,7 @@
       <name>FJT-CASCR01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway/>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -204,7 +204,7 @@
       <name>ACE-IASDB01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.16.1</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -232,7 +232,7 @@
       <name>ACE-OASDB01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.16.1</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -260,7 +260,7 @@
       <name>ACE-CASCR01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway/>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -286,7 +286,7 @@
       <name>FJT-IASRM01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>defota29</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.126</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -315,7 +315,7 @@
       <name>FJT-IASRM02</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>defota29</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.126</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -344,7 +344,7 @@
       <name>FJT-OASRM01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>ratoka99</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.122</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -373,7 +373,7 @@
       <name>FJT-OASRM02</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>ratoka99</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.122</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -402,7 +402,7 @@
       <name>FJT-CASVP01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>ratoka99</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.0.129</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -428,7 +428,7 @@
       <name>ACE-IASRM01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>zoteru30</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.118</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -457,7 +457,7 @@
       <name>ACE-IASRM02</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>zoteru30</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.118</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -486,7 +486,7 @@
       <name>ACE-OASRM01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>zoteru30</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.118</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -515,7 +515,7 @@
       <name>ACE-OASRM02</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>zoteru30</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.118</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -544,7 +544,7 @@
       <name>ACE-CASVP01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>zoteru30</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.0.129</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -949,7 +949,7 @@
   <auths type="Array">
     <Pod.Cfg.WorkRequest.AuthReq>
       <name>admin</name>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <op>New</op>
       <aid>aadmin.Fractal_Systems</aid>
     </Pod.Cfg.WorkRequest.AuthReq>
@@ -1011,7 +1011,7 @@
   <report type="Pod.Xml.XmlStr">
     <WorkRequestReport ticket="Fractal" inventory="Fractal_Systems" status="New" start="2010-10-07T10:46:24.204777000+09:00" finish="2010-10-08T10:21:36.246424000+09:00">
       <IloVpn>
-        <Auth cname="admin" user="admin" password="fatuzi69" id="aadmin.Fractal_Systems"/>
+        <Auth cname="admin" user="admin" password="xxxxxxxx" id="aadmin.Fractal_Systems"/>
       </IloVpn>
       <Network>
         <Vlans>
@@ -1096,128 +1096,128 @@
       </Network>
       <Servers>
         <Server cname="FJT-IASDB01" gateway="10.128.16.1" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="S01" machine="mCN701504TM" id="eCN701504TM">
-          <Login user="root" password="fatuzi69"/>
-          <IloLogin addr="10.251.2.179" user="ILOUser" password="fatuzi69"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.2.179" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4076" mac="d8:d3:85:e0:ca:00" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
             <Interface name="eth0.5" mac="d8:d3:85:e0:ca:00" vlan="5" vid="v5" vlan_name="storage" addr="10.128.16.26" netbits="20"/>
           </Interfaces>
         </Server>
         <Server cname="FJT-OASDB01" gateway="10.128.16.1" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="S01" machine="mCN701504TN" id="eCN701504TN">
-          <Login user="root" password="fatuzi69"/>
-          <IloLogin addr="10.251.12.46" user="ILOUser" password="fatuzi69"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.12.46" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4076" mac="d8:d3:85:e0:ab:d0" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
             <Interface name="eth0.5" mac="d8:d3:85:e0:ab:d0" vlan="5" vid="v5" vlan_name="storage" addr="10.128.16.27" netbits="20"/>
           </Interfaces>
         </Server>
         <Server cname="FJT-CASCR01" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="S01" machine="mCN700908C2" id="eCN700908C2">
-          <Login user="root" password="fatuzi69"/>
-          <IloLogin addr="10.251.1.232" user="ILOUser" password="fatuzi69"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.1.232" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4076" mac="d8:d3:85:b8:bd:20" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
             <Interface name="eth0.4060" mac="d8:d3:85:b8:bd:20" vlan="4060" vid="v4060" vlan_name="Ext" addr="" netbits=""/>
           </Interfaces>
         </Server>
         <Server cname="ACE-IASDB01" gateway="10.128.16.1" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="E01" machine="mCN701802BK" id="eCN701802BK">
-          <Login user="root" password="fatuzi69"/>
-          <IloLogin addr="10.251.7.95" user="ILOUser" password="fatuzi69"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.7.95" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4076" mac="78:e7:d1:65:b4:30" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
             <Interface name="eth0.5" mac="78:e7:d1:65:b4:30" vlan="5" vid="v5" vlan_name="storage" addr="10.128.16.28" netbits="20"/>
           </Interfaces>
         </Server>
         <Server cname="ACE-OASDB01" gateway="10.128.16.1" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="E01" machine="mCN701802BM" id="eCN701802BM">
-          <Login user="root" password="fatuzi69"/>
-          <IloLogin addr="10.251.5.121" user="ILOUser" password="fatuzi69"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.5.121" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4076" mac="d8:d3:85:e2:18:ac" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
             <Interface name="eth0.5" mac="d8:d3:85:e2:18:ac" vlan="5" vid="v5" vlan_name="storage" addr="10.128.16.29" netbits="20"/>
           </Interfaces>
         </Server>
         <Server cname="ACE-CASCR01" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="E01" machine="mCN701802BN" id="eCN701802BN">
-          <Login user="root" password="fatuzi69"/>
-          <IloLogin addr="10.251.9.120" user="ILOUser" password="fatuzi69"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.9.120" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4076" mac="78:e7:d1:65:c4:e8" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
             <Interface name="eth0.4060" mac="78:e7:d1:65:c4:e8" vlan="4060" vid="v4060" vlan_name="Ext" addr="" netbits=""/>
           </Interfaces>
         </Server>
         <Server cname="FJT-IASRM01" gateway="10.128.3.126" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="S01" machine="mCN70090BPP" id="eCN70090BPP">
-          <Login user="root" password="defota29"/>
-          <IloLogin addr="10.251.13.220" user="ILOUser" password="defota29"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.13.220" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4058" mac="d8:d3:85:b8:2e:44" vlan="4058" vid="v4058" vlan_name="LB" addr="10.128.3.3" netbits="25"/>
             <Interface name="eth0.4076" mac="d8:d3:85:b8:2e:44" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
           </Interfaces>
         </Server>
         <Server cname="FJT-IASRM02" gateway="10.128.3.126" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="S01" machine="mCN701102PM" id="eCN701102PM">
-          <Login user="root" password="defota29"/>
-          <IloLogin addr="10.251.14.172" user="ILOUser" password="defota29"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.14.172" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4058" mac="d8:d3:85:ba:ea:30" vlan="4058" vid="v4058" vlan_name="LB" addr="10.128.3.4" netbits="25"/>
             <Interface name="eth0.4076" mac="d8:d3:85:ba:ea:30" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
           </Interfaces>
         </Server>
         <Server cname="FJT-OASRM01" gateway="10.128.3.122" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="S01" machine="mCN701500E9" id="eCN701500E9">
-          <Login user="root" password="ratoka99"/>
-          <IloLogin addr="10.251.13.207" user="ILOUser" password="ratoka99"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.13.207" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4058" mac="d8:d3:85:ba:df:3c" vlan="4058" vid="v4058" vlan_name="LB" addr="10.128.3.5" netbits="25"/>
             <Interface name="eth0.4076" mac="d8:d3:85:ba:df:3c" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
           </Interfaces>
         </Server>
         <Server cname="FJT-OASRM02" gateway="10.128.3.122" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="S01" machine="mCN701500EB" id="eCN701500EB">
-          <Login user="root" password="ratoka99"/>
-          <IloLogin addr="10.251.14.143" user="ILOUser" password="ratoka99"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.14.143" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4058" mac="d8:d3:85:e0:be:40" vlan="4058" vid="v4058" vlan_name="LB" addr="10.128.3.6" netbits="25"/>
             <Interface name="eth0.4076" mac="d8:d3:85:e0:be:40" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
           </Interfaces>
         </Server>
         <Server cname="FJT-CASVP01" gateway="10.128.0.129" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="S01" machine="mCN701500EC" id="eCN701500EC">
-          <Login user="root" password="ratoka99"/>
-          <IloLogin addr="10.251.13.184" user="ILOUser" password="ratoka99"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.13.184" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4059" mac="d8:d3:85:e1:90:14" vlan="4059" vid="v4059" vlan_name="FW" addr="10.128.0.139" netbits="25"/>
             <Interface name="eth0.4076" mac="d8:d3:85:e1:90:14" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
           </Interfaces>
         </Server>
         <Server cname="ACE-IASRM01" gateway="10.128.3.118" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="E01" machine="mCN701902B8" id="eCN701902B8">
-          <Login user="root" password="zoteru30"/>
-          <IloLogin addr="10.251.9.114" user="ILOUser" password="zoteru30"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.9.114" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4058" mac="78:e7:d1:f6:83:44" vlan="4058" vid="v4058" vlan_name="LB" addr="10.128.3.9" netbits="25"/>
             <Interface name="eth0.4076" mac="78:e7:d1:f6:83:44" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
           </Interfaces>
         </Server>
         <Server cname="ACE-IASRM02" gateway="10.128.3.118" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="E01" machine="mCN701802BX" id="eCN701802BX">
-          <Login user="root" password="zoteru30"/>
-          <IloLogin addr="10.251.7.18" user="ILOUser" password="zoteru30"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.7.18" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4058" mac="78:e7:d1:65:15:a8" vlan="4058" vid="v4058" vlan_name="LB" addr="10.128.3.10" netbits="25"/>
             <Interface name="eth0.4076" mac="78:e7:d1:65:15:a8" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
           </Interfaces>
         </Server>
         <Server cname="ACE-OASRM01" gateway="10.128.3.118" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="E01" machine="mCN701802C9" id="eCN701802C9">
-          <Login user="root" password="zoteru30"/>
-          <IloLogin addr="10.251.11.45" user="ILOUser" password="zoteru30"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.11.45" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4058" mac="78:e7:d1:65:e4:e8" vlan="4058" vid="v4058" vlan_name="LB" addr="10.128.3.11" netbits="25"/>
             <Interface name="eth0.4076" mac="78:e7:d1:65:e4:e8" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
           </Interfaces>
         </Server>
         <Server cname="ACE-OASRM02" gateway="10.128.3.118" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="E01" machine="mCN701802CC" id="eCN701802CC">
-          <Login user="root" password="zoteru30"/>
-          <IloLogin addr="10.251.6.174" user="ILOUser" password="zoteru30"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.6.174" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4058" mac="78:e7:d1:65:c4:44" vlan="4058" vid="v4058" vlan_name="LB" addr="10.128.3.12" netbits="25"/>
             <Interface name="eth0.4076" mac="78:e7:d1:65:c4:44" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
           </Interfaces>
         </Server>
         <Server cname="ACE-CASVP01" gateway="10.128.0.129" timezone="-9" os="Windows 2008 Standard x32 Japanese" grade="E01" machine="mCN701902BC" id="eCN701902BC">
-          <Login user="root" password="zoteru30"/>
-          <IloLogin addr="10.251.11.119" user="ILOUser" password="zoteru30"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.11.119" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4059" mac="78:e7:d1:65:5a:44" vlan="4059" vid="v4059" vlan_name="FW" addr="10.128.0.147" netbits="25"/>
             <Interface name="eth0.4076" mac="78:e7:d1:65:5a:44" vlan="4076" vid="v4076" vlan_name="APSEG" addr="" netbits=""/>
