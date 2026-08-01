@@ -13,6 +13,7 @@ typedef unsigned char uchar;
 extern unsigned long b64_orig_size(const char *text);
 
 extern void to_base64(const uchar *src, int len, char *b64);
-extern void from_base64(const char *b64, uchar *str);
+// size counts the terminator, so pass b64_orig_size() + 1.
+extern unsigned long from_base64(const char *b64, uchar *str, unsigned long size);
 
 #endif /* BASE64_H */

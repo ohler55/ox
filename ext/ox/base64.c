@@ -61,30 +61,30 @@ void to_base64(const uchar *src, int len, char *b64) {
     *b64 = '\0';
 }
 
+// Bytes from_base64() will write, not counting the terminator. It stops where
+// from_base64() stops instead of measuring the string, so the two can not
+// disagree about where the encoding ends.
 unsigned long b64_orig_size(const char *text) {
     const char   *start = text;
-    unsigned long size  = 0;
+    unsigned long cnt;
 
-    if ('\0' != *text) {
-        for (; 0 != *text; text++) {
-        }
-        size = (text - start) * 3 / 4;
-        text--;
-        if ('=' == *text) {
-            size--;
-            text--;
-            if ('=' == *text) {
-                size--;
-            }
-        }
+    for (; 'X' != s_digits[(uchar)*text]; text++) {
     }
-    return size;
+    cnt = (unsigned long)(text - start);
+
+    // Four characters carry three bytes. A trailing pair or triple carries one
+    // or two, a trailing single character none.
+    return cnt / 4 * 3 + (2 <= cnt % 4 ? cnt % 4 - 1 : 0);
 }
 
-void from_base64(const char *b64, uchar *str) {
-    uchar b0, b1, b2, b3;
+// size counts the terminator. It is honoured even if it disagrees with
+// b64_orig_size(), so the two can not drift back into an overflow.
+unsigned long from_base64(const char *b64, uchar *str, unsigned long size) {
+    uchar *start = str;
+    uchar *end   = str + size - 1;
+    uchar  b0, b1, b2, b3;
 
-    while (1) {
+    while (str < end) {
         if ('X' == (b0 = s_digits[(uchar)*b64++])) {
             break;
         }
@@ -92,14 +92,21 @@ void from_base64(const char *b64, uchar *str) {
             break;
         }
         *str++ = (b0 << 2) | ((b1 >> 4) & 0x03);
+        if (end <= str) {
+            break;
+        }
         if ('X' == (b2 = s_digits[(uchar)*b64++])) {
             break;
         }
         *str++ = (b1 << 4) | ((b2 >> 2) & 0x0F);
+        if (end <= str) {
+            break;
+        }
         if ('X' == (b3 = s_digits[(uchar)*b64++])) {
             break;
         }
         *str++ = (b2 << 6) | b3;
     }
     *str = '\0';
+    return (unsigned long)(str - start);
 }
