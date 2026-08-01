@@ -400,11 +400,12 @@ static void add_text(PInfo pi, char *text, size_t len, int closed) {
     case TimeCode: h->obj = parse_time(text, ox_time_class); break;
     case String64Code: {
         unsigned long str_size = b64_orig_size(text);
-        VALUE         v;
-        char         *str = ALLOCA_N(char, str_size + 1);
+        // Decode straight into the String. The size comes from the document, so
+        // an ALLOCA_N of it is an unbounded stack allocation, and the heap the
+        // String already needs costs nothing extra.
+        VALUE v = rb_str_new(0, (long)str_size);
 
-        from_base64(text, (uchar *)str);
-        v = rb_str_new(str, str_size);
+        from_base64(text, (uchar *)RSTRING_PTR(v), str_size + 1);
         if (0 != pi->options->rb_enc) {
             rb_enc_associate(v, pi->options->rb_enc);
         }
@@ -417,10 +418,12 @@ static void add_text(PInfo pi, char *text, size_t len, int closed) {
     }
     case Symbol64Code: {
         unsigned long str_size = b64_orig_size(text);
-        char         *str      = ALLOCA_N(char, str_size + 1);
+        VALUE         v        = rb_str_new(0, (long)str_size);
+        char         *str      = RSTRING_PTR(v);
 
-        from_base64(text, (uchar *)str);
+        from_base64(text, (uchar *)str, str_size + 1);
         h->obj = ox_sym_intern(str, strlen(str), NULL);
+        RB_GC_GUARD(v);
         break;
     }
     case RegexpCode:
@@ -428,10 +431,12 @@ static void add_text(PInfo pi, char *text, size_t len, int closed) {
             h->obj = parse_regexp(text);
         } else {
             unsigned long str_size = b64_orig_size(text);
-            char         *str      = ALLOCA_N(char, str_size + 1);
+            VALUE         v        = rb_str_new(0, (long)str_size);
+            char         *str      = RSTRING_PTR(v);
 
-            from_base64(text, (uchar *)str);
+            from_base64(text, (uchar *)str, str_size + 1);
             h->obj = parse_regexp(str);
+            RB_GC_GUARD(v);
         }
         break;
     case BignumCode: h->obj = rb_cstr_to_inum(text, 10, 1); break;
