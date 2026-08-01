@@ -238,6 +238,11 @@ static VALUE ox_parse_ensure(VALUE ctxv) {
         ox_circ_array_free(ctx->pi->circ_array);
         ctx->pi->circ_array = 0;
     }
+    // Same for hash mode's mark list, freed by finish() only if the loop ends.
+    xfree(ctx->pi->marked);
+    ctx->pi->marked    = NULL;
+    ctx->pi->mark_size = 0;
+    ctx->pi->mark_cnt  = 0;
     return Qnil;
 }
 
