@@ -520,45 +520,94 @@ static void dump_date(Out out, VALUE obj) {
     }
 }
 
+// Splits seconds since the epoch into a UTC date and wall clock. Used when
+// localtime() can not represent the time, so no timezone rules are needed.
+static void utc_from_epoch(time_t sec, long long *yearp, int *monp, int *dayp, int *hourp, int *minp, int *secp) {
+    long long days = (long long)sec / 86400;
+    long long rem  = (long long)sec % 86400;
+    long long era, doe, yoe, doy, mp;
+
+    if (0 > rem) {
+        rem += 86400;
+        days--;
+    }
+    *hourp = (int)(rem / 3600);
+    *minp  = (int)(rem % 3600 / 60);
+    *secp  = (int)(rem % 60);
+
+    // Hinnant's civil_from_days. The era starts in March so the leap day is
+    // last in the year and needs no special case.
+    days += 719468;
+    era    = (0 <= days ? days : days - 146096) / 146097;
+    doe    = days - era * 146097;
+    yoe    = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    doy    = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    mp     = (5 * doy + 2) / 153;
+    *dayp  = (int)(doy - (153 * mp + 2) / 5 + 1);
+    *monp  = (int)(10 > mp ? mp + 3 : mp - 9);
+    *yearp = yoe + era * 400 + (2 >= *monp);
+}
+
 static void dump_time_xsd(Out out, VALUE obj) {
     struct tm      *tm;
-    struct timespec ts   = rb_time_timespec(obj);
-    time_t          sec  = ts.tv_sec;
-    long            nsec = ts.tv_nsec;
-    int             tzhour, tzmin;
+    struct timespec ts     = rb_time_timespec(obj);
+    time_t          sec    = ts.tv_sec;
+    long            nsec   = ts.tv_nsec;
+    int             tzhour = 0, tzmin = 0;
     char            tzsign = '+';
+    long long       year;
+    int             mon, day, hour, min, tsec;
+    char            buf[64];
+    int             cnt;
 
-    if (out->end - out->cur <= 33) {
-        grow(out, 33);
-    }
     /* 2010-07-09T10:47:45.895826+09:00 */
     tm = localtime(&sec);
-#if HAVE_ST_TM_GMTOFF
-    if (0 > tm->tm_gmtoff) {
-        tzsign = '-';
-        tzhour = (int)(tm->tm_gmtoff / -3600);
-        tzmin  = (int)(tm->tm_gmtoff / -60) - (tzhour * 60);
+    if (NULL == tm) {
+        // localtime() returns NULL for times it can not represent: the
+        // Microsoft CRT rejects everything before the epoch, and glibc rejects
+        // years too large for tm_year. Reading tm anyway is a NULL dereference,
+        // so fall back to UTC, which is the same instant either way.
+        utc_from_epoch(sec, &year, &mon, &day, &hour, &min, &tsec);
     } else {
-        tzhour = (int)(tm->tm_gmtoff / 3600);
-        tzmin  = (int)(tm->tm_gmtoff / 60) - (tzhour * 60);
-    }
-#else
-    tzhour = 0;
-    tzmin  = 0;
+        year = tm->tm_year + 1900;
+        mon  = tm->tm_mon + 1;
+        day  = tm->tm_mday;
+        hour = tm->tm_hour;
+        min  = tm->tm_min;
+        tsec = tm->tm_sec;
+#if HAVE_ST_TM_GMTOFF
+        if (0 > tm->tm_gmtoff) {
+            tzsign = '-';
+            tzhour = (int)(tm->tm_gmtoff / -3600);
+            tzmin  = (int)(tm->tm_gmtoff / -60) - (tzhour * 60);
+        } else {
+            tzhour = (int)(tm->tm_gmtoff / 3600);
+            tzmin  = (int)(tm->tm_gmtoff / 60) - (tzhour * 60);
+        }
 #endif
+    }
     /* TBD replace with more efficient printer */
-    out->cur += sprintf(out->cur,
-                        "%04d-%02d-%02dT%02d:%02d:%02d.%06ld%c%02d:%02d",
-                        tm->tm_year + 1900,
-                        tm->tm_mon + 1,
-                        tm->tm_mday,
-                        tm->tm_hour,
-                        tm->tm_min,
-                        tm->tm_sec,
-                        nsec / 1000,
-                        tzsign,
-                        tzhour,
-                        tzmin);
+    // A year outside four digits is longer than the sample above, so reserve
+    // what was actually formatted instead of a fixed 33. buf can not overflow:
+    // the largest time_t puts the year at 12 digits, and the rest of the format
+    // is a fixed 28 characters.
+    cnt = snprintf(buf,
+                   sizeof(buf),
+                   "%04lld-%02d-%02dT%02d:%02d:%02d.%06ld%c%02d:%02d",
+                   year,
+                   mon,
+                   day,
+                   hour,
+                   min,
+                   tsec,
+                   nsec / 1000,
+                   tzsign,
+                   tzhour,
+                   tzmin);
+    if (out->end - out->cur <= cnt) {
+        grow(out, cnt);
+    }
+    APPEND_CHARS(out->cur, buf, cnt);
 }
 
 static void dump_first_obj(VALUE obj, Out out) {
