@@ -1126,6 +1126,11 @@ static void dump_gen_element(VALUE obj, int depth, Out out) {
         indent = depth * out->indent;
     }
     size = indent + 4 + nlen + out->opts->margin_len;
+    if (0 == depth && 0 < out->indent) {
+        // The margin is written here and again by fill_indent(), so reserve it
+        // twice.
+        size += out->opts->margin_len;
+    }
     if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }
@@ -1139,11 +1144,24 @@ static void dump_gen_element(VALUE obj, int depth, Out out) {
     if (Qnil != attrs) {
         rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
     }
+    // The attribute loop runs Ruby, so both the reservation above and the name
+    // pointer are spent: dump_gen_attr() calls rb_String() on each value, and
+    // growing the name String there frees the buffer name points at.
+    name = StringValuePtr(rname);
+    nlen = RSTRING_LEN(rname);
+    size = indent + 5 + nlen + out->opts->margin_len;
+    if (out->end - out->cur <= (long)size) {
+        grow(out, size);
+    }
     if (Qnil != nodes && 0 < RARRAY_LEN(nodes)) {
         int do_indent;
 
         *out->cur++ = '>';
         do_indent   = dump_gen_nodes(nodes, depth, out);
+        // The children run Ruby as well.
+        name = StringValuePtr(rname);
+        nlen = RSTRING_LEN(rname);
+        size = indent + 5 + nlen + out->opts->margin_len;
         if (out->end - out->cur <= (long)size) {
             grow(out, size);
         }
