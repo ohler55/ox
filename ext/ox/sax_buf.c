@@ -193,9 +193,11 @@ static int read_from_fd(Buf buf) {
     if (cnt < 0) {
         ox_sax_drive_error(buf->dr, "failed to read from file");
         return -1;
-    } else if (0 != cnt) {
-        buf->read_end = buf->tail + cnt;
+    } else if (0 == cnt) {  // EOF
+        return -1;
     }
+    buf->read_end = buf->tail + cnt;
+
     return 0;
 }
 
