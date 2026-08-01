@@ -122,7 +122,7 @@
       <name>FJT-IASDB01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.16.1</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -150,7 +150,7 @@
       <name>FJT-OASDB01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.16.1</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -178,7 +178,7 @@
       <name>FJT-CASCR01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway/>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -204,7 +204,7 @@
       <name>ACE-IASDB01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.16.1</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -232,7 +232,7 @@
       <name>ACE-OASDB01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.16.1</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -260,7 +260,7 @@
       <name>ACE-CASCR01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <gateway/>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -286,7 +286,7 @@
       <name>FJT-IASRM01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>defota29</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.126</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -315,7 +315,7 @@
       <name>FJT-IASRM02</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>defota29</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.126</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -344,7 +344,7 @@
       <name>FJT-OASRM01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>ratoka99</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.122</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -373,7 +373,7 @@
       <name>FJT-OASRM02</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>ratoka99</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.122</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -402,7 +402,7 @@
       <name>FJT-CASVP01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>ratoka99</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.0.129</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -428,7 +428,7 @@
       <name>ACE-IASRM01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>zoteru30</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.118</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -457,7 +457,7 @@
       <name>ACE-IASRM02</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>zoteru30</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.118</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -486,7 +486,7 @@
       <name>ACE-OASRM01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>zoteru30</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.118</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -515,7 +515,7 @@
       <name>ACE-OASRM02</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>zoteru30</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.3.118</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -544,7 +544,7 @@
       <name>ACE-CASVP01</name>
       <domain/>
       <os>Windows_2008_Standard_x32_jp</os>
-      <password>zoteru30</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.0.129</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -949,7 +949,7 @@
   <auths type="Array">
     <Pod.Cfg.WorkRequest.AuthReq>
       <name>admin</name>
-      <password>fatuzi69</password>
+      <password>xxxxxxxx</password>
       <op>New</op>
       <aid>aadmin.Fractal_Systems</aid>
     </Pod.Cfg.WorkRequest.AuthReq>

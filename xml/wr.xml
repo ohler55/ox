@@ -101,7 +101,7 @@
       <name>yoshika</name>
       <domain/>
       <os>CentOS_5.5_x64_jp</os>
-      <password>zigeyi22</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.2.190</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -126,7 +126,7 @@
       <name>mio</name>
       <domain/>
       <os>CentOS_5.5_x64_jp</os>
-      <password>zigeyi22</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.2.190</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -151,7 +151,7 @@
       <name>charlotte</name>
       <domain/>
       <os>CentOS_5.5_x64_jp</os>
-      <password>zigeyi22</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.2.193</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -173,7 +173,7 @@
       <name>erica</name>
       <domain/>
       <os>CentOS_5.5_x64_jp</os>
-      <password>zigeyi22</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.2.193</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -195,7 +195,7 @@
       <name>lucchini</name>
       <domain/>
       <os>CentOS_5.5_x64_jp</os>
-      <password>zigeyi22</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.2.193</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -217,7 +217,7 @@
       <name>sanya</name>
       <domain/>
       <os>CentOS_5.5_x64_jp</os>
-      <password>zigeyi22</password>
+      <password>xxxxxxxx</password>
       <gateway>10.128.2.193</gateway>
       <nameserver/>
       <timezone type="Fixnum">-9</timezone>
@@ -333,7 +333,7 @@
   <auths type="Array">
     <Pod.Cfg.WorkRequest.AuthReq>
       <name>admin</name>
-      <password>zigeyi22</password>
+      <password>xxxxxxxx</password>
       <op>New</op>
       <aid>aadmin.TDC_SOFTWARE</aid>
     </Pod.Cfg.WorkRequest.AuthReq>
@@ -365,7 +365,7 @@
   <report type="Pod.Xml.Raw">
     <WorkRequestReport ticket="23461" inventory="TDC_SOFTWARE" status="Completed" start="2010-08-09T17:50:26.648823000+09:00" finish="2010-08-09T18:22:04.092542000+09:00">
       <IloVpn>
-        <Auth cname="admin" user="admin" password="zigeyi22" id="aadmin.TDC_SOFTWARE"/>
+        <Auth cname="admin" user="admin" password="xxxxxxxx" id="aadmin.TDC_SOFTWARE"/>
       </IloVpn>
       <Network>
         <Vlans>
@@ -402,45 +402,45 @@
       </Network>
       <Servers>
         <Server cname="yoshika" gateway="10.128.2.190" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="E01" machine="mCN701802GY" id="eCN701802GY">
-          <Login user="root" password="zigeyi22"/>
-          <IloLogin addr="10.251.15.155" user="ILOUser" password="zigeyi22"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.15.155" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4066" mac="78:e7:d1:65:15:bc" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.193" netbits="29"/>
             <Interface name="eth0.4069" mac="78:e7:d1:65:15:bc" vlan="4069" vid="v4069" vlan_name="kaname" addr="10.128.2.185" netbits="29"/>
           </Interfaces>
         </Server>
         <Server cname="mio" gateway="10.128.2.190" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="E01" machine="mCN701802H9" id="eCN701802H9">
-          <Login user="root" password="zigeyi22"/>
-          <IloLogin addr="10.251.1.195" user="ILOUser" password="zigeyi22"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.1.195" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0.4066" mac="78:e7:d1:65:14:04" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.194" netbits="29"/>
             <Interface name="eth0.4069" mac="78:e7:d1:65:14:04" vlan="4069" vid="v4069" vlan_name="kaname" addr="10.128.2.186" netbits="29"/>
           </Interfaces>
         </Server>
         <Server cname="charlotte" gateway="10.128.2.193" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="S01" machine="mCN701802FJ" id="eCN701802FJ">
-          <Login user="root" password="zigeyi22"/>
-          <IloLogin addr="10.251.11.205" user="ILOUser" password="zigeyi22"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.11.205" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0" mac="d8:d3:85:e2:28:28" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.195" netbits="29"/>
           </Interfaces>
         </Server>
         <Server cname="erica" gateway="10.128.2.193" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="S01" machine="mCN701802FK" id="eCN701802FK">
-          <Login user="root" password="zigeyi22"/>
-          <IloLogin addr="10.251.2.19" user="ILOUser" password="zigeyi22"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.2.19" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0" mac="d8:d3:85:e2:b7:a8" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.196" netbits="29"/>
           </Interfaces>
         </Server>
         <Server cname="lucchini" gateway="10.128.2.193" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="P01" machine="mJPT0203AF6" id="eJPT0203AF6">
-          <Login user="root" password="zigeyi22"/>
-          <IloLogin addr="10.251.5.149" user="ILOUser" password="zigeyi22"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.5.149" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0" mac="d8:d3:85:ba:36:50" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.197" netbits="29"/>
           </Interfaces>
         </Server>
         <Server cname="sanya" gateway="10.128.2.193" timezone="-9" os="CentOS 5.5 x64 Japanese" grade="P01" machine="mJPT0203AF7" id="eJPT0203AF7">
-          <Login user="root" password="zigeyi22"/>
-          <IloLogin addr="10.251.11.230" user="ILOUser" password="zigeyi22"/>
+          <Login user="root" password="xxxxxxxx"/>
+          <IloLogin addr="10.251.11.230" user="ILOUser" password="xxxxxxxx"/>
           <Interfaces>
             <Interface name="eth0" mac="d8:d3:85:b9:d5:0c" vlan="4066" vid="v4066" vlan_name="teresa" addr="10.128.2.198" netbits="29"/>
           </Interfaces>
