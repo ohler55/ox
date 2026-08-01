@@ -5,6 +5,7 @@
 
 #include <errno.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -707,17 +708,23 @@ static void end_element(PInfo pi, const char *ename) {
 }
 
 static VALUE parse_double_time(const char *text, VALUE clas) {
-    long        v   = 0;
+    time_t      v   = 0;
     long        v2  = 0;
     const char *dot = 0;
     char        c;
+    bool        neg = false;
 
+    // A time before the epoch is written as a sign followed by the magnitude.
+    if ('-' == *text) {
+        neg = true;
+        text++;
+    }
     for (; '.' != *text; text++) {
         c = *text;
         if (c < '0' || '9' < c) {
             return Qnil;
         }
-        v = 10 * v + (long)(c - '0');
+        v = 10 * v + (time_t)(c - '0');
     }
     dot = text++;
     for (; '\0' != *text && text - dot <= 6; text++) {
@@ -729,6 +736,17 @@ static VALUE parse_double_time(const char *text, VALUE clas) {
     }
     for (; text - dot <= 9; text++) {
         v2 *= 10;
+    }
+    if (neg) {
+        // rb_time_nano_new() wants a non negative nanosecond count, so the
+        // fraction goes back into the second count the way dump_time_thin()
+        // took it out.
+        if (0 == v2) {
+            v = -v;
+        } else {
+            v  = -v - 1;
+            v2 = 1000000000L - v2;
+        }
     }
     return rb_time_nano_new(v, v2);
 }
