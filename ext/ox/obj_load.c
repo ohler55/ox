@@ -16,6 +16,7 @@
 #include "ox.h"
 #include "ruby.h"
 #include "ruby/encoding.h"
+#include "time_conv.h"
 
 // No Struct has this many members, so a larger index is always out of range.
 #define MAX_STRUCT_INDEX (1 << 24)
@@ -825,7 +826,9 @@ static VALUE parse_xsd_time(const char *text, VALUE clas) {
                           {2, '\0', '\0'},
                           {0, '\0', '\0'}};
     Tp         tp      = tpa;
-    struct tm  tm;
+    long       nsec    = 0;
+    long       offset;
+    bool       neg = false;
 
     for (; 0 != tp->cnt; tp++) {
         for (i = tp->cnt, v = 0; 0 < i; text++, i--) {
@@ -838,19 +841,30 @@ static VALUE parse_xsd_time(const char *text, VALUE clas) {
             }
             v = 10 * v + (long)(c - '0');
         }
+        // The fraction is the only field terminated by the offset sign, and the
+        // sign is the only place the offset's direction is written down.
+        if ('+' == tp->end) {
+            nsec = v;
+            for (; 0 < i; i--) {
+                nsec *= 10;
+            }
+            neg = ('-' == *text);
+        }
         c = *text++;
         if (tp->end != c && tp->alt != c) {
             return Qnil;
         }
         *cp++ = v;
     }
-    tm.tm_year = (int)cargs[0] - 1900;
-    tm.tm_mon  = (int)cargs[1] - 1;
-    tm.tm_mday = (int)cargs[2];
-    tm.tm_hour = (int)cargs[3];
-    tm.tm_min  = (int)cargs[4];
-    tm.tm_sec  = (int)cargs[5];
-    return rb_time_nano_new(mktime(&tm), cargs[6]);
+    offset = cargs[7] * 3600 + cargs[8] * 60;
+    if (neg) {
+        offset = -offset;
+    }
+    // mktime() would read the wall clock as local time and throw the offset
+    // away, and returns -1 for everything before the epoch on Windows.
+    return rb_time_nano_new(
+        (time_t)(ox_epoch_from_civil(cargs[0], cargs[1], cargs[2], cargs[3], cargs[4], cargs[5]) - offset),
+        nsec);
 }
 
 // debug functions
