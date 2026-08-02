@@ -197,7 +197,7 @@ static void comment(SaxDrive dr, long pos, long line, long col) {
         Hint h      = ox_hint_find(dr->options.hints, "!--");
 
         if (NULL == parent || NULL == parent->hint || OffOverlay != parent->hint->overlay ||
-            (NULL != h && (ActiveOverlay == h->overlay || ActiveOverlay == h->overlay))) {
+            (NULL != h && (ActiveOverlay == h->overlay || NestOverlay == h->overlay))) {
             VALUE arg = rb_str_new2(dr->buf.str);
 
             if (0 != dr->encoding) {
