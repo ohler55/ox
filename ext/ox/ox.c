@@ -1058,7 +1058,7 @@ static VALUE load_file(int argc, VALUE *argv, VALUE self) {
     err_init(&err);
     Check_Type(*argv, T_STRING);
     path = StringValuePtr(*argv);
-    if (0 == (f = fopen(path, "r"))) {
+    if (0 == (f = fopen(path, "rb"))) {
         rb_raise(rb_eIOError, "%s\n", strerror(errno));
     }
     // A stream that can not seek leaves len at -1, which allocates nothing and

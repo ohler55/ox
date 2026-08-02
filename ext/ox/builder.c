@@ -447,7 +447,7 @@ static VALUE builder_file(int argc, VALUE *argv, VALUE self) {
         rb_raise(ox_arg_error_class, "missing filename");
     }
     Check_Type(*argv, T_STRING);
-    if (NULL == (f = fopen(StringValuePtr(*argv), "w"))) {
+    if (NULL == (f = fopen(StringValuePtr(*argv), "wb"))) {
         xfree(b);
         rb_raise(rb_eIOError, "%s\n", strerror(errno));
     }
