@@ -1286,8 +1286,12 @@ static void
 dump_gen_val_node(VALUE obj, int depth, const char *pre, size_t plen, const char *suf, size_t slen, Out out) {
     volatile VALUE v = rb_attr_get(obj, ox_at_value_id);
     const char    *val;
+    const char    *end;
+    const char    *from;
+    const char    *split;
     size_t         vlen;
     size_t         size;
+    size_t         cdata_cnt = 0;
     int            indent;
 
     if (T_STRING != rb_type(v)) {
@@ -1295,6 +1299,8 @@ dump_gen_val_node(VALUE obj, int depth, const char *pre, size_t plen, const char
     }
     val  = StringValuePtr(v);
     vlen = RSTRING_LEN(v);
+    from = val;
+    end  = val + vlen;
     if (0 > out->indent) {
         indent = -1;
     } else if (0 == out->indent) {
@@ -1303,12 +1309,24 @@ dump_gen_val_node(VALUE obj, int depth, const char *pre, size_t plen, const char
         indent = depth * out->indent;
     }
     size = indent + plen + slen + vlen + out->opts->margin_len;
+    // Only a CDATA section can be closed by its own value; see xml_cdata_end().
+    if (9 == plen && 0 == strncmp("<![CDATA[", pre, 9)) {
+        cdata_cnt = xml_cdata_end_cnt(val, end);
+        size += cdata_cnt * CDATA_SPLIT_EXTRA;
+    }
     if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }
     fill_indent(out, indent);
     fill_value(out, pre, plen);
-    fill_value(out, val, vlen);
+    // The ']]' stays in this section and the '>' opens the next one, so from
+    // lands on the '>' each time round.
+    while (0 < cdata_cnt && NULL != (split = xml_cdata_end(from, end))) {
+        fill_value(out, from, (size_t)((split + 2) - from));
+        fill_value(out, "]]><![CDATA[", CDATA_SPLIT_EXTRA);
+        from = split + 2;
+    }
+    fill_value(out, from, (size_t)(end - from));
     fill_value(out, suf, slen);
     *out->cur = '\0';
 }

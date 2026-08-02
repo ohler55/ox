@@ -797,29 +797,41 @@ static VALUE builder_cdata(VALUE self, VALUE data) {
     const char    *str;
     const char    *s;
     const char    *end;
+    const char    *from;
+    const char    *split;
+    size_t         extra = 0;
     int            len;
 
     TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
 
-    v   = rb_String(v);
-    str = StringValuePtr(v);
-    len = (int)RSTRING_LEN(v);
-    s   = str;
-    end = str + len;
+    v    = rb_String(v);
+    str  = StringValuePtr(v);
+    len  = (int)RSTRING_LEN(v);
+    s    = str;
+    end  = str + len;
+    from = str;
     i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<![CDATA[", 9);
     b->col += 9;
     b->pos += 9;
-    buf_append_string(&b->buf, str, len);
-    b->col += len;
+    // See xml_cdata_end(). The ']]' stays in this section and the '>' opens the
+    // next one, so from lands on the '>' each time round.
+    while (NULL != (split = xml_cdata_end(from, end))) {
+        buf_append_string(&b->buf, from, (split + 2) - from);
+        buf_append_string(&b->buf, "]]><![CDATA[", CDATA_SPLIT_EXTRA);
+        extra += CDATA_SPLIT_EXTRA;
+        from = split + 2;
+    }
+    buf_append_string(&b->buf, from, end - from);
+    b->col += len + extra;
     s = strchr(s, '\n');
     while (NULL != s) {
         b->line++;
         b->col = end - s;
         s      = strchr(s + 1, '\n');
     }
-    b->pos += len;
+    b->pos += len + extra;
     buf_append_string(&b->buf, "]]>", 3);
     b->col += 3;
     b->pos += 3;

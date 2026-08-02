@@ -144,4 +144,30 @@ inline static size_t xml_str_len(const unsigned char *str, size_t len, const cha
     return size - len * (size_t)'0';
 }
 
+/* A CDATA section ends at the first "]]>", so a value holding one closes its
+ * own section and the rest is read as markup. Both writers split each
+ * occurrence into "]]" + "]]>" + "<![CDATA[" + ">", which reads back as the
+ * same three characters, so this is what they scan with.
+ */
+#define CDATA_SPLIT_EXTRA 12
+
+inline static const char *xml_cdata_end(const char *str, const char *end) {
+    for (; str + 3 <= end; str++) {
+        if (']' == *str && ']' == str[1] && '>' == str[2]) {
+            return str;
+        }
+    }
+    return NULL;
+}
+
+inline static size_t xml_cdata_end_cnt(const char *str, const char *end) {
+    size_t cnt = 0;
+
+    while (NULL != (str = xml_cdata_end(str, end))) {
+        cnt++;
+        str += 2;
+    }
+    return cnt;
+}
+
 #endif /* OX_XML_STR_H */
