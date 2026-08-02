@@ -330,6 +330,7 @@ static VALUE circ_array_get(CircArray ca, unsigned long id) {
 
 static VALUE parse_regexp(const char *text, PInfo pi) {
     const char *te;
+    VALUE       src;
     size_t      len     = strlen(text);
     int         options = 0;
 
@@ -358,7 +359,15 @@ static VALUE parse_regexp(const char *text, PInfo pi) {
         set_error(&pi->err, "Invalid regexp format", pi->str, pi->s);
         return Qundef;
     }
-    return rb_reg_new(text + 1, te - text - 1, options);
+    // rb_reg_new() takes bytes, so it can not be told the document's encoding
+    // and leaves the source ASCII-8BIT. Going through the String also gets
+    // Ruby's own rule, which promotes an ASCII only source to US-ASCII the way
+    // a literal is.
+    src = rb_str_new(text + 1, te - text - 1);
+    if (0 != pi->options->rb_enc) {
+        rb_enc_associate(src, pi->options->rb_enc);
+    }
+    return rb_reg_new_str(src, options);
 }
 
 static void instruct(PInfo pi, const char *target, Attr attrs, const char *content) {
