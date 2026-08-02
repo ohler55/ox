@@ -2,6 +2,17 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [Unreleased]
+
+### Changed
+
+- An `<?ox mode="object"?>` processing instruction in a document no
+  longer switches a default `Ox.load` into object mode. Object mode
+  allocates the classes the document names without calling `initialize`
+  and sets their instance variables, so a document can no longer ask for
+  that on its own. Pass `mode: :object` to load in object mode.
+  `mode="generic"` and `mode="limited"` are unaffected. See issue #446.
+
 ## [2.14.28] - 2026-06-28
 
 ### Fixed
