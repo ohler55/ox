@@ -13,6 +13,7 @@
 #include "base64.h"
 #include "cache8.h"
 #include "ox.h"
+#include "time_conv.h"
 #include "xml_str.h"
 
 #define USE_B64 0
@@ -543,40 +544,12 @@ static void dump_date(Out out, VALUE obj) {
     }
 }
 
-// Splits seconds since the epoch into a UTC date and wall clock. Used when
-// localtime() can not represent the time, so no timezone rules are needed.
-static void utc_from_epoch(time_t sec, long long *yearp, int *monp, int *dayp, int *hourp, int *minp, int *secp) {
-    long long days = (long long)sec / 86400;
-    long long rem  = (long long)sec % 86400;
-    long long era, doe, yoe, doy, mp;
-
-    if (0 > rem) {
-        rem += 86400;
-        days--;
-    }
-    *hourp = (int)(rem / 3600);
-    *minp  = (int)(rem % 3600 / 60);
-    *secp  = (int)(rem % 60);
-
-    // Hinnant's civil_from_days. The era starts in March so the leap day is
-    // last in the year and needs no special case.
-    days += 719468;
-    era    = (0 <= days ? days : days - 146096) / 146097;
-    doe    = days - era * 146097;
-    yoe    = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
-    doy    = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    mp     = (5 * doy + 2) / 153;
-    *dayp  = (int)(doy - (153 * mp + 2) / 5 + 1);
-    *monp  = (int)(10 > mp ? mp + 3 : mp - 9);
-    *yearp = yoe + era * 400 + (2 >= *monp);
-}
-
 static void dump_time_xsd(Out out, VALUE obj) {
-    struct tm      *tm;
     struct timespec ts     = rb_time_timespec(obj);
     time_t          sec    = ts.tv_sec;
     long            nsec   = ts.tv_nsec;
-    int             tzhour = 0, tzmin = 0;
+    long            offset = NUM2LONG(rb_funcall2(obj, ox_utc_offset_id, 0, 0));
+    int             tzhour, tzmin;
     char            tzsign = '+';
     long long       year;
     int             mon, day, hour, min, tsec;
@@ -584,31 +557,25 @@ static void dump_time_xsd(Out out, VALUE obj) {
     int             cnt;
 
     /* 2010-07-09T10:47:45.895826+09:00 */
-    tm = localtime(&sec);
-    if (NULL == tm) {
-        // localtime() returns NULL for times it can not represent: the
-        // Microsoft CRT rejects everything before the epoch, and glibc rejects
-        // years too large for tm_year. Reading tm anyway is a NULL dereference,
-        // so fall back to UTC, which is the same instant either way.
-        utc_from_epoch(sec, &year, &mon, &day, &hour, &min, &tsec);
-    } else {
-        year = tm->tm_year + 1900;
-        mon  = tm->tm_mon + 1;
-        day  = tm->tm_mday;
-        hour = tm->tm_hour;
-        min  = tm->tm_min;
-        tsec = tm->tm_sec;
-#if HAVE_ST_TM_GMTOFF
-        if (0 > tm->tm_gmtoff) {
-            tzsign = '-';
-            tzhour = (int)(tm->tm_gmtoff / -3600);
-            tzmin  = (int)(tm->tm_gmtoff / -60) - (tzhour * 60);
-        } else {
-            tzhour = (int)(tm->tm_gmtoff / 3600);
-            tzmin  = (int)(tm->tm_gmtoff / 60) - (tzhour * 60);
-        }
-#endif
+    // The offset comes from the Time rather than from localtime(), which has no
+    // tm_gmtoff in the Microsoft CRT and so wrote +00:00 next to a local wall
+    // clock there. Adding it before splitting gives that wall clock without a
+    // timezone database, so there is no platform branch and no NULL to check.
+    // xsd writes the offset as hh:mm, so one that is not a whole number of
+    // minutes -- Dublin was -00:25:21 until 1916 -- can not be written without
+    // moving the instant. UTC says the same thing and says it exactly.
+    if (0 != offset % 60) {
+        offset = 0;
     }
+    if (0 > offset) {
+        tzsign = '-';
+        tzhour = (int)(offset / -3600);
+        tzmin  = (int)(offset / -60) - (tzhour * 60);
+    } else {
+        tzhour = (int)(offset / 3600);
+        tzmin  = (int)(offset / 60) - (tzhour * 60);
+    }
+    ox_civil_from_epoch((int64_t)sec + offset, &year, &mon, &day, &hour, &min, &tsec);
     /* TBD replace with more efficient printer */
     // A year outside four digits is longer than the sample above, so reserve
     // what was actually formatted instead of a fixed 33. buf can not overflow:

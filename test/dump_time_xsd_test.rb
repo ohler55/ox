@@ -12,15 +12,16 @@
 #   * glibc accepts those but rejects years too large for tm_year, so on Linux
 #     it took something like Time.at(2**62)
 #
-# A time outside localtime()'s range now falls back to UTC, which is why the
-# assertions below accept either the local or the UTC rendering of the instant
-# rather than one of them: which is used depends on where the platform draws
-# that line. Times inside the range are unaffected, verified byte for byte
-# identical over 7108 dumps in each of four timezones.
+# dump_time_xsd() no longer calls localtime() at all -- the offset comes from
+# Time#utc_offset and the date arithmetic from time_conv.h -- so there is no
+# NULL left to dereference and no range to fall outside of. These stay as the
+# guard on that: every one of them crashed the process before, and they are
+# still the widest inputs the function takes.
 #
-# Nothing here asserts the offset that gets written, because on a platform
-# without tm_gmtoff it is still "+00:00" for a local wall clock. That is a
-# separate defect and a separate fix.
+# The offset that gets written is asserted in xsd_time_test.rb, which is where
+# the rest of the timezone handling lives. The assertions here accept either
+# the local or the UTC rendering because a zone whose offset is not a whole
+# number of minutes is written as UTC on purpose.
 
 $: << File.join(File.dirname(__FILE__), '../lib')
 $: << File.join(File.dirname(__FILE__), '../ext')
@@ -49,12 +50,13 @@ class DumpTimeXsdTest < ::Test::Unit::TestCase
   end
 
   # The wall clock has to be the instant it was given, read either as local or
-  # as UTC. A wrong one would mean the fallback computed the wrong date.
+  # as UTC, and reading the document back has to land on that same instant.
   def assert_dumps_instant(sec)
     got = body(Time.at(sec))
     assert_match(XSD, got, "sec=#{sec}")
     t = Time.at(sec)
-    assert_include([rendering(t.getlocal), rendering(t.utc)], got[0, got.index(/[-+]\d\d:\d\d\z/)], "sec=#{sec}")
+    assert_include([rendering(t.getlocal), rendering(t.getutc)], got[0, got.index(/[-+]\d\d:\d\d\z/)], "sec=#{sec}")
+    assert_equal(sec, Ox.load("<t>#{got}</t>").to_i, "sec=#{sec}")
   end
 
   # The Windows end of the range. Before the fix these crashed the process
@@ -63,20 +65,19 @@ class DumpTimeXsdTest < ::Test::Unit::TestCase
     [-1, -14_215_340, -2_208_988_800, -(2**40)].each { |sec| assert_dumps_instant(sec) }
   end
 
-  # The glibc end. Both signs, since the fallback splits the day differently
-  # for a negative remainder.
+  # The glibc end. Both signs, since the day is split differently for a
+  # negative remainder.
   def test_year_too_large_for_localtime_dumps
     assert_match(/\A\d{6,}-\d\d-\d\dT/, body(Time.at(2**62)))
     assert_match(/\A-\d{6,}-\d\d-\d\dT/, body(Time.at(-(2**62))))
   end
 
-  # 2**62 is outside every platform's localtime() range, so this is always the
-  # fallback and it has to agree with Ruby about which instant it is.
-  def test_fallback_matches_ruby_utc
-    [2**62, -(2**62), 2**62 - 12_345, -(2**62) + 98_765].each do |sec|
-      t = Time.at(sec).utc
-      assert_equal("#{rendering(t)}+00:00", body(Time.at(sec)), "sec=#{sec}")
-    end
+  # 2**62 is outside every platform's localtime() range, so the arithmetic here
+  # is entirely ox's and has to agree with Ruby about which instant it is. A
+  # date that far back can carry a local mean time offset -- Tokyo's was
+  # +09:18:59 -- which is why assert_dumps_instant accepts UTC as well.
+  def test_extreme_times_match_ruby
+    [2**62, -(2**62), 2**62 - 12_345, -(2**62) + 98_765].each { |sec| assert_dumps_instant(sec) }
   end
 
   # A year outside four digits makes the line longer than the 33 bytes the old
