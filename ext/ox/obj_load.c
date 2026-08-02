@@ -28,7 +28,7 @@ static void end_element(PInfo pi, const char *ename);
 static VALUE parse_time(const char *text, VALUE clas);
 static VALUE parse_xsd_time(const char *text, VALUE clas);
 static VALUE parse_double_time(const char *text, VALUE clas);
-static VALUE parse_regexp(const char *text);
+static VALUE parse_regexp(const char *text, PInfo pi);
 
 static ID            get_var_sym_from_attrs(Attr a, void *encoding, bool *indexp);
 static VALUE         get_obj_from_attrs(Attr a, PInfo pi, VALUE base_class);
@@ -327,11 +327,19 @@ static VALUE circ_array_get(CircArray ca, unsigned long id) {
     return obj;
 }
 
-static VALUE parse_regexp(const char *text) {
+static VALUE parse_regexp(const char *text, PInfo pi) {
     const char *te;
+    size_t      len     = strlen(text);
     int         options = 0;
 
-    te = text + strlen(text) - 1;
+    // The text is Regexp#inspect output, so the shortest it can be is "//".
+    // Below that te would be built from text - 1, which is not a pointer the
+    // string owns.
+    if (len < 2 || '/' != *text) {
+        set_error(&pi->err, "Invalid regexp format", pi->str, pi->s);
+        return Qundef;
+    }
+    te = text + len - 1;
 #ifdef ONIG_OPTION_IGNORECASE
     for (; text < te && '/' != *te; te--) {
         switch (*te) {
@@ -342,6 +350,13 @@ static VALUE parse_regexp(const char *text) {
         }
     }
 #endif
+    // The scan above stops on the opening / when there is no closing one, and
+    // without ONIG_OPTION_IGNORECASE it never runs at all. Either way the
+    // length below goes negative if this is not checked.
+    if (te <= text || '/' != *te) {
+        set_error(&pi->err, "Invalid regexp format", pi->str, pi->s);
+        return Qundef;
+    }
     return rb_reg_new(text + 1, te - text - 1, options);
 }
 
@@ -447,19 +462,26 @@ static void add_text(PInfo pi, char *text, size_t len, int closed) {
         RB_GC_GUARD(v);
         break;
     }
-    case RegexpCode:
+    case RegexpCode: {
+        VALUE re;
+
         if ('/' == *text) {
-            h->obj = parse_regexp(text);
+            re = parse_regexp(text, pi);
         } else {
             unsigned long str_size = b64_orig_size(text);
             VALUE         v        = rb_str_new(0, (long)str_size);
             char         *str      = RSTRING_PTR(v);
 
             from_base64(text, (uchar *)str, str_size + 1);
-            h->obj = parse_regexp(str);
+            re = parse_regexp(str, pi);
             RB_GC_GUARD(v);
         }
+        if (Qundef == re) {
+            return;
+        }
+        h->obj = re;
         break;
+    }
     case BignumCode: h->obj = rb_cstr_to_inum(text, 10, 1); break;
     case BigDecimalCode: h->obj = rb_funcall(rb_cObject, ox_bigdecimal_id, 1, rb_str_new2(text)); break;
     default: {

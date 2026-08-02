@@ -101,15 +101,16 @@ class ObjLoadBase64Test < ::Test::Unit::TestCase
   end
 
   # A Regexp element only decodes to something usable when the result is a
-  # /.../ literal. Anything else reaches parse_regexp() with no closing slash
-  # to find, and it hands rb_reg_new a negative length. That is its own defect,
-  # unrelated to the decode -- <g>/</g> does it with no base64 at all -- and it
-  # raises the same way before and after this change.
-  def test_regexp_without_a_literal_raises_as_before
+  # /.../ literal. Anything else is a malformed value rather than a decode
+  # failure -- <g>/</g> does it with no base64 at all -- so parse_regexp()
+  # reports it the way the rest of object mode reports one. It used to reach
+  # rb_reg_new() with a negative length and raise ArgumentError from inside
+  # Ruby; see regexp_literal_test.rb.
+  def test_regexp_without_a_literal_is_a_parse_error
     ['=', 'AAAA=', b64('nope')].each do |text|
-      assert_raise(ArgumentError, text) { load64('g', text) }
+      assert_raise(Ox::ParseError, text) { load64('g', text) }
     end
-    assert_raise(ArgumentError) { Ox.parse_obj('<g>/</g>') }
+    assert_raise(Ox::ParseError) { Ox.parse_obj('<g>/</g>') }
   end
 
   # Decoding into the String means the encoding is applied to the object the
