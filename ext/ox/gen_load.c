@@ -26,8 +26,6 @@ static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren
 static void end_element(PInfo pi, const char *ename);
 static void add_instruct(PInfo pi, const char *name, Attr attrs, const char *content);
 
-extern ParseCallbacks ox_obj_callbacks;
-
 struct _parseCallbacks _ox_gen_callbacks = {
     instruct, /* instruct, */
     add_doctype,
@@ -163,14 +161,18 @@ static void nomode_instruct(PInfo pi, const char *target, Attr attrs, const char
                 }
             } else if (0 == strcmp("mode", attrs->name)) {
                 if (0 == strcmp("object", attrs->value)) {
-                    pi->pcb = ox_obj_callbacks;
-                    pi->obj = Qnil;
-                    helper_stack_init(&pi->helpers);
+                    // Only the caller can select object mode.
+                    if (TRACE <= pi->options->trace) {
+                        printf("Object mode processing instruction ignored.\n");
+                    }
                 } else if (0 == strcmp("generic", attrs->value)) {
                     pi->pcb = ox_gen_callbacks;
                 } else if (0 == strcmp("limited", attrs->value)) {
                     pi->pcb = ox_limited_callbacks;
                     pi->obj = Qnil;
+                    // The instruction can appear after the stack has grown, and
+                    // helper_stack_init() only moves head back to base.
+                    helper_stack_cleanup(&pi->helpers);
                     helper_stack_init(&pi->helpers);
                 } else {
                     ox_err_set(&pi->err,

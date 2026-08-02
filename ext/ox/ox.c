@@ -967,6 +967,13 @@ static VALUE load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALU
  *     - _:limited_ - read as a generic XML file but with callbacks on text and elements events only
  *     - _:hash_ - read and convert to a Hash and core class objects only
  *     - _:hash_no_attrs_ - read and convert to a Hash and core class objects only without capturing attributes
+ *
+ *     If neither this option nor Ox.default_options[:mode] is set the document
+ *     may pick the mode itself with an <?ox mode="generic"?> or an
+ *     <?ox mode="limited"?> processing instruction. A document can never pick
+ *     object mode. Only the caller can, with mode: :object, since object mode
+ *     allocates the classes the document names and sets their instance
+ *     variables without calling initialize.
  *   - *:effort* [:strict|:tolerant|:auto_define] effort to use when an undefined class is encountered, default: :strict
  *     - _:strict_ - raise an NameError for missing classes and modules
  *     - _:tolerant_ - return nil for missing classes and modules
@@ -1021,6 +1028,13 @@ static VALUE load_str(int argc, VALUE *argv, VALUE self) {
  *     - _:limited_ - read as a generic XML file but with callbacks on text and elements events only
  *     - _:hash_ - read and convert to a Hash and core class objects only
  *     - _:hash_no_attrs_ - read and convert to a Hash and core class objects only without capturing attributes
+ *
+ *     If neither this option nor Ox.default_options[:mode] is set the document
+ *     may pick the mode itself with an <?ox mode="generic"?> or an
+ *     <?ox mode="limited"?> processing instruction. A document can never pick
+ *     object mode. Only the caller can, with mode: :object, since object mode
+ *     allocates the classes the document names and sets their instance
+ *     variables without calling initialize.
  *   - *:effort* [:strict|:tolerant|:auto_define] effort to use when an undefined class is encountered, default: :strict
  *     - _:strict_ - raise an NameError for missing classes and modules
  *     - _:tolerant_ - return nil for missing classes and modules
