@@ -1390,7 +1390,7 @@ void ox_write_obj_to_file(VALUE obj, const char *path, Options copts) {
 
     dump_obj_to_xml(obj, copts, &out);
     size = out.cur - out.buf;
-    if (0 == (f = fopen(path, "w"))) {
+    if (0 == (f = fopen(path, "wb"))) {
         xfree(out.buf);
         rb_raise(rb_eIOError, "%s\n", strerror(errno));
     }
