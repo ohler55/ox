@@ -64,7 +64,7 @@ inline static void buf_reset(Buf buf) {
 
 inline static void buf_cleanup(Buf buf) {
     if (buf->base != buf->head) {
-        free(buf->head);
+        xfree(buf->head);
     }
 }
 
@@ -85,7 +85,9 @@ inline static void buf_append_string(Buf buf, const char *s, size_t slen) {
                 return;
             }
             buf->tail = buf->head;
-            if (sizeof(buf->base) <= slen) {
+            // The buffer's capacity, not sizeof(base): init() may have taken a
+            // larger head.
+            if ((size_t)(buf->end - buf->head) <= slen) {
                 if (slen != (size_t)write(buf->fd, s, slen)) {
                     buf->err = true;
                     return;

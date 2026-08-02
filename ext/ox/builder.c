@@ -97,7 +97,9 @@ static void append_indent(Builder b) {
     if (0 >= b->indent) {
         return;
     }
-    if (b->buf.head < b->buf.tail) {
+    // pos and not the buffer: a file builder empties the buffer on every flush,
+    // which would read as the start of the document again.
+    if (0 < b->pos) {
         int cnt = (b->indent * (b->depth + 1)) + 1;
 
         if (sizeof(indent_spaces) <= (size_t)cnt) {
