@@ -136,6 +136,29 @@ class NoModeInstructTest < ::Test::Unit::TestCase
     assert_equal([Ox::Element], doc.nodes.map(&:class))
   end
 
+  # nomode_instruct() reset the helper stack when the instruction named a mode,
+  # and helper_stack_init() only moves head back to base -- so an instruction
+  # deeper than the 16 slot base abandoned the grown array. Valgrind is the
+  # grader here; without it these only check the parse still finishes.
+  DEEP = 40
+
+  def deep_document(instruct)
+    (0...DEEP).map { |i| "<e#{i}>" }.join +
+      instruct +
+      (DEEP - 1).downto(0).map { |i| "</e#{i}>" }.join
+  end
+
+  def test_object_instruction_below_the_base_stack_does_not_leak
+    doc = deep_document(%{<?ox version="1.0" mode="object"?>})
+    20.times { assert_equal('e0', Ox.load(doc).name) }
+  end
+
+  def test_limited_instruction_below_the_base_stack_does_not_leak
+    doc = deep_document(%{<?ox version="1.0" mode="limited"?>})
+    # The reset leaves nothing to return, which is what it did before as well.
+    20.times { assert_nil(Ox.load(doc)) }
+  end
+
   def test_unknown_mode_still_raises
     assert_raise(Ox::SyntaxError) { Ox.load(%{<?ox version="1.0" mode="bogus"?><a/>}) }
   end

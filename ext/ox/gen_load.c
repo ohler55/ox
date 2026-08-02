@@ -170,6 +170,9 @@ static void nomode_instruct(PInfo pi, const char *target, Attr attrs, const char
                 } else if (0 == strcmp("limited", attrs->value)) {
                     pi->pcb = ox_limited_callbacks;
                     pi->obj = Qnil;
+                    // The instruction can appear after the stack has grown, and
+                    // helper_stack_init() only moves head back to base.
+                    helper_stack_cleanup(&pi->helpers);
                     helper_stack_init(&pi->helpers);
                 } else {
                     ox_err_set(&pi->err,

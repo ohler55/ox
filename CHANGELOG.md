@@ -13,6 +13,11 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
   that on its own. Pass `mode: :object` to load in object mode.
   `mode="generic"` and `mode="limited"` are unaffected. See issue #446.
 
+### Fixed
+
+- Fixed a memory leak when an `<?ox mode?>` processing instruction
+  appears more than sixteen elements deep in a document.
+
 ## [2.14.28] - 2026-06-28
 
 ### Fixed
