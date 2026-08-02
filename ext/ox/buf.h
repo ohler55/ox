@@ -57,11 +57,6 @@ inline static void buf_init(Buf buf, int fd, long initial_size) {
     buf->err  = false;
 }
 
-inline static void buf_reset(Buf buf) {
-    buf->head = buf->base;
-    buf->tail = buf->head;
-}
-
 inline static void buf_cleanup(Buf buf) {
     if (buf->base != buf->head) {
         xfree(buf->head);
