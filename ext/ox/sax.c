@@ -934,7 +934,7 @@ static char read_element_start(SaxDrive dr) {
         stack_push(&dr->stack, ename, nlen, name, h);
     }
     if (efree) {
-        free((char *)ename);
+        xfree((char *)ename);
     }
     if ('>' != c) {
         ox_sax_drive_error(dr, WRONG_CHAR "element not closed");
