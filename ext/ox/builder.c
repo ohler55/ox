@@ -623,10 +623,8 @@ static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
     }
     i_am_a_child(b, false);
     append_indent(b);
-    if (MAX_DEPTH <= b->depth + 1) {
-        rb_raise(ox_arg_error_class, "XML too deeply nested");
-    }
-    b->depth++;
+    // Everything that can raise has to run before b->depth++ or the raise
+    // leaves a stack slot that was never filled in.
     switch (rb_type(*argv)) {
     case T_STRING:
         name = StringValuePtr(*argv);
@@ -638,6 +636,14 @@ static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
         break;
     default: rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name"); break;
     }
+    // strdup() below stops at an embedded NUL but len does not.
+    if (NULL != memchr(name, '\0', (size_t)len)) {
+        rb_raise(ox_arg_error_class, "element name can not contain a null character");
+    }
+    if (MAX_DEPTH <= b->depth + 1) {
+        rb_raise(ox_arg_error_class, "XML too deeply nested");
+    }
+    b->depth++;
     e = &b->stack[b->depth];
     if (sizeof(e->buf) <= (size_t)len) {
         e->name = strdup(name);
