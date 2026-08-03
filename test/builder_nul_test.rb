@@ -143,10 +143,10 @@ class BuilderNulTest < ::Test::Unit::TestCase
     assert_equal(expected.b, xml)
   end
 
-  # append_string writes as it scans, so the bytes ahead of the character it
-  # raises on are already in the buffer. That is what a rescued 0x01 has always
-  # left behind and a rescued NUL now leaves the same thing; what matters here
-  # is that the element stack is intact and the next call still works.
+  # A rescued call writes nothing at all, so the document reads as though it had
+  # never been made. This assertion used to pin the opposite - the "<!--a" the
+  # scan had already emitted before it reached the NUL - which is the behaviour
+  # builder_resume_test.rb now covers for every writer.
   def test_the_builder_is_usable_after_a_rescued_nul_raise
     nul = Ox::Builder.new
     assert_raise(Ox::SyntaxError) { nul.comment("a\0b") }
@@ -159,6 +159,6 @@ class BuilderNulTest < ::Test::Unit::TestCase
     soh.pop
 
     assert_equal(soh.to_s, nul.to_s)
-    assert_equal("<!--a\n<x/>\n", nul.to_s)
+    assert_equal("<x/>\n".b, nul.to_s)
   end
 end

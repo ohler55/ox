@@ -112,9 +112,51 @@ static void append_indent(Builder b) {
     }
 }
 
-static void append_string(Builder b, const char *str, size_t size, const char *table, bool strip_invalid_chars) {
+// Returns the escaped size append_string() needs, and raises first if the value
+// holds a character XML has no way to write. append_string() raises on the same
+// byte, but only once the delimiters around the value are already in the buffer
+// and, for an element, once the element is on the stack, and nothing takes those
+// back. So the writers ask here before they write anything.
+//
+// Only a value whose escaped form is longer can hold one, since an invalid byte
+// counts 10, so the common case is the one walk append_string() always did.
+inline static size_t check_string(const char *str, size_t size, const char *table) {
     size_t xsize = xml_str_len((const unsigned char *)str, size, table);
 
+    if (xsize != size) {
+        const unsigned char *bad = xml_first_invalid((const unsigned char *)str, size);
+
+        if (NULL != bad) {
+            rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *bad);
+        }
+    }
+    return xsize;
+}
+
+// Resolves a Symbol or String name to bytes and checks it, for the writers that
+// take either. sym holds the Symbol's name String for as long as *strp is used.
+inline static long check_name(VALUE v, volatile VALUE *sym, const char **strp, size_t *xsizep, const char *msg) {
+    long len;
+
+    switch (rb_type(v)) {
+    case T_STRING:
+        *strp = StringValuePtr(v);
+        len   = RSTRING_LEN(v);
+        break;
+    case T_SYMBOL:
+        *sym  = rb_sym2str(v);
+        *strp = RSTRING_PTR(*sym);
+        len   = RSTRING_LEN(*sym);
+        break;
+    default: rb_raise(ox_arg_error_class, "%s", msg); break;
+    }
+    *xsizep = check_string(*strp, (size_t)len, xml_element_chars);
+
+    return len;
+}
+
+static void
+append_string(Builder b, const char *str, size_t size, const char *table, size_t xsize, bool strip_invalid_chars) {
     if (size == xsize) {
         const char *s   = str;
         const char *end = str + size;
@@ -238,21 +280,10 @@ static void append_string(Builder b, const char *str, size_t size, const char *t
 static void append_sym_str(Builder b, VALUE v) {
     volatile VALUE sym = Qnil;
     const char    *s;
-    long           len;
+    size_t         xsize = 0;
+    long           len   = check_name(v, &sym, &s, &xsize, "expected a Symbol or String");
 
-    switch (rb_type(v)) {
-    case T_STRING:
-        s   = StringValuePtr(v);
-        len = RSTRING_LEN(v);
-        break;
-    case T_SYMBOL:
-        sym = rb_sym2str(v);
-        s   = StringValuePtr(sym);
-        len = RSTRING_LEN(sym);
-        break;
-    default: rb_raise(ox_arg_error_class, "expected a Symbol or String"); break;
-    }
-    append_string(b, s, len, xml_element_chars, false);
+    append_string(b, s, len, xml_element_chars, xsize, false);
 }
 
 static void i_am_a_child(Builder b, bool is_text) {
@@ -272,17 +303,29 @@ static void i_am_a_child(Builder b, bool is_text) {
 }
 
 static int append_attr(VALUE key, VALUE value, VALUE bv) {
-    Builder b = (Builder)bv;
+    Builder        b   = (Builder)bv;
+    volatile VALUE sym = Qnil;
+    const char    *ks;
+    long           klen;
+    size_t         kx;
+    size_t         vsize;
+    size_t         vx;
+
+    // Both halves before the space: an attribute is either written whole or not
+    // at all, and the element it belongs to is left as it was.
+    Check_Type(value, T_STRING);
+    klen  = check_name(key, &sym, &ks, &kx, "expected a Symbol or String");
+    vsize = (size_t)RSTRING_LEN(value);
+    vx    = check_string(StringValuePtr(value), vsize, xml_attr_chars);
 
     buf_append(&b->buf, ' ');
     b->col++;
     b->pos++;
-    append_sym_str(b, key);
+    append_string(b, ks, klen, xml_element_chars, kx, false);
     buf_append_string(&b->buf, "=\"", 2);
     b->col += 2;
     b->pos += 2;
-    Check_Type(value, T_STRING);
-    append_string(b, StringValuePtr(value), (int)RSTRING_LEN(value), xml_attr_chars, false);
+    append_string(b, StringValuePtr(value), vsize, xml_attr_chars, vx, false);
     buf_append(&b->buf, '"');
     b->col++;
     b->pos++;
@@ -331,7 +374,12 @@ static void pop(Builder b) {
             append_indent(b);
         }
         buf_append_string(&b->buf, "</", 2);
-        append_string(b, e->name, e->len, xml_element_chars, false);
+        append_string(b,
+                      e->name,
+                      e->len,
+                      xml_element_chars,
+                      xml_str_len((const unsigned char *)e->name, e->len, xml_element_chars),
+                      false);
         buf_append(&b->buf, '>');
         b->col += e->len + 3;
         b->pos += e->len + 3;
@@ -547,6 +595,13 @@ static VALUE builder_instruct(int argc, VALUE *argv, VALUE self) {
     Builder b;
 
     TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
+    if (0 < argc) {
+        volatile VALUE nsym = Qnil;
+        const char    *nstr;
+        size_t         nx;
+
+        check_name(*argv, &nsym, &nstr, &nx, "expected a Symbol or String");
+    }
     i_am_a_child(b, false);
     append_indent(b);
     if (0 == argc) {
@@ -617,7 +672,8 @@ static VALUE builder_instruct(int argc, VALUE *argv, VALUE self) {
 static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
     Builder        b;
     Element        e;
-    volatile VALUE sym = Qnil;
+    volatile VALUE sym   = Qnil;
+    size_t         xsize = 0;
     const char    *name;
     long           len;
 
@@ -626,30 +682,15 @@ static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
     if (1 > argc) {
         rb_raise(ox_arg_error_class, "missing element name");
     }
-    i_am_a_child(b, false);
-    append_indent(b);
-    // Everything that can raise has to run before b->depth++ or the raise
-    // leaves a stack slot that was never filled in.
-    switch (rb_type(*argv)) {
-    case T_STRING:
-        name = StringValuePtr(*argv);
-        len  = RSTRING_LEN(*argv);
-        break;
-    case T_SYMBOL:
-        sym  = rb_sym2str(*argv);
-        name = StringValuePtr(sym);
-        len  = RSTRING_LEN(sym);
-        break;
-    default: rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name"); break;
-    }
-    // append_string() below raises on the NUL too, but only after strdup() has
-    // copied a name shorter than len says it is.
-    if (NULL != memchr(name, '\0', (size_t)len)) {
-        rb_raise(ox_syntax_error_class, "'\\#x00' is not a valid XML character.");
-    }
+    // Everything that can raise has to run before the first write, or the raise
+    // leaves an element started that no later call can finish or take back. It
+    // also has to run before b->depth++, or the stack slot is never filled in.
+    len = check_name(*argv, &sym, &name, &xsize, "expected a Symbol or String for an element name");
     if (MAX_DEPTH <= b->depth + 1) {
         rb_raise(ox_arg_error_class, "XML too deeply nested");
     }
+    i_am_a_child(b, false);
+    append_indent(b);
     b->depth++;
     e = &b->stack[b->depth];
     if (sizeof(e->buf) <= (size_t)len) {
@@ -666,7 +707,7 @@ static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
     buf_append(&b->buf, '<');
     b->col++;
     b->pos++;
-    append_string(b, e->name, len, xml_element_chars, false);
+    append_string(b, e->name, len, xml_element_chars, xsize, false);
     if (1 < argc && T_HASH == rb_type(argv[1])) {
         rb_hash_foreach(argv[1], append_attr, (VALUE)b);
     }
@@ -687,7 +728,8 @@ static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE builder_void_element(int argc, VALUE *argv, VALUE self) {
     Builder        b;
-    volatile VALUE sym = Qnil;
+    volatile VALUE sym   = Qnil;
+    size_t         xsize = 0;
     const char    *name;
     long           len;
 
@@ -696,24 +738,13 @@ static VALUE builder_void_element(int argc, VALUE *argv, VALUE self) {
     if (1 > argc) {
         rb_raise(ox_arg_error_class, "missing element name");
     }
+    len = check_name(*argv, &sym, &name, &xsize, "expected a Symbol or String for an element name");
     i_am_a_child(b, false);
     append_indent(b);
-    switch (rb_type(*argv)) {
-    case T_STRING:
-        name = StringValuePtr(*argv);
-        len  = RSTRING_LEN(*argv);
-        break;
-    case T_SYMBOL:
-        sym  = rb_sym2str(*argv);
-        name = StringValuePtr(sym);
-        len  = RSTRING_LEN(sym);
-        break;
-    default: rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name"); break;
-    }
     buf_append(&b->buf, '<');
     b->col++;
     b->pos++;
-    append_string(b, name, len, xml_element_chars, false);
+    append_string(b, name, len, xml_element_chars, xsize, false);
     if (1 < argc && T_HASH == rb_type(argv[1])) {
         rb_hash_foreach(argv[1], append_attr, (VALUE)b);
     }
@@ -732,15 +763,19 @@ static VALUE builder_void_element(int argc, VALUE *argv, VALUE self) {
  */
 static VALUE builder_comment(VALUE self, VALUE text) {
     Builder b;
+    size_t  size;
+    size_t  xsize;
 
     TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
     rb_check_type(text, T_STRING);
+    size  = (size_t)RSTRING_LEN(text);
+    xsize = check_string(StringValuePtr(text), size, xml_element_chars);
     i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<!--", 4);
     b->col += 5;
     b->pos += 5;
-    append_string(b, StringValuePtr(text), RSTRING_LEN(text), xml_element_chars, false);
+    append_string(b, StringValuePtr(text), size, xml_element_chars, xsize, false);
     buf_append_string(&b->buf, "-->", 3);
     b->col += 5;
     b->pos += 5;
@@ -755,15 +790,19 @@ static VALUE builder_comment(VALUE self, VALUE text) {
  */
 static VALUE builder_doctype(VALUE self, VALUE text) {
     Builder b;
+    size_t  size;
+    size_t  xsize;
 
     TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
     rb_check_type(text, T_STRING);
+    size  = (size_t)RSTRING_LEN(text);
+    xsize = check_string(StringValuePtr(text), size, xml_element_chars);
     i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<!DOCTYPE ", 10);
     b->col += 10;
     b->pos += 10;
-    append_string(b, StringValuePtr(text), RSTRING_LEN(text), xml_element_chars, false);
+    append_string(b, StringValuePtr(text), size, xml_element_chars, xsize, false);
     buf_append(&b->buf, '>');
     b->col++;
     b->pos++;
@@ -781,6 +820,8 @@ static VALUE builder_text(int argc, VALUE *argv, VALUE self) {
     Builder        b;
     volatile VALUE v;
     volatile VALUE strip_invalid_chars;
+    size_t         size;
+    size_t         xsize;
 
     TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
 
@@ -794,9 +835,14 @@ static VALUE builder_text(int argc, VALUE *argv, VALUE self) {
         strip_invalid_chars = Qfalse;
     }
 
-    v = rb_String(v);
+    v    = rb_String(v);
+    size = (size_t)RSTRING_LEN(v);
+    // Stripping is allowed to drop the byte, so it is the one writer that does
+    // not have to refuse the value up front.
+    xsize = RTEST(strip_invalid_chars) ? xml_str_len((const unsigned char *)StringValuePtr(v), size, xml_element_chars)
+                                       : check_string(StringValuePtr(v), size, xml_element_chars);
     i_am_a_child(b, true);
-    append_string(b, StringValuePtr(v), RSTRING_LEN(v), xml_element_chars, RTEST(strip_invalid_chars));
+    append_string(b, StringValuePtr(v), size, xml_element_chars, xsize, RTEST(strip_invalid_chars));
 
     return Qnil;
 }
