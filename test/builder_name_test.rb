@@ -29,13 +29,13 @@ class BuilderNameTest < ::Test::Unit::TestCase
 
   def test_nul_in_a_short_element_name_raises
     b = Ox::Builder.new
-    assert_raise(Ox::ArgError) { b.element("a\0bcd") }
+    assert_raise(Ox::SyntaxError) { b.element("a\0bcd") }
   end
 
   def test_nul_in_a_strdup_length_element_name_raises
     b = Ox::Builder.new
-    assert_raise(Ox::ArgError) { b.element("\0#{'x' * 200_000}") }
-    assert_raise(Ox::ArgError) { b.element("#{'a' * 70}\0#{'b' * 200_000}") }
+    assert_raise(Ox::SyntaxError) { b.element("\0#{'x' * 200_000}") }
+    assert_raise(Ox::SyntaxError) { b.element("#{'a' * 70}\0#{'b' * 200_000}") }
   end
 
   # The bug lives on the strdup side of this boundary, so pin both sides of it
@@ -65,7 +65,7 @@ class BuilderNameTest < ::Test::Unit::TestCase
 
   def test_builder_is_usable_after_a_rescued_nul_name_raise
     b = Ox::Builder.new
-    assert_raise(Ox::ArgError) { b.element("a\0b") }
+    assert_raise(Ox::SyntaxError) { b.element("a\0b") }
     b.element('x')
     b.pop
     assert_equal("<x/>\n", b.to_s)

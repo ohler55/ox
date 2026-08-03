@@ -134,7 +134,7 @@ static void append_string(Builder b, const char *str, size_t size, const char *t
         char       *bend = buf + sizeof(buf) - 1;
         const char *send = str + size;
 
-        while (str < send && '\0' != *str) {
+        while (str < send) {
             /* Copy runs of pass-through bytes a word at a time into the staging
              * buffer. A clean word has no byte below 0x20, so it can hold no
              * newline and no '\0': col and pos advance by the whole word and the
@@ -170,7 +170,7 @@ static void append_string(Builder b, const char *str, size_t size, const char *t
              * word. These are all >= 0x20 and not escape characters, so no
              * newline check is needed.
              */
-            while (str < send && '\0' != *str) {
+            while (str < send) {
                 unsigned char c = (unsigned char)*str;
 
                 if (c < 0x20 || '"' == c || '\'' == c || '&' == c || '<' == c || '>' == c) {
@@ -188,7 +188,7 @@ static void append_string(Builder b, const char *str, size_t size, const char *t
              * or a byte the table keeps unchanged ('"' and '\'' in the element
              * table, and 0x09/0x0a/0x0d in every table).
              */
-            if (str < send && '\0' != *str) {
+            if (str < send) {
                 int fcnt = table[(unsigned char)*str];
 
                 if ('1' == fcnt) {
@@ -638,9 +638,10 @@ static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
         break;
     default: rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name"); break;
     }
-    // strdup() below stops at an embedded NUL but len does not.
+    // append_string() below raises on the NUL too, but only after strdup() has
+    // copied a name shorter than len says it is.
     if (NULL != memchr(name, '\0', (size_t)len)) {
-        rb_raise(ox_arg_error_class, "element name can not contain a null character");
+        rb_raise(ox_syntax_error_class, "'\\#x00' is not a valid XML character.");
     }
     if (MAX_DEPTH <= b->depth + 1) {
         rb_raise(ox_arg_error_class, "XML too deeply nested");
