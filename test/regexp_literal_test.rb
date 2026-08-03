@@ -98,11 +98,13 @@ class RegexpLiteralTest < ::Test::Unit::TestCase
   end
 
   # Regexp#inspect escapes a '/' in the pattern, so scanning back from the end
-  # still lands on the delimiter and the length covers the whole pattern.
+  # still lands on the delimiter and the length covers the whole pattern. The
+  # source used to keep the backslash inspect had added, which is what
+  # regexp_slash_test.rb is about; what this one pins is the delimiter scan.
   def test_an_escaped_slash_in_the_pattern
     re = load_obj('/a\\/b/')
     assert_instance_of(Regexp, re)
-    assert_equal('a\\/b', re.source)
+    assert_equal('a/b', re.source)
     assert_match(re, 'a/b')
   end
 
