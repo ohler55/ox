@@ -108,15 +108,9 @@ class RegexpEncodingTest < ::Test::Unit::TestCase
   # With no encoding anywhere the source stays ASCII-8BIT -- unchanged, and the
   # same thing a String does in that document. Pinned so that the boundary of
   # this change is written down rather than inferred.
-  #
-  # Ox.load rather than Ox.parse_obj because Ox.default_options = {encoding:
-  # nil} clears the reported value but not the rb_enc behind it, and parse_obj
-  # reads only the latter. So once any test in the process has set an encoding,
-  # parse_obj keeps applying it. Ox.load re-derives it from the String it is
-  # handed, which is what makes this order independent.
   def test_without_any_encoding_a_regexp_matches_what_a_string_does
-    from_string = Ox.load(Ox.dump('あ'), mode: :object)
-    from_regexp = Ox.load(Ox.dump(/あ/), mode: :object)
+    from_string = Ox.parse_obj(Ox.dump('あ'))
+    from_regexp = Ox.parse_obj(Ox.dump(/あ/))
     assert_equal(Encoding::ASCII_8BIT, from_string.encoding)
     assert_equal(Encoding::ASCII_8BIT, from_regexp.source.encoding)
   end
