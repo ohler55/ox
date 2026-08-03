@@ -482,7 +482,10 @@ static VALUE set_def_opts(VALUE self, VALUE opts) {
 
     v = rb_hash_aref(opts, ox_encoding_sym);
     if (Qnil == v) {
+        // Ox.parse_obj and Ox.parse read rb_enc and never re-derive it from the
+        // name, so clearing only the name leaves them on the old encoding.
         *ox_default_options.encoding = '\0';
+        ox_default_options.rb_enc    = 0;
     } else {
         Check_Type(v, T_STRING);
         strncpy(ox_default_options.encoding, StringValuePtr(v), sizeof(ox_default_options.encoding) - 1);
