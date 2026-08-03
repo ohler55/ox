@@ -330,6 +330,8 @@ static VALUE circ_array_get(CircArray ca, unsigned long id) {
 
 static VALUE parse_regexp(const char *text, PInfo pi) {
     const char *te;
+    const char *s;
+    char       *b;
     VALUE       src;
     size_t      len     = strlen(text);
     int         options = 0;
@@ -363,7 +365,26 @@ static VALUE parse_regexp(const char *text, PInfo pi) {
     // and leaves the source ASCII-8BIT. Going through the String also gets
     // Ruby's own rule, which promotes an ASCII only source to US-ASCII the way
     // a literal is.
-    src = rb_str_new(text + 1, te - text - 1);
+    src = rb_str_new(0, te - text - 1);
+    b   = RSTRING_PTR(src);
+    // The dumper writes Regexp#inspect, which escapes a / in the source as \/,
+    // so take that back off. A backslash pair is stepped over whole or the /
+    // in "\\/" would be read as the escaped one.
+    s = text + 1;
+    while (s < te) {
+        if ('\\' == *s && s + 1 < te) {
+            if ('/' == s[1]) {
+                *b++ = '/';
+            } else {
+                *b++ = *s;
+                *b++ = s[1];
+            }
+            s += 2;
+        } else {
+            *b++ = *s++;
+        }
+    }
+    rb_str_set_len(src, b - RSTRING_PTR(src));
     if (0 != pi->options->rb_enc) {
         rb_enc_associate(src, pi->options->rb_enc);
     }
