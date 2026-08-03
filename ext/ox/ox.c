@@ -997,6 +997,9 @@ static VALUE load_str(int argc, VALUE *argv, VALUE self) {
     VALUE       encoding;
     struct _err err;
 
+    if (1 > argc) {
+        rb_raise(ox_arg_error_class, "missing XML string");
+    }
     err_init(&err);
     Check_Type(*argv, T_STRING);
     /* the xml string gets modified so make a copy of it */
@@ -1059,6 +1062,9 @@ static VALUE load_file(int argc, VALUE *argv, VALUE self) {
     VALUE       obj;
     struct _err err;
 
+    if (1 > argc) {
+        rb_raise(ox_arg_error_class, "missing file path");
+    }
     err_init(&err);
     Check_Type(*argv, T_STRING);
     path = StringValuePtr(*argv);
@@ -1384,6 +1390,9 @@ static VALUE dump(int argc, VALUE *argv, VALUE self) {
     struct _options copts = ox_default_options;
     VALUE           rstr;
 
+    if (1 > argc) {
+        rb_raise(ox_arg_error_class, "missing object to dump");
+    }
     if (2 == argc) {
         parse_dump_options(argv[1], &copts);
     }
@@ -1446,6 +1455,9 @@ static VALUE to_xml(int argc, VALUE *argv, VALUE self) {
 static VALUE to_file(int argc, VALUE *argv, VALUE self) {
     struct _options copts = ox_default_options;
 
+    if (2 > argc) {
+        rb_raise(ox_arg_error_class, "missing file path or object to write");
+    }
     if (3 == argc) {
         parse_dump_options(argv[2], &copts);
     }
