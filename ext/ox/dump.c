@@ -151,9 +151,10 @@ static Type obj_class_code(VALUE obj) {
         return (is_xml_friendly((uchar *)StringValuePtr(obj), (int)RSTRING_LEN(obj), xml_element_chars)) ? StringCode
                                                                                                          : String64Code;
     case T_SYMBOL: {
-        const char *sym = rb_id2name(SYM2ID(obj));
+        volatile VALUE sym = rb_sym2str(obj);
 
-        return (is_xml_friendly((uchar *)sym, (int)strlen(sym), xml_element_chars)) ? SymbolCode : Symbol64Code;
+        return (is_xml_friendly((uchar *)RSTRING_PTR(sym), (int)RSTRING_LEN(sym), xml_element_chars)) ? SymbolCode
+                                                                                                      : Symbol64Code;
     }
     case T_DATA: return (rb_cTime == clas) ? TimeCode : ((ox_date_class == clas) ? DateCode : 0);
     case T_STRUCT: return (rb_cRange == clas) ? RangeCode : StructCode;
@@ -786,9 +787,10 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
         break;
     }
     case T_SYMBOL: {
-        const char *sym = rb_id2name(SYM2ID(obj));
+        volatile VALUE rsym = rb_sym2str(obj);
+        const char    *sym  = RSTRING_PTR(rsym);
 
-        cnt = (int)strlen(sym);
+        cnt = (int)RSTRING_LEN(rsym);
 #if USE_B64
         if (is_xml_friendly((uchar *)sym, cnt)) {
             e.type = SymbolCode;
@@ -1220,21 +1222,24 @@ static int dump_gen_nodes(VALUE obj, int depth, Out out) {
 }
 
 static int dump_gen_attr(VALUE key, VALUE value, VALUE ov) {
-    Out out = (Out)ov;
-
-    const char *ks;
-    size_t      klen;
-    size_t      size;
+    Out            out = (Out)ov;
+    volatile VALUE kv  = key;
+    const char    *ks;
+    size_t         klen;
+    size_t         size;
 
     switch (rb_type(key)) {
-    case T_SYMBOL: ks = rb_id2name(SYM2ID(key)); break;
-    case T_STRING: ks = StringValuePtr(key); break;
-    default:
-        key = rb_String(key);
-        ks  = StringValuePtr(key);
-        break;
+    case T_SYMBOL: kv = rb_sym2str(key); break;
+    case T_STRING: break;
+    default: kv = rb_String(key); break;
     }
-    klen  = strlen(ks);
+    ks   = StringValuePtr(kv);
+    klen = (size_t)RSTRING_LEN(kv);
+    // The name is written raw, so a NUL would reach the buffer and rb_str_new2()
+    // would cut the whole document there. Values already raise on it.
+    if (NULL != memchr(ks, '\0', klen)) {
+        rb_raise(ox_syntax_error_class, "'\\#x00' is not a valid XML character.");
+    }
     value = rb_String(value);
     size  = 4 + klen + RSTRING_LEN(value);
     if (out->end - out->cur <= (long)size) {

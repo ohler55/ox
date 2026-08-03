@@ -236,8 +236,9 @@ static void append_string(Builder b, const char *str, size_t size, const char *t
 }
 
 static void append_sym_str(Builder b, VALUE v) {
-    const char *s;
-    long        len;
+    volatile VALUE sym = Qnil;
+    const char    *s;
+    long           len;
 
     switch (rb_type(v)) {
     case T_STRING:
@@ -245,8 +246,9 @@ static void append_sym_str(Builder b, VALUE v) {
         len = RSTRING_LEN(v);
         break;
     case T_SYMBOL:
-        s   = rb_id2name(SYM2ID(v));
-        len = strlen(s);
+        sym = rb_sym2str(v);
+        s   = StringValuePtr(sym);
+        len = RSTRING_LEN(sym);
         break;
     default: rb_raise(ox_arg_error_class, "expected a Symbol or String"); break;
     }
@@ -613,10 +615,11 @@ static VALUE builder_instruct(int argc, VALUE *argv, VALUE self) {
  * - +attributes+ - (Hash) of the element
  */
 static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
-    Builder     b;
-    Element     e;
-    const char *name;
-    long        len;
+    Builder        b;
+    Element        e;
+    volatile VALUE sym = Qnil;
+    const char    *name;
+    long           len;
 
     TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
 
@@ -633,8 +636,9 @@ static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
         len  = RSTRING_LEN(*argv);
         break;
     case T_SYMBOL:
-        name = rb_id2name(SYM2ID(*argv));
-        len  = strlen(name);
+        sym  = rb_sym2str(*argv);
+        name = StringValuePtr(sym);
+        len  = RSTRING_LEN(sym);
         break;
     default: rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name"); break;
     }
@@ -682,9 +686,10 @@ static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
  * - +attributes+ - (Hash) of the element
  */
 static VALUE builder_void_element(int argc, VALUE *argv, VALUE self) {
-    Builder     b;
-    const char *name;
-    long        len;
+    Builder        b;
+    volatile VALUE sym = Qnil;
+    const char    *name;
+    long           len;
 
     TypedData_Get_Struct(self, struct _builder, &ox_builder_type, b);
 
@@ -699,8 +704,9 @@ static VALUE builder_void_element(int argc, VALUE *argv, VALUE self) {
         len  = RSTRING_LEN(*argv);
         break;
     case T_SYMBOL:
-        name = rb_id2name(SYM2ID(*argv));
-        len  = strlen(name);
+        sym  = rb_sym2str(*argv);
+        name = StringValuePtr(sym);
+        len  = RSTRING_LEN(sym);
         break;
     default: rb_raise(ox_arg_error_class, "expected a Symbol or String for an element name"); break;
     }
