@@ -133,6 +133,29 @@ inline static size_t check_string(const char *str, size_t size, const char *tabl
     return xsize;
 }
 
+// The same question for a value that is copied through rather than escaped.
+// check_string() answers it too, but only as a side effect of sizing an escaped
+// form these writers have no use for, and inside a CDATA section or a comment a
+// character reference is not expanded, so escaping is not an option there.
+inline static void check_unescaped(const char *str, size_t size) {
+    const unsigned char *bad = xml_first_invalid((const unsigned char *)str, size);
+
+    if (NULL != bad) {
+        rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *bad);
+    }
+}
+
+// One of the instruct() attributes, which are written from the Hash rather than
+// passed in. A value of the wrong type is left to the type check that already
+// refuses it further down.
+inline static void check_instruct_value(VALUE attrs, VALUE key) {
+    volatile VALUE v = rb_hash_lookup(attrs, key);
+
+    if (Qnil != v && rb_cString == rb_obj_class(v)) {
+        check_unescaped(StringValuePtr(v), (size_t)RSTRING_LEN(v));
+    }
+}
+
 // Resolves a Symbol or String name to bytes and checks it, for the writers that
 // take either. sym holds the Symbol's name String for as long as *strp is used.
 inline static long check_name(VALUE v, volatile VALUE *sym, const char **strp, size_t *xsizep, const char *msg) {
@@ -601,6 +624,13 @@ static VALUE builder_instruct(int argc, VALUE *argv, VALUE self) {
         size_t         nx;
 
         check_name(*argv, &nsym, &nstr, &nx, "expected a Symbol or String");
+        if (1 < argc && rb_cHash == rb_obj_class(argv[1])) {
+            // The "<?" and the target are out by the time the values are
+            // written, so a raise down there would leave them in the buffer.
+            check_instruct_value(argv[1], ox_version_sym);
+            check_instruct_value(argv[1], ox_encoding_sym);
+            check_instruct_value(argv[1], ox_standalone_sym);
+        }
     }
     i_am_a_child(b, false);
     append_indent(b);
@@ -871,6 +901,7 @@ static VALUE builder_cdata(VALUE self, VALUE data) {
     s    = str;
     end  = str + len;
     from = str;
+    check_unescaped(str, (size_t)len);
     i_am_a_child(b, false);
     append_indent(b);
     buf_append_string(&b->buf, "<![CDATA[", 9);
