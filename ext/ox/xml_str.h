@@ -144,6 +144,45 @@ inline static size_t xml_str_len(const unsigned char *str, size_t len, const cha
     return size - len * (size_t)'0';
 }
 
+/* First byte of str that no XML table lets through, or NULL.
+ *
+ * Every table marks the same set - the bytes under 0x20 other than 0x09, 0x0a
+ * and 0x0d - so this takes no table and answers for all of them. They are all
+ * under 0x20, which is the first term of xml_bytes_of_interest(), so a word
+ * that term does not flag holds none of them and is skipped whole.
+ *
+ * A caller that has to write a delimiter before the value it is escaping uses
+ * this to find out first, since the escape loop only reaches the byte after
+ * the delimiter is already out.
+ */
+inline static const unsigned char *xml_first_invalid(const unsigned char *str, size_t len) {
+    const unsigned char *end = str + len;
+
+    while (str + 8 <= end) {
+        uint64_t v;
+
+        memcpy(&v, str, 8);
+        if (0 != (((v - XSTR_ONES * 0x20) & ~v) & XSTR_HIGH)) {
+            int i;
+
+            for (i = 0; i < 8; i++) {
+                unsigned char c = str[i];
+
+                if (c < 0x20 && '\t' != c && '\n' != c && '\r' != c) {
+                    return str + i;
+                }
+            }
+        }
+        str += 8;
+    }
+    for (; str < end; str++) {
+        if (*str < 0x20 && '\t' != *str && '\n' != *str && '\r' != *str) {
+            return str;
+        }
+    }
+    return NULL;
+}
+
 /* A CDATA section ends at the first "]]>", so a value holding one closes its
  * own section and the rest is read as markup. Both writers split each
  * occurrence into "]]" + "]]>" + "<![CDATA[" + ">", which reads back as the
