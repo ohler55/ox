@@ -412,18 +412,21 @@ static void bclose(Builder b) {
 
 static VALUE to_s(Builder b) {
     volatile VALUE rstr;
+    size_t         len;
 
     if (0 != b->buf.fd) {
         rb_raise(ox_arg_error_class, "can not create a String with a stream or file builder.");
     }
-    if (0 <= b->indent && '\n' != *(b->buf.tail - 1)) {
-        buf_append(&b->buf, '\n');
-        b->line++;
-        b->col = 1;
-        b->pos++;
-    }
+    len          = buf_len(&b->buf);
     *b->buf.tail = '\0';  // for debugging
-    rstr         = rb_str_new(b->buf.head, buf_len(&b->buf));
+    rstr         = rb_str_new(b->buf.head, len);
+    // The closing newline goes on the String and not the buffer. Appended to the
+    // buffer it stays there, so a to_s taken before the document is finished
+    // leaves a newline in the middle of it, and in the middle of a value if that
+    // is where the builder was.
+    if (0 <= b->indent && (0 == len || '\n' != b->buf.head[len - 1])) {
+        rb_str_cat(rstr, "\n", 1);
+    }
 
     if ('\0' != *b->encoding) {
         rb_enc_associate(rstr, rb_enc_find(b->encoding));
