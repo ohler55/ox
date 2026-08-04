@@ -182,6 +182,18 @@ inline static void fill_indent(Out out, int cnt) {
     }
 }
 
+// Raises on a character XML has no way to write, for the values fill_value()
+// copies through. dump_str_value() answers the same question for the values it
+// escapes, but inside a CDATA section, a comment or an instruction a character
+// reference is not expanded, so escaping is not an option there.
+inline static void check_unescaped(const char *str, size_t size) {
+    const unsigned char *bad = xml_first_invalid((const unsigned char *)str, size);
+
+    if (NULL != bad) {
+        rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *bad);
+    }
+}
+
 inline static void fill_value(Out out, const char *value, size_t len) {
     if (16 < len) {
         APPEND_CHARS(out->cur, value, len);
@@ -1164,10 +1176,12 @@ static void dump_gen_instruct(VALUE obj, int depth, Out out) {
     long           clen     = 0;
     size_t         size;
 
+    check_unescaped(name, (size_t)nlen);
     if (T_STRING == rb_type(rcontent)) {
         content = StringValuePtr(rcontent);
         clen    = RSTRING_LEN(rcontent);
-        size    = 4 + nlen + clen;
+        check_unescaped(content, (size_t)clen);
+        size = 4 + nlen + clen;
     } else {
         size = 4 + nlen;
     }
@@ -1278,6 +1292,11 @@ dump_gen_val_node(VALUE obj, int depth, const char *pre, size_t plen, const char
     vlen = RSTRING_LEN(v);
     from = val;
     end  = val + vlen;
+    // Ox::Raw is documented as going out untouched, so it is the one value node
+    // that is not checked. The rest are markup ox wrote the delimiters for.
+    if (ox_raw_clas != rb_obj_class(obj)) {
+        check_unescaped(val, vlen);
+    }
     if (0 > out->indent) {
         indent = -1;
     } else if (0 == out->indent) {

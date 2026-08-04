@@ -292,7 +292,9 @@ static VALUE hints_to_overlay(Hints hints) {
  * - _:convert_special_ [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
  * - _:invalid_replace_ [nil|false|String] what to do with a character XML can not hold on dump. false, the default,
  * raises an Ox::SyntaxError. nil writes it as a hex character reference, other than a NUL which is dropped since
- * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it.
+ * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it. This
+ * covers text and attribute values. A comment, CDATA section, DOCTYPE or processing instruction expands no character
+ * reference, so a character XML can not hold always raises there.
  * - _:no_empty_ [true|false|nil] flag indicating there should be no empty elements in a dump
  * - _:with_cdata_ [true|false] includes cdata in hash_load results
  * - _:strip_namespace_ [String|true|false] false or "" results in no namespace stripping. A string of "*" or true will
@@ -456,7 +458,9 @@ static VALUE sax_html_overlay(VALUE self) {
  *   - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  *   - _:invalid_replace_ [nil|false|String] what to do with a character XML can not hold on dump. false, the default,
  * raises an Ox::SyntaxError. nil writes it as a hex character reference, other than a NUL which is dropped since
- * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it.
+ * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it. This
+ * covers text and attribute values. A comment, CDATA section, DOCTYPE or processing instruction expands no character
+ * reference, so a character XML can not hold always raises there.
  *   - _:strip_namespace_ [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true
  * will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  * - _:with_cdata_ [true|false] includes cdata in hash_load results
@@ -1003,7 +1007,9 @@ static VALUE load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALU
  *   - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
  *   - *:invalid_replace* [nil|false|String] what to do with a character XML can not hold on dump. false, the default,
  * raises an Ox::SyntaxError. nil writes it as a hex character reference, other than a NUL which is dropped since
- * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it.
+ * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it. This
+ * covers text and attribute values. A comment, CDATA section, DOCTYPE or processing instruction expands no character
+ * reference, so a character XML can not hold always raises there.
  *   - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will
  * strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  *   - *:with_cdata* [true|false] if true cdata is included in hash_load output otherwise it is not.
@@ -1068,7 +1074,9 @@ static VALUE load_str(int argc, VALUE *argv, VALUE self) {
  *   - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
  *   - *:invalid_replace* [nil|false|String] what to do with a character XML can not hold on dump. false, the default,
  * raises an Ox::SyntaxError. nil writes it as a hex character reference, other than a NUL which is dropped since
- * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it.
+ * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it. This
+ * covers text and attribute values. A comment, CDATA section, DOCTYPE or processing instruction expands no character
+ * reference, so a character XML can not hold always raises there.
  *   - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will
  * strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
