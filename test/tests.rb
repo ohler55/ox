@@ -329,7 +329,7 @@ class Func < Test::Unit::TestCase
   end
 
   def test_dump_invalid_character
-    assert_raise(Ox::SyntaxError) { Ox.dump("foo\x19bar") }
+    assert_raise(Ox::SyntaxError) { Ox.dump("foo\x19bar", invalid_replace: false) }
   end
 
   def test_unsupported_ox_version
@@ -537,16 +537,19 @@ class Func < Test::Unit::TestCase
     assert_equal('π', doc.attributes[:name].force_encoding('UTF-8'))
   end
 
+  # :effort no longer reaches the character check, so these two pass what they
+  # are actually asking for: the empty string drops the character and false is
+  # the state that raises.
   def test_escape_dump_tolerant
     Ox.default_options = $ox_object_options
-    dumped_xml = Ox.dump("tab\tamp&backspace\b.", effort: :tolerant)
+    dumped_xml = Ox.dump("tab\tamp&backspace\b.", invalid_replace: '')
     assert_equal("<s>tab\tamp&amp;backspace.</s>\n", dumped_xml)
   end
 
   def test_escape_dump_strict
     Ox.default_options = $ox_object_options
     begin
-      Ox.dump("tab\tamp&backspace\b.", effort: :strict)
+      Ox.dump("tab\tamp&backspace\b.", invalid_replace: false)
     rescue Exception => e
       assert_equal("'\\#x08' is not a valid XML character.", e.message)
       return

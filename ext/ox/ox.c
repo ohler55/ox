@@ -176,7 +176,7 @@ struct _options ox_default_options = {
     SpcSkip,       // skip
     No,            // smart
     true,          // convert_special
-    No,            // allow_invalid
+    NotSet,        // allow_invalid
     false,         // no_empty
     false,         // with_cdata
     {'\0'},        // inv_repl
@@ -290,8 +290,9 @@ static VALUE hints_to_overlay(Hints hints) {
  * - _:skip_ [:skip_none|:skip_return|:skip_white|:skip_off] determines how to handle white space in text
  * - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
  * - _:convert_special_ [true|false|nil] flag indicating special characters like &lt; are converted with the SAX parser
- * - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include anyway
- * as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ * - _:invalid_replace_ [nil|false|String] what to do with a character XML can not hold on dump. false, the default,
+ * raises an Ox::SyntaxError. nil writes it as a hex character reference, other than a NUL which is dropped since
+ * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it.
  * - _:no_empty_ [true|false|nil] flag indicating there should be no empty elements in a dump
  * - _:with_cdata_ [true|false] includes cdata in hash_load results
  * - _:strip_namespace_ [String|true|false] false or "" results in no namespace stripping. A string of "*" or true will
@@ -367,12 +368,14 @@ static VALUE get_def_opts(VALUE self) {
     case SpcSkip: rb_hash_aset(opts, skip_sym, skip_white_sym); break;
     default: rb_hash_aset(opts, skip_sym, Qnil); break;
     }
-    if (Yes == ox_default_options.allow_invalid) {
-        rb_hash_aset(opts, invalid_replace_sym, Qnil);
-    } else {
+    switch (ox_default_options.allow_invalid) {
+    case Yes: rb_hash_aset(opts, invalid_replace_sym, Qnil); break;
+    case No:
         rb_hash_aset(opts,
                      invalid_replace_sym,
                      rb_str_new(ox_default_options.inv_repl + 1, (int)*ox_default_options.inv_repl));
+        break;
+    default: rb_hash_aset(opts, invalid_replace_sym, Qfalse); break;
     }
     if ('\0' == *ox_default_options.strip_ns) {
         rb_hash_aset(opts, strip_namespace_sym, Qfalse);
@@ -451,8 +454,9 @@ static VALUE sax_html_overlay(VALUE self) {
  *   - _:attr_key_mod_ [Proc|nil] converts attribute keys on parse if not nil
  *   - _:skip_ [:skip_none|:skip_return|:skip_white|:skip_off] determines how to handle white space in text
  *   - _:smart_ [true|false|nil] flag indicating the SAX parser uses hints if available (use with html)
- *   - _:invalid_replace_ [nil|String] replacement string for invalid XML characters on dump. nil indicates include
- * anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ *   - _:invalid_replace_ [nil|false|String] what to do with a character XML can not hold on dump. false, the default,
+ * raises an Ox::SyntaxError. nil writes it as a hex character reference, other than a NUL which is dropped since
+ * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it.
  *   - _:strip_namespace_ [nil|String|true|false] "" or false result in no namespace stripping. A string of "*" or true
  * will strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  * - _:with_cdata_ [true|false] includes cdata in hash_load results
@@ -582,9 +586,19 @@ static VALUE set_def_opts(VALUE self, VALUE opts) {
         rb_raise(ox_parse_error_class, ":no_empty must be true or false.\n");
     }
 
-    v = rb_hash_aref(opts, invalid_replace_sym);
+    v = rb_hash_lookup(opts, invalid_replace_sym);
     if (Qnil == v) {
-        ox_default_options.allow_invalid = Yes;
+        // A key that is not there asks for the default, an explicit nil asks for
+        // the character to be written out, so the two cannot share a branch.
+        if (Qtrue == rb_funcall(opts, has_key_id, 1, invalid_replace_sym)) {
+            ox_default_options.allow_invalid = Yes;
+        } else {
+            ox_default_options.allow_invalid = NotSet;
+            *ox_default_options.inv_repl     = '\0';
+        }
+    } else if (Qfalse == v) {
+        ox_default_options.allow_invalid = NotSet;
+        *ox_default_options.inv_repl     = '\0';
     } else {
         long slen;
 
@@ -847,6 +861,9 @@ static int load_options_cb(VALUE k, VALUE v, VALUE opts) {
     } else if (invalid_replace_sym == k) {
         if (Qnil == v) {
             copts->allow_invalid = Yes;
+        } else if (Qfalse == v) {
+            copts->allow_invalid = NotSet;
+            *copts->inv_repl     = '\0';
         } else {
             long slen;
 
@@ -984,8 +1001,9 @@ static VALUE load(char *xml, size_t len, int argc, VALUE *argv, VALUE self, VALU
  *     - _:auto_define_ - auto define missing classes and modules
  *   - *:trace* [Fixnum] trace level as a Fixnum, default: 0 (silent)
  *   - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
- *   - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include
- * anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ *   - *:invalid_replace* [nil|false|String] what to do with a character XML can not hold on dump. false, the default,
+ * raises an Ox::SyntaxError. nil writes it as a hex character reference, other than a NUL which is dropped since
+ * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it.
  *   - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will
  * strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  *   - *:with_cdata* [true|false] if true cdata is included in hash_load output otherwise it is not.
@@ -1048,8 +1066,9 @@ static VALUE load_str(int argc, VALUE *argv, VALUE self) {
  *     - _:auto_define_ - auto define missing classes and modules
  *   - *:trace* [Fixnum] trace level as a Fixnum, default: 0 (silent)
  *   - *:symbolize_keys* [true|false|nil] symbolize element attribute keys or leave as Strings
- *   - *:invalid_replace* [nil|String] replacement string for invalid XML characters on dump. nil indicates include
- * anyway as hex. A string, limited to 10 characters will replace the invalid character with the replace.
+ *   - *:invalid_replace* [nil|false|String] what to do with a character XML can not hold on dump. false, the default,
+ * raises an Ox::SyntaxError. nil writes it as a hex character reference, other than a NUL which is dropped since
+ * &#x0000; can not be read back. A string, limited to 10 characters, replaces it and the empty string drops it.
  *   - *:strip_namespace* [String|true|false] "" or false result in no namespace stripping. A string of "*" or true will
  * strip all namespaces. Any other non-empty string indicates that matching namespaces will be stripped.
  */
@@ -1318,6 +1337,9 @@ static void parse_dump_options(VALUE ropts, Options copts) {
             if (Qtrue == rb_funcall(ropts, has_key_id, 1, invalid_replace_sym)) {
                 copts->allow_invalid = Yes;
             }
+        } else if (Qfalse == v) {
+            copts->allow_invalid = NotSet;
+            *copts->inv_repl     = '\0';
         } else {
             long slen;
 

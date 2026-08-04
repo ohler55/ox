@@ -420,13 +420,18 @@ inline static void dump_str_value(Out out, const char *value, size_t size, const
                 case '>': APPEND_CHARS_SMALL(out->cur, "&gt;", 4); break;
                 default:
                     // Must be one of the invalid characters.
-                    if (StrictEffort == out->opts->effort) {
+                    if (NotSet == out->opts->allow_invalid) {
                         rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", c);
                     }
                     if (Yes == out->opts->allow_invalid) {
-                        APPEND_CHARS_SMALL(out->cur, "&#x00", 5);
-                        dump_hex(c, out);
-                        *out->cur++ = ';';
+                        // A character reference has to resolve to a Char, which #x0 is not.
+                        // Reading &#x0000; back ends the text at the NUL and drops the rest
+                        // without an error, so the byte is left out instead.
+                        if ('\0' != c) {
+                            APPEND_CHARS_SMALL(out->cur, "&#x00", 5);
+                            dump_hex(c, out);
+                            *out->cur++ = ';';
+                        }
                     } else if ('\0' != *out->opts->inv_repl) {
                         // If the empty string then ignore. The first character of
                         // the replacement is the length.
