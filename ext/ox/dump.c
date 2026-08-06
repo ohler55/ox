@@ -14,6 +14,7 @@
 #include "cache8.h"
 #include "ox.h"
 #include "time_conv.h"
+#include "xml_check.h"
 #include "xml_str.h"
 
 #define USE_B64 0
@@ -179,18 +180,6 @@ inline static void fill_indent(Out out, int cnt) {
             memset(out->cur, ' ', cnt);
             out->cur += cnt;
         }
-    }
-}
-
-// Raises on a character XML has no way to write, for the values fill_value()
-// copies through. dump_str_value() answers the same question for the values it
-// escapes, but inside a CDATA section, a comment or an instruction a character
-// reference is not expanded, so escaping is not an option there.
-inline static void check_unescaped(const char *str, size_t size) {
-    const unsigned char *bad = xml_first_invalid((const unsigned char *)str, size);
-
-    if (NULL != bad) {
-        rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *bad);
     }
 }
 
@@ -1104,6 +1093,7 @@ static void dump_gen_element(VALUE obj, int depth, Out out) {
     size_t         size;
     int            indent;
 
+    check_name_chars(name, (size_t)nlen, false);
     if (0 > out->indent) {
         indent = -1;
     } else if (0 == out->indent) {
@@ -1254,11 +1244,9 @@ static int dump_gen_attr(VALUE key, VALUE value, VALUE ov) {
     }
     ks   = StringValuePtr(kv);
     klen = (size_t)RSTRING_LEN(kv);
-    // The name is written raw, so a NUL would reach the buffer and rb_str_new2()
-    // would cut the whole document there. Values already raise on it.
-    if (NULL != memchr(ks, '\0', klen)) {
-        rb_raise(ox_syntax_error_class, "'\\#x00' is not a valid XML character.");
-    }
+    // Before the space, so a rescued raise leaves the element as it was. The
+    // NUL this used to check for on its own is the low end of the same set.
+    check_name_chars(ks, klen, true);
     value = rb_String(value);
     size  = 4 + klen + RSTRING_LEN(value);
     if (out->end - out->cur <= (long)size) {

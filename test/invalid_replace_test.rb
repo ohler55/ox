@@ -191,13 +191,17 @@ class InvalidReplaceTest < ::Test::Unit::TestCase
                  Ox.dump({"a\x01b" => 1}, invalid_replace: '?'))
   end
 
-  # An element name is written raw rather than escaped, so it is not this
-  # option's to govern and a NUL there still costs the document. Pinned so that
-  # a change to either side shows up here. See Z34 / issue #460.
+  # A name is written raw rather than escaped, so it is not this option's to
+  # govern. It used to go out unchecked; since issue #469 it raises instead, and
+  # the option does not soften that. Pinned so a change to either side shows up.
   def test_names_are_not_covered_by_the_option
     STATES.each_key do |state|
-      assert_equal("\n<r\x01/>\n", Ox.dump(Ox::Element.new("r\x01"), mode: :generic, invalid_replace: state),
-                   state.inspect)
+      assert_raise(Ox::SyntaxError, state.inspect) do
+        Ox.dump(Ox::Element.new("r\x01"), mode: :generic, invalid_replace: state)
+      end
+      e = Ox::Element.new('r')
+      e["k\x01"] = 'v'
+      assert_raise(Ox::SyntaxError, state.inspect) { Ox.dump(e, mode: :generic, invalid_replace: state) }
     end
   end
 

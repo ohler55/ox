@@ -14,6 +14,7 @@
 #include "ruby.h"
 #include "ruby/encoding.h"
 #include "ruby/version.h"
+#include "xml_check.h"
 #include "xml_str.h"
 
 #define MAX_DEPTH 128
@@ -131,18 +132,6 @@ inline static size_t check_string(const char *str, size_t size, const char *tabl
         }
     }
     return xsize;
-}
-
-// The same question for a value that is copied through rather than escaped.
-// check_string() answers it too, but only as a side effect of sizing an escaped
-// form these writers have no use for, and inside a CDATA section or a comment a
-// character reference is not expanded, so escaping is not an option there.
-inline static void check_unescaped(const char *str, size_t size) {
-    const unsigned char *bad = xml_first_invalid((const unsigned char *)str, size);
-
-    if (NULL != bad) {
-        rb_raise(ox_syntax_error_class, "'\\#x%02x' is not a valid XML character.", *bad);
-    }
 }
 
 // One of the instruct() attributes, which are written from the Hash rather than
@@ -342,7 +331,8 @@ static int append_attr(VALUE key, VALUE value, VALUE bv) {
     // Both halves before the space: an attribute is either written whole or not
     // at all, and the element it belongs to is left as it was.
     Check_Type(value, T_STRING);
-    klen  = check_name(key, &sym, &ks, &kx, "expected a Symbol or String");
+    klen = check_name(key, &sym, &ks, &kx, "expected a Symbol or String");
+    check_name_chars(ks, (size_t)klen, true);
     vsize = (size_t)RSTRING_LEN(value);
     vx    = check_string(StringValuePtr(value), vsize, xml_attr_chars);
 
@@ -726,6 +716,7 @@ static VALUE builder_element(int argc, VALUE *argv, VALUE self) {
     // leaves an element started that no later call can finish or take back. It
     // also has to run before b->depth++, or the stack slot is never filled in.
     len = check_name(*argv, &sym, &name, &xsize, "expected a Symbol or String for an element name");
+    check_name_chars(name, (size_t)len, false);
     if (MAX_DEPTH <= b->depth + 1) {
         rb_raise(ox_arg_error_class, "XML too deeply nested");
     }
@@ -779,6 +770,7 @@ static VALUE builder_void_element(int argc, VALUE *argv, VALUE self) {
         rb_raise(ox_arg_error_class, "missing element name");
     }
     len = check_name(*argv, &sym, &name, &xsize, "expected a Symbol or String for an element name");
+    check_name_chars(name, (size_t)len, false);
     i_am_a_child(b, false);
     append_indent(b);
     buf_append(&b->buf, '<');
