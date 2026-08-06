@@ -183,6 +183,41 @@ inline static const unsigned char *xml_first_invalid(const unsigned char *str, s
     return NULL;
 }
 
+/* What a byte does to a name, in the same shape as the escape tables. '2' ends
+ * a name wherever one is written - a byte at or below a space, either white
+ * space or one XML can not hold at all, or one of the five characters a start
+ * tag is read with. '1' ends only an attribute name, the quote its value is
+ * written in. '0' is a byte a name can hold.
+ */
+#define XML_NAME_ELEMENT '2'
+#define XML_NAME_ATTR '1'
+
+static const char xml_name_chars[257] = "\
+22222222222222222222222222222222\
+20100020000000020000000000002220\
+00000000000000000000000000000000\
+00000000000000000000000000000000\
+00000000000000000000000000000000\
+00000000000000000000000000000000\
+00000000000000000000000000000000\
+00000000000000000000000000000000";
+
+/* First byte of str that ends a name written where ends says it is written, or
+ * NULL. One load and one compare a byte, since every one of these is a name and
+ * a name is short enough that a word loop would spend more on its own setup
+ * than it saves.
+ */
+inline static const unsigned char *xml_first_bad_name(const unsigned char *str, size_t len, char ends) {
+    const unsigned char *end = str + len;
+
+    for (; str < end; str++) {
+        if (ends <= xml_name_chars[*str]) {
+            return str;
+        }
+    }
+    return NULL;
+}
+
 /* A CDATA section ends at the first "]]>", so a value holding one closes its
  * own section and the rest is read as markup. Both writers split each
  * occurrence into "]]" + "]]>" + "<![CDATA[" + ">", which reads back as the

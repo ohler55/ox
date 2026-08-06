@@ -700,12 +700,13 @@ class Func < Test::Unit::TestCase
     end
   end
 
-  def test_escape_open_close_tag_names
+  # Was escaped to </&gt;&lt;script&gt;&lt;/script&gt;>, which is not an
+  # injection but is not a name either. Since issue #469 the name is refused.
+  def test_open_close_tag_names_are_refused
     Ox.default_options = $ox_object_options
     b = Ox::Builder.new
-    b.element(%(/><script></script>)) { b.text('xss') }
-    s = b.to_s
-    assert_equal(%(</&gt;&lt;script&gt;&lt;/script&gt;>xss<//&gt;&lt;script&gt;&lt;/script&gt;>\n), s)
+    e = assert_raise(Ox::SyntaxError) { b.element(%(/><script></script>)) { b.text('xss') } }
+    assert_equal("'/' can not be used in an element name.", e.message)
   end
 
   def test_attr_as_string
