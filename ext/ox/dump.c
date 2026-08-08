@@ -1122,8 +1122,10 @@ static void dump_gen_element(VALUE obj, int depth, Out out) {
     }
     // The attribute loop runs Ruby, so both the reservation above and the name
     // pointer are spent: dump_gen_attr() calls rb_String() on each value, and
-    // growing the name String there frees the buffer name points at.
-    name = StringValuePtr(rname);
+    // growing the name String there frees the buffer name points at. The type
+    // check is not repeated: StringValuePtr() above left rname a String and a
+    // VALUE does not change type, only where its bytes live.
+    name = RSTRING_PTR(rname);
     nlen = RSTRING_LEN(rname);
     size = indent + 5 + nlen + out->opts->margin_len;
     if (out->end - out->cur <= (long)size) {
@@ -1135,7 +1137,7 @@ static void dump_gen_element(VALUE obj, int depth, Out out) {
         *out->cur++ = '>';
         do_indent   = dump_gen_nodes(nodes, depth, out);
         // The children run Ruby as well.
-        name = StringValuePtr(rname);
+        name = RSTRING_PTR(rname);
         nlen = RSTRING_LEN(rname);
         size = indent + 5 + nlen + out->opts->margin_len;
         if (out->end - out->cur <= (long)size) {
@@ -1242,20 +1244,23 @@ static int dump_gen_attr(VALUE key, VALUE value, VALUE ov) {
     case T_STRING: break;
     default: kv = rb_String(key); break;
     }
-    ks   = StringValuePtr(kv);
+    // Every arm above leaves kv a String, so no second type check is needed.
+    ks   = RSTRING_PTR(kv);
     klen = (size_t)RSTRING_LEN(kv);
     // Before the space, so a rescued raise leaves the element as it was. The
     // NUL this used to check for on its own is the low end of the same set.
     check_name_chars(ks, klen, true);
-    value = rb_String(value);
-    size  = 4 + klen + RSTRING_LEN(value);
+    if (!RB_TYPE_P(value, T_STRING)) {
+        value = rb_String(value);
+    }
+    size = 4 + klen + RSTRING_LEN(value);
     if (out->end - out->cur <= (long)size) {
         grow(out, size);
     }
     *out->cur++ = ' ';
     fill_value(out, ks, klen);
     APPEND_CHARS_SMALL(out->cur, "=\"", 2);
-    dump_str_value(out, StringValuePtr(value), RSTRING_LEN(value), xml_quote_chars);
+    dump_str_value(out, RSTRING_PTR(value), RSTRING_LEN(value), xml_quote_chars);
     *out->cur++ = '"';
 
     return ST_CONTINUE;
