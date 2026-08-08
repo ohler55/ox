@@ -2,7 +2,25 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
-## [Unreleased]
+## [2.14.29] - 2026-07-08
+
+### Added
+
+- Speed up Ox.dump by not type checking the same String twice. See PR #471.
+- Speed up Ox.dump / Ox::Builder string escaping with a SWAR fast path.
+  See PR #423.
+- Speed up Ox.load text parsing with a SWAR fast path. See PR #421.
+- Speed up Ox.dump integer serialization. See PR #417.
+- Speed up Ox.dump string and indent writing. See PR #416.
+- Port oj's fast_memcpy16 into the Ox.dump short-copy path. See PR #424.
+- Drop a redundant strlen and newline scan from text node parsing.
+  See PR #422.
+- Added ruby_memcheck (Valgrind memcheck) integration as rake test:valgrind.
+  See PR #426.
+- Added Valgrind memcheck CI workflow. See PR #427.
+- Added a 20 minute timeout to the CI and Valgrind jobs. See PR #432.
+- Limited the CI workflows to a read-only token and stopped persisting
+  it. See PR #436.
 
 ### Changed
 
@@ -13,10 +31,79 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
   that on its own. Pass `mode: :object` to load in object mode.
   `mode="generic"` and `mode="limited"` are unaffected. See issue #446.
 
+- Use rb_range_values() to dump a Range instead of struct slots. See PR #429.
+- Removed the dead buf_reset() from the builder's buf.h. See PR #453.
+
 ### Fixed
 
-- Fixed a memory leak when an `<?ox mode?>` processing instruction
+- Fix an element or attribute name going out unchecked. A name can now
+  end itself and start something else with nothing raised. See PR #470.
+- Fix a comment, CDATA, DOCTYPE or instruction value going out
+  unchecked. A NUL in these nodes could lose data. See PR #468.
+- Fix Ox::Builder counting more than it writes, and to_s writing to the
+  buffer. See PR #467.
+- Fix :invalid_replace having no effect unless :effort is moved. See
+  PR #466.
+- Fix a rescued raise leaving part of the value in the buffer. See
+  PR #465.
+- Fix a slash in a Regexp pattern coming back escaped. See PR #463.
+- Fix the arity -1 entry points reading past their arguments. See PR #462.
+- Fix a Symbol name being truncated at an embedded NUL. See PR #461.
+- Fix an encoding set in Ox.default_options never being cleared. See
+  PR #459.
+- Fix Ox::Builder truncating a value at an embedded NUL. See PR #458.
+- Fix a loaded Regexp ignoring the document's encoding. See PR #457.
+- Fix the xsd dateTime conversion discarding the timezone offset. See
+  PR #456.
+- Fix parse_regexp building a pointer before the start of its text. See
+  PR #455.
+- Fix a :nest_ok comment being dropped inside an :off element. See PR #454.
+- Fix Ox.load_file failing on Windows for files ox wrote itself. See
+  PR #452.
+- Fix the builder output buffer being freed with the wrong allocator.
+  See PR #451.
+- Fix a CDATA value being able to close its own section. See PR #450.
+- Fix buffer over-read of an Ox::Builder element name that holds a NUL.
+  See PR #449.
+- Fix a memory leak when an `<?ox mode?>` processing instruction
   appears more than sixteen elements deep in a document.
+- Fix the SAX parser reading uninitialised memory after EOF on a file.
+  See PR #447.
+- Fix the double free of the hash mode mark list. See PR #445.
+- Fix the sample XML files carrying what look like real passwords. See
+  PR #444.
+- Fix the heap overflow and the stale element name in dump_gen_element.
+  See PR #443.
+- Fix SEGV when an object mode container is not what end_element
+  expects. See PR #442.
+- Fix the thin time format losing times before 1970 and after 2038. See
+  PR #438.
+- Fix Ox.load_file sizing the read from whatever the path reports. See
+  PR #441.
+- Fix the name cache pointer held across callbacks and the unchecked
+  allocations. See PR #440.
+- Fix the out-of-bounds read and write in the base64 decode. See PR #439.
+- Fix SEGV when dumping a Time localtime() can not represent. See
+  PR #437.
+- Fix out-of-bounds heap write and read in the circular reference table.
+  See PR #434.
+- Fix hash flooding by seeding the name cache hash per process. See
+  PR #435.
+- Fix memory leak of the object-mode circular reference table. See
+  PR #433.
+- Fix rake test_all silently skipping most of the test suite. See PR #431.
+- Fix memory leaks on parse error paths, the SAX element stack, and the
+  intern cache. See PR #428.
+- Fix heap out-of-bounds read and write after the Ox::Builder depth
+  raise. See PR #430.
+- Free the Ox.dump output buffer when a dump raises. See PR #425.
+- Fix GC crash from stack PInfo wrapper left dangling on a raised parse.
+  See PR #420.
+- Fix xml_str_len returning ~49x the escaped length. See PR #419.
+- Limit sax nesting. See PR #418.
+- Fix integer overflow with oversized dump :indent option. See PR #415.
+- Fix stack buffer overflow on long object-mode class names. See PR #414.
+- Fix buffer overflow in SAX IO read callbacks. See PR #413.
 
 ## [2.14.28] - 2026-06-28
 
