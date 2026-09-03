@@ -28,6 +28,7 @@ typedef struct _buf {
         VALUE       io;
         const char *str;
     } in;
+    size_t            str_remaining_len; /* bytes of in.str still to copy, the length strlen() gave at init */
     struct _saxDrive *dr;
 } *Buf;
 

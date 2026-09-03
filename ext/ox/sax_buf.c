@@ -32,14 +32,17 @@ void ox_sax_buf_init(Buf buf, VALUE io) {
     volatile VALUE io_class = rb_obj_class(io);
     VALUE          rfd;
 
+    buf->str_remaining_len = 0;
     if (rb_cString == io_class) {
-        buf->read_func = read_from_str;
-        buf->in.str    = StringValuePtr(io);
+        buf->read_func         = read_from_str;
+        buf->in.str            = StringValuePtr(io);
+        buf->str_remaining_len = strlen(buf->in.str);
     } else if (ox_stringio_class == io_class && 0 == FIX2INT(rb_funcall2(io, ox_pos_id, 0, 0))) {
         volatile VALUE s = rb_funcall2(io, ox_string_id, 0, 0);
 
-        buf->read_func = read_from_str;
-        buf->in.str    = StringValuePtr(s);
+        buf->read_func         = read_from_str;
+        buf->in.str            = StringValuePtr(s);
+        buf->str_remaining_len = strlen(buf->in.str);
     } else if (rb_cFile == io_class && Qnil != (rfd = rb_funcall(io, ox_fileno_id, 0))) {
         buf->read_func = read_from_fd;
         buf->in.fd     = FIX2INT(rfd);
@@ -201,23 +204,23 @@ static int read_from_fd(Buf buf) {
     return 0;
 }
 
+// What is left of the string is carried in the buffer rather than measured
+// again here. Measuring it per refill walks the rest of the document every
+// 4KB, which makes reading a String quadratic in its length. The caller writes
+// the terminator at read_end, as it does for the other readers.
 static int read_from_str(Buf buf) {
     size_t max = buf->end - buf->tail - 1;
-    char  *s;
-    size_t cnt;
+    size_t cnt = buf->str_remaining_len;
 
-    if ('\0' == *buf->in.str) {
+    if (0 == cnt || max < 2) {
         return -1;
     }
-    cnt = strlen(buf->in.str) + 1;
-    if (max < cnt) {
-        cnt = max;
+    if (max <= cnt) {
+        cnt = max - 1;
     }
     memcpy(buf->tail, buf->in.str, cnt);
-    s   = buf->tail + cnt - 1;
-    *s  = '\0';
-    cnt = s - buf->tail;
     buf->in.str += cnt;
+    buf->str_remaining_len -= cnt;
     buf->read_end = buf->tail + cnt;
 
     return 0;
