@@ -238,11 +238,11 @@ static VALUE ox_parse_ensure(VALUE ctxv) {
         ox_circ_array_free(ctx->pi->circ_array);
         ctx->pi->circ_array = 0;
     }
-    // Same for hash mode's mark list, freed by finish() only if the loop ends.
-    xfree(ctx->pi->marked);
-    ctx->pi->marked    = NULL;
-    ctx->pi->mark_size = 0;
-    ctx->pi->mark_cnt  = 0;
+    // Same for hash mode's mark set, freed by finish() only if the loop ends.
+    if (NULL != ctx->pi->marked) {
+        st_free_table(ctx->pi->marked);
+        ctx->pi->marked = NULL;
+    }
     return Qnil;
 }
 
@@ -269,8 +269,6 @@ ox_parse(char *xml, size_t len, ParseCallbacks pcb, char **endp, Options options
     pi.circ_array = 0;
     pi.options    = options;
     pi.marked     = NULL;
-    pi.mark_size  = 0;
-    pi.mark_cnt   = 0;
 
     ctx.pi          = &pi;
     ctx.endp        = endp;

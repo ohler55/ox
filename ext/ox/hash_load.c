@@ -13,8 +13,6 @@
 #include "ox.h"
 #include "ruby.h"
 
-#define MARK_INC 256
-
 // The approach taken for the hash and has_no_attrs parsing is to push just
 // the key on to the stack and then decide what to do on the way up/out.
 
@@ -27,45 +25,26 @@ static VALUE create_top(PInfo pi) {
     return top;
 }
 
+// Only membership is ever asked of these. As a list they were walked end to
+// end on every close, which is quadratic in the number of repeated elements
+// that carry attributes, since each of those adds a mark and only one is
+// ever taken back.
 static void mark_value(PInfo pi, VALUE val) {
     if (NULL == pi->marked) {
-        pi->marked    = ALLOC_N(VALUE, MARK_INC);
-        pi->mark_size = MARK_INC;
-    } else if (pi->mark_size <= pi->mark_cnt) {
-        pi->mark_size += MARK_INC;
-        REALLOC_N(pi->marked, VALUE, pi->mark_size);
+        pi->marked = st_init_numtable();
     }
-    pi->marked[pi->mark_cnt] = val;
-    pi->mark_cnt++;
+    st_insert(pi->marked, (st_data_t)val, (st_data_t)1);
 }
 
 static bool marked(PInfo pi, VALUE val) {
-    if (NULL != pi->marked) {
-        VALUE *vp = pi->marked + pi->mark_cnt - 1;
-
-        for (; pi->marked <= vp; vp--) {
-            if (val == *vp) {
-                return true;
-            }
-        }
-    }
-    return false;
+    return NULL != pi->marked && 0 != st_lookup(pi->marked, (st_data_t)val, NULL);
 }
 
 static void unmark(PInfo pi, VALUE val) {
     if (NULL != pi->marked) {
-        VALUE *vp = pi->marked + pi->mark_cnt - 1;
-        int    i;
+        st_data_t key = (st_data_t)val;
 
-        for (i = 0; pi->marked <= vp; vp--, i++) {
-            if (val == *vp) {
-                for (; 0 < i; i--, vp++) {
-                    *vp = *(vp + 1);
-                }
-                pi->mark_cnt--;
-                break;
-            }
-        }
+        st_delete(pi->marked, &key, NULL);
     }
 }
 
@@ -239,12 +218,12 @@ static void end_element_no_attrs(PInfo pi, const char *ename) {
 }
 
 static void finish(PInfo pi) {
-    // Called once per yielded entity and once after the loop, so the pointer
-    // and the count have to go with the block.
-    xfree(pi->marked);
-    pi->marked    = NULL;
-    pi->mark_size = 0;
-    pi->mark_cnt  = 0;
+    // Called once per yielded entity and once after the loop, so the table has
+    // to go with the block.
+    if (NULL != pi->marked) {
+        st_free_table(pi->marked);
+        pi->marked = NULL;
+    }
 }
 
 static void set_encoding_from_instruct(PInfo pi, Attr attrs) {
