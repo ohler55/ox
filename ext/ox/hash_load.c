@@ -127,14 +127,17 @@ static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren
 }
 
 static void add_element_no_attrs(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
-    VALUE s = rb_str_new2(ename);
-    if (0 != pi->options->rb_enc) {
-        rb_enc_associate(s, pi->options->rb_enc);
-    }
+    rb_encoding *enc = pi->options->rb_enc;
+
     if (helper_stack_empty(&pi->helpers)) {
         create_top(pi);
     }
-    helper_stack_push(&pi->helpers, rb_intern_str(s), Qnil, NoCode);
+    // Intern the name without a temporary String, preserving rb_str_new2's
+    // binary encoding when the parser has no encoding set.
+    helper_stack_push(&pi->helpers,
+                      rb_intern3(ename, strlen(ename), NULL == enc ? rb_ascii8bit_encoding() : enc),
+                      Qnil,
+                      NoCode);
 }
 
 static int umark_hash_cb(VALUE key, VALUE value, VALUE x) {

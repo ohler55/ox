@@ -24,13 +24,15 @@ $: << File.join(File.dirname(__FILE__), '../lib')
 $: << File.join(File.dirname(__FILE__), '../ext')
 
 require 'test/unit'
+require 'tmpdir'
 require 'ox'
 
 class HashLoadTest < ::Test::Unit::TestCase
   def setup
-    # The memcheck lane runs every file in one process, so do not inherit
-    # whatever options ran before this.
+    # The memcheck lane runs every file in one process. Let the input or XML
+    # declaration choose the encoding instead of inheriting a default.
     @opts = Ox.default_options
+    Ox.default_options = {encoding: nil, symbolize_keys: true}
   end
 
   def teardown
@@ -107,6 +109,60 @@ class HashLoadTest < ::Test::Unit::TestCase
 
   def test_hash_no_attrs_mode
     assert_equal({top: 't'}, Ox.load('<top a="1"><top>t</top></top>', mode: :hash_no_attrs)[:top])
+  end
+
+  def test_hash_no_attrs_name_encodings
+    %w[UTF-8 Shift_JIS ASCII-8BIT].each do |encoding|
+      name = '項目'.encode(encoding == 'ASCII-8BIT' ? 'UTF-8' : encoding).force_encoding(encoding)
+      xml = '<'.b + name.b + '>one</'.b + name.b + '><'.b + name.b + '>two</'.b + name.b + '>'
+      xml.force_encoding(encoding)
+
+      [true, false].each do |symbolize|
+        key = symbolize ? name.to_sym : name
+        result = Ox.load(xml, mode: :hash_no_attrs, symbolize_keys: symbolize)
+        assert_equal({key => %w[one two]}, result)
+        assert_equal(name.encoding, result.keys.first.encoding)
+      end
+    end
+  end
+
+  def test_hash_no_attrs_declared_name_encoding
+    xml = '<?xml version="1.0" encoding="UTF-8"?><項目/>'.b
+    result = Ox.load(xml, mode: :hash_no_attrs, symbolize_keys: false)
+    assert_equal({'項目' => nil}, result)
+    assert_equal(Encoding::UTF_8, result.keys.first.encoding)
+  end
+
+  def test_hash_no_attrs_file_name_defaults_to_binary
+    # Unlike load(String), load_file has no input encoding. Without a default
+    # or XML declaration, the interned name must retain the binary fallback.
+    Dir.mktmpdir('ox-hash-no-attrs') do |dir|
+      path = File.join(dir, 'names.xml')
+      File.binwrite(path, '<root><項目>1</項目></root>')
+
+      [true, false].each do |symbolize|
+        name = '項目'.b
+        root_key = symbolize ? :root : 'root'
+        name_key = symbolize ? name.to_sym : name
+        result = Ox.load_file(path, mode: :hash_no_attrs, symbolize_keys: symbolize)
+        assert_equal({root_key => {name_key => '1'}}, result)
+        assert_equal(Encoding::ASCII_8BIT, result[root_key].keys.first.encoding)
+      end
+    end
+  end
+
+  def test_hash_no_attrs_name_modifier_receives_encoded_string
+    names = []
+    modifier = lambda do |name|
+      names << name
+      name.upcase
+    end
+    result = Ox.load('<root><項目 ignored="yes">one</項目><項目>two</項目></root>',
+                     mode: :hash_no_attrs,
+                     element_key_mod: modifier, symbolize_keys: true)
+    assert_equal({'ROOT' => {'項目' => %w[one two]}}, result)
+    assert_equal(['項目', '項目', 'root'], names)
+    assert_equal([Encoding::UTF_8, Encoding::UTF_8, Encoding::US_ASCII], names.map(&:encoding))
   end
 
   def test_string_keys
