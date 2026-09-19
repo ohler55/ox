@@ -119,16 +119,35 @@ int ox_sax_buf_read(Buf buf) {
     return err;
 }
 
+// rb_rescue hands the handler the exception instance, not its class. Passing
+// that instance to rb_raise(), which expects a class, made Ruby raise a
+// TypeError about the argument type while building the new exception, so the
+// caller saw that TypeError instead of the error its IO raised. Re-raise the
+// original error with the position appended, keeping its class.
+//
+// EOFError still ends the parse: that is how readpartial() signals end of
+// input. TypeError is no longer swallowed here; read() returning nil at EOF is
+// recognized in io_cb() rather than through the TypeError StringValuePtr()
+// raised on it.
+//
+// Raising here is safe: ox_sax_drive_cleanup() runs after the rb_protect() in
+// sax_parse() catches this.
 static VALUE rescue_cb(VALUE rbuf, VALUE err) {
-    VALUE err_class = rb_obj_class(err);
+    Buf   buf = (Buf)rbuf;
+    VALUE msg;
 
-    if (err_class != rb_eTypeError && err_class != rb_eEOFError) {
-        Buf buf = (Buf)rbuf;
-
-        // ox_sax_drive_cleanup(buf->dr); called after exiting protect
-        rb_raise(err, "at line %ld, column %ld\n", (long)buf->line, (long)buf->col);
+    if (rb_obj_is_kind_of(err, rb_eEOFError)) {
+        return Qfalse;
     }
-    return Qfalse;
+    msg = rb_sprintf("%" PRIsVALUE " at line %ld, column %ld",
+                     rb_funcall(err, ox_message_id, 0),
+                     (long)buf->line,
+                     (long)buf->col);
+    // Exception#exception clones the receiver and swaps in the new message, so
+    // the class survives whatever initialize() it happens to define.
+    rb_exc_raise(rb_funcall(err, ox_exception_id, 1, msg));
+
+    return Qfalse;  // not reached
 }
 
 static VALUE partial_io_cb(VALUE rbuf) {
@@ -141,7 +160,10 @@ static VALUE partial_io_cb(VALUE rbuf) {
 
     args[0] = ULONG2NUM(max);
     rstr    = rb_funcall2(buf->in.io, ox_readpartial_id, 1, args);
-    str     = StringValuePtr(rstr);
+    if (NIL_P(rstr)) {  // end of input
+        return Qfalse;
+    }
+    str = StringValuePtr(rstr);
     // Clamp to the space actually requested. A misbehaving IO can return more
     // than max bytes; copying it unclamped overflows the buffer (which starts
     // on the C stack). Use the real byte length, not strlen(), so an embedded
@@ -167,7 +189,13 @@ static VALUE io_cb(VALUE rbuf) {
 
     args[0] = ULONG2NUM(max);
     rstr    = rb_funcall2(buf->in.io, ox_read_id, 1, args);
-    str     = StringValuePtr(rstr);
+    // IO#read(len) returns nil at EOF. That used to reach StringValuePtr(),
+    // whose TypeError rescue_cb() read as end of input; say so directly so
+    // rescue_cb() no longer has to treat every TypeError as EOF.
+    if (NIL_P(rstr)) {
+        return Qfalse;
+    }
+    str = StringValuePtr(rstr);
     // See partial_io_cb: clamp to the requested size to prevent overflow.
     cnt = (size_t)RSTRING_LEN(rstr);
     if (cnt > max) {

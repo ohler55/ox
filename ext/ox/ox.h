@@ -190,6 +190,7 @@ extern ID ox_end_element_id;
 extern ID ox_end_id;
 extern ID ox_end_instruct_id;
 extern ID ox_error_id;
+extern ID ox_exception_id;
 extern ID ox_excl_id;
 extern ID ox_external_encoding_id;
 extern ID ox_fileno_id;

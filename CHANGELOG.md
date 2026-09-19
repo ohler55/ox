@@ -36,6 +36,10 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ### Fixed
 
+- Fix Ox.sax_parse replacing an exception raised by the input IO's read
+  or readpartial method with a TypeError. The original error now reaches
+  the caller with its class and message, and a TypeError raised inside
+  read is no longer swallowed as end of input.
 - Fix an element or attribute name going out unchecked. A name can now
   end itself and start something else with nothing raised. See PR #470.
 - Fix a comment, CDATA, DOCTYPE or instruction value going out
