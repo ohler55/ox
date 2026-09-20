@@ -58,6 +58,7 @@ ID ox_end_element_id;
 ID ox_end_id;
 ID ox_end_instruct_id;
 ID ox_error_id;
+ID ox_exception_id;
 ID ox_excl_id;
 ID ox_external_encoding_id;
 ID ox_fileno_id;
@@ -1565,6 +1566,7 @@ void Init_ox(void) {
     ox_end_id               = rb_intern("@end");
     ox_end_instruct_id      = rb_intern("end_instruct");
     ox_error_id             = rb_intern("error");
+    ox_exception_id         = rb_intern("exception");
     ox_excl_id              = rb_intern("@excl");
     ox_external_encoding_id = rb_intern("external_encoding");
     ox_fileno_id            = rb_intern("fileno");
