@@ -88,10 +88,10 @@ static void add_cdata(PInfo pi, const char *text, size_t len) {
 }
 
 static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
-    VALUE s = rb_str_new2(ename);
-    if (0 != pi->options->rb_enc) {
-        rb_enc_associate(s, pi->options->rb_enc);
-    }
+    // Keep the name's encoding without allocating a temporary String. Intern
+    // after the attributes as before, including any key modifier callbacks.
+    rb_encoding *enc = NULL == pi->options->rb_enc ? rb_ascii8bit_encoding() : pi->options->rb_enc;
+
     if (helper_stack_empty(&pi->helpers)) {
         create_top(pi);
     }
@@ -120,9 +120,9 @@ static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren
         a = rb_ary_new();
         rb_ary_push(a, h);
         mark_value(pi, a);
-        helper_stack_push(&pi->helpers, rb_intern_str(s), a, ArrayCode);
+        helper_stack_push(&pi->helpers, rb_intern3(ename, strlen(ename), enc), a, ArrayCode);
     } else {
-        helper_stack_push(&pi->helpers, rb_intern_str(s), Qnil, NoCode);
+        helper_stack_push(&pi->helpers, rb_intern3(ename, strlen(ename), enc), Qnil, NoCode);
     }
 }
 

@@ -169,4 +169,67 @@ class HashLoadTest < ::Test::Unit::TestCase
     assert_equal({'top' => [{'a' => '1'}]},
                  Ox.load('<top a="1"/>', mode: :hash, symbolize_keys: false))
   end
+
+  def test_hash_element_name_encodings
+    %w[UTF-8 Shift_JIS ASCII-8BIT].each do |encoding|
+      name = '項目'.encode(encoding == 'ASCII-8BIT' ? 'UTF-8' : encoding).force_encoding(encoding)
+      [true, false].each do |with_attrs|
+        attrs = with_attrs ? ' id="1"' : ''
+        xml = '<'.b + name.b + attrs.b + '>one</'.b + name.b + '>'
+        xml = (xml * 2).force_encoding(encoding)
+        [true, false].each do |symbolize|
+          key = symbolize ? name.to_sym : name
+          attr_key = symbolize ? :id : 'id'
+          value = with_attrs ? [{attr_key => '1'}, 'one'] : 'one'
+          result = Ox.load(xml, mode: :hash, symbolize_keys: symbolize)
+          assert_equal({key => [value, value]}, result)
+          assert_equal(name.encoding, result.keys.first.encoding)
+        end
+      end
+    end
+  end
+
+  def test_hash_file_element_name_defaults_to_binary
+    Dir.mktmpdir('ox-hash') do |dir|
+      path = File.join(dir, 'names.xml')
+      [true, false].each do |with_attrs|
+        attrs = with_attrs ? ' id="1"' : ''
+        File.binwrite(path, "<root><項目#{attrs}>one</項目></root>")
+        [true, false].each do |symbolize|
+          root_key = symbolize ? :root : 'root'
+          name_key = symbolize ? '項目'.b.to_sym : '項目'.b
+          attr_key = symbolize ? :id : 'id'
+          value = with_attrs ? [{attr_key => '1'}, 'one'] : 'one'
+          result = Ox.load_file(path, mode: :hash, symbolize_keys: symbolize)
+          assert_equal({root_key => {name_key => value}}, result)
+          assert_equal(Encoding::ASCII_8BIT, result[root_key].keys.first.encoding)
+        end
+      end
+    end
+  end
+
+  def test_hash_declared_element_name_encoding
+    xml = '<?xml version="1.0" encoding="UTF-8"?><項目 id="1"/>'.b
+    result = Ox.load(xml, mode: :hash, symbolize_keys: false)
+    assert_equal({'項目' => [{'id' => '1'}]}, result)
+    assert_equal(Encoding::UTF_8, result.keys.first.encoding)
+  end
+
+  def test_hash_key_modifiers_receive_encoded_names
+    names = []
+    attr_modifier = lambda do |name|
+      names << [:attribute, name.dup]
+      GC.start
+      name.replace('ID')
+    end
+    element_modifier = lambda do |name|
+      names << [:element, name]
+      name.upcase
+    end
+    result = Ox.load('<項目 番号="1">one</項目>', mode: :hash,
+                     attr_key_mod: attr_modifier, element_key_mod: element_modifier)
+    assert_equal({'項目' => [{'ID' => '1'}, 'one']}, result)
+    assert_equal([[:attribute, '番号'], [:element, '項目']], names)
+    assert_equal([Encoding::UTF_8, Encoding::UTF_8], names.map { |_, name| name.encoding })
+  end
 end
