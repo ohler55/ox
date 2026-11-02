@@ -866,6 +866,21 @@ class Func < Test::Unit::TestCase
     end
   end
 
+  def test_exception_raised
+    Ox.default_options = $ox_object_options
+    begin
+      raise StandardError.new('Some Error')
+    rescue StandardError => e
+      assert(!Ox.dump(e).include?('bt_locations'))
+      dump_and_load(e, false)
+    end
+    begin
+      raise PrefixedBacktraceError.new('Some Error')
+    rescue StandardError => e
+      dump_and_load(e, false)
+    end
+  end
+
   def test_exception_bag
     Ox.default_options = $ox_object_options
     if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
@@ -891,6 +906,18 @@ class Func < Test::Unit::TestCase
     if 'ruby' == $ruby || 'ree' == $ruby
       s = Struct.new('Box', :x, :y, :w, :h)
       dump_and_load(s.new(2, 4, 10, 20), false)
+    else
+      assert(true)
+    end
+  end
+
+  def test_range_subclass
+    Ox.default_options = $ox_object_options
+    if 'ruby' == $ruby
+      [false, true].each do |exclude_end|
+        assert_equal(RangeSub, dump_and_load(RangeSub.new(1, 7, exclude_end), false).class)
+      end
+      assert_equal(RangeFromZero, dump_and_load(RangeFromZero.new(7), false).class)
     else
       assert(true)
     end
@@ -2114,4 +2141,19 @@ class Bag
     true
   end
   alias == eql?
+end
+
+class RangeSub < Range
+end
+
+class RangeFromZero < Range
+  def initialize(last)
+    super(0, last)
+  end
+end
+
+class PrefixedBacktraceError < StandardError
+  def backtrace
+    super&.map { |line| "X:#{line}" }
+  end
 end

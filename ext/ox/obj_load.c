@@ -652,6 +652,9 @@ static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren
         if (0 != pi->circ_array) {
             circ_array_set(pi->circ_array, h->obj, get_id_from_attrs(pi, attrs));
         }
+        if (Qtrue == rb_obj_is_kind_of(h->obj, rb_cRange)) {
+            h->obj = rb_ary_new_from_args(4, Qnil, Qnil, Qfalse, h->obj);
+        }
         break;
     case ClassCode:
         if (Qundef == (h->obj = get_class_from_attrs(attrs, pi, ox_bag_clas))) {
@@ -707,6 +710,18 @@ static void end_element(PInfo pi, const char *ename) {
             const VALUE *ap = RARRAY_PTR(h->obj);
 
             h->obj = rb_range_new(*ap, *(ap + 1), Qtrue == *(ap + 2));
+        } else if (StructCode == h->type && T_ARRAY == rb_type(h->obj)) {
+            VALUE args = h->obj;
+            VALUE init = rb_funcall(rb_cRange, rb_intern("instance_method"), 1, ID2SYM(rb_intern("initialize")));
+
+            h->obj = rb_ary_entry(args, 3);
+            rb_funcall(init,
+                       rb_intern("bind_call"),
+                       4,
+                       h->obj,
+                       rb_ary_entry(args, 0),
+                       rb_ary_entry(args, 1),
+                       rb_ary_entry(args, 2));
         }
         pi->obj = h->obj;
         if (0 != ph) {
@@ -735,7 +750,17 @@ static void end_element(PInfo pi, const char *ename) {
                     set_error(&pi->err, "Invalid element for object mode", pi->str, pi->s);
                     return;
                 }
-                rb_struct_aset(ph->obj, h->var, h->obj);
+                if (T_ARRAY == rb_type(ph->obj)) {
+                    long i = NUM2LONG((VALUE)h->var);
+
+                    if (2 < i) {
+                        set_error(&pi->err, "Invalid range attribute", pi->str, pi->s);
+                        return;
+                    }
+                    rb_ary_store(ph->obj, i, h->obj);
+                } else {
+                    rb_struct_aset(ph->obj, h->var, h->obj);
+                }
                 break;
             case HashCode:
                 // put back h
