@@ -24,24 +24,34 @@
 #define CACHE_UNLOCK(c) rb_mutex_unlock((c)->mutex)
 #endif
 
-// almost the Murmur hash algorithm
-#define M 0x5bd1e995
+#define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
+#define SIPROUND           \
+    do {                   \
+        v0 += v1;          \
+        v1 = ROTL(v1, 13); \
+        v1 ^= v0;          \
+        v0 = ROTL(v0, 32); \
+        v2 += v3;          \
+        v3 = ROTL(v3, 16); \
+        v3 ^= v2;          \
+        v0 += v3;          \
+        v3 = ROTL(v3, 21); \
+        v3 ^= v0;          \
+        v2 += v1;          \
+        v1 = ROTL(v1, 17); \
+        v1 ^= v2;          \
+        v2 = ROTL(v2, 32); \
+    } while (0)
 
-// Mixed into the initial state of hash_calc(). Element and attribute names come
-// straight from the document, so without a per process seed the bucket every
-// name lands in can be precomputed offline. Written once by ox_hash_seed_init()
-// during Init_ox and only read afterwards, so the caches stay Ractor safe.
-static uint64_t hash_seed = 0;
+static uint64_t hash_key[2];
 
 void ox_hash_seed_init(void) {
-#ifdef HAVE_RB_HASH_START
-    // Folds in the random seed Ruby uses to defend Hash against the same attack.
-    hash_seed = (uint64_t)rb_hash_start(0);
-#else
-    // String#hash is per process randomized too. It can be negative, so take it
-    // as signed and reinterpret rather than letting NUM2ULL reject it.
-    hash_seed = (uint64_t)(int64_t)NUM2LL(rb_funcall(rb_str_new_literal("ox"), rb_intern("hash"), 0));
-#endif
+    VALUE seed = rb_funcall(rb_cRandom, rb_intern("new_seed"), 0);
+    VALUE mask = ULL2NUM(UINT64_MAX);
+
+    hash_key[0] = NUM2ULL(rb_funcall(seed, rb_intern("&"), 1, mask)) ^ (uint64_t)rb_memhash("ox0", 3);
+    hash_key[1] = NUM2ULL(rb_funcall(rb_funcall(seed, rb_intern(">>"), 1, INT2FIX(64)), rb_intern("&"), 1, mask)) ^
+                  (uint64_t)rb_memhash("ox1", 3);
 }
 
 typedef struct _slot {
@@ -83,37 +93,36 @@ const rb_data_type_t ox_cache_type = {
 };
 
 static uint64_t hash_calc(const uint8_t *key, size_t len) {
-    const uint8_t *end     = key + len;
-    const uint8_t *endless = key + (len & 0xFFFFFFFC);
-    uint64_t       h       = (uint64_t)len ^ hash_seed;
-    uint64_t       k;
+    const uint8_t *end = key + (len & ~(size_t)7);
+    uint64_t       v0  = 0x736f6d6570736575ULL ^ hash_key[0];
+    uint64_t       v1  = 0x646f72616e646f6dULL ^ hash_key[1];
+    uint64_t       v2  = 0x6c7967656e657261ULL ^ hash_key[0];
+    uint64_t       v3  = 0x7465646279746573ULL ^ hash_key[1];
+    uint64_t       b   = (uint64_t)len << 56;
+    uint64_t       m;
+    size_t         i;
 
-    while (key < endless) {
-        k = (uint64_t)*key++;
-        k |= (uint64_t)*key++ << 8;
-        k |= (uint64_t)*key++ << 16;
-        k |= (uint64_t)*key++ << 24;
-
-        k *= M;
-        k ^= k >> 24;
-        h *= M;
-        h ^= k * M;
+    for (; key < end; key += 8) {
+        m = 0;
+        for (i = 0; i < 8; i++) {
+            m |= (uint64_t)key[i] << (8 * i);
+        }
+        v3 ^= m;
+        SIPROUND;
+        v0 ^= m;
     }
-    if (1 < end - key) {
-        uint16_t k16 = (uint16_t)*key++;
-
-        k16 |= (uint16_t)*key++ << 8;
-        h ^= k16 << 8;
+    for (i = 0; i < (len & 7); i++) {
+        b |= (uint64_t)key[i] << (8 * i);
     }
-    if (key < end) {
-        h ^= *key;
-    }
-    h *= M;
-    h ^= h >> 13;
-    h *= M;
-    h ^= h >> 15;
+    v3 ^= b;
+    SIPROUND;
+    v0 ^= b;
+    v2 ^= 0xff;
+    SIPROUND;
+    SIPROUND;
+    SIPROUND;
 
-    return h;
+    return v0 ^ v1 ^ v2 ^ v3;
 }
 
 static void rehash(Cache c) {
