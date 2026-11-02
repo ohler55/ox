@@ -900,6 +900,14 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
                 VALUE v = RSTRUCT_GET(obj, (int)(i));
                 dump_obj(rb_intern(ulong2str(i, num_buf + sizeof(num_buf) - 1)), v, d2, out);
             }
+            if (2 == cnt && Qtrue == rb_obj_is_kind_of(obj, rb_cRange)) {
+                VALUE beg;
+                VALUE end;
+                int   excl;
+
+                rb_range_values(obj, &beg, &end, &excl);
+                dump_obj(rb_intern(ulong2str(i, num_buf + sizeof(num_buf) - 1)), excl ? Qtrue : Qfalse, d2, out);
+            }
             out->w_end(out, &e);
         }
 #else
@@ -1032,6 +1040,12 @@ static int dump_var(ID key, VALUE value, VALUE ov) {
          * time.
          */
         value = rb_funcall(out->obj, ox_message_id, 0);
+    } else if (T_DATA == rb_type(value) && key == rb_intern("bt")) {
+        VALUE m = rb_funcall(rb_eException, rb_intern("instance_method"), 1, ID2SYM(rb_intern("backtrace")));
+
+        value = rb_funcall(m, rb_intern("bind_call"), 1, out->obj);
+    } else if (key == rb_intern("bt_locations")) {
+        return ST_CONTINUE;
     }
     dump_obj(key, value, out->depth, out);
 
