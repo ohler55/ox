@@ -105,7 +105,15 @@ inline static VALUE structname2obj(const char *name) {
             s = name;
             break;
         } else if (':' == *s) {
-            s += 2;
+            // Step over the "::" separator, but only over a second ':' that is
+            // actually there. A name ending in a single ':' (the attacker
+            // controlled `c` attribute in object mode) otherwise skipped past
+            // the terminating '\0' and rb_intern() read on into the rest of the
+            // document. classname2class() already guards this the same way.
+            s++;
+            if (':' == *s) {
+                s++;
+            }
             break;
         }
     }
