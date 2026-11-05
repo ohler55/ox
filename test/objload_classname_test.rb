@@ -38,3 +38,26 @@ class ObjLoadClassnameTest < ::Test::Unit::TestCase
     end
   end
 end
+
+# Regression test: object-mode struct name over-read.
+#
+# In mode: :object the `c` attribute of a struct element (<u>) is the struct
+# class name. structname2obj() stepped over a "::" namespace separator with an
+# unconditional `s += 2`, so a name ending in a single ':' skipped past the
+# terminating '\0' and rb_intern() read on into the bytes that followed the
+# attribute in the document. The constant lookup name must stay inside the
+# attribute value.
+class ObjLoadStructNameTest < ::Test::Unit::TestCase
+  def test_struct_name_trailing_colon_does_not_read_past_token
+    xml = %(<u c="Foo:">PAST_THE_TOKEN</u>)
+    e = assert_raise(NameError) { Ox.load(xml, mode: :object) }
+    assert(!e.message.include?('PAST_THE_TOKEN'),
+           "struct class name read past the attribute value: #{e.message.inspect}")
+  end
+
+  def test_namespaced_struct_still_loads
+    Struct.new('OxStructNameRegress', :x) unless defined?(Struct::OxStructNameRegress)
+    s = Struct::OxStructNameRegress.new(7)
+    assert_equal(s, Ox.load(Ox.dump(s, mode: :object), mode: :object))
+  end
+end
