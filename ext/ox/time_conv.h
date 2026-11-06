@@ -9,6 +9,11 @@
 #include <stdint.h>
 #include <time.h>
 
+// The largest time_t, which C has no name for. Built from two halves so that no
+// step overflows on its way to the sign bit.
+#define OX_TIME_T_MAX \
+    ((time_t)((((time_t)1 << (sizeof(time_t) * 8 - 2)) - 1) + ((time_t)1 << (sizeof(time_t) * 8 - 2))))
+
 // Howard Hinnant's civil_from_days and days_from_civil, which are inverses.
 // Neither consults a timezone database, and that is the point: mktime() reads
 // the wall clock as local time no matter what offset the document carries, and
