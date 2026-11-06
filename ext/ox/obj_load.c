@@ -438,9 +438,11 @@ static void add_text(PInfo pi, char *text, size_t len, int closed) {
         }
         break;
     case FixnumCode: {
-        long n = 0;
-        char c;
-        int  neg = 0;
+        const char *num = text;
+        long        n   = 0;
+        char        c;
+        int         neg = 0;
+        bool        big = false;
 
         if ('-' == *text) {
             neg = 1;
@@ -449,11 +451,22 @@ static void add_text(PInfo pi, char *text, size_t len, int closed) {
         for (; '\0' != *text; text++) {
             c = *text;
             if ('0' <= c && c <= '9') {
-                n = n * 10 + (c - '0');
+                // Past LONG_MAX n would wrap to whatever value the document picked,
+                // so stop there and let Ruby build the Integer once the rest is
+                // checked.
+                if (big || (LONG_MAX - (c - '0')) / 10 < n) {
+                    big = true;
+                } else {
+                    n = n * 10 + (c - '0');
+                }
             } else {
                 set_error(&pi->err, "bad number format", pi->str, pi->s);
                 return;
             }
+        }
+        if (big) {
+            h->obj = rb_cstr_to_inum(num, 10, 0);
+            break;
         }
         if (neg) {
             n = -n;
@@ -859,6 +872,11 @@ static VALUE parse_double_time(const char *text, VALUE clas) {
     for (; '.' != *text; text++) {
         c = *text;
         if (c < '0' || '9' < c) {
+            return Qnil;
+        }
+        // Past the largest time_t the seconds would wrap to whatever the document
+        // picked, so leave a count that long to the parsers below.
+        if ((OX_TIME_T_MAX - (c - '0')) / 10 < v) {
             return Qnil;
         }
         v = 10 * v + (time_t)(c - '0');
