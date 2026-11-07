@@ -73,6 +73,31 @@ const rb_data_type_t ox_sax_value_type = {
     0,
 };
 
+// Past STACK_INC elements the name stack moves to the heap, where the
+// conservative stack scan does not see the element names on it. Mark them
+// while parsing or a GC can free a name before end_element() is called with it.
+static void mark_stack_cb(void *ptr) {
+    if (NULL != ptr) {
+        NStack stack = &((SaxDrive)ptr)->stack;
+        Nv     nv;
+
+        for (nv = stack->head; nv < stack->tail; nv++) {
+            rb_gc_mark(nv->val);
+        }
+    }
+}
+
+static const rb_data_type_t sax_wrap_type = {
+    "Object",
+    {
+        mark_stack_cb,
+        NULL,
+        NULL,
+    },
+    0,
+    0,
+};
+
 static VALUE protect_parse(VALUE drp) {
     parse((SaxDrive)drp);
 
@@ -96,10 +121,14 @@ void ox_sax_parse(VALUE handler, VALUE io, SaxOptions options) {
     rb_ext_ractor_safe(true);
 #endif
     struct _saxDrive dr;
+    volatile VALUE   wrap;
     int              line = 0;
 
     sax_drive_init(&dr, handler, io, options);
+    wrap = TypedData_Wrap_Struct(rb_cObject, &sax_wrap_type, &dr);
     rb_protect(protect_parse, (VALUE)&dr, &line);
+    // dr is about to go away with this frame, detach it from the wrapper.
+    DATA_PTR(wrap) = NULL;
     ox_sax_drive_cleanup(&dr);
     if (0 != line) {
         rb_jump_tag(line);
