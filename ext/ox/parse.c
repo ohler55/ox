@@ -128,11 +128,23 @@ static void fix_newlines(char *buf) {
 static void mark_pi_cb(void *ptr) {
     if (NULL != ptr) {
         HelperStack stack = &((PInfo)ptr)->helpers;
+        CircArray   ca    = ((PInfo)ptr)->circ_array;
         Helper      h;
 
         for (h = stack->head; h < stack->tail; h++) {
             if (NoCode != h->type) {
                 rb_gc_mark(h->obj);
+            }
+        }
+        // An object registered for a later <p i="..."/> can drop out of the
+        // tree before that reference is read, for example when the document
+        // sets the same instance variable twice. The table is on the heap, so
+        // nothing else keeps it alive.
+        if (NULL != ca) {
+            unsigned long i;
+
+            for (i = 0; i < ca->cnt; i++) {
+                rb_gc_mark(ca->objs[i]);
             }
         }
     }

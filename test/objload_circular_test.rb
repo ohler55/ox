@@ -102,6 +102,30 @@ class ObjLoadCircularTest < ::Test::Unit::TestCase
     assert_same(a[0], a[1])
   end
 
+  # The table holds every object with an id until the parse ends, but GC did
+  # not see it. Setting @a twice drops the first String from the tree, and a
+  # full GC before the <p> collected it, so the reference came back as
+  # whatever reused the slot. BigDecimal is the one object mode type that calls
+  # back into Ruby, which gives a point in the middle of the parse to run GC.
+  def test_reference_survives_gc_after_the_object_is_replaced
+    victim = 'v' * 64
+    xml    = %(<o c="#{Bag.name}" i="1"><s a="@a" i="2">#{victim}</s><s a="@a">replaced</s>) +
+             %(<B a="@b">1</B><p a="@c" i="2"/></o>)
+
+    Object.define_singleton_method(:BigDecimal) do |s|
+      GC.start
+      Array.new(1000) { |i| "filler#{i}" }
+      s.to_i
+    end
+    begin
+      bag = Ox.parse_obj(xml)
+    ensure
+      Object.singleton_class.send(:remove_method, :BigDecimal)
+    end
+    assert_equal('replaced', bag.a)
+    assert_equal(victim, bag.instance_variable_get(:@c))
+  end
+
   def test_dump_load_round_trip_preserves_sharing
     str = 'shared'
     bag = Bag.new(1, 2)
