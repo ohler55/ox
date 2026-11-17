@@ -733,6 +733,7 @@ static VALUE to_obj(VALUE self, VALUE ruby_xml) {
     char            *xml, *x, *str;
     size_t           len;
     VALUE            obj;
+    VALUE            xml_buf = 0;
     VALUE            was_disabled;
     struct _options  options = ox_default_options;
     struct _err      err;
@@ -747,8 +748,10 @@ static VALUE to_obj(VALUE self, VALUE ruby_xml) {
     // Drop the BOM from len as well, otherwise the copy below reads past the
     // end of the Ruby string and xml is left without a terminating '\0'.
     len -= (size_t)(x - str);
+    // The parse can raise, which skips ALLOCV_END(). The GC then frees the
+    // copy, where an ALLOC_N() copy was leaked.
     if (SMALL_XML < len) {
-        xml = ALLOC_N(char, len);
+        xml = ALLOCV_N(char, xml_buf, len);
     } else {
         xml = ALLOCA_N(char, len);
     }
@@ -759,9 +762,7 @@ static VALUE to_obj(VALUE self, VALUE ruby_xml) {
     args.err     = &err;
     was_disabled = rb_gc_disable();
     obj          = rb_ensure(obj_parse_body, (VALUE)&args, obj_parse_reenable, was_disabled);
-    if (SMALL_XML < len) {
-        xfree(xml);
-    }
+    ALLOCV_END(xml_buf);
     RB_GC_GUARD(obj);
     if (err_has(&err)) {
         ox_err_raise(&err);
@@ -781,6 +782,7 @@ static VALUE to_gen(VALUE self, VALUE ruby_xml) {
     char           *xml, *x, *str;
     size_t          len;
     VALUE           obj;
+    VALUE           xml_buf = 0;
     struct _options options = ox_default_options;
     struct _err     err;
 
@@ -794,15 +796,13 @@ static VALUE to_gen(VALUE self, VALUE ruby_xml) {
     // end of the Ruby string and xml is left without a terminating '\0'.
     len -= (size_t)(x - str);
     if (SMALL_XML < len) {
-        xml = ALLOC_N(char, len);
+        xml = ALLOCV_N(char, xml_buf, len);
     } else {
         xml = ALLOCA_N(char, len);
     }
     memcpy(xml, x, len);
     obj = ox_parse(xml, len - 1, ox_gen_callbacks, 0, &options, &err);
-    if (SMALL_XML < len) {
-        xfree(xml);
-    }
+    ALLOCV_END(xml_buf);
     if (err_has(&err)) {
         ox_err_raise(&err);
     }
@@ -1019,6 +1019,7 @@ static VALUE load_str(int argc, VALUE *argv, VALUE self) {
     char       *xml;
     size_t      len;
     VALUE       obj;
+    VALUE       xml_buf = 0;
     VALUE       encoding;
     struct _err err;
 
@@ -1030,7 +1031,7 @@ static VALUE load_str(int argc, VALUE *argv, VALUE self) {
     /* the xml string gets modified so make a copy of it */
     len = RSTRING_LEN(*argv) + 1;
     if (SMALL_XML < len) {
-        xml = ALLOC_N(char, len);
+        xml = ALLOCV_N(char, xml_buf, len);
     } else {
         xml = ALLOCA_N(char, len);
     }
@@ -1038,9 +1039,7 @@ static VALUE load_str(int argc, VALUE *argv, VALUE self) {
     memcpy(xml, StringValuePtr(*argv), len);
     xml[len - 1] = '\0';
     obj          = load(xml, len - 1, argc - 1, argv + 1, self, encoding, &err);
-    if (SMALL_XML < len) {
-        xfree(xml);
-    }
+    ALLOCV_END(xml_buf);
     if (err_has(&err)) {
         ox_err_raise(&err);
     }
@@ -1088,6 +1087,7 @@ static VALUE load_file(int argc, VALUE *argv, VALUE self) {
     off_t       len;
     struct stat st;
     VALUE       obj;
+    VALUE       xml_buf = 0;
     struct _err err;
 
     if (1 > argc) {
@@ -1109,22 +1109,27 @@ static VALUE load_file(int argc, VALUE *argv, VALUE self) {
         rb_raise(rb_eIOError, "%s is not a regular file.\n", path);
     }
     len = st.st_size;
+    // ALLOCV_N() counts in a long, which is 32 bits on Windows.
+    if (LONG_MAX <= len) {
+        fclose(f);
+        rb_raise(rb_eIOError, "%s is too large.\n", path);
+    }
     if (SMALL_XML < len) {
-        xml = ALLOC_N(char, (size_t)len + 1);
+        xml = ALLOCV_N(char, xml_buf, (long)len + 1);
     } else {
         xml = ALLOCA_N(char, (size_t)len + 1);
     }
+    // The file is closed before the parse since load() can raise.
     if ((size_t)len != fread(xml, 1, len, f)) {
+        fclose(f);
         ox_err_set(&err, rb_eLoadError, "Failed to read %ld bytes from %s.\n", (long)len, path);
         obj = Qnil;
     } else {
+        fclose(f);
         xml[len] = '\0';
         obj      = load(xml, len, argc - 1, argv + 1, self, Qnil, &err);
     }
-    fclose(f);
-    if (SMALL_XML < len) {
-        xfree(xml);
-    }
+    ALLOCV_END(xml_buf);
     if (err_has(&err)) {
         ox_err_raise(&err);
     }
