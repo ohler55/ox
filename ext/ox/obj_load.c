@@ -553,6 +553,19 @@ static void add_text(PInfo pi, char *text, size_t len, int closed) {
     }
 }
 
+// snprintf() returns the length it wanted to write, not what fit, so adding it
+// to s unchecked moves s past end once the element name and attributes are
+// longer than the buffer.
+static char *trace_append(char *s, const char *end, int cnt) {
+    if (cnt < 0) {
+        return s;
+    }
+    if (end - s <= cnt) {
+        return (char *)end - 1;
+    }
+    return s + cnt;
+}
+
 static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren) {
     Attr          a;
     Helper        h;
@@ -566,9 +579,9 @@ static void add_element(PInfo pi, const char *ename, Attr attrs, int hasChildren
         char *s   = buf;
         char *end = buf + sizeof(buf) - 2;
 
-        s += snprintf(s, end - s, " <%s%s", (hasChildren) ? "" : "/", ename);
+        s = trace_append(s, end, snprintf(s, end - s, " <%s%s", (hasChildren) ? "" : "/", ename));
         for (a = attrs; 0 != a->name; a++) {
-            s += snprintf(s, end - s, " %s=%s", a->name, a->value);
+            s = trace_append(s, end, snprintf(s, end - s, " %s=%s", a->name, a->value));
         }
         *s++ = '>';
         *s++ = '\0';
