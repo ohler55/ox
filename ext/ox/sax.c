@@ -178,7 +178,12 @@ static void attr_value(SaxDrive dr, VALUE name, char *value, long pos, long line
     dr->set_col(dr->handler, col);
     args[0] = name;
     args[1] = dr->value_obj;
+    // The Value reads dr, which lives in ox_sax_parse()'s frame and whose
+    // buf.str is only this value while the callback runs, so it is attached
+    // for the callback alone.
+    DATA_PTR(dr->value_obj) = dr;
     rb_funcall2(dr->handler, ox_attr_value_id, 2, args);
+    DATA_PTR(dr->value_obj) = NULL;
 }
 
 static void attrs_done_noop(VALUE handler) {
@@ -296,7 +301,7 @@ static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions opti
     dr->buf.dr = dr;
     stack_init(&dr->stack);
     dr->handler   = handler;
-    dr->value_obj = TypedData_Wrap_Struct(ox_sax_value_class, &ox_sax_value_type, dr);
+    dr->value_obj = TypedData_Wrap_Struct(ox_sax_value_class, &ox_sax_value_type, NULL);
     rb_gc_register_address(&dr->value_obj);
     dr->options = *options;
     dr->err     = 0;
@@ -355,6 +360,9 @@ static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions opti
 }
 
 void ox_sax_drive_cleanup(SaxDrive dr) {
+    // A handler can keep the Value past the parse, or a raise can skip the
+    // detach after the callback, so make sure it no longer points at dr.
+    DATA_PTR(dr->value_obj) = NULL;
     rb_gc_unregister_address(&dr->value_obj);
     buf_cleanup(&dr->buf);
     stack_cleanup(&dr->stack);
@@ -1134,7 +1142,10 @@ END_OF_BUF:
             dr->set_line(dr->handler, line);
             dr->set_col(dr->handler, col);
             *args = dr->value_obj;
+            // Attached for the callback alone, see attr_value().
+            DATA_PTR(dr->value_obj) = dr;
             rb_funcall2(dr->handler, ox_value_id, 1, args);
+            DATA_PTR(dr->value_obj) = NULL;
         } else if (dr->has_text) {
             if (dr->options.convert_special) {
                 ox_sax_collapse_special(dr, dr->buf.str, pos, line, col);
