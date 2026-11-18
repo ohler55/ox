@@ -138,6 +138,19 @@ static VALUE parse_xsd_time(const char *text) {
         nsec);
 }
 
+// A Value is only attached to the drive while the value() or attr_value()
+// callback it was passed to runs. Outside of that the drive is gone or reading
+// something else.
+static SaxDrive value_drive(VALUE self) {
+    SaxDrive dr;
+
+    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
+    if (NULL == dr) {
+        rb_raise(ox_arg_error_class, "Ox::Sax::Value can only be used in the callback it was passed to.\n");
+    }
+    return dr;
+}
+
 /* call-seq: as_s()
  *
  * *return* value as an String.
@@ -146,7 +159,7 @@ static VALUE sax_value_as_s(VALUE self) {
     SaxDrive dr;
     VALUE    rs;
 
-    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
+    dr = value_drive(self);
 
     if ('\0' == *dr->buf.str) {
         return Qnil;
@@ -173,7 +186,7 @@ static VALUE sax_value_as_s(VALUE self) {
 static VALUE sax_value_as_sym(VALUE self) {
     SaxDrive dr;
 
-    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
+    dr = value_drive(self);
 
     if ('\0' == *dr->buf.str) {
         return Qnil;
@@ -188,7 +201,7 @@ static VALUE sax_value_as_sym(VALUE self) {
 static VALUE sax_value_as_f(VALUE self) {
     SaxDrive dr;
 
-    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
+    dr = value_drive(self);
 
     if ('\0' == *dr->buf.str) {
         return Qnil;
@@ -207,8 +220,8 @@ static VALUE sax_value_as_i(VALUE self) {
     int         neg = 0;
     bool        big = false;
 
-    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
-    s = dr->buf.str;
+    dr = value_drive(self);
+    s  = dr->buf.str;
 
     if ('\0' == *s) {
         return Qnil;
@@ -250,7 +263,7 @@ static VALUE sax_value_as_time(VALUE self) {
     const char *str;
     VALUE       t;
 
-    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
+    dr  = value_drive(self);
     str = dr->buf.str;
 
     if ('\0' == *str) {
@@ -273,7 +286,7 @@ static VALUE sax_value_as_time(VALUE self) {
 static VALUE sax_value_as_bool(VALUE self) {
     SaxDrive dr;
 
-    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
+    dr = value_drive(self);
     return (0 == strcasecmp("true", dr->buf.str)) ? Qtrue : Qfalse;
 }
 
@@ -284,7 +297,7 @@ static VALUE sax_value_as_bool(VALUE self) {
 static VALUE sax_value_empty(VALUE self) {
     SaxDrive dr;
 
-    TypedData_Get_Struct(self, struct _saxDrive, &ox_sax_value_type, dr);
+    dr = value_drive(self);
     return ('\0' == *dr->buf.str) ? Qtrue : Qfalse;
 }
 
