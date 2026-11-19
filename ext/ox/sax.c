@@ -1474,8 +1474,12 @@ int ox_sax_collapse_special(SaxDrive dr, char *str, long pos, long line, long co
                     x   = '\0';
                     end = read_10_uint64(s, &u);
                 }
-                if (0 == end) {
-                    ox_sax_drive_error(dr, NO_TERM "special character does not end with a semicolon");
+                if (0 == end || ox_ucs_has_nul(u)) {
+                    if (0 == end) {
+                        ox_sax_drive_error(dr, NO_TERM "special character does not end with a semicolon");
+                    } else {
+                        ox_sax_drive_error(dr, INVALID_FORMAT "character reference resolves to a NUL");
+                    }
                     *b++ = '&';
                     *b++ = '#';
                     if ('\0' != x) {

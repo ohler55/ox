@@ -1235,7 +1235,7 @@ static char *read_coded_chars(PInfo pi, char *text) {
         } else {
             b = read_10_uint64(b, &u);
         }
-        if (0 == b) {
+        if (0 == b || ox_ucs_has_nul(u)) {
             *text++ = '&';
         } else {
             if (u <= 0x000000000000007FULL) {
@@ -1298,7 +1298,7 @@ static int collapse_special(PInfo pi, char *str) {
                     x   = '\0';
                     end = read_10_uint64(s, &u);
                 }
-                if (0 == end) {
+                if (0 == end || ox_ucs_has_nul(u)) {
                     if (TolerantEffort == pi->options->effort) {
                         *b++ = '&';
                         *b++ = '#';
@@ -1306,6 +1306,9 @@ static int collapse_special(PInfo pi, char *str) {
                             *b++ = x;
                         }
                         continue;
+                    }
+                    if (0 != end) {
+                        set_error(&pi->err, "invalid format, character reference resolves to a NUL", pi->str, pi->s);
                     }
                     return EDOM;
                 }
