@@ -156,23 +156,29 @@ static SaxDrive value_drive(VALUE self) {
  * *return* value as an String.
  */
 static VALUE sax_value_as_s(VALUE self) {
-    SaxDrive dr;
-    VALUE    rs;
+    SaxDrive       dr;
+    volatile VALUE rs;
+    char          *s;
 
     dr = value_drive(self);
 
     if ('\0' == *dr->buf.str) {
         return Qnil;
     }
+    // Collapse a copy. dr->buf.str is what the next as_s reads, so collapsing it
+    // in place decoded the value once more on every call: &amp;lt; came back as
+    // &lt; and then as <.
+    rs = rb_str_new2(dr->buf.str);
+    s  = RSTRING_PTR(rs);
     if (dr->options.convert_special) {
-        ox_sax_collapse_special(dr, dr->buf.str, dr->buf.pos, dr->buf.line, dr->buf.col);
+        ox_sax_collapse_special(dr, s, dr->buf.pos, dr->buf.line, dr->buf.col);
     }
     switch (dr->options.skip) {
-    case CrSkip: buf_collapse_return(dr->buf.str); break;
-    case SpcSkip: buf_collapse_white(dr->buf.str); break;
+    case CrSkip: buf_collapse_return(s); break;
+    case SpcSkip: buf_collapse_white(s); break;
     default: break;
     }
-    rs = rb_str_new2(dr->buf.str);
+    rb_str_set_len(rs, (long)strlen(s));
     if (0 != dr->encoding) {
         rb_enc_associate(rs, dr->encoding);
     }
