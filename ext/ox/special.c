@@ -52,6 +52,30 @@ char *ox_ucs_to_utf8_chars(char *text, uint64_t u) {
     return text;
 }
 
+// True if ox_ucs_to_utf8_chars() would write a NUL for u: &#0; itself, or a
+// value it copies out byte for byte (a surrogate or past U+10FFFF) with a zero
+// byte after the first non-zero one, such as &#xD800; or &#x110000;. The
+// callers collapse text in place and the result is used as a C string, so the
+// NUL silently dropped everything after the reference.
+bool ox_ucs_has_nul(uint64_t u) {
+    int i = 56;
+
+    if (0 == u) {
+        return true;
+    }
+    if (u <= 0x000000000010FFFFULL && (u < 0x000000000000D800ULL || 0x000000000000DFFFULL < u)) {
+        return false;
+    }
+    for (; 0 == ((u >> i) & 0x00000000000000FFULL); i -= 8) {
+    }
+    for (; 0 <= i; i -= 8) {
+        if (0 == ((u >> i) & 0x00000000000000FFULL)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 #define BUCKET_SIZE 256
 #define BUCKET_MASK 255
 
