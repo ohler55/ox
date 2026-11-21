@@ -403,14 +403,16 @@ static void pop(Builder b) {
         // and the ">".
         b->col += 3;
         b->pos += 3;
-        if (e->buf != e->name) {
-            free(e->name);
-            e->name = 0;
-        }
     } else {
         buf_append_string(&b->buf, "/>", 2);
         b->col += 2;
         b->pos += 2;
+    }
+    // A name too long for the inline buffer was strdup'd, and an element closed
+    // with "/>" owns that copy just as much as one with children.
+    if (e->buf != e->name) {
+        free(e->name);
+        e->name = 0;
     }
 }
 
