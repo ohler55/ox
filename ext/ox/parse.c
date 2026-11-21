@@ -616,6 +616,14 @@ static char *read_element(PInfo pi, int depth) {
                 attr_stack_cleanup(&attrs);
                 return 0;
             }
+            // An unquoted tolerant value stepped pi->s past the '/' or '>' that
+            // ended it, while the close handling below (like the no-value branch
+            // above) expects pi->s left on it. Without this the close is stepped
+            // over twice, walking pi->s past the terminating NUL into an
+            // out-of-bounds read in the next next_non_white.
+            if ('/' == pi->last || '>' == pi->last) {
+                pi->s--;
+            }
             if (pi->options->convert_special && 0 != strchr(attr_value, '&')) {
                 if (0 != collapse_special(pi, (char *)attr_value) || err_has(&pi->err)) {
                     attr_stack_cleanup(&attrs);
