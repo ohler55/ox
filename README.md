@@ -6,6 +6,15 @@ A fast XML parser and Object marshaller as a Ruby gem.
 ## Installation
     gem install ox
 
+Precompiled native gems are published for Linux (x86_64, aarch64, x86 and
+32-bit arm, each with glibc or musl), macOS (x86_64 and arm64) and Windows (x64
+and ARM64), so on those platforms no C compiler is needed. They cover Ruby 3.1
+through 4.0, except Windows ARM64, which starts at Ruby 3.4 as RubyInstaller
+does. Other platforms and Rubies install the source gem and compile the
+extension. To always compile from source, use `gem install ox --platform ruby`,
+or with Bundler set `force_ruby_platform: true` on the gem or run
+`bundle config set force_ruby_platform true`.
+
 ## Documentation
 
 *Documentation*: http://www.ohler.com/ox

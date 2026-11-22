@@ -75,5 +75,15 @@ require 'ox/document'
 require 'ox/bag'
 require 'ox/sax'
 
-# C extension
-require 'ox/ox'
+# C extension. A precompiled native gem ships one binary per Ruby minor
+# version under ox/<major.minor>/; the source gem compiles a single ox/ox.
+begin
+  require "ox/#{RUBY_VERSION[/\A\d+\.\d+/]}/ox"
+rescue LoadError => e
+  # Fall back only when there is no binary for this Ruby. If there is one but it
+  # fails to load (a missing system library, say), raise that real error rather
+  # than a misleading "cannot load such file -- ox/ox".
+  raise unless e.message.start_with?('cannot load such file')
+
+  require 'ox/ox'
+end

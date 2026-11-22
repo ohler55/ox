@@ -2,10 +2,109 @@
 
 require 'bundler/gem_tasks'
 require 'rake/extensiontask'
+require 'rubygems/package_task'
 require 'rake/testtask'
 
-Rake::ExtensionTask.new('ox') do |ext|
+# Platforms that get a precompiled native gem, published alongside the source
+# gem so most users install Ox without a C toolchain. Each one is built inside
+# a rake-compiler-dock container; see the gem:native tasks below and
+# .github/workflows/precompiled.yml.
+#
+# x64-mingw-ucrt and aarch64-mingw-ucrt are the RubyInstaller platforms for
+# Windows on x64 (Ruby 3.1 and later) and ARM64 (Ruby 3.4 and later). The
+# *-linux-gnu and *-linux-musl gems are built separately because the
+# rake-compiler-dock docs say not to mix a bare *-linux gem with *-linux-musl.
+#
+# The 32-bit glibc gems (arm-linux-gnu, x86-linux-gnu) are built against a Ruby
+# with a 32-bit time_t but can be installed on one built with a 64-bit time_t,
+# as Debian 13 and Ubuntu 24.04 do on 32-bit ARM. That is safe because Ox does
+# not pass time_t to Ruby when it is built against a 32-bit one; see
+# ext/ox/time_conv.h.
+NATIVE_PLATFORMS = [
+  'aarch64-linux-gnu',
+  'aarch64-linux-musl',
+  'aarch64-mingw-ucrt',
+  'arm-linux-gnu',
+  'arm-linux-musl',
+  'arm64-darwin',
+  'x64-mingw-ucrt',
+  'x86-linux-gnu',
+  'x86-linux-musl',
+  'x86_64-darwin',
+  'x86_64-linux-gnu',
+  'x86_64-linux-musl'
+].freeze
+
+# Ruby minor versions compiled into each native gem. Rubies outside this list
+# fall back to the source gem and compile it as before.
+NATIVE_RUBY_VERSIONS = ['4.0', '3.4', '3.3', '3.2', '3.1'].freeze
+
+# Binaries rake-compiler-dock leaves unstripped, and the strip that fixes them.
+# Its cross rubies are linked with -s everywhere but Windows ARM64 and macOS, and
+# extensions inherit that, so those two still carry symbols: DWARF debug info
+# and a symbol table on Windows ARM64, which is about three quarters of each DLL,
+# and local symbols on macOS, where the container's strip re-signs the binary.
+NATIVE_STRIP = {
+  'aarch64-mingw-ucrt' => 'aarch64-w64-mingw32-strip --strip-all',
+  'arm64-darwin' => 'aarch64-apple-darwin-strip -x',
+  'x86_64-darwin' => 'x86_64-apple-darwin-strip -x'
+}.freeze
+
+# Platforms with fewer Rubies: RubyInstaller for Windows on ARM64, and so
+# rake-compiler-dock's cross rubies for it, start at Ruby 3.4.
+NATIVE_RUBY_VERSIONS_FOR = Hash.new(NATIVE_RUBY_VERSIONS).merge(
+  'aarch64-mingw-ucrt' => ['4.0', '3.4']
+).freeze
+
+GEMSPEC = Gem::Specification.load('ox.gemspec')
+
+# Defines the gem task that rake-compiler hooks to package native gems into pkg/.
+Gem::PackageTask.new(GEMSPEC).define
+
+Rake::ExtensionTask.new('ox', GEMSPEC) do |ext|
   ext.lib_dir = 'lib/ox'
+  ext.cross_compile = true
+  ext.cross_platform = NATIVE_PLATFORMS
+  ext.cross_compiling do |spec|
+    # The native gem ships compiled binaries, so nothing under ext/ is needed:
+    # not the C sources, and not extconf.rb, as a native gem has no extensions
+    # to build. lib/ is then the only load path.
+    spec.files.reject! { |path| path.start_with?('ext/') }
+    spec.require_paths = ['lib']
+  end
+end
+
+# Strip each binary in NATIVE_STRIP as soon as it is compiled, so every copy
+# made from it on the way into the native gem is stripped too. Only inside the
+# rake-compiler-dock container (which sets RCD_HOST_RUBY_PLATFORM), where the
+# strip tools are: a plain rake compile on, say, Windows ARM64 defines the same
+# task for its own platform and must be left alone.
+if ENV['RCD_HOST_RUBY_PLATFORM']
+  Rake::Task.tasks.each do |task|
+    platform = task.name[%r{\Atmp/([^/]+)/ox/\d+\.\d+\.\d+/ox\.(?:so|bundle)\z}, 1]
+    strip = NATIVE_STRIP[platform] or next
+
+    task.enhance { sh "#{strip} #{task.name}" }
+  end
+end
+
+namespace :gem do
+  namespace :native do
+    NATIVE_PLATFORMS.each do |platform|
+      desc "Build the precompiled #{platform} gem with rake-compiler-dock"
+      task platform do
+        require 'rake_compiler_dock'
+        RakeCompilerDock.set_ruby_cc_version(*NATIVE_RUBY_VERSIONS_FOR[platform])
+        # The container image ships a patched rake-compiler and the cross
+        # rubies, so this runs plain rake rather than bundle exec.
+        RakeCompilerDock.sh("rake native:#{platform} gem RUBY_CC_VERSION=#{ENV.fetch('RUBY_CC_VERSION')}",
+                            platform: platform)
+      end
+    end
+  end
+
+  desc 'Build the precompiled gems for every native platform'
+  task native: NATIVE_PLATFORMS.map { |platform| "gem:native:#{platform}" }
 end
 
 # test_all invokes this. Without it Rake::Task['test'] silently resolved to a
