@@ -22,7 +22,7 @@
 #include "time_conv.h"
 
 static VALUE parse_double_time(const char *text) {
-    time_t      v   = 0;
+    ox_time_t   v   = 0;
     long        v2  = 0;
     const char *dot = 0;
     char        c;
@@ -38,12 +38,12 @@ static VALUE parse_double_time(const char *text) {
         if (c < '0' || '9' < c) {
             return Qnil;
         }
-        // Past the largest time_t the seconds would wrap to whatever the document
+        // Past the largest ox_time_t the seconds would wrap to whatever the document
         // picked, so leave a count that long to the parsers below.
-        if ((OX_TIME_T_MAX - (c - '0')) / 10 < v) {
+        if ((OX_TIME_MAX - (c - '0')) / 10 < v) {
             return Qnil;
         }
-        v = 10 * v + (time_t)(c - '0');
+        v = 10 * v + (ox_time_t)(c - '0');
     }
     dot = text++;
     for (; '\0' != *text && text - dot <= 6; text++) {
@@ -57,7 +57,7 @@ static VALUE parse_double_time(const char *text) {
         v2 *= 10;
     }
     if (neg) {
-        // rb_time_nano_new() wants a non negative nanosecond count, so the
+        // ox_time_nano_new() wants a non negative nanosecond count, so the
         // fraction goes back into the second count the way dump_time_thin()
         // took it out.
         if (0 == v2) {
@@ -67,7 +67,7 @@ static VALUE parse_double_time(const char *text) {
             v2 = 1000000000L - v2;
         }
     }
-    return rb_time_nano_new(v, v2);
+    return ox_time_nano_new(v, v2);
 }
 
 typedef struct _tp {
@@ -133,8 +133,8 @@ static VALUE parse_xsd_time(const char *text) {
     }
     // mktime() would read the wall clock as local time and throw the offset
     // away, and returns -1 for everything before the epoch on Windows.
-    return rb_time_nano_new(
-        (time_t)(ox_epoch_from_civil(cargs[0], cargs[1], cargs[2], cargs[3], cargs[4], cargs[5]) - offset),
+    return ox_time_nano_new(
+        (ox_time_t)(ox_epoch_from_civil(cargs[0], cargs[1], cargs[2], cargs[3], cargs[4], cargs[5]) - offset),
         nsec);
 }
 
