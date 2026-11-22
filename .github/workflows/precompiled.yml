@@ -2,9 +2,9 @@ name: Precompiled gems
 
 # Builds the source gem plus one precompiled native gem per platform (see
 # NATIVE_PLATFORMS in the Rakefile), then installs each native gem on a matching
-# OS/architecture and runs the test suite against it. Publishing is not
-# automated: on a v* tag the gems are collected into a single artifact for the
-# maintainer to `gem push`.
+# OS/architecture and runs the test suite against it. On a v* tag the gems are
+# collected into one release-gems artifact, and in ohler55/ox the publish job
+# pushes them to RubyGems.org through trusted publishing. See RELEASING.md.
 
 on:
   push:
@@ -195,8 +195,52 @@ jobs:
           path: gems
           merge-multiple: true
       - run: ls -l gems && (cd gems && sha256sum ./*.gem)
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0'
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          path: src
+      # Checks the tag against the gem version and shows what publish would push.
+      - run: ruby src/.github/scripts/push_gems.rb gems --dry-run
       - uses: actions/upload-artifact@v7
         with:
           name: release-gems
           path: gems/*.gem
           if-no-files-found: error
+
+  # Pushes the release gems to RubyGems.org. Only runs for a v* tag in
+  # ohler55/ox, inside the "release" environment, which can require a reviewer
+  # to approve the push. Credentials come from trusted publishing (OIDC), or
+  # from a RUBYGEMS_API_TOKEN secret if one is set. See RELEASING.md for setup.
+  publish:
+    name: Publish to RubyGems.org
+    if: startsWith(github.ref, 'refs/tags/v') && github.repository == 'ohler55/ox'
+    needs: collect-gems
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: release
+    concurrency:
+      group: rubygems-publish
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-gems
+          path: gems
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '4.0'
+      # With no RUBYGEMS_API_TOKEN secret the input is empty and the action uses
+      # trusted publishing.
+      - uses: rubygems/configure-rubygems-credentials@v2.1.0
+        with:
+          api-token: ${{ secrets.RUBYGEMS_API_TOKEN }}
+      - run: ruby .github/scripts/push_gems.rb gems
