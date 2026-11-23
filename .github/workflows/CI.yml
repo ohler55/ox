@@ -18,6 +18,7 @@ jobs:
         # Due to https://github.com/actions/runner/issues/849, we have to use quotes for '3.0'
         ruby:
           - head
+          - '4.0'
           - '3.4'
           - '3.3'
           - '3.2'
@@ -32,8 +33,15 @@ jobs:
           - { os: ubuntu, ruby: '3.1' }
           - { os: ubuntu, ruby: '3.0' }
           - { os: ubuntu, ruby: '2.7' }
+        # ARM64 runners, which have no -latest label. setup-ruby has Windows
+        # ARM64 builds from Ruby 3.4 (RubyInstaller's first).
+        include:
+          - { os: ubuntu-arm, runner: ubuntu-26.04-arm, ruby: '4.0' }
+          - { os: windows-arm, runner: windows-11-arm, ruby: head }
+          - { os: windows-arm, runner: windows-11-arm, ruby: '4.0' }
+          - { os: windows-arm, runner: windows-11-arm, ruby: '3.4' }
 
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.runner || format('{0}-latest', matrix.os) }}
     timeout-minutes: 20
     continue-on-error: ${{ matrix.ruby == '3.0' || matrix.ruby == 'head'}}
     name: Ruby ${{ matrix.ruby }} (${{ matrix.os }})
