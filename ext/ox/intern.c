@@ -47,7 +47,7 @@ static VALUE form_attr(const char *str, size_t len) {
             memcpy(b + 1, str, len);
             b[len + 1] = '\0';
         }
-        id = rb_intern3(buf, len + 1, rb_utf8_encoding());
+        id = rb_intern3(b, len + 1, rb_utf8_encoding());
         xfree(b);
         return id;
     }
