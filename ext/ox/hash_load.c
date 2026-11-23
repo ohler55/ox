@@ -153,10 +153,11 @@ static void end_element_core(PInfo pi, const char *ename, bool check_marked) {
     volatile VALUE found  = Qundef;
     volatile VALUE key;
     volatile VALUE a;
+    // The popped slot is past the tail mark_pi_cb walks, and on the heap once
+    // the stack outgrows its base, so hold the value where the GC can see it
+    // before anything below allocates.
+    volatile VALUE obj = (NoCode == e->type) ? Qnil : e->obj;
 
-    if (NoCode == e->type) {
-        e->obj = Qnil;
-    }
     if (Qnil != pi->options->element_key_mod) {
         key = rb_funcall(pi->options->element_key_mod, ox_call_id, 1, rb_id2str(e->var));
     } else if (Yes == pi->options->sym_keys) {
@@ -187,28 +188,28 @@ static void end_element_core(PInfo pi, const char *ename, bool check_marked) {
         break;
     }
     if (Qundef == found) {
-        rb_hash_aset(pobj, key, e->obj);
+        rb_hash_aset(pobj, key, obj);
     } else if (RUBY_T_ARRAY == rb_type(found)) {
         if (check_marked && marked(pi, found)) {
             unmark(pi, found);
             a = rb_ary_new();
             rb_ary_push(a, found);
-            rb_ary_push(a, e->obj);
+            rb_ary_push(a, obj);
             rb_hash_aset(pobj, key, a);
         } else {
-            rb_ary_push(found, e->obj);
+            rb_ary_push(found, obj);
         }
     } else {  // something there other than an array
-        if (check_marked && marked(pi, e->obj)) {
-            unmark(pi, e->obj);
+        if (check_marked && marked(pi, obj)) {
+            unmark(pi, obj);
         }
         a = rb_ary_new();
         rb_ary_push(a, found);
-        rb_ary_push(a, e->obj);
+        rb_ary_push(a, obj);
         rb_hash_aset(pobj, key, a);
     }
-    if (check_marked && NULL != pi->marked && RUBY_T_HASH == rb_type(e->obj)) {
-        rb_hash_foreach(e->obj, umark_hash_cb, (VALUE)pi);
+    if (check_marked && NULL != pi->marked && RUBY_T_HASH == rb_type(obj)) {
+        rb_hash_foreach(obj, umark_hash_cb, (VALUE)pi);
     }
 }
 
