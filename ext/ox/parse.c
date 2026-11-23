@@ -383,6 +383,9 @@ DONE:
     }
     if (attrs_ok) {
         if ('>' != *pi->s++) {
+            // Step back first: the '>' check stepped over whatever was there,
+            // and when that was the terminating NUL set_error would read past it.
+            pi->s--;
             set_error(&pi->err, "invalid format, processing instruction not terminated", pi->str, pi->s);
             goto CLEANUP;
         }
