@@ -699,6 +699,14 @@ static char *read_element(PInfo pi, int depth) {
                         ((TolerantEffort == pi->options->effort) ? strcasecmp(name, ename) : strcmp(name, ename))) {
                         attr_stack_cleanup(&attrs);
                         if (TolerantEffort == pi->options->effort) {
+                            // The element that matches name steps pi->s over
+                            // the '>', so it has to be there. Without it
+                            // (</a at the end of the input) pi->s is on the
+                            // terminating NUL and that step walks past it.
+                            if ('>' != c) {
+                                set_error(&pi->err, "invalid format, element not closed", pi->str, pi->s);
+                                return 0;
+                            }
                             pi->pcb->end_element(pi, ename);
                             return name;
                         } else {
