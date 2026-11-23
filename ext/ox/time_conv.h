@@ -9,10 +9,62 @@
 #include <stdint.h>
 #include <time.h>
 
+#include "ruby.h"
+
+// ox_time_t is the second count Ox converts Time objects to and from.
+//
+// Where Ruby's time_t is 64 bits it is time_t, and the conversions go straight
+// through rb_time_nano_new() and rb_time_timespec().
+//
+// Where it is narrower -- 32-bit glibc without _TIME_BITS=64 -- it is int64_t,
+// and the conversions go through Time.at, Time#to_i and Time#nsec instead, so
+// no time_t crosses into Ruby. That matters twice over. A 32-bit time_t only
+// reaches 1901 to 2038, and Ruby's Time does not have that limit. And a
+// precompiled binary can meet a Ruby with a different time_t: 32-bit ARM
+// distros that moved to a 64-bit time_t (Debian 13, Ubuntu 24.04) build Ruby
+// with one, while cross compilers for that target still default to 32 bits. A
+// time_t passed between the two is read at the wrong width, and on 32-bit ARM
+// that garbles the nanoseconds as well as the seconds.
+#if SIZEOF_TIME_T >= 8
+
+typedef time_t ox_time_t;
+
 // The largest time_t, which C has no name for. Built from two halves so that no
 // step overflows on its way to the sign bit.
-#define OX_TIME_T_MAX \
-    ((time_t)((((time_t)1 << (sizeof(time_t) * 8 - 2)) - 1) + ((time_t)1 << (sizeof(time_t) * 8 - 2))))
+#define OX_TIME_MAX ((time_t)((((time_t)1 << (sizeof(time_t) * 8 - 2)) - 1) + ((time_t)1 << (sizeof(time_t) * 8 - 2))))
+
+// A local Time for sec seconds and nsec (0 to 999,999,999) nanoseconds.
+inline static VALUE ox_time_nano_new(ox_time_t sec, long nsec) {
+    return rb_time_nano_new(sec, nsec);
+}
+
+// Splits a Time into whole seconds, rounded down, and the nanoseconds past
+// them, which are never negative.
+inline static void ox_time_split(VALUE time, ox_time_t *secp, long *nsecp) {
+    struct timespec ts = rb_time_timespec(time);
+
+    *secp  = ts.tv_sec;
+    *nsecp = ts.tv_nsec;
+}
+
+#else
+
+typedef int64_t ox_time_t;
+
+#define OX_TIME_MAX INT64_MAX
+
+inline static VALUE ox_time_nano_new(ox_time_t sec, long nsec) {
+    return rb_funcall(rb_cTime, rb_intern("at"), 3, LL2NUM(sec), LONG2NUM(nsec), ID2SYM(rb_intern("nanosecond")));
+}
+
+// Time#to_i rounds down and Time#nsec is never negative, the same split
+// rb_time_timespec() makes. A Time past the int64_t range raises RangeError.
+inline static void ox_time_split(VALUE time, ox_time_t *secp, long *nsecp) {
+    *secp  = (ox_time_t)NUM2LL(rb_funcall(time, rb_intern("to_i"), 0));
+    *nsecp = NUM2LONG(rb_funcall(time, rb_intern("nsec"), 0));
+}
+
+#endif
 
 // Howard Hinnant's civil_from_days and days_from_civil, which are inverses.
 // Neither consults a timezone database, and that is the point: mktime() reads

@@ -54,3 +54,31 @@ jobs:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
       - run: bundle exec rake
+
+  # A 32-bit time_t build. Debian kept i386 on a 32-bit time_t, so this compiles
+  # the Time conversions that avoid passing time_t to Ruby (see time_conv.h).
+  # The image bundles test-unit and bigdecimal, so nothing is fetched: Bundler
+  # could not reach rubygems.org from inside this container.
+  i386:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    name: Ruby 4.0 (linux/386, 32-bit time_t)
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Compile and test in ruby:4.0 for linux/386
+        run: |
+          cat > "$RUNNER_TEMP/i386.sh" <<'EOF'
+          set -eu
+          grep -h 'define SIZEOF_TIME_T' "$(ruby -e 'print RbConfig::CONFIG["rubyarchhdrdir"]')/ruby/config.h"
+          (cd ext/ox && ruby extconf.rb && make)
+          cp ext/ox/ox.so lib/ox/
+          ruby test/tests.rb
+          ruby test/sax/sax_test.rb
+          # The same files rake test runs; see the Rakefile for the exclusions.
+          find test -name '*_test.rb' ! -path test/cache_test.rb ! -path test/cache8_test.rb \
+            ! -path test/sax/smart_test.rb ! -path test/sax/sax_test.rb | sort |
+            xargs ruby -e 'files = ARGV.dup; ARGV.clear; files.each { |f| require File.expand_path(f) }'
+          EOF
+          docker run --rm --platform linux/386 -v "$PWD:/ox" -v "$RUNNER_TEMP:/ci" -w /ox ruby:4.0 sh /ci/i386.sh

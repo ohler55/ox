@@ -477,16 +477,18 @@ inline static void dump_num(Out out, VALUE obj) {
 }
 
 static void dump_time_thin(Out out, VALUE obj) {
-    char            buf[64];
-    char           *b    = buf + sizeof(buf) - 1;
-    struct timespec ts   = rb_time_timespec(obj);
-    time_t          sec  = ts.tv_sec;
-    long            nsec = ts.tv_nsec;
-    char           *dot  = b - 10;
-    long            size;
-    bool            neg = 0 > sec;
+    char      buf[64];
+    char     *b = buf + sizeof(buf) - 1;
+    ox_time_t sec;
+    long      nsec;
+    char     *dot = b - 10;
+    long      size;
+    bool      neg;
 
-    // tv_nsec is never negative, so a time before the epoch is a negative
+    ox_time_split(obj, &sec, &nsec);
+    neg = 0 > sec;
+
+    // nsec is never negative, so a time before the epoch is a negative
     // second count carrying a positive fraction. Writing those two out as they
     // are would read as -1.5 for what is really -0.5, so move the fraction over
     // and write the magnitude with a sign in front of it.
@@ -503,7 +505,7 @@ static void dump_time_thin(Out out, VALUE obj) {
         *b-- = '0';
     } else if (neg) {
         // sec is left negative instead of negated so that the most negative
-        // time_t does not overflow. C truncates the quotient toward zero, so
+        // ox_time_t does not overflow. C truncates the quotient toward zero, so
         // the remainder carries the sign with it.
         for (; 0 != sec; b--, sec /= 10) {
             *b = (char)('0' - sec % 10);
@@ -552,17 +554,17 @@ static void dump_date(Out out, VALUE obj) {
 }
 
 static void dump_time_xsd(Out out, VALUE obj) {
-    struct timespec ts     = rb_time_timespec(obj);
-    time_t          sec    = ts.tv_sec;
-    long            nsec   = ts.tv_nsec;
-    long            offset = NUM2LONG(rb_funcall2(obj, ox_utc_offset_id, 0, 0));
-    int             tzhour, tzmin;
-    char            tzsign = '+';
-    long long       year;
-    int             mon, day, hour, min, tsec;
-    char            buf[64];
-    int             cnt;
+    ox_time_t sec;
+    long      nsec;
+    long      offset = NUM2LONG(rb_funcall2(obj, ox_utc_offset_id, 0, 0));
+    int       tzhour, tzmin;
+    char      tzsign = '+';
+    long long year;
+    int       mon, day, hour, min, tsec;
+    char      buf[64];
+    int       cnt;
 
+    ox_time_split(obj, &sec, &nsec);
     /* 2010-07-09T10:47:45.895826+09:00 */
     // The offset comes from the Time rather than from localtime(), which has no
     // tm_gmtoff in the Microsoft CRT and so wrote +00:00 next to a local wall
@@ -586,7 +588,7 @@ static void dump_time_xsd(Out out, VALUE obj) {
     /* TBD replace with more efficient printer */
     // A year outside four digits is longer than the sample above, so reserve
     // what was actually formatted instead of a fixed 33. buf can not overflow:
-    // the largest time_t puts the year at 12 digits, and the rest of the format
+    // the largest ox_time_t puts the year at 12 digits, and the rest of the format
     // is a fixed 28 characters.
     cnt = snprintf(buf,
                    sizeof(buf),
