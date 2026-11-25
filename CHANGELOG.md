@@ -2,6 +2,42 @@
 
 All changes to the Ox gem are documented here. Releases follow semantic versioning.
 
+## [2.14.30] - 2026-11-25
+
+### Added
+
+- Speed up Ox.sax_parse by not rescanning the String on each refill. See PR #472.
+- Speed up Ox.load in hash mode by keeping the marked arrays in a table. See PR #473.
+- Speed up hash_no_attrs mode by interning element names directly. See PR #474.
+- Speed up hash mode by interning element names directly. See PR #475.
+- Added Ruby 4.0 and ARM64 runners to the CI test matrix. See PR #492.
+
+### Changed
+
+- Skip the Ruby 2.7, 3.0 and 3.1 CI jobs on Ubuntu. See PR #477.
+
+### Fixed
+
+- Fix an exception from the SAX input IO coming back as a TypeError. See PR #476.
+- Fix slow parsing of names built to collide in the name cache. See PR #478.
+- Fix object mode dumps of raised exceptions and Range subclasses. See PR #479.
+- Fix out-of-bounds read in structname2obj on a trailing colon. See PR #480.
+- Fix signed overflow reading long digit strings in as_i, `<i>` and `<t>`. See PR #481.
+- Fix use-after-free of element names deeper than 32 in ox_sax_parse. See PR #482.
+- Fix the circular reference table not being marked in mark_pi_cb. See PR #483.
+- Fix a leak of the document copy in Ox.load when the parse raises. See PR #484.
+- Fix use-after-free of the SAX drive through a kept Ox::Sax::Value. See PR #485.
+- Fix stack buffer overflow in add_element :trace output. See PR #486.
+- Fix a character reference to NUL cutting off the rest of the value. See PR #487.
+- Fix read_element over-read on a tolerant unquoted attribute value. See PR #488.
+- Fix a leak of the name of an empty element in Ox::Builder pop. See PR #489.
+- Fix Ox::Sax::Value#as_s decoding the value again on each call. See PR #490.
+- Fix Time conversion on 32-bit time_t builds. See PR #493.
+- Fix use-after-free of a popped element in hash mode end_element. See PR #494.
+- Fix out-of-bounds read in form_attr interning the stack buffer. See PR #495.
+- Fix read_element over-read on a tolerant end tag cut off before its '>'. See PR #496.
+- Fix read_instruction over-read on an instruction ending in '?' with no '>'. See PR #497.
+
 ## [2.14.29] - 2026-07-08
 
 ### Added
@@ -36,10 +72,6 @@ All changes to the Ox gem are documented here. Releases follow semantic versioni
 
 ### Fixed
 
-- Fix Ox.sax_parse replacing an exception raised by the input IO's read
-  or readpartial method with a TypeError. The original error now reaches
-  the caller with its class and message, and a TypeError raised inside
-  read is no longer swallowed as end of input.
 - Fix an element or attribute name going out unchecked. A name can now
   end itself and start something else with nothing raised. See PR #470.
 - Fix a comment, CDATA, DOCTYPE or instruction value going out
