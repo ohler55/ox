@@ -236,32 +236,34 @@ static VALUE ox_locking_intern(Cache c, const char *key, size_t len, const char 
             if (NULL != keyp) {
                 *keyp = b->key;
             }
+            rkey = b->val;
             CACHE_UNLOCK(c);
 
-            return b->val;
+            return rkey;
         }
     }
     old_size = c->size;
     // The creation of a new value may trigger a GC which be a problem if the
     // cache is locked so make sure it is unlocked for the key value creation.
+    // It can also raise, so take a slot only after it returns.
+    CACHE_UNLOCK(c);
+    rkey = c->form(key, len);
+
+    // Lock again to add the new entry.
+    CACHE_LOCK(c);
     if (NULL != (b = c->reuse)) {
         c->reuse = b->next;
         c->rcnt--;
+    } else if (NULL == (b = calloc(1, sizeof(struct _slot)))) {
+        CACHE_UNLOCK(c);
+        rb_memerror();
     }
-    CACHE_UNLOCK(c);
-    if (NULL == b && NULL == (b = calloc(1, sizeof(struct _slot)))) {
-        rb_memerror();  // the lock was released above
-    }
-    rkey    = c->form(key, len);
     b->hash = h;
     memcpy(b->key, key, len);
     b->klen     = (uint8_t)len;
     b->key[len] = '\0';
     b->val      = rkey;
     b->use_cnt  = 16;
-
-    // Lock again to add the new entry.
-    CACHE_LOCK(c);
     if (old_size != c->size) {
         h      = hash_calc((const uint8_t *)key, len);
         bucket = (Slot *)c->slots + (h & c->mask);
