@@ -13,6 +13,7 @@ require 'ox'
 class LoadRactorTest < ::Test::Unit::TestCase
   def test_load_new_attribute_names_in_ractors
     omit('needs Ractor') unless defined?(Ractor)
+    omit('skipped under Valgrind') if ENV['OX_SKIP_RACTOR_TESTS']
     experimental = Warning[:experimental]
     Warning[:experimental] = false
     ractors = Array.new(4) do |k|
