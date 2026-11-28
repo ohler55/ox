@@ -36,6 +36,45 @@ typedef struct _element {
     char          type;
 } *Element;
 
+struct ivar {
+    ID    name;
+    VALUE val;
+};
+
+typedef struct _ivars {
+    struct ivar *buf;
+    long         len;
+    long         cap;
+} *Ivars;
+
+static void ivars_mark(void *ptr) {
+    Ivars iv = (Ivars)ptr;
+    long  i;
+
+    for (i = 0; i < iv->len; i++) {
+        rb_gc_mark(iv->buf[i].val);
+    }
+}
+
+static void ivars_free(void *ptr) {
+    Ivars iv = (Ivars)ptr;
+
+    xfree(iv->buf);
+    xfree(iv);
+}
+
+static const rb_data_type_t ox_ivars_type = {
+    "Ox/dump/ivars",
+    {
+        ivars_mark,
+        ivars_free,
+        NULL,
+    },
+    0,
+    0,
+    RUBY_TYPED_FREE_IMMEDIATELY,
+};
+
 typedef struct _out {
     void (*w_start)(struct _out *out, Element e);
     void (*w_end)(struct _out *out, Element e);
@@ -49,6 +88,13 @@ typedef struct _out {
     int           depth; /* used by dumpHash */
     Options       opts;
     VALUE         obj;
+    // Instance variable snapshots of the objects being dumped. Nested objects
+    // share one buffer so a snapshot takes no C stack per level. It starts in
+    // ivars_local and moves to ivars_obj, which GC marks, when that fills up.
+    Ivars         ivars;
+    struct _ivars ivars_head;
+    struct ivar   ivars_local[32];
+    VALUE         ivars_obj;
 } *Out;
 
 static void dump_obj_to_xml(VALUE obj, Options copts, Out out);
@@ -70,7 +116,8 @@ static void grow(Out out, size_t len);
 
 static void dump_value(Out out, const char *value, size_t size);
 static void dump_str_value(Out out, const char *value, size_t size, const char *table);
-static int  dump_var(ID key, VALUE value, VALUE ov);
+static int  collect_var(ID key, VALUE value, st_data_t arg);
+static void dump_var(ID key, VALUE value, Out out);
 static void dump_num(Out out, VALUE obj);
 static void dump_date(Out out, VALUE obj);
 static void dump_time_thin(Out out, VALUE obj);
@@ -944,11 +991,23 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
             e.closed = (0 >= cnt);
             out->w_start(out, &e);
             if (0 < cnt) {
-                unsigned int od = out->depth;
+                unsigned int od   = out->depth;
+                long         base = out->ivars->len;
+                long         end;
+                long         i;
 
+                // dump_var can call Ruby code that removes instance variables,
+                // which rb_ivar_foreach does not survive, so dump a copy.
+                rb_ivar_foreach(obj, collect_var, (st_data_t)out);
+                end        = out->ivars->len;
                 out->depth = depth + 1;
-                rb_ivar_foreach(obj, dump_var, (VALUE)out);
-                out->depth = od;
+                for (i = base; i < end; i++) {
+                    struct ivar *v = out->ivars->buf + i;
+
+                    dump_var(v->name, v->val, out);
+                }
+                out->depth      = od;
+                out->ivars->len = base;
                 out->w_end(out, &e);
             }
         }
@@ -1030,9 +1089,36 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
     out->obj = prev_obj;
 }
 
-static int dump_var(ID key, VALUE value, VALUE ov) {
-    Out out = (Out)ov;
+static int collect_var(ID key, VALUE value, st_data_t arg) {
+    Out   out = (Out)arg;
+    Ivars iv  = out->ivars;
 
+    if (iv->len == iv->cap) {
+        long cap = iv->cap * 2;
+
+        if (Qnil == out->ivars_obj) {
+            Ivars heap;
+
+            out->ivars_obj = TypedData_Make_Struct(0, struct _ivars, &ox_ivars_type, heap);
+            heap->buf      = ALLOC_N(struct ivar, cap);
+            memcpy(heap->buf, iv->buf, sizeof(struct ivar) * iv->len);
+            heap->len  = iv->len;
+            heap->cap  = cap;
+            out->ivars = heap;
+            iv         = heap;
+        } else {
+            REALLOC_N(iv->buf, struct ivar, cap);
+            iv->cap = cap;
+        }
+    }
+    iv->buf[iv->len].name = key;
+    iv->buf[iv->len].val  = value;
+    iv->len++;
+
+    return ST_CONTINUE;
+}
+
+static void dump_var(ID key, VALUE value, Out out) {
     if (T_DATA == rb_type(value) && key == ox_mesg_id) {
         /* There is a secret recipe that keeps Exception mesg attributes as a
          * T_DATA until it is needed. The safe way around this hack is to call
@@ -1047,11 +1133,9 @@ static int dump_var(ID key, VALUE value, VALUE ov) {
 
         value = rb_funcall(m, rb_intern("bind_call"), 1, out->obj);
     } else if (key == rb_intern("bt_locations")) {
-        return ST_CONTINUE;
+        return;
     }
     dump_obj(key, value, out->depth, out);
-
-    return ST_CONTINUE;
 }
 
 static int dump_hash(VALUE key, VALUE value, VALUE ov) {
@@ -1379,6 +1463,12 @@ static void dump_obj_to_xml(VALUE obj, Options copts, Out out) {
     out->opts       = copts;
     out->obj        = obj;
     *out->cur       = '\0';
+
+    out->ivars_head.buf = out->ivars_local;
+    out->ivars_head.len = 0;
+    out->ivars_head.cap = sizeof(out->ivars_local) / sizeof(*out->ivars_local);
+    out->ivars          = &out->ivars_head;
+    out->ivars_obj      = Qnil;
     if (Yes == copts->circular) {
         ox_cache8_new(&out->circ_cache);
     }
@@ -1388,6 +1478,7 @@ static void dump_obj_to_xml(VALUE obj, Options copts, Out out) {
     // back to the caller; on a raise the longjmp would otherwise skip the free,
     // so release the buffer (and the circular cache) here before re-raising.
     rb_protect(dump_obj_to_xml_body, (VALUE)out, &state);
+    RB_GC_GUARD(out->ivars_obj);
 
     if (Yes == copts->circular) {
         ox_cache8_delete(out->circ_cache);
