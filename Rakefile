@@ -41,9 +41,7 @@ if RUBY_PLATFORM.include?('linux')
     # C self-tests only compiled into a debug build; smart_test.rb runs
     # opts.parse(ARGV) at load and exits on the test runner's -v flag. The two
     # fork-based tests in tests.rb are skipped under Valgrind via OX_SKIP_FORK_TESTS
-    # (a forked child stays under Valgrind and only adds noise). The Ractor test is
-    # skipped via OX_SKIP_RACTOR_TESTS: Valgrind runs one thread at a time, so the
-    # Ractors cannot race there and the test only adds time.
+    # (a forked child stays under Valgrind and only adds noise).
     memcheck_test_files =
       FileList['test/**/*_test.rb']
       .exclude('test/cache_test.rb', 'test/cache8_test.rb', 'test/sax/smart_test.rb') + ['test/tests.rb']
@@ -57,7 +55,6 @@ if RUBY_PLATFORM.include?('linux')
         end
         # Inherited by the Ruby child that Valgrind traces; see the note above.
         ENV['OX_SKIP_FORK_TESTS'] = '1'
-        ENV['OX_SKIP_RACTOR_TESTS'] = '1'
       end
 
       RubyMemcheck::TestTask.new(valgrind: [:check_valgrind, :compile]) do |t|

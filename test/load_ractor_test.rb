@@ -13,7 +13,9 @@ require 'ox'
 class LoadRactorTest < ::Test::Unit::TestCase
   def test_load_new_attribute_names_in_ractors
     omit('needs Ractor') unless defined?(Ractor)
-    omit('skipped under Valgrind') if ENV['OX_SKIP_RACTOR_TESTS']
+    # ruby_memcheck sets this. Valgrind runs one thread at a time, so the
+    # Ractors cannot race there and the test only adds time.
+    omit('skipped under Valgrind') if ENV['RUBY_MEMCHECK_RUNNING']
     experimental = Warning[:experimental]
     Warning[:experimental] = false
     ractors = Array.new(4) do |k|
