@@ -17,9 +17,6 @@ static VALUE          ox_str_cache_obj;
 static struct _cache *ox_sym_cache = NULL;
 static VALUE          ox_sym_cache_obj;
 
-static struct _cache *ox_attr_cache = NULL;
-static VALUE          ox_attr_cache_obj;
-
 static struct _cache *ox_id_cache = NULL;
 static VALUE          ox_id_cache_obj;
 
@@ -29,38 +26,6 @@ static VALUE form_str(const char *str, size_t len) {
 
 static VALUE form_sym(const char *str, size_t len) {
     return rb_to_symbol(rb_str_freeze(rb_utf8_str_new(str, len)));
-}
-
-static VALUE form_attr(const char *str, size_t len) {
-    char buf[256];
-
-    if (sizeof(buf) - 2 <= len) {
-        char *b = ALLOC_N(char, len + 2);
-        ID    id;
-
-        if ('~' == *str) {
-            memcpy(b, str + 1, len - 1);
-            b[len - 1] = '\0';
-            len -= 2;
-        } else {
-            *b = '@';
-            memcpy(b + 1, str, len);
-            b[len + 1] = '\0';
-        }
-        id = rb_intern3(b, len + 1, rb_utf8_encoding());
-        xfree(b);
-        return id;
-    }
-    if ('~' == *str) {
-        memcpy(buf, str + 1, len - 1);
-        buf[len - 1] = '\0';
-        len -= 2;
-    } else {
-        *buf = '@';
-        memcpy(buf + 1, str, len);
-        buf[len + 1] = '\0';
-    }
-    return (VALUE)rb_intern3(buf, len + 1, rb_utf8_encoding());
 }
 
 static VALUE form_id(const char *str, size_t len) {
@@ -86,10 +51,6 @@ void ox_hash_init(void) {
     ox_sym_cache_obj = TypedData_Wrap_Struct(cache_class, &ox_cache_type, ox_sym_cache);
     rb_gc_register_address(&ox_sym_cache_obj);
 
-    ox_attr_cache     = ox_cache_create(0, form_attr, false, false);
-    ox_attr_cache_obj = TypedData_Wrap_Struct(cache_class, &ox_cache_type, ox_attr_cache);
-    rb_gc_register_address(&ox_attr_cache_obj);
-
     ox_id_cache     = ox_cache_create(0, form_id, false, false);
     ox_id_cache_obj = TypedData_Wrap_Struct(cache_class, &ox_cache_type, ox_id_cache);
     rb_gc_register_address(&ox_id_cache_obj);
@@ -110,10 +71,6 @@ ox_str_intern(const char *key, size_t len, const char **keyp) {
 VALUE
 ox_sym_intern(const char *key, size_t len, const char **keyp) {
     return ox_cache_intern(ox_sym_cache, key, len, keyp);
-}
-
-ID ox_attr_intern(const char *key, size_t len) {
-    return ox_cache_intern(ox_attr_cache, key, len, NULL);
 }
 
 ID ox_id_intern(const char *key, size_t len) {
