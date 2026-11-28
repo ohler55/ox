@@ -1268,6 +1268,10 @@ static int dump_gen_attr(VALUE key, VALUE value, VALUE ov) {
     check_name_chars(ks, klen, true);
     if (!RB_TYPE_P(value, T_STRING)) {
         value = rb_String(value);
+        // to_s can change the key String, so read and check it again.
+        ks   = RSTRING_PTR(kv);
+        klen = (size_t)RSTRING_LEN(kv);
+        check_name_chars(ks, klen, true);
     }
     size = 4 + klen + RSTRING_LEN(value);
     if (out->end - out->cur <= (long)size) {
