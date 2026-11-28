@@ -707,12 +707,13 @@ static void dump_obj(ID aid, VALUE obj, int depth, Out out) {
         e.closed = (0 >= cnt);
         out->w_start(out, &e);
         if (!e.closed) {
-            const VALUE *np = RARRAY_PTR(obj);
-            int          i;
-            int          d2 = depth + 1;
+            int i;
+            int d2 = depth + 1;
 
-            for (i = cnt; 0 < i; i--, np++) {
-                dump_obj(0, *np, d2, out);
+            // Ruby code run for an element can shrink obj, so check the
+            // length and read the element again on each pass.
+            for (i = 0; i < cnt && i < RARRAY_LEN(obj); i++) {
+                dump_obj(0, RARRAY_AREF(obj, i), d2, out);
             }
             out->w_end(out, &e);
         }
@@ -1215,31 +1216,35 @@ static int dump_gen_nodes(VALUE obj, int depth, Out out) {
     int  indent_needed = 1;
 
     if (0 < cnt) {
-        const VALUE *np = RARRAY_PTR(obj);
-        VALUE        clas;
-        int          d2 = depth + 1;
+        VALUE node;
+        VALUE clas;
+        long  i;
+        int   d2 = depth + 1;
 
         if (MAX_DEPTH < depth) {
             rb_raise(rb_eSysStackError, "maximum depth exceeded");
         }
-        for (; 0 < cnt; cnt--, np++) {
-            clas = rb_obj_class(*np);
+        // Ruby code run for a node can shrink obj, so check the length and
+        // read the node again on each pass.
+        for (i = 0; i < cnt && i < RARRAY_LEN(obj); i++) {
+            node = RARRAY_AREF(obj, i);
+            clas = rb_obj_class(node);
             if (ox_element_clas == clas) {
-                dump_gen_element(*np, d2, out);
+                dump_gen_element(node, d2, out);
             } else if (ox_instruct_clas == clas) {
-                dump_gen_instruct(*np, d2, out);
-                indent_needed = (1 == cnt) ? 0 : 1;
+                dump_gen_instruct(node, d2, out);
+                indent_needed = (cnt - 1 == i) ? 0 : 1;
             } else if (rb_cString == clas) {
-                dump_str_value(out, StringValuePtr(*(VALUE *)np), RSTRING_LEN(*np), xml_element_chars);
-                indent_needed = (1 == cnt) ? 0 : 1;
+                dump_str_value(out, StringValuePtr(node), RSTRING_LEN(node), xml_element_chars);
+                indent_needed = (cnt - 1 == i) ? 0 : 1;
             } else if (ox_comment_clas == clas) {
-                dump_gen_val_node(*np, d2, "<!--", 4, "-->", 3, out);
+                dump_gen_val_node(node, d2, "<!--", 4, "-->", 3, out);
             } else if (ox_raw_clas == clas) {
-                dump_gen_val_node(*np, d2, "", 0, "", 0, out);
+                dump_gen_val_node(node, d2, "", 0, "", 0, out);
             } else if (ox_cdata_clas == clas) {
-                dump_gen_val_node(*np, d2, "<![CDATA[", 9, "]]>", 3, out);
+                dump_gen_val_node(node, d2, "<![CDATA[", 9, "]]>", 3, out);
             } else if (ox_doctype_clas == clas) {
-                dump_gen_val_node(*np, d2, "<!DOCTYPE ", 10, ">", 1, out);
+                dump_gen_val_node(node, d2, "<!DOCTYPE ", 10, ">", 1, out);
             } else {
                 rb_raise(rb_eTypeError, "Unexpected class, %s, while dumping generic XML\n", rb_class2name(clas));
             }
