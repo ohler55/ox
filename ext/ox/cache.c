@@ -1,12 +1,14 @@
 // Copyright (c) 2011, 2021 Peter Ohler. All rights reserved.
 // Licensed under the MIT License. See LICENSE file in the project root for license details.
 
+#include "cache.h"
+
+#include <stdlib.h>
 #if HAVE_PTHREAD_MUTEX_INIT
 #include <pthread.h>
+#else
+#include <ruby/thread_native.h>
 #endif
-#include <stdlib.h>
-
-#include "cache.h"
 
 // The stdlib calloc, realloc, and free are used instead of the Ruby ALLOC,
 // ALLOC_N, REALLOC, and xfree since the later could trigger a GC which will
@@ -17,11 +19,15 @@
 #define REUSE_MAX 8192
 
 #if HAVE_PTHREAD_MUTEX_INIT
+#define CACHE_LOCK_INIT(c) pthread_mutex_init(&((c)->mutex), NULL)
+#define CACHE_LOCK_DESTROY(c) pthread_mutex_destroy(&((c)->mutex))
 #define CACHE_LOCK(c) pthread_mutex_lock(&((c)->mutex))
 #define CACHE_UNLOCK(c) pthread_mutex_unlock(&((c)->mutex))
 #else
-#define CACHE_LOCK(c) rb_mutex_lock((c)->mutex)
-#define CACHE_UNLOCK(c) rb_mutex_unlock((c)->mutex)
+#define CACHE_LOCK_INIT(c) rb_nativethread_lock_initialize(&((c)->mutex))
+#define CACHE_LOCK_DESTROY(c) rb_nativethread_lock_destroy(&((c)->mutex))
+#define CACHE_LOCK(c) rb_nativethread_lock_lock(&((c)->mutex))
+#define CACHE_UNLOCK(c) rb_nativethread_lock_unlock(&((c)->mutex))
 #endif
 
 #define ROTL(x, b) (uint64_t)(((x) << (b)) | ((x) >> (64 - (b))))
@@ -75,7 +81,7 @@ typedef struct _cache {
 #if HAVE_PTHREAD_MUTEX_INIT
     pthread_mutex_t mutex;
 #else
-    VALUE mutex;
+    rb_nativethread_lock_t mutex;
 #endif
     uint8_t xrate;
     bool    mark;
@@ -232,7 +238,7 @@ static VALUE ox_locking_intern(Cache c, const char *key, size_t len, const char 
     bucket = (Slot *)c->slots + (h & c->mask);
     for (b = *bucket; NULL != b; b = b->next) {
         if ((uint8_t)len == b->klen && 0 == strncmp(b->key, key, len)) {
-            b->use_cnt += 4;
+            b->use_cnt += 16;
             if (NULL != keyp) {
                 *keyp = b->key;
             }
@@ -263,7 +269,7 @@ static VALUE ox_locking_intern(Cache c, const char *key, size_t len, const char 
     b->klen     = (uint8_t)len;
     b->key[len] = '\0';
     b->val      = rkey;
-    b->use_cnt  = 16;
+    b->use_cnt  = 4;
     if (old_size != c->size) {
         h      = hash_calc((const uint8_t *)key, len);
         bucket = (Slot *)c->slots + (h & c->mask);
@@ -294,17 +300,13 @@ Cache ox_cache_create(size_t size, VALUE (*form)(const char *str, size_t len), b
     if (shift < MIN_SHIFT) {
         shift = MIN_SHIFT;
     }
-#if HAVE_PTHREAD_MUTEX_INIT
-    pthread_mutex_init(&c->mutex, NULL);
-#else
-    c->mutex = rb_mutex_new();
-#endif
     c->size = 1 << shift;
     c->mask = c->size - 1;
     if (NULL == (c->slots = calloc(c->size, sizeof(Slot)))) {
         free(c);
         rb_memerror();
     }
+    CACHE_LOCK_INIT(c);
     c->form  = form;
     c->xrate = 1;  // low
     c->mark  = mark;
@@ -334,6 +336,7 @@ void ox_cache_free(void *ptr) {
         free(s);
     }
     free((void *)c->slots);
+    CACHE_LOCK_DESTROY(c);
     free(c);
 }
 
@@ -341,10 +344,11 @@ void ox_cache_mark(void *ptr) {
     Cache    c = (Cache)ptr;
     uint64_t i;
 
-#if !HAVE_PTHREAD_MUTEX_INIT
-    rb_gc_mark(c->mutex);
-#endif
+    // Ruby 4.1 runs the GC per Ractor, so other Ractors can be interning
+    // while this runs. No locked section allocates, so a GC never waits here.
+    CACHE_LOCK(c);
     if (0 == c->cnt) {
+        CACHE_UNLOCK(c);
         return;
     }
     for (i = 0; i < c->size; i++) {
@@ -378,6 +382,7 @@ void ox_cache_mark(void *ptr) {
             prev = s;
         }
     }
+    CACHE_UNLOCK(c);
 }
 
 VALUE
