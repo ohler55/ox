@@ -881,6 +881,24 @@ class Func < Test::Unit::TestCase
     end
   end
 
+  def test_exception_message_removes_ivars
+    Ox.default_options = $ox_object_options
+    begin
+      undefined_name_for_ox_test
+    rescue NameError => e
+      40.times { |i| e.instance_variable_set(:"@v#{i}", "s#{i}") }
+      def e.message
+        instance_variables.each { |n| remove_instance_variable(n) }
+        GC.start
+        super
+      end
+      obj = Ox.load(Ox.dump(e), mode: :object)
+      assert_equal('s39', obj.instance_variable_get(:@v39))
+      # TruffleRuby does not call #message here.
+      assert(!e.instance_variable_defined?(:@v39)) if 'ruby' == $ruby
+    end
+  end
+
   def test_exception_bag
     Ox.default_options = $ox_object_options
     if RUBY_VERSION.start_with?('1.8') || 'rubinius' == $ruby
