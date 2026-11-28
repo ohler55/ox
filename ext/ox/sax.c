@@ -300,9 +300,10 @@ static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions opti
     ox_sax_buf_init(&dr->buf, io);
     dr->buf.dr = dr;
     stack_init(&dr->stack);
-    dr->handler   = handler;
+    dr->handler = handler;
+    // dr lives in ox_sax_parse()'s frame, where the conservative stack scan
+    // keeps value_obj alive, so it is not registered as a global root.
     dr->value_obj = TypedData_Wrap_Struct(ox_sax_value_class, &ox_sax_value_type, NULL);
-    rb_gc_register_address(&dr->value_obj);
     dr->options = *options;
     dr->err     = 0;
     dr->blocked = 0;
@@ -363,7 +364,6 @@ void ox_sax_drive_cleanup(SaxDrive dr) {
     // A handler can keep the Value past the parse, or a raise can skip the
     // detach after the callback, so make sure it no longer points at dr.
     DATA_PTR(dr->value_obj) = NULL;
-    rb_gc_unregister_address(&dr->value_obj);
     buf_cleanup(&dr->buf);
     stack_cleanup(&dr->stack);
 }
