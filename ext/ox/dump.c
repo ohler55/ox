@@ -1217,7 +1217,7 @@ static int dump_gen_nodes(VALUE obj, int depth, Out out) {
 
     if (0 < cnt) {
         VALUE node;
-        VALUE clas;
+        VALUE clas = Qnil;
         long  i;
         int   d2 = depth + 1;
 
@@ -1233,10 +1233,8 @@ static int dump_gen_nodes(VALUE obj, int depth, Out out) {
                 dump_gen_element(node, d2, out);
             } else if (ox_instruct_clas == clas) {
                 dump_gen_instruct(node, d2, out);
-                indent_needed = (cnt - 1 == i) ? 0 : 1;
             } else if (rb_cString == clas) {
                 dump_str_value(out, StringValuePtr(node), RSTRING_LEN(node), xml_element_chars);
-                indent_needed = (cnt - 1 == i) ? 0 : 1;
             } else if (ox_comment_clas == clas) {
                 dump_gen_val_node(node, d2, "<!--", 4, "-->", 3, out);
             } else if (ox_raw_clas == clas) {
@@ -1249,6 +1247,7 @@ static int dump_gen_nodes(VALUE obj, int depth, Out out) {
                 rb_raise(rb_eTypeError, "Unexpected class, %s, while dumping generic XML\n", rb_class2name(clas));
             }
         }
+        indent_needed = (ox_instruct_clas == clas || rb_cString == clas) ? 0 : 1;
     }
     return indent_needed;
 }
