@@ -33,6 +33,7 @@ class DumpGenTypeTest < ::Test::Unit::TestCase
     doc = Ox::Document.new
     doc.instance_variable_set(:@attributes, 7)
     assert_raise(TypeError) { Ox.dump(doc) }
+    assert_raise(TypeError) { Ox.dump(doc, encoding: 'UTF-8', with_xml: true) }
   end
 
   def test_instruct_attributes_not_a_hash
