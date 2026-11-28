@@ -304,10 +304,10 @@ static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions opti
     // dr lives in ox_sax_parse()'s frame, where the conservative stack scan
     // keeps value_obj alive, so it is not registered as a global root.
     dr->value_obj = TypedData_Wrap_Struct(ox_sax_value_class, &ox_sax_value_type, NULL);
-    dr->options = *options;
-    dr->err     = 0;
-    dr->blocked = 0;
-    dr->abort   = false;
+    dr->options   = *options;
+    dr->err       = 0;
+    dr->blocked   = 0;
+    dr->abort     = false;
 
     dr->set_pos  = (Qtrue == rb_ivar_defined(handler, ox_at_pos_id)) ? set_pos : set_long_noop;
     dr->set_line = (Qtrue == rb_ivar_defined(handler, ox_at_line_id)) ? set_line : set_long_noop;
