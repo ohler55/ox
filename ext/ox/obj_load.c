@@ -185,7 +185,9 @@ static VALUE classname2class(const char *name, PInfo pi, VALUE base_class) {
         *s = '\0';
         if (Qundef != (clas = resolve_classname(clas, class_name, pi->options->effort, base_class))) {
             *slot = clas;
-            rb_gc_register_address(slot);
+            // slot_cache_get() moves values to other slots, so register the
+            // class itself. That also keeps it from being moved.
+            rb_gc_register_mark_object(clas);
         }
     }
     return clas;
