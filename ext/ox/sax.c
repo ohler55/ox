@@ -78,9 +78,11 @@ const rb_data_type_t ox_sax_value_type = {
 // while parsing or a GC can free a name before end_element() is called with it.
 static void mark_stack_cb(void *ptr) {
     if (NULL != ptr) {
-        NStack stack = &((SaxDrive)ptr)->stack;
-        Nv     nv;
+        SaxDrive dr    = (SaxDrive)ptr;
+        NStack   stack = &dr->stack;
+        Nv       nv;
 
+        rb_gc_mark(dr->value_obj);
         for (nv = stack->head; nv < stack->tail; nv++) {
             rb_gc_mark(nv->val);
         }
@@ -301,8 +303,8 @@ static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions opti
     dr->buf.dr = dr;
     stack_init(&dr->stack);
     dr->handler = handler;
-    // dr lives in ox_sax_parse()'s frame, where the conservative stack scan
-    // keeps value_obj alive, so it is not registered as a global root.
+    // ox_sax_parse()'s wrap marks value_obj (the stack covers it until then).
+    // It is not a global root, which Ractors parsing at the same time corrupt.
     dr->value_obj = TypedData_Wrap_Struct(ox_sax_value_class, &ox_sax_value_type, NULL);
     dr->options   = *options;
     dr->err       = 0;
