@@ -78,9 +78,11 @@ const rb_data_type_t ox_sax_value_type = {
 // while parsing or a GC can free a name before end_element() is called with it.
 static void mark_stack_cb(void *ptr) {
     if (NULL != ptr) {
-        NStack stack = &((SaxDrive)ptr)->stack;
-        Nv     nv;
+        SaxDrive dr    = (SaxDrive)ptr;
+        NStack   stack = &dr->stack;
+        Nv       nv;
 
+        rb_gc_mark(dr->value_obj);
         for (nv = stack->head; nv < stack->tail; nv++) {
             rb_gc_mark(nv->val);
         }
@@ -300,13 +302,14 @@ static void sax_drive_init(SaxDrive dr, VALUE handler, VALUE io, SaxOptions opti
     ox_sax_buf_init(&dr->buf, io);
     dr->buf.dr = dr;
     stack_init(&dr->stack);
-    dr->handler   = handler;
+    dr->handler = handler;
+    // ox_sax_parse()'s wrap marks value_obj (the stack covers it until then).
+    // It is not a global root, which Ractors parsing at the same time corrupt.
     dr->value_obj = TypedData_Wrap_Struct(ox_sax_value_class, &ox_sax_value_type, NULL);
-    rb_gc_register_address(&dr->value_obj);
-    dr->options = *options;
-    dr->err     = 0;
-    dr->blocked = 0;
-    dr->abort   = false;
+    dr->options   = *options;
+    dr->err       = 0;
+    dr->blocked   = 0;
+    dr->abort     = false;
 
     dr->set_pos  = (Qtrue == rb_ivar_defined(handler, ox_at_pos_id)) ? set_pos : set_long_noop;
     dr->set_line = (Qtrue == rb_ivar_defined(handler, ox_at_line_id)) ? set_line : set_long_noop;
@@ -363,7 +366,6 @@ void ox_sax_drive_cleanup(SaxDrive dr) {
     // A handler can keep the Value past the parse, or a raise can skip the
     // detach after the callback, so make sure it no longer points at dr.
     DATA_PTR(dr->value_obj) = NULL;
-    rb_gc_unregister_address(&dr->value_obj);
     buf_cleanup(&dr->buf);
     stack_cleanup(&dr->stack);
 }
