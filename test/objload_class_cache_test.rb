@@ -1,10 +1,9 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Regression test: object mode kept each cached class alive by registering the
-# slot that held it. Looking a name up again, or adding a name with the same
-# start, moved the class to another slot, so a removed class was freed or a
-# compacted one was moved while the cache still returned it.
+# Regression test: object mode registered the cache slot of each class, but
+# slot_cache_get() moves classes between slots, so a removed class was freed
+# or a compacted one was moved while the cache still returned it.
 
 $LOAD_PATH << File.join(File.dirname(__FILE__), '../lib')
 $LOAD_PATH << File.join(File.dirname(__FILE__), '../ext')
