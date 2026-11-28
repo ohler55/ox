@@ -1063,13 +1063,22 @@ static int dump_hash(VALUE key, VALUE value, VALUE ov) {
     return ST_CONTINUE;
 }
 
+static void check_ivar_type(VALUE v, int type, const char *name) {
+    if (Qnil != v && !RB_TYPE_P(v, type)) {
+        rb_raise(rb_eTypeError, "Unexpected class for %s, %s, while dumping generic XML\n", name, rb_obj_classname(v));
+    }
+}
+
 static void dump_gen_doc(VALUE obj, int depth, Out out) {
     volatile VALUE attrs = rb_attr_get(obj, ox_attributes_id);
     volatile VALUE nodes = rb_attr_get(obj, ox_nodes_id);
 
+    check_ivar_type(nodes, T_ARRAY, "nodes");
     if ('\0' == *out->opts->encoding && Qnil != attrs) {
-        volatile VALUE renc = rb_hash_lookup(attrs, ox_encoding_sym);
+        volatile VALUE renc;
 
+        check_ivar_type(attrs, T_HASH, "attributes");
+        renc = rb_hash_lookup(attrs, ox_encoding_sym);
         if (Qnil != renc) {
             const char *enc = StringValuePtr(renc);
 
@@ -1082,6 +1091,7 @@ static void dump_gen_doc(VALUE obj, int depth, Out out) {
         }
         dump_value(out, "<?xml", 5);
         if (Qnil != attrs) {
+            check_ivar_type(attrs, T_HASH, "attributes");
             rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
         }
         dump_value(out, "?>", 2);
@@ -1109,6 +1119,8 @@ static void dump_gen_element(VALUE obj, int depth, Out out) {
     size_t         size;
     int            indent;
 
+    check_ivar_type(attrs, T_HASH, "attributes");
+    check_ivar_type(nodes, T_ARRAY, "nodes");
     check_name_chars(name, (size_t)nlen, false);
     if (0 > out->indent) {
         indent = -1;
@@ -1204,6 +1216,7 @@ static void dump_gen_instruct(VALUE obj, int depth, Out out) {
         }
         fill_value(out, content, clen);
     } else if (Qnil != attrs) {
+        check_ivar_type(attrs, T_HASH, "attributes");
         rb_hash_foreach(attrs, dump_gen_attr, (VALUE)out);
     }
     APPEND_CHARS_SMALL(out->cur, "?>", 2);
